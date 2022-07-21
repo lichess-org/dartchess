@@ -60,9 +60,8 @@ class SquareSet {
     return SquareSet(value & other.value);
   }
 
-  int size() {
-    return _popcnt64(value);
-  }
+  int get size => _popcnt64(value);
+  bool get isEmpty => value == 0;
 
   bool has(int square) {
     return value & (1 << square) != 0;

@@ -12,7 +12,7 @@ void main() {
   test('size', () {
     SquareSet squares = SquareSet.empty;
     for (int i = 0; i < 64; i++) {
-      expect(squares.size(), i);
+      expect(squares.size, i);
       squares = squares.withSquare(i);
     }
   });
