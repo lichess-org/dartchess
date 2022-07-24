@@ -31,6 +31,8 @@ class SquareSet {
   static const full = SquareSet(0xffffffffffffffff);
   static const lightSquares = SquareSet(0x55AA55AA55AA55AA);
   static const darkSquares = SquareSet(0xAA55AA55AA55AA55);
+  static const diagonal = SquareSet(0x8040201008040201);
+  static const antidiagonal = SquareSet(0x0102040810204080);
 
   SquareSet shr(int shift) {
     if (shift >= 64) return SquareSet.empty;
@@ -60,6 +62,29 @@ class SquareSet {
     return SquareSet(value & other.value);
   }
 
+  SquareSet minus(SquareSet other) {
+    return SquareSet(value - other.value);
+  }
+
+  SquareSet flipVertical() {
+    const k1 = 0x00FF00FF00FF00FF;
+    const k2 = 0x0000FFFF0000FFFF;
+    int x = ((value >>> 8) & k1) | ((value & k1) << 8);
+    x = ((x >>> 16) & k2) | ((x & k2) << 16);
+    x = (x >>> 32) | (x << 32);
+    return SquareSet(x);
+  }
+
+  SquareSet mirrorHorizontal() {
+    const k1 = 0x5555555555555555;
+    const k2 = 0x3333333333333333;
+    const k4 = 0x0f0f0f0f0f0f0f0f;
+    int x = ((value >>> 1) & k1) | ((value & k1) << 1);
+    x = ((x >>> 2) & k2) | ((x & k2) << 2);
+    x = ((x >>> 4) & k4) | ((x & k4) << 4);
+    return SquareSet(x);
+  }
+
   int get size => _popcnt64(value);
   bool get isEmpty => value == 0;
 
@@ -69,6 +94,10 @@ class SquareSet {
 
   SquareSet withSquare(int square) {
     return SquareSet(value | (1 << square));
+  }
+
+  SquareSet withoutSquare(int square) {
+    return SquareSet(value & ~(1 << square));
   }
 
   String debugPrint() {

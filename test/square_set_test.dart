@@ -1,8 +1,8 @@
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
+import 'package:dartchess/src/utils.dart';
 
 void main() {
-
   test('full set has all', () {
     for (int square = 0; square < 64; square++) {
       expect(SquareSet.full.has(square), true);
@@ -46,5 +46,84 @@ void main() {
   test('from rank', () {
     expect(SquareSet.fromRank(0), SquareSet(0x00000000000000FF));
     expect(SquareSet.fromRank(7), SquareSet(0xFF00000000000000));
+  });
+
+  test('from square', () {
+    expect(SquareSet.fromSquare(42), squareSetFromStringRep('''
+. . . . . . . .
+. . . . . . . .
+. . 1 . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+'''));
+  });
+
+  test('without square', () {
+    expect(squareSetFromStringRep('''
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . 1 1 . . .
+. . . 1 1 . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+''').withoutSquare(27), squareSetFromStringRep('''
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . 1 1 . . .
+. . . . 1 . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+'''));
+  });
+
+  test('flip vertical', () {
+    expect(squareSetFromStringRep('''
+. 1 1 1 1 . . .
+. 1 . . . 1 . .
+. 1 . . . 1 . .
+. 1 . . 1 . . .
+. 1 1 1 . . . .
+. 1 . 1 . . . .
+. 1 . . 1 . . .
+. 1 . . . 1 . .
+''').flipVertical(), squareSetFromStringRep('''
+. 1 . . . 1 . .
+. 1 . . 1 . . .
+. 1 . 1 . . . .
+. 1 1 1 . . . .
+. 1 . . 1 . . .
+. 1 . . . 1 . .
+. 1 . . . 1 . .
+. 1 1 1 1 . . .
+'''));
+  });
+
+  test('mirror horizontal', () {
+    expect(squareSetFromStringRep('''
+. 1 1 1 1 . . .
+. 1 . . . 1 . .
+. 1 . . . 1 . .
+. 1 . . 1 . . .
+. 1 1 1 . . . .
+. 1 . 1 . . . .
+. 1 . . 1 . . .
+. 1 . . . 1 . .
+''').mirrorHorizontal(), squareSetFromStringRep('''
+. . . 1 1 1 1 .
+. . 1 . . . 1 .
+. . 1 . . . 1 .
+. . . 1 . . 1 .
+. . . . 1 1 1 .
+. . . . 1 . 1 .
+. . . 1 . . 1 .
+. . 1 . . . 1 .
+'''));
   });
 }
