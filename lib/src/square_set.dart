@@ -1,6 +1,6 @@
 /// A set of squares represented by a 64 bit integer mask, using little endian
 /// rank-file (LERF) mapping.
-/// This is how it looks like:
+/// This is how the mapping looks like:
 ///
 ///  8 | 56 57 58 59 60 61 62 63
 ///  7 | 48 49 50 51 52 53 54 55
@@ -98,18 +98,6 @@ class SquareSet {
 
   SquareSet withoutSquare(int square) {
     return SquareSet(value & ~(1 << square));
-  }
-
-  String debugPrint() {
-    final r = [];
-    for (int y = 7; y >= 0; y--) {
-      for (int x = 0; x < 8; x++) {
-        final square = x + y * 8;
-        r.add(has(square) ? '1' : '.');
-        r.add(x < 7 ? ' ' : '\n');
-      }
-    }
-    return r.join('');
   }
 
   @override

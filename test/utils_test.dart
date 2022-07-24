@@ -2,7 +2,7 @@ import 'package:test/test.dart';
 import 'package:dartchess/src/utils.dart';
 
 void main() {
-  test('squareSetFromStringRep', () {
+  test('makeSquareSet', () {
     const rep = '''
 . 1 1 1 . . . .
 . 1 . 1 . . . .
@@ -13,8 +13,8 @@ void main() {
 . 1 . . . 1 . .
 . 1 . . 1 . . .
 ''';
-    final sq = squareSetFromStringRep(rep);
+    final sq = makeSquareSet(rep);
 
-    expect(rep, sq.debugPrint());
+    expect(rep, printSquareSet(sq));
   });
 }

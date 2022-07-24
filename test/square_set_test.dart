@@ -49,7 +49,7 @@ void main() {
   });
 
   test('from square', () {
-    expect(SquareSet.fromSquare(42), squareSetFromStringRep('''
+    expect(SquareSet.fromSquare(42), makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . 1 . . . . .
@@ -62,7 +62,7 @@ void main() {
   });
 
   test('without square', () {
-    expect(squareSetFromStringRep('''
+    expect(makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
@@ -71,7 +71,7 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
-''').withoutSquare(27), squareSetFromStringRep('''
+''').withoutSquare(27), makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
@@ -84,7 +84,7 @@ void main() {
   });
 
   test('flip vertical', () {
-    expect(squareSetFromStringRep('''
+    expect(makeSquareSet('''
 . 1 1 1 1 . . .
 . 1 . . . 1 . .
 . 1 . . . 1 . .
@@ -93,7 +93,7 @@ void main() {
 . 1 . 1 . . . .
 . 1 . . 1 . . .
 . 1 . . . 1 . .
-''').flipVertical(), squareSetFromStringRep('''
+''').flipVertical(), makeSquareSet('''
 . 1 . . . 1 . .
 . 1 . . 1 . . .
 . 1 . 1 . . . .
@@ -106,7 +106,7 @@ void main() {
   });
 
   test('mirror horizontal', () {
-    expect(squareSetFromStringRep('''
+    expect(makeSquareSet('''
 . 1 1 1 1 . . .
 . 1 . . . 1 . .
 . 1 . . . 1 . .
@@ -115,7 +115,7 @@ void main() {
 . 1 . 1 . . . .
 . 1 . . 1 . . .
 . 1 . . . 1 . .
-''').mirrorHorizontal(), squareSetFromStringRep('''
+''').mirrorHorizontal(), makeSquareSet('''
 . . . 1 1 1 1 .
 . . 1 . . . 1 .
 . . 1 . . . 1 .

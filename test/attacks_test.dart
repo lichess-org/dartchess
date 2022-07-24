@@ -4,7 +4,7 @@ import 'package:dartchess/src/utils.dart';
 
 void main() {
   test('King attacks', () {
-    final attacks = squareSetFromStringRep('''
+    final attacks = makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
@@ -18,7 +18,7 @@ void main() {
   });
 
   test('Knight attacks', () {
-    final attacks = squareSetFromStringRep('''
+    final attacks = makeSquareSet('''
 . . . . . . . .
 . . 1 . 1 . . .
 . 1 . . . 1 . .
@@ -32,7 +32,7 @@ void main() {
   });
 
   test('White pawn attacks', () {
-    final attacks = squareSetFromStringRep('''
+    final attacks = makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
@@ -46,7 +46,7 @@ void main() {
   });
 
   test('Black pawn attacks', () {
-    final attacks = squareSetFromStringRep('''
+    final attacks = makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
@@ -60,8 +60,7 @@ void main() {
   });
 
   test('bishop attacks, empty board', () {
-    const occupied = SquareSet.empty;
-    expect(bishopAttacks(27, occupied), squareSetFromStringRep('''
+    expect(bishopAttacks(27, SquareSet.empty), makeSquareSet('''
 . . . . . . . 1
 1 . . . . . 1 .
 . 1 . . . 1 . .
@@ -74,7 +73,7 @@ void main() {
   });
 
   test('bishop attacks, occupied board', () {
-    final occupied = squareSetFromStringRep('''
+    final occupied = makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . 1 . .
@@ -84,7 +83,7 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(bishopAttacks(0, occupied), squareSetFromStringRep('''
+    expect(bishopAttacks(0, occupied), makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . 1 . .
@@ -97,8 +96,7 @@ void main() {
   });
 
   test('rook attacks, empty board', () {
-    const occupied = SquareSet.empty;
-    expect(rookAttacks(10, occupied), squareSetFromStringRep('''
+    expect(rookAttacks(10, SquareSet.empty), makeSquareSet('''
 . . 1 . . . . .
 . . 1 . . . . .
 . . 1 . . . . .
@@ -111,7 +109,7 @@ void main() {
   });
 
   test('rook attacks, occupied board', () {
-    final occupied = squareSetFromStringRep('''
+    final occupied = makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . 1 . .
@@ -121,7 +119,7 @@ void main() {
 . . 1 . . . . .
 . . . . . . . .
 ''');
-    expect(rookAttacks(42, occupied), squareSetFromStringRep('''
+    expect(rookAttacks(42, occupied), makeSquareSet('''
 . . 1 . . . . .
 . . 1 . . . . .
 1 1 . 1 1 1 . .
@@ -134,8 +132,7 @@ void main() {
   });
 
   test('queen attacks, empty board', () {
-    const occupied = SquareSet.empty;
-    expect(queenAttacks(37, occupied), squareSetFromStringRep('''
+    expect(queenAttacks(37, SquareSet.empty), makeSquareSet('''
 . . 1 . . 1 . .
 . . . 1 . 1 . 1
 . . . . 1 1 1 .
@@ -148,7 +145,7 @@ void main() {
   });
 
   test('queen attacks, occupied board', () {
-    final occupied = squareSetFromStringRep('''
+    final occupied = makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . 1 . . . . . .
@@ -158,7 +155,7 @@ void main() {
 . . 1 . . . . .
 . . . . . . . .
 ''');
-    expect(queenAttacks(42, occupied), squareSetFromStringRep('''
+    expect(queenAttacks(42, occupied), makeSquareSet('''
 1 . 1 . 1 . . .
 . 1 1 1 . . . .
 . 1 . 1 1 1 1 1

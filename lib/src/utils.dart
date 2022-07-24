@@ -14,7 +14,7 @@ int squareFile(int square) => square & 0x7;
 /// . 1 . . 1 . . .
 ///
 /// and returns a SquareSet. Useful for debugging/testing purposes.
-SquareSet squareSetFromStringRep(String rep) {
+SquareSet makeSquareSet(String rep) {
   SquareSet ret = SquareSet.empty;
   final table = rep
       .split('\n')
@@ -32,4 +32,17 @@ SquareSet squareSetFromStringRep(String rep) {
     }
   }
   return ret;
+}
+
+/// Returns the square set as a human readable string format
+String printSquareSet(SquareSet sq) {
+  final r = [];
+  for (int y = 7; y >= 0; y--) {
+    for (int x = 0; x < 8; x++) {
+      final square = x + y * 8;
+      r.add(sq.has(square) ? '1' : '.');
+      r.add(x < 7 ? ' ' : '\n');
+    }
+  }
+  return r.join('');
 }
