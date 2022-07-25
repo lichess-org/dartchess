@@ -87,6 +87,8 @@ class SquareSet {
 
   int get size => _popcnt64(value);
   bool get isEmpty => value == 0;
+  int? get first => _getFirstSquare(value);
+  Iterable<int> get squares => _iterateSquares();
 
   bool has(int square) {
     return value & (1 << square) != 0;
@@ -110,16 +112,39 @@ class SquareSet {
   @override
   int get hashCode => value.hashCode;
 
-  @override
-  toString() {
-    return 'SquareSet(0x${value.toRadixString(16)})';
+  Iterable<int> _iterateSquares() sync* {
+    int bitboard = value;
+    while (bitboard != 0) {
+      final square = _getFirstSquare(bitboard);
+      bitboard ^= 1 << square!;
+      yield square;
+    }
+  }
+
+  int? _getFirstSquare(int bitboard) {
+    final ntz = _ntz64(bitboard);
+    return ntz >= 0 && ntz < 64 ? ntz : null;
   }
 }
 
-int _popcnt64(n) {
+int _popcnt64(int n) {
   final count2 = n - ((n >>> 1) & 0x5555555555555555);
   final count4 =
       (count2 & 0x3333333333333333) + ((count2 >>> 2) & 0x3333333333333333);
   final count8 = (count4 + (count4 >>> 4)) & 0x0f0f0f0f0f0f0f0f;
   return (count8 * 0x0101010101010101) >>> 56;
 }
+
+// from https://gist.github.com/jtmcdole/297434f327077dbfe5fb19da3b4ef5be
+int _ntz64(int x) => _ntzLut64[(x & -x) % 131];
+const _ntzLut64 = [
+  64, 0, 1, -1, 2, 46, -1, -1, 3, 14, 47, 56, -1, 18, -1, //
+  -1, 4, 43, 15, 35, 48, 38, 57, 23, -1, -1, 19, -1, -1, 51,
+  -1, 29, 5, 63, 44, 12, 16, 41, 36, -1, 49, -1, 39, -1, 58,
+  60, 24, -1, -1, 62, -1, -1, 20, 26, -1, -1, -1, -1, 52, -1,
+  -1, -1, 30, -1, 6, -1, -1, -1, 45, -1, 13, 55, 17, -1, 42,
+  34, 37, 22, -1, -1, 50, 28, -1, 11, 40, -1, -1, -1, 59,
+  -1, 61, -1, 25, -1, -1, -1, -1, -1, -1, -1, -1, 54, -1,
+  33, 21, -1, 27, 10, -1, -1, -1, -1, -1, -1, -1, -1, 53,
+  32, -1, 9, -1, -1, -1, -1, 31, 8, -1, -1, 7, -1, -1,
+];

@@ -38,6 +38,22 @@ void main() {
     expect(r.shl(63), SquareSet(0x0));
   });
 
+  test('first', () {
+    for (int square = 0; square < 64; square++) {
+      expect(SquareSet.fromSquare(square).first, square);
+    }
+    expect(SquareSet.full.first, 0);
+    expect(SquareSet.empty.first, null);
+    for (int rank = 0; rank < 8; rank++) {
+      expect(SquareSet.fromRank(rank).first, rank * 8);
+    }
+  });
+
+  test('squares', () {
+    expect(SquareSet.empty.squares.toList(), []);
+    expect(SquareSet.full.squares.toList(), [for (int i = 0; i < 64; i++) i]);
+  });
+
   test('from file', () {
     expect(SquareSet.fromFile(0), SquareSet(0x0101010101010101));
     expect(SquareSet.fromFile(7), SquareSet(0x8080808080808080));

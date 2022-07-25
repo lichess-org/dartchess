@@ -42,7 +42,7 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(pawnAttacks('white', 11), attacks);
+    expect(pawnAttacks(Color.white, 11), attacks);
   });
 
   test('Black pawn attacks', () {
@@ -56,7 +56,7 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(pawnAttacks('black', 36), attacks);
+    expect(pawnAttacks(Color.black, 36), attacks);
   });
 
   test('bishop attacks, empty board', () {

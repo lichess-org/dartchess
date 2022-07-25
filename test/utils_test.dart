@@ -1,4 +1,5 @@
 import 'package:test/test.dart';
+import 'package:dartchess/dartchess.dart';
 import 'package:dartchess/src/utils.dart';
 
 void main() {
@@ -16,5 +17,15 @@ void main() {
     final sq = makeSquareSet(rep);
 
     expect(rep, printSquareSet(sq));
+    expect(makeSquareSet('''
+. . . . . . . 1
+. . . . . . 1 .
+. . . . . 1 . .
+. . . . 1 . . .
+. . . 1 . . . .
+. . 1 . . . . .
+. 1 . . . . . .
+1 . . . . . . .
+'''), SquareSet.diagonal);
   });
 }

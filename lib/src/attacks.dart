@@ -1,5 +1,6 @@
 import './square_set.dart';
 import './utils.dart';
+import './models.dart';
 
 /// Gets squares attacked or defended by a king on `square`.
 SquareSet kingAttacks(int square) {
@@ -15,9 +16,8 @@ SquareSet knightAttacks(int square) {
 
 /// Gets squares attacked or defended by a pawn of the given `color`
 /// on `square`.
-SquareSet pawnAttacks(String color, int square) {
+SquareSet pawnAttacks(Color color, int square) {
   assert(square >= 0 && square < 64);
-  assert(color == 'white' || color == 'black');
   return _pawnAttacks[color]![square];
 }
 
@@ -68,8 +68,8 @@ final _kingAttacks =
 final _knightAttacks =
     _tabulate((sq) => _computeRange(sq, [-17, -15, -10, -6, 6, 10, 15, 17]));
 final _pawnAttacks = {
-  'white': _tabulate((sq) => _computeRange(sq, [7, 9])),
-  'black': _tabulate((sq) => _computeRange(sq, [-7, -9])),
+  Color.white: _tabulate((sq) => _computeRange(sq, [7, 9])),
+  Color.black: _tabulate((sq) => _computeRange(sq, [-7, -9])),
 };
 
 final _fileRange =
