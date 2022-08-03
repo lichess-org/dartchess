@@ -3,6 +3,7 @@ import 'package:test/test.dart';
 
 void main() {
   test('empty board', () {
+    expect(Board.empty.pieces.isEmpty, true);
     expect(Board.empty.pieceAt(0), null);
   });
 
@@ -23,5 +24,8 @@ void main() {
     final clone = board.clone();
     expect(board, clone);
     expect(identical(board, clone), false);
+    board.setPieceAt(24, Piece(color: Color.white, role: Role.queen));
+    expect(board.pieces.length, 33);
+    expect(clone.pieces.length, 32);
   });
 }
