@@ -142,7 +142,6 @@ class SquareSet {
     }
   }
 
-
   int? _getFirstSquare(int bitboard) {
     final ntz = _ntz64(bitboard);
     return ntz >= 0 && ntz < 64 ? ntz : null;

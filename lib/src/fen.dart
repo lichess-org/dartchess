@@ -54,7 +54,7 @@ SquareSet parseCastlingFen(Board board, String castlingPart) {
       candidates = backrank.squares;
     } else if (lower == 'k') {
       candidates = backrank.squaresReversed;
-    } else if ('a'.compareTo(lower) < 0 && lower.compareTo('h') < 0) {
+    } else if ('a'.compareTo(lower) <= 0 && lower.compareTo('h') <= 0) {
       candidates = SquareSet.fromFile(lower.codeUnitAt(0) - 'a'.codeUnitAt(0))
           .intersect(backrank)
           .squares;
