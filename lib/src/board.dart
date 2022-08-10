@@ -1,7 +1,7 @@
 import './square_set.dart';
 import './models.dart';
 
-/// Piece positions on a board.
+/// [Piece] positions on a board.
 class Board {
   Board({
     required occupied,

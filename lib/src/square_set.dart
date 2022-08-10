@@ -14,17 +14,25 @@
 ///      a  b  c  d  e  f  g  h
 ///
 class SquareSet {
+  /// Creates a [SquareSet] with the provided 64bit integer value.
   const SquareSet(this.value);
+
+  /// Creates a [SquareSet] with a single [square].
   const SquareSet.fromSquare(int square)
       : value = 1 << square,
         assert(square >= 0 && square < 64);
+
+  /// Create a [SquareSet] containing all squares of the given rank.
   const SquareSet.fromRank(int rank)
       : value = 0xff << (8 * rank),
         assert(rank >= 0 && rank < 8);
+
+  /// Create a [SquareSet] containing all squares of the given file.
   const SquareSet.fromFile(int file)
       : value = 0x0101010101010101 << file,
         assert(file >= 0 && file < 8);
 
+  /// 64 bit integer representing the square set.
   final int value;
 
   static const empty = SquareSet(0);
