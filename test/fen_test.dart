@@ -14,8 +14,10 @@ void main() {
   });
 
   test('invalid board fen', () {
-    expect(() => parseBoardFen('4k2r/8/8/8/8/RR2K2R'),
-        throwsA(TypeMatcher<InvalidFenException>()));
+    expect(
+        () => parseBoardFen('4k2r/8/8/8/8/RR2K2R'),
+        throwsA(predicate(
+            (e) => e is InvalidFenException && e.message == 'ERR_BOARD')));
 
     expect(() => parseBoardFen('lol'),
         throwsA(TypeMatcher<InvalidFenException>()));
@@ -31,7 +33,9 @@ void main() {
   });
 
   test('invalid castling fen', () {
-    expect(() => parseCastlingFen(Board.standard, 'BGL'),
-        throwsA(TypeMatcher<InvalidFenException>()));
+    expect(
+        () => parseCastlingFen(Board.standard, 'BGL'),
+        throwsA(predicate(
+            (e) => e is InvalidFenException && e.message == 'ERR_CASTLING')));
   });
 }

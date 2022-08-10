@@ -3,8 +3,8 @@ import './square_set.dart';
 import './models.dart';
 
 class InvalidFenException implements Exception {
-  String cause;
-  InvalidFenException(this.cause);
+  final String message;
+  InvalidFenException(this.message);
 }
 
 String kInitialBoardFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
