@@ -49,9 +49,26 @@ void main() {
     }
   });
 
+  test('last', () {
+    for (int square = 0; square < 64; square++) {
+      expect(SquareSet.fromSquare(square).last, square);
+    }
+    expect(SquareSet.full.last, 63);
+    expect(SquareSet.empty.last, null);
+    for (int rank = 0; rank < 8; rank++) {
+      expect(SquareSet.fromRank(rank).last, rank * 8 + 7);
+    }
+  });
+
   test('squares', () {
     expect(SquareSet.empty.squares.toList(), []);
     expect(SquareSet.full.squares.toList(), [for (int i = 0; i < 64; i++) i]);
+  });
+
+  test('squaresReversed', () {
+    expect(SquareSet.empty.squaresReversed.toList(), []);
+    expect(SquareSet.full.squaresReversed.toList(),
+        [for (int i = 63; i >= 0; i--) i]);
   });
 
   test('from file', () {

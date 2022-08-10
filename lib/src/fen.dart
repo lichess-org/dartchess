@@ -1,4 +1,5 @@
 import './board.dart';
+import './square_set.dart';
 import './models.dart';
 
 class InvalidFenException implements Exception {
@@ -32,8 +33,47 @@ Board parseBoardFen(String boardFen) {
       }
     }
   }
-  if (rank != 0 || file != 8) throw InvalidFenException('BOARD_ERR');
+  if (rank != 0 || file != 8) throw InvalidFenException('ERR_BOARD');
   return board;
+}
+
+SquareSet parseCastlingFen(Board board, String castlingPart) {
+  SquareSet unmovedRooks = SquareSet.empty;
+  if (castlingPart == '-') {
+    return unmovedRooks;
+  }
+  for (int i = 0; i < castlingPart.length; i++) {
+    final c = castlingPart[i];
+    final lower = c.toLowerCase();
+    final color = c == lower ? Color.black : Color.white;
+    final backrankMask = SquareSet.fromRank(color == Color.white ? 0 : 7);
+    final backrank = backrankMask.intersect(board.byColor(color));
+
+    Iterable<int> candidates;
+    if (lower == 'q') {
+      candidates = backrank.squares;
+    } else if (lower == 'k') {
+      candidates = backrank.squaresReversed;
+    } else if ('a'.compareTo(lower) < 0 && lower.compareTo('h') < 0) {
+      candidates = SquareSet.fromFile(lower.codeUnitAt(0) - 'a'.codeUnitAt(0))
+          .intersect(backrank)
+          .squares;
+    } else {
+      throw InvalidFenException('ERR_CASTLING');
+    }
+    for (final square in candidates) {
+      if (board.king.has(square)) break;
+      if (board.rook.has(square)) {
+        unmovedRooks = unmovedRooks.withSquare(square);
+        break;
+      }
+    }
+  }
+  if (SquareSet.fromRank(0).intersect(unmovedRooks).size > 2 ||
+      SquareSet.fromRank(7).intersect(unmovedRooks).size > 2) {
+    throw InvalidFenException('ERR_CASTLING');
+  }
+  return unmovedRooks;
 }
 
 Piece? _charToPiece(String ch, bool promoted) {

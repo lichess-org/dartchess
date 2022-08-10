@@ -102,6 +102,10 @@ class Board {
     }
   }
 
+  SquareSet byColor(Color color) {
+    return _byColor[color]!;
+  }
+
   Color? colorAt(int square) {
     if (white.has(square)) {
       return Color.white;

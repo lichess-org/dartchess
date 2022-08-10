@@ -41,6 +41,8 @@ class SquareSet {
   static const darkSquares = SquareSet(0xAA55AA55AA55AA55);
   static const diagonal = SquareSet(0x8040201008040201);
   static const antidiagonal = SquareSet(0x0102040810204080);
+  static const corners = SquareSet(0x8100000000000081);
+  static const backranks = SquareSet(0xff000000000000ff);
 
   SquareSet shr(int shift) {
     if (shift >= 64) return SquareSet.empty;
@@ -96,7 +98,9 @@ class SquareSet {
   int get size => _popcnt64(value);
   bool get isEmpty => value == 0;
   int? get first => _getFirstSquare(value);
+  int? get last => _getLastSquare(value);
   Iterable<int> get squares => _iterateSquares();
+  Iterable<int> get squaresReversed => _iterateSquaresReversed();
 
   bool has(int square) {
     return value & (1 << square) != 0;
@@ -129,9 +133,24 @@ class SquareSet {
     }
   }
 
+  Iterable<int> _iterateSquaresReversed() sync* {
+    int bitboard = value;
+    while (bitboard != 0) {
+      final square = _getLastSquare(bitboard);
+      bitboard ^= 1 << square!;
+      yield square;
+    }
+  }
+
+
   int? _getFirstSquare(int bitboard) {
     final ntz = _ntz64(bitboard);
     return ntz >= 0 && ntz < 64 ? ntz : null;
+  }
+
+  int? _getLastSquare(int bitboard) {
+    if (bitboard == 0) return null;
+    return 63 - _nlz64(bitboard);
   }
 }
 
@@ -141,6 +160,16 @@ int _popcnt64(int n) {
       (count2 & 0x3333333333333333) + ((count2 >>> 2) & 0x3333333333333333);
   final count8 = (count4 + (count4 >>> 4)) & 0x0f0f0f0f0f0f0f0f;
   return (count8 * 0x0101010101010101) >>> 56;
+}
+
+int _nlz64(int x) {
+  x |= (x >>> 1);
+  x |= (x >>> 2);
+  x |= (x >>> 4);
+  x |= (x >>> 8);
+  x |= (x >>> 16);
+  x |= (x >>> 32);
+  return 64 - _popcnt64(x);
 }
 
 // from https://gist.github.com/jtmcdole/297434f327077dbfe5fb19da3b4ef5be
