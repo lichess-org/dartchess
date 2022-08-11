@@ -60,6 +60,20 @@ void main() {
     }
   });
 
+  test('more that one', () {
+    expect(SquareSet.empty.moreThanOne, false);
+    expect(SquareSet.full.moreThanOne, true);
+    expect(SquareSet.fromSquare(4).moreThanOne, false);
+    expect(SquareSet.fromSquare(4).withSquare(5).moreThanOne, true);
+  });
+
+  test('singleSquare', () {
+    expect(SquareSet.empty.singleSquare, null);
+    expect(SquareSet.full.singleSquare, null);
+    expect(SquareSet.fromSquare(4).singleSquare, 4);
+    expect(SquareSet.fromSquare(4).withSquare(5).singleSquare, null);
+  });
+
   test('squares', () {
     expect(SquareSet.empty.squares.toList(), []);
     expect(SquareSet.full.squares.toList(), [for (int i = 0; i < 64; i++) i]);

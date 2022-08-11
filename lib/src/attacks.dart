@@ -2,26 +2,26 @@ import './square_set.dart';
 import './utils.dart';
 import './models.dart';
 
-/// Gets squares attacked or defended by a king on `square`.
+/// Gets squares attacked or defended by a king on [square].
 SquareSet kingAttacks(int square) {
   assert(square >= 0 && square < 64);
   return _kingAttacks[square];
 }
 
-/// Gets squares attacked or defended by a knight on `square`.
+/// Gets squares attacked or defended by a knight on [square].
 SquareSet knightAttacks(int square) {
   assert(square >= 0 && square < 64);
   return _knightAttacks[square];
 }
 
-/// Gets squares attacked or defended by a pawn of the given `color`
-/// on `square`.
+/// Gets squares attacked or defended by a pawn of the given [color]
+/// on [square].
 SquareSet pawnAttacks(Color color, int square) {
   assert(square >= 0 && square < 64);
   return _pawnAttacks[color]![square];
 }
 
-/// Gets squares attacked or defended by a bishop on `square`, given `occupied`
+/// Gets squares attacked or defended by a bishop on [square], given [occupied]
 /// squares.
 SquareSet bishopAttacks(int square, SquareSet occupied) {
   final bit = SquareSet.fromSquare(square);
@@ -29,13 +29,13 @@ SquareSet bishopAttacks(int square, SquareSet occupied) {
       .xor(_hyperbola(bit, _antiDiagRange[square], occupied));
 }
 
-/// Gets squares attacked or defended by a rook on `square`, given `occupied`
+/// Gets squares attacked or defended by a rook on [square], given [occupied]
 /// squares.
 SquareSet rookAttacks(int square, SquareSet occupied) {
   return _fileAttacks(square, occupied).xor(_rankAttacks(square, occupied));
 }
 
-/// Gets squares attacked or defended by a queen on `square`, given `occupied`
+/// Gets squares attacked or defended by a queen on [square], given [occupied]
 /// squares.
 SquareSet queenAttacks(int square, SquareSet occupied) =>
     bishopAttacks(square, occupied).xor(rookAttacks(square, occupied));

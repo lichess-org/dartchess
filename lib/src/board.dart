@@ -99,10 +99,6 @@ class Board {
     }
   }
 
-  SquareSet byColor(Color color) {
-    return _byColor[color]!;
-  }
-
   Color? colorAt(int square) {
     if (white.has(square)) {
       return Color.white;
@@ -130,6 +126,19 @@ class Board {
     final role = roleAt(square)!;
     final prom = promoted.has(square);
     return Piece(color: color, role: role, promoted: prom);
+  }
+
+  SquareSet byColor(Color color) {
+    return _byColor[color]!;
+  }
+
+  SquareSet byPiece(Piece piece) {
+    return _byColor[piece.color]!.intersect(_byRole[piece.role]!);
+  }
+
+  /// Finds the unique king of the given [color], if any.
+  int? kingOf(Color color) {
+    return byPiece(Piece(color: color, role: Role.king)).singleSquare;
   }
 
   void setPieceAt(int square, Piece piece) {

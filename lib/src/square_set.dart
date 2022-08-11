@@ -97,10 +97,14 @@ class SquareSet {
 
   int get size => _popcnt64(value);
   bool get isEmpty => value == 0;
+  bool get isNotEmpty => value != 0;
   int? get first => _getFirstSquare(value);
   int? get last => _getLastSquare(value);
   Iterable<int> get squares => _iterateSquares();
   Iterable<int> get squaresReversed => _iterateSquaresReversed();
+  bool get moreThanOne => isNotEmpty && size > 1;
+  /// Returns square if it is single, otherwise returns null.
+  int? get singleSquare => moreThanOne ? null : last;
 
   bool has(int square) {
     return value & (1 << square) != 0;

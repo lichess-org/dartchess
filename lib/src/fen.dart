@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import './board.dart';
 import './square_set.dart';
 import './models.dart';
@@ -159,6 +160,67 @@ SquareSet parseCastlingFen(Board board, String castlingPart) {
     throw InvalidFenException('ERR_CASTLING');
   }
   return unmovedRooks;
+}
+
+String makeBoardFen(Board board) {
+  String fen = '';
+  int empty = 0;
+  for (int rank = 7; rank >= 0; rank--) {
+    for (int file = 0; file < 8; file++) {
+      final square = file + rank * 8;
+      final piece = board.pieceAt(square);
+      if (piece == null) {
+        empty++;
+      } else {
+        if (empty > 0) {
+          fen += empty.toString();
+          empty = 0;
+        }
+        fen += piece.fenChar;
+      }
+
+      if (file == 7) {
+        if (empty > 0) {
+          fen += empty.toString();
+          empty = 0;
+        }
+        if (rank != 0) fen += '/';
+      }
+    }
+  }
+  return fen;
+}
+
+String makeCastlingFen(Board board, SquareSet unmovedRooks) {
+  String fen = '';
+  for (final color in Color.values) {
+    final backrank = SquareSet.fromRank(color == Color.white ? 0 : 7);
+    final king = board.kingOf(color);
+    final candidates =
+        board.byPiece(Piece(color: color, role: Role.rook)).intersect(backrank);
+    for (final rook in unmovedRooks.intersect(candidates).squaresReversed) {
+      if (rook == candidates.first && king != null && rook < king) {
+        fen += color == Color.white ? 'Q' : 'q';
+      } else if (rook == candidates.last && king != null && king < rook) {
+        fen += color == Color.white ? 'K' : 'k';
+      } else {
+        final file = kFileNames[squareFile(rook)];
+        fen += color == Color.white ? file.toUpperCase() : file;
+      }
+    }
+  }
+  return fen != '' ? fen : '-';
+}
+
+String makeFen(Setup setup) {
+  return [
+    makeBoardFen(setup.board),
+    setup.turnLetter,
+    makeCastlingFen(setup.board, setup.unmovedRooks),
+    setup.epSquare != null ? makeSquare(setup.epSquare!) : '-',
+    math.max(0, math.min(setup.halfmoves, 9999)),
+    math.max(1, math.min(setup.fullmoves, 9999)),
+  ].join(' ');
 }
 
 Piece? _charToPiece(String ch, bool promoted) {

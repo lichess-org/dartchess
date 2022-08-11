@@ -27,4 +27,6 @@ class Setup {
         epSquare = null,
         halfmoves = 0,
         fullmoves = 1;
+
+  String get turnLetter => turn.name[0];
 }
