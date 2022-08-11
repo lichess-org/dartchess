@@ -1,5 +1,8 @@
+import './utils.dart';
+
 enum Color {
-  white, black;
+  white,
+  black;
 
   Color fromName(String name) {
     switch (name) {
@@ -26,20 +29,29 @@ class Piece {
   final Role role;
   final bool promoted;
 
-  String get kind => '${color.name}${role.name}';
+  String get fenChar {
+    String r = roleToChar(role);
+    if (color == Color.white) r = r.toUpperCase();
+    if (promoted) r += '~';
+    return r;
+  }
 
   @override
   toString() {
-    return kind;
+    return '${color.name}${role.name}';
   }
 
   @override
   bool operator ==(Object other) {
-    return other.runtimeType == runtimeType && hashCode == other.hashCode;
+    return other is Piece &&
+        other.runtimeType == runtimeType &&
+        color == other.color &&
+        role == other.role &&
+        promoted == other.promoted;
   }
 
   @override
-  int get hashCode => kind.hashCode;
+  int get hashCode => Object.hash(color, role, promoted);
 }
 
 class Tuple<T1, T2> {

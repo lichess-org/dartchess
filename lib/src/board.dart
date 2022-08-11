@@ -30,7 +30,7 @@ class Board {
         };
 
   /// Standard chess starting position.
-  Board._makeStandard()
+  Board.standard()
       : _occupied = SquareSet(0xffff00000000ffff),
         _promoted = SquareSet.empty,
         _byColor = {
@@ -46,7 +46,7 @@ class Board {
           Role.king: SquareSet(0x1000000000000010),
         };
 
-  Board._makeEmpty()
+  Board.empty()
       : _occupied = SquareSet.empty,
         _promoted = SquareSet.empty,
         _byColor = {
@@ -61,9 +61,6 @@ class Board {
           Role.queen: SquareSet.empty,
           Role.king: SquareSet.empty,
         };
-
-  static final standard = Board._makeStandard();
-  static final empty = Board._makeEmpty();
 
   SquareSet _occupied;
   SquareSet _promoted;
