@@ -103,6 +103,7 @@ class SquareSet {
   Iterable<int> get squares => _iterateSquares();
   Iterable<int> get squaresReversed => _iterateSquaresReversed();
   bool get moreThanOne => isNotEmpty && size > 1;
+
   /// Returns square if it is single, otherwise returns null.
   int? get singleSquare => moreThanOne ? null : last;
 

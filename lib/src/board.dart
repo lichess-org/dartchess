@@ -1,5 +1,6 @@
 import './square_set.dart';
 import './models.dart';
+import './utils.dart';
 
 /// [Piece] positions on a board.
 class Board {
@@ -28,6 +29,13 @@ class Board {
           Role.queen: queen,
           Role.king: king,
         };
+
+  /// All occupied squares.
+  SquareSet _occupied;
+  /// All squares occupied by pieces known to be promoted.
+  SquareSet _promoted;
+  final Map<Color, SquareSet> _byColor;
+  final Map<Role, SquareSet> _byRole;
 
   /// Standard chess starting position.
   Board.standard()
@@ -62,10 +70,33 @@ class Board {
           Role.king: SquareSet.empty,
         };
 
-  SquareSet _occupied;
-  SquareSet _promoted;
-  final Map<Color, SquareSet> _byColor;
-  final Map<Role, SquareSet> _byRole;
+  factory Board.parseFen(String boardFen) {
+    final board = Board.empty();
+    int rank = 7, file = 0;
+    for (int i = 0; i < boardFen.length; i++) {
+      final c = boardFen[i];
+      if (c == '/' && file == 8) {
+        file = 0;
+        rank--;
+      } else {
+        final code = c.codeUnitAt(0);
+        if (code < 57) {
+          file += code - 48;
+        } else {
+          if (file >= 8 || rank < 0) throw InvalidFenException('ERR_BOARD');
+          final square = file + rank * 8;
+          final promoted = i + 1 < boardFen.length && boardFen[i + 1] == '~';
+          final piece = _charToPiece(c, promoted);
+          if (piece == null) throw InvalidFenException('ERR_BOARD');
+          if (promoted) i++;
+          board.setPieceAt(square, piece);
+          file++;
+        }
+      }
+    }
+    if (rank != 0 || file != 8) throw InvalidFenException('ERR_BOARD');
+    return board;
+  }
 
   Board clone() {
     return Board(
@@ -92,6 +123,35 @@ class Board {
   SquareSet get rook => _byRole[Role.rook]!;
   SquareSet get queen => _byRole[Role.queen]!;
   SquareSet get king => _byRole[Role.king]!;
+
+  String get fen {
+    String fen = '';
+    int empty = 0;
+    for (int rank = 7; rank >= 0; rank--) {
+      for (int file = 0; file < 8; file++) {
+        final square = file + rank * 8;
+        final piece = pieceAt(square);
+        if (piece == null) {
+          empty++;
+        } else {
+          if (empty > 0) {
+            fen += empty.toString();
+            empty = 0;
+          }
+          fen += piece.fenChar;
+        }
+
+        if (file == 7) {
+          if (empty > 0) {
+            fen += empty.toString();
+            empty = 0;
+          }
+          if (rank != 0) fen += '/';
+        }
+      }
+    }
+    return fen;
+  }
 
   Iterable<Tuple<int, Piece>> get pieces sync* {
     for (final square in occupied.squares) {
@@ -151,7 +211,6 @@ class Board {
   @override
   bool operator ==(Object other) {
     return other is Board &&
-        other.runtimeType == runtimeType &&
         other.occupied == occupied &&
         other.promoted == promoted &&
         other.white == white &&
@@ -166,7 +225,6 @@ class Board {
 
   @override
   int get hashCode => Object.hash(
-        runtimeType,
         occupied,
         promoted,
         white,
@@ -178,4 +236,15 @@ class Board {
         queen,
         king,
       );
+}
+
+Piece? _charToPiece(String ch, bool promoted) {
+  final role = charToRole(ch);
+  if (role != null) {
+    return Piece(
+        role: role,
+        color: ch == ch.toLowerCase() ? Color.black : Color.white,
+        promoted: promoted);
+  }
+  return null;
 }

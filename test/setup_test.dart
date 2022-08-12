@@ -1,47 +1,36 @@
 import 'package:dartchess/dartchess.dart';
-import 'package:dartchess/src/utils.dart';
 import 'package:test/test.dart';
 
 void main() {
-  test('parse board fen', () {
-    final board = parseBoardFen(kInitialBoardFEN);
-    expect(board, Board.standard());
-  });
-
-  test('parse board fen, promoted piece', () {
-    final board =
-        parseBoardFen('rQ~q1kb1r/pp2pppp/2p5/8/3P1Bb1/4PN2/PPP3PP/R2QKB1R');
-    expect(board.promoted.squares.length, 1);
-  });
-
-  test('invalid board fen', () {
-    expect(
-        () => parseBoardFen('4k2r/8/8/8/8/RR2K2R'),
-        throwsA(predicate(
-            (e) => e is InvalidFenException && e.message == 'ERR_BOARD')));
-
-    expect(() => parseBoardFen('lol'),
-        throwsA(TypeMatcher<InvalidFenException>()));
-  });
-
   test('parse castling fen, standard initial board', () {
-    expect(parseCastlingFen(Board.standard(), 'KQkq'), SquareSet.corners);
-    expect(parseCastlingFen(Board.standard(), '-'), SquareSet.empty);
+    expect(
+        Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq')
+            .unmovedRooks,
+        SquareSet.corners);
+    expect(
+        Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w -')
+            .unmovedRooks,
+        SquareSet.empty);
   });
 
   test('parse castling fen, shredder notation', () {
-    expect(parseCastlingFen(Board.standard(), 'HAha'), SquareSet.corners);
+    expect(
+        Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w HAha')
+            .unmovedRooks,
+        SquareSet.corners);
   });
 
   test('invalid castling fen', () {
     expect(
-        () => parseCastlingFen(Board.standard(), 'BGL'),
+        () =>
+            Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w BGL')
+                .unmovedRooks,
         throwsA(predicate(
             (e) => e is InvalidFenException && e.message == 'ERR_CASTLING')));
   });
 
   test('parse initial fen', () {
-    final setup = parseFen(kInitialFEN);
+    final setup = Setup.parseFen(kInitialFEN);
     expect(setup.board, Board.standard());
     expect(setup.turn, Color.white);
     expect(setup.unmovedRooks, SquareSet.corners);
@@ -51,7 +40,7 @@ void main() {
   });
 
   test('parse partial fen', () {
-    final setup = parseFen(kInitialBoardFEN);
+    final setup = Setup.parseFen(kInitialBoardFEN);
     expect(setup.board, Board.standard());
     expect(setup.turn, Color.white);
     expect(setup.unmovedRooks, SquareSet.empty);
@@ -62,23 +51,19 @@ void main() {
 
   test('parse invalid fen', () {
     expect(
-        () => parseFen(
+        () => Setup.parseFen(
             'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR u KQkq - 0 1'),
         throwsException);
     expect(
-        () => parseFen(
+        () => Setup.parseFen(
             'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQQKBNR w cq - 0P1'),
         throwsException);
     expect(
-        () => parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w  - 0 1'),
+        () => Setup.parseFen(
+            'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w  - 0 1'),
         throwsException);
-    expect(() => parseFen('4k2r/8/8/8/8/8/8/RR2K2R w KBQk - 0 1'),
+    expect(() => Setup.parseFen('4k2r/8/8/8/8/8/8/RR2K2R w KBQk - 0 1'),
         throwsException);
-  });
-
-  test('make board fen', () {
-    expect(makeBoardFen(Board.empty()), kEmptyBoardFEN);
-    expect(makeBoardFen(Board.standard()), kInitialBoardFEN);
   });
 
   test('parse and make fen', () {
@@ -87,8 +72,8 @@ void main() {
       '5b1r/1p5p/4ppp1/4Bn2/1PPP1PP1/4P2P/3k4/4K2R w K - 1 1',
       'rnbqkb1r/p1p1nppp/2Pp4/3P1PP1/PPPPPP1P/PPP1PPPP/PPPnbqkb/PPPPPPPP w ha - 1 6',
     ]) {
-      final setup = parseFen(fen);
-      expect(makeFen(setup), fen);
+      final setup = Setup.parseFen(fen);
+      expect(setup.fen, fen);
     }
   });
 }

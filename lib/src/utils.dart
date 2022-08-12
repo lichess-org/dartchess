@@ -1,9 +1,7 @@
 import './square_set.dart';
 import './board.dart';
 import './models.dart';
-
-const kFileNames = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-const kRankNames = ['1', '2', '3', '4', '5', '6', '7', '8'];
+import './constants.dart';
 
 int squareRank(int square) => square >> 3;
 int squareFile(int square) => square & 0x7;
@@ -16,8 +14,11 @@ int? parseSquare(String str) {
   return file + 8 * rank;
 }
 
+int? parseSmallUint(String str) =>
+    RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;
+
 String makeSquare(int square) =>
-  kFileNames[squareFile(square)] + kRankNames[squareRank(square)];
+    kFileNames[squareFile(square)] + kRankNames[squareRank(square)];
 
 Role? charToRole(String ch) {
   switch (ch.toLowerCase()) {
