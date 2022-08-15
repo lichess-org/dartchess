@@ -7,11 +7,24 @@ import './constants.dart';
 
 /// A not necessarily legal position.
 class Setup {
+  /// Piece positions on the board.
   final Board board;
+
+  /// Side to move.
   final Color turn;
+
+  /// Unmoved rooks positions used to determine castling rights.
   final SquareSet unmovedRooks;
+
+  /// En passant target square.
+  ///
+  /// Valid target squares are on the third or sixth rank.
   final int? epSquare;
+
+  /// Number of half-moves since the last capture or pawn move.
   final int halfmoves;
+
+  /// Current move number.
   final int fullmoves;
 
   const Setup({
@@ -31,7 +44,7 @@ class Setup {
     fullmoves: 1,
   );
 
-  /// Parse Forsyth-Edwards-Notation.
+  /// Parse Forsyth-Edwards-Notation and returns a Setup.
   ///
   /// The parser is relaxed:
   ///
@@ -40,9 +53,11 @@ class Setup {
   ///   default values of `8/8/8/8/8/8/8/8 w - - 0 1`.
   /// * Accepts multiple spaces and underscores (`_`) as separators between
   ///   FEN fields.
+  ///
+  /// Throws a [FenError] if the provided FEN is not valid.
   factory Setup.parseFen(String fen) {
     final parts = fen.split(RegExp(r'[\s_]+'));
-    if (parts.isEmpty) throw InvalidFenException('ERR_FEN');
+    if (parts.isEmpty) throw FenError('ERR_FEN');
 
     // board
     final boardPart = parts.removeAt(0);
@@ -59,7 +74,7 @@ class Setup {
       } else if (turnPart == 'b') {
         turn = Color.black;
       } else {
-        throw InvalidFenException('ERR_TURN');
+        throw FenError('ERR_TURN');
       }
     }
 
@@ -78,7 +93,7 @@ class Setup {
       final epPart = parts.removeAt(0);
       if (epPart != '-') {
         epSquare = parseSquare(epPart);
-        if (epSquare == null) throw InvalidFenException('ERR_EP_SQUARE');
+        if (epSquare == null) throw FenError('ERR_EP_SQUARE');
       }
     }
 
@@ -87,7 +102,7 @@ class Setup {
     if (parts.isNotEmpty) {
       final int? parsed = parseSmallUint(parts.removeAt(0));
       if (parsed == null) {
-        throw InvalidFenException('ERR_HALFMOVES');
+        throw FenError('ERR_HALFMOVES');
       } else {
         halfmoves = parsed;
       }
@@ -98,14 +113,14 @@ class Setup {
     if (parts.isNotEmpty) {
       final int? parsed = parseSmallUint(parts.removeAt(0));
       if (parsed == null) {
-        throw InvalidFenException('ERR_FULLMOVES');
+        throw FenError('ERR_FULLMOVES');
       } else {
         fullmoves = parsed;
       }
     }
 
     if (parts.isNotEmpty) {
-      throw InvalidFenException('ERR_FEN');
+      throw FenError('ERR_FEN');
     }
 
     return Setup(
@@ -173,7 +188,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
           .intersect(backrank)
           .squares;
     } else {
-      throw InvalidFenException('ERR_CASTLING');
+      throw FenError('ERR_CASTLING');
     }
     for (final square in candidates) {
       if (board.king.has(square)) break;
@@ -185,7 +200,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
   }
   if (SquareSet.fromRank(0).intersect(unmovedRooks).size > 2 ||
       SquareSet.fromRank(7).intersect(unmovedRooks).size > 2) {
-    throw InvalidFenException('ERR_CASTLING');
+    throw FenError('ERR_CASTLING');
   }
   return unmovedRooks;
 }

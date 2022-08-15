@@ -32,19 +32,19 @@ class Board {
   /// All squares occupied by pawns.
   final SquareSet pawn;
 
-  /// All squares occupied by knights..
+  /// All squares occupied by knights.
   final SquareSet knight;
 
-  /// All squares occupied by bishops...
+  /// All squares occupied by bishops.
   final SquareSet bishop;
 
-  /// All squares occupied by rooks..
+  /// All squares occupied by rooks.
   final SquareSet rook;
 
-  /// All squares occupied by queens..
+  /// All squares occupied by queens.
   final SquareSet queen;
 
-  /// All squares occupied by kings..
+  /// All squares occupied by kings.
   final SquareSet king;
 
   /// Standard chess starting position.
@@ -73,6 +73,8 @@ class Board {
       king: SquareSet.empty);
 
   /// Parse the board part of a FEN string and returns a Board.
+  ///
+  /// Throws a [FenError] if the provided FEN string is not valid.
   factory Board.parseFen(String boardFen) {
     Board board = Board.empty;
     int rank = 7, file = 0;
@@ -86,18 +88,18 @@ class Board {
         if (code < 57) {
           file += code - 48;
         } else {
-          if (file >= 8 || rank < 0) throw InvalidFenException('ERR_BOARD');
+          if (file >= 8 || rank < 0) throw FenError('ERR_BOARD');
           final square = file + rank * 8;
           final promoted = i + 1 < boardFen.length && boardFen[i + 1] == '~';
           final piece = _charToPiece(c, promoted);
-          if (piece == null) throw InvalidFenException('ERR_BOARD');
+          if (piece == null) throw FenError('ERR_BOARD');
           if (promoted) i++;
           board = board.setPieceAt(square, piece);
           file++;
         }
       }
     }
-    if (rank != 0 || file != 8) throw InvalidFenException('ERR_BOARD');
+    if (rank != 0 || file != 8) throw FenError('ERR_BOARD');
     return board;
   }
 

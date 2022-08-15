@@ -61,7 +61,7 @@ class Tuple<T1, T2> {
   Tuple(this.a, this.b);
 }
 
-class InvalidFenException implements Exception {
+class FenError implements Exception {
   final String message;
-  InvalidFenException(this.message);
+  FenError(this.message);
 }

@@ -33,10 +33,10 @@ void main() {
     expect(
         () => Board.parseFen('4k2r/8/8/8/8/RR2K2R'),
         throwsA(predicate(
-            (e) => e is InvalidFenException && e.message == 'ERR_BOARD')));
+            (e) => e is FenError && e.message == 'ERR_BOARD')));
 
     expect(() => Board.parseFen('lol'),
-        throwsA(TypeMatcher<InvalidFenException>()));
+        throwsA(TypeMatcher<FenError>()));
   });
 
   test('make board fen', () {

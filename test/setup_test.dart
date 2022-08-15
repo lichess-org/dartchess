@@ -26,7 +26,7 @@ void main() {
             Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w BGL')
                 .unmovedRooks,
         throwsA(predicate(
-            (e) => e is InvalidFenException && e.message == 'ERR_CASTLING')));
+            (e) => e is FenError && e.message == 'ERR_CASTLING')));
   });
 
   test('parse initial fen', () {
