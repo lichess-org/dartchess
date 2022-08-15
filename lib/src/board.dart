@@ -4,74 +4,77 @@ import './utils.dart';
 
 /// [Piece] positions on a board.
 class Board {
-  Board({
-    required occupied,
-    required promoted,
-    required SquareSet white,
-    required SquareSet black,
-    required SquareSet pawn,
-    required SquareSet knight,
-    required SquareSet bishop,
-    required SquareSet rook,
-    required SquareSet queen,
-    required SquareSet king,
-  })  : _occupied = occupied,
-        _promoted = promoted,
-        _byColor = {
-          Color.white: white,
-          Color.black: black,
-        },
-        _byRole = {
-          Role.pawn: pawn,
-          Role.knight: knight,
-          Role.bishop: bishop,
-          Role.rook: rook,
-          Role.queen: queen,
-          Role.king: king,
-        };
+  const Board({
+    required this.occupied,
+    required this.promoted,
+    required this.white,
+    required this.black,
+    required this.pawn,
+    required this.knight,
+    required this.bishop,
+    required this.rook,
+    required this.queen,
+    required this.king,
+  });
 
   /// All occupied squares.
-  SquareSet _occupied;
+  final SquareSet occupied;
+
   /// All squares occupied by pieces known to be promoted.
-  SquareSet _promoted;
-  final Map<Color, SquareSet> _byColor;
-  final Map<Role, SquareSet> _byRole;
+  final SquareSet promoted;
+
+  /// All squares occupied by white pieces.
+  final SquareSet white;
+
+  /// All squares occupied by black pieces.
+  final SquareSet black;
+
+  /// All squares occupied by pawns.
+  final SquareSet pawn;
+
+  /// All squares occupied by knights..
+  final SquareSet knight;
+
+  /// All squares occupied by bishops...
+  final SquareSet bishop;
+
+  /// All squares occupied by rooks..
+  final SquareSet rook;
+
+  /// All squares occupied by queens..
+  final SquareSet queen;
+
+  /// All squares occupied by kings..
+  final SquareSet king;
 
   /// Standard chess starting position.
-  Board.standard()
-      : _occupied = SquareSet(0xffff00000000ffff),
-        _promoted = SquareSet.empty,
-        _byColor = {
-          Color.white: SquareSet(0xffff),
-          Color.black: SquareSet(0xffff000000000000),
-        },
-        _byRole = {
-          Role.pawn: SquareSet(0x00ff00000000ff00),
-          Role.knight: SquareSet(0x4200000000000042),
-          Role.bishop: SquareSet(0x2400000000000024),
-          Role.rook: SquareSet(0x8100000000000081),
-          Role.queen: SquareSet(0x0800000000000008),
-          Role.king: SquareSet(0x1000000000000010),
-        };
+  static const standard = Board(
+      occupied: SquareSet(0xffff00000000ffff),
+      promoted: SquareSet.empty,
+      white: SquareSet(0xffff),
+      black: SquareSet(0xffff000000000000),
+      pawn: SquareSet(0x00ff00000000ff00),
+      knight: SquareSet(0x4200000000000042),
+      bishop: SquareSet(0x2400000000000024),
+      rook: SquareSet(0x8100000000000081),
+      queen: SquareSet(0x0800000000000008),
+      king: SquareSet(0x1000000000000010));
 
-  Board.empty()
-      : _occupied = SquareSet.empty,
-        _promoted = SquareSet.empty,
-        _byColor = {
-          Color.white: SquareSet.empty,
-          Color.black: SquareSet.empty,
-        },
-        _byRole = {
-          Role.pawn: SquareSet.empty,
-          Role.knight: SquareSet.empty,
-          Role.bishop: SquareSet.empty,
-          Role.rook: SquareSet.empty,
-          Role.queen: SquareSet.empty,
-          Role.king: SquareSet.empty,
-        };
+  static const empty = Board(
+      occupied: SquareSet.empty,
+      promoted: SquareSet.empty,
+      white: SquareSet.empty,
+      black: SquareSet.empty,
+      pawn: SquareSet.empty,
+      knight: SquareSet.empty,
+      bishop: SquareSet.empty,
+      rook: SquareSet.empty,
+      queen: SquareSet.empty,
+      king: SquareSet.empty);
 
+  /// Parse the board part of a FEN string and returns a Board.
   factory Board.parseFen(String boardFen) {
-    final board = Board.empty();
+    Board board = Board.empty;
     int rank = 7, file = 0;
     for (int i = 0; i < boardFen.length; i++) {
       final c = boardFen[i];
@@ -89,7 +92,7 @@ class Board {
           final piece = _charToPiece(c, promoted);
           if (piece == null) throw InvalidFenException('ERR_BOARD');
           if (promoted) i++;
-          board.setPieceAt(square, piece);
+          board = board.setPieceAt(square, piece);
           file++;
         }
       }
@@ -97,32 +100,6 @@ class Board {
     if (rank != 0 || file != 8) throw InvalidFenException('ERR_BOARD');
     return board;
   }
-
-  Board clone() {
-    return Board(
-      occupied: _occupied,
-      promoted: _promoted,
-      white: white,
-      black: black,
-      pawn: pawn,
-      knight: knight,
-      bishop: bishop,
-      rook: rook,
-      queen: queen,
-      king: king,
-    );
-  }
-
-  SquareSet get occupied => _occupied;
-  SquareSet get promoted => _promoted;
-  SquareSet get white => _byColor[Color.white]!;
-  SquareSet get black => _byColor[Color.black]!;
-  SquareSet get pawn => _byRole[Role.pawn]!;
-  SquareSet get knight => _byRole[Role.knight]!;
-  SquareSet get bishop => _byRole[Role.bishop]!;
-  SquareSet get rook => _byRole[Role.rook]!;
-  SquareSet get queen => _byRole[Role.queen]!;
-  SquareSet get king => _byRole[Role.king]!;
 
   String get fen {
     String fen = '';
@@ -159,6 +136,31 @@ class Board {
     }
   }
 
+  SquareSet byColor(Color color) {
+    return color == Color.white ? white : black;
+  }
+
+  SquareSet byRole(Role role) {
+    switch (role) {
+      case Role.pawn:
+        return pawn;
+      case Role.knight:
+        return knight;
+      case Role.bishop:
+        return bishop;
+      case Role.rook:
+        return rook;
+      case Role.queen:
+        return queen;
+      case Role.king:
+        return king;
+    }
+  }
+
+  SquareSet byPiece(Piece piece) {
+    return byColor(piece.color).intersect(byRole(piece.role));
+  }
+
   Color? colorAt(int square) {
     if (white.has(square)) {
       return Color.white;
@@ -171,7 +173,7 @@ class Board {
 
   Role? roleAt(int square) {
     for (final role in Role.values) {
-      if (_byRole[role]!.has(square)) {
+      if (byRole(role).has(square)) {
         return role;
       }
     }
@@ -188,24 +190,50 @@ class Board {
     return Piece(color: color, role: role, promoted: prom);
   }
 
-  SquareSet byColor(Color color) {
-    return _byColor[color]!;
-  }
-
-  SquareSet byPiece(Piece piece) {
-    return _byColor[piece.color]!.intersect(_byRole[piece.role]!);
-  }
-
   /// Finds the unique king of the given [color], if any.
   int? kingOf(Color color) {
     return byPiece(Piece(color: color, role: Role.king)).singleSquare;
   }
 
-  void setPieceAt(int square, Piece piece) {
-    _occupied = _occupied.withSquare(square);
-    _byColor[piece.color] = _byColor[piece.color]!.withSquare(square);
-    _byRole[piece.role] = _byRole[piece.role]!.withSquare(square);
-    if (piece.promoted) _promoted = _promoted.withSquare(square);
+  Board setPieceAt(int square, Piece piece) {
+    return _copyWith(
+      occupied: occupied.withSquare(square),
+      promoted: piece.promoted ? promoted.withSquare(square) : null,
+      white: piece.color == Color.white ? white.withSquare(square) : null,
+      black: piece.color == Color.black ? black.withSquare(square) : null,
+      pawn: piece.role == Role.pawn ? pawn.withSquare(square) : null,
+      knight: piece.role == Role.knight ? knight.withSquare(square) : null,
+      bishop: piece.role == Role.bishop ? bishop.withSquare(square) : null,
+      rook: piece.role == Role.rook ? rook.withSquare(square) : null,
+      queen: piece.role == Role.queen ? queen.withSquare(square) : null,
+      king: piece.role == Role.king ? king.withSquare(square) : null,
+    );
+  }
+
+  Board _copyWith({
+    SquareSet? occupied,
+    SquareSet? promoted,
+    SquareSet? white,
+    SquareSet? black,
+    SquareSet? pawn,
+    SquareSet? knight,
+    SquareSet? bishop,
+    SquareSet? rook,
+    SquareSet? queen,
+    SquareSet? king,
+  }) {
+    return Board(
+      occupied: occupied ?? this.occupied,
+      promoted: promoted ?? this.promoted,
+      white: white ?? this.white,
+      black: black ?? this.black,
+      pawn: pawn ?? this.pawn,
+      knight: knight ?? this.knight,
+      bishop: bishop ?? this.bishop,
+      rook: rook ?? this.rook,
+      queen: queen ?? this.queen,
+      king: king ?? this.king,
+    );
   }
 
   @override

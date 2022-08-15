@@ -31,7 +31,8 @@ void main() {
 
   test('parse initial fen', () {
     final setup = Setup.parseFen(kInitialFEN);
-    expect(setup.board, Board.standard());
+    expect(setup, Setup.standard);
+    expect(setup.board, Board.standard);
     expect(setup.turn, Color.white);
     expect(setup.unmovedRooks, SquareSet.corners);
     expect(setup.epSquare, null);
@@ -41,7 +42,7 @@ void main() {
 
   test('parse partial fen', () {
     final setup = Setup.parseFen(kInitialBoardFEN);
-    expect(setup.board, Board.standard());
+    expect(setup.board, Board.standard);
     expect(setup.turn, Color.white);
     expect(setup.unmovedRooks, SquareSet.empty);
     expect(setup.epSquare, null);

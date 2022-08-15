@@ -14,7 +14,7 @@ class Setup {
   final int halfmoves;
   final int fullmoves;
 
-  Setup({
+  const Setup({
     required this.board,
     required this.turn,
     required this.unmovedRooks,
@@ -23,14 +23,23 @@ class Setup {
     required this.fullmoves,
   });
 
-  Setup.standard()
-      : board = Board.standard(),
-        turn = Color.white,
-        unmovedRooks = SquareSet.corners,
-        epSquare = null,
-        halfmoves = 0,
-        fullmoves = 1;
+  static const standard = Setup(
+    board: Board.standard,
+    turn: Color.white,
+    unmovedRooks: SquareSet.corners,
+    halfmoves: 0,
+    fullmoves: 1,
+  );
 
+  /// Parse Forsyth-Edwards-Notation.
+  ///
+  /// The parser is relaxed:
+  ///
+  /// * Supports X-FEN and Shredder-FEN for castling right notation.
+  /// * Accepts missing FEN fields (except the board) and fills them with
+  ///   default values of `8/8/8/8/8/8/8/8 w - - 0 1`.
+  /// * Accepts multiple spaces and underscores (`_`) as separators between
+  ///   FEN fields.
   factory Setup.parseFen(String fen) {
     final parts = fen.split(RegExp(r'[\s_]+'));
     if (parts.isEmpty) throw InvalidFenException('ERR_FEN');
@@ -119,6 +128,27 @@ class Setup {
         math.max(0, math.min(halfmoves, 9999)),
         math.max(1, math.min(fullmoves, 9999)),
       ].join(' ');
+
+  @override
+  bool operator ==(Object other) {
+    return other is Setup &&
+        other.board == board &&
+        other.turn == turn &&
+        other.unmovedRooks == unmovedRooks &&
+        other.epSquare == epSquare &&
+        other.halfmoves == halfmoves &&
+        other.fullmoves == fullmoves;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        board,
+        turn,
+        unmovedRooks,
+        epSquare,
+        halfmoves,
+        fullmoves,
+      );
 }
 
 SquareSet _parseCastlingFen(Board board, String castlingPart) {
