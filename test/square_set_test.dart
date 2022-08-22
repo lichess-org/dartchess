@@ -3,6 +3,17 @@ import 'package:test/test.dart';
 import 'package:dartchess/src/utils.dart';
 
 void main() {
+  test('toString', () {
+    expect(SquareSet.empty.toString(), 'SquareSet(0x0000000000000000)');
+    expect(SquareSet.full.toString(), 'SquareSet(0xFFFFFFFFFFFFFFFF)');
+    expect(SquareSet.lightSquares.toString(), 'SquareSet(0x55AA55AA55AA55AA)');
+    expect(SquareSet.darkSquares.toString(), 'SquareSet(0xAA55AA55AA55AA55)');
+    expect(SquareSet.diagonal.toString(), 'SquareSet(0x8040201008040201)');
+    expect(SquareSet.antidiagonal.toString(), 'SquareSet(0x0102040810204080)');
+    expect(SquareSet.corners.toString(), 'SquareSet(0x8100000000000081)');
+    expect(SquareSet.backranks.toString(), 'SquareSet(0xFF000000000000FF)');
+  });
+
   test('full set has all', () {
     for (int square = 0; square < 64; square++) {
       expect(SquareSet.full.has(square), true);

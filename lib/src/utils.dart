@@ -89,28 +89,28 @@ SquareSet makeSquareSet(String rep) {
 
 /// Prints the square set as a human readable string format
 String printSquareSet(SquareSet sq) {
-  final r = [];
+  String r = '';
   for (int y = 7; y >= 0; y--) {
     for (int x = 0; x < 8; x++) {
       final square = x + y * 8;
-      r.add(sq.has(square) ? '1' : '.');
-      r.add(x < 7 ? ' ' : '\n');
+      r += (sq.has(square) ? '1' : '.');
+      r += (x < 7 ? ' ' : '\n');
     }
   }
-  return r.join('');
+  return r;
 }
 
 /// Prints the board as a human readable string format
 String printBoard(Board board) {
-  final r = [];
+  String r = '';
   for (int y = 7; y >= 0; y--) {
     for (int x = 0; x < 8; x++) {
       final square = x + y * 8;
       final p = board.pieceAt(square);
       final col = p != null ? p.fenChar : '.';
-      r.add(col);
-      r.add(x < 7 ? (col.length < 2 ? ' ' : '') : '\n');
+      r += col;
+      r += (x < 7 ? (col.length < 2 ? ' ' : '') : '\n');
     }
   }
-  return r.join('');
+  return r;
 }

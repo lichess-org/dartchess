@@ -135,7 +135,21 @@ class SquareSet {
   int get hashCode => value.hashCode;
 
   @override
-  toString() => 'SquareSet(${value.toRadixString(16)})';
+  toString() {
+    String b = '';
+    for (int square = 0; square < 64; square++) {
+      b += (has(square) ? '1' : '0');
+    }
+    final first = int.parse(b.substring(0, 32), radix: 2)
+        .toRadixString(16)
+        .toUpperCase()
+        .padLeft(8, '0');
+    final last = int.parse(b.substring(32, 64), radix: 2)
+        .toRadixString(16)
+        .toUpperCase()
+        .padLeft(8, '0');
+    return 'SquareSet(0x$first$last)';
+  }
 
   Iterable<int> _iterateSquares() sync* {
     int bitboard = value;
