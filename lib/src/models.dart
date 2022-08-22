@@ -16,6 +16,8 @@ enum Color {
   }
 }
 
+typedef ByColor<T> = Map<Color, T>;
+
 enum Role { king, queen, knight, bishop, rook, pawn }
 
 class Piece {
@@ -54,11 +56,32 @@ class Piece {
   int get hashCode => Object.hash(color, role, promoted);
 }
 
-class Tuple<T1, T2> {
-  final T1 a;
-  final T2 b;
+/// Represents a 2-tuple, or pair.
+class Tuple2<T1, T2> {
+  /// First item of the tuple.
+  final T1 item1;
 
-  Tuple(this.a, this.b);
+  /// Second item of the tuple.
+  final T2 item2;
+
+  /// Creates a new tuple value with the specified items.
+  const Tuple2(this.item1, this.item2);
+
+  /// Returns a tuple with the first item set to the specified value.
+  Tuple2<T1, T2> withItem1(T1 v) => Tuple2<T1, T2>(v, item2);
+
+  /// Returns a tuple with the second item set to the specified value.
+  Tuple2<T1, T2> withItem2(T2 v) => Tuple2<T1, T2>(item1, v);
+
+  @override
+  String toString() => '[$item1, $item2]';
+
+  @override
+  bool operator ==(Object other) =>
+      other is Tuple2 && item1 == other.item1 && item2 == other.item2;
+
+  @override
+  int get hashCode => Object.hash(item1, item2);
 }
 
 class FenError implements Exception {

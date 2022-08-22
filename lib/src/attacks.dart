@@ -2,26 +2,26 @@ import './square_set.dart';
 import './utils.dart';
 import './models.dart';
 
-/// Gets squares attacked or defended by a king on [square].
+/// Gets squares attacked or defended by a king on `square`.
 SquareSet kingAttacks(int square) {
   assert(square >= 0 && square < 64);
   return _kingAttacks[square];
 }
 
-/// Gets squares attacked or defended by a knight on [square].
+/// Gets squares attacked or defended by a knight on `square`.
 SquareSet knightAttacks(int square) {
   assert(square >= 0 && square < 64);
   return _knightAttacks[square];
 }
 
-/// Gets squares attacked or defended by a pawn of the given [color]
-/// on [square].
+/// Gets squares attacked or defended by a pawn of the given `color`
+/// on `square`.
 SquareSet pawnAttacks(Color color, int square) {
   assert(square >= 0 && square < 64);
   return _pawnAttacks[color]![square];
 }
 
-/// Gets squares attacked or defended by a bishop on [square], given [occupied]
+/// Gets squares attacked or defended by a bishop on `square`, given `occupied`
 /// squares.
 SquareSet bishopAttacks(int square, SquareSet occupied) {
   final bit = SquareSet.fromSquare(square);
@@ -29,16 +29,41 @@ SquareSet bishopAttacks(int square, SquareSet occupied) {
       .xor(_hyperbola(bit, _antiDiagRange[square], occupied));
 }
 
-/// Gets squares attacked or defended by a rook on [square], given [occupied]
+/// Gets squares attacked or defended by a rook on `square`, given `occupied`
 /// squares.
 SquareSet rookAttacks(int square, SquareSet occupied) {
   return _fileAttacks(square, occupied).xor(_rankAttacks(square, occupied));
 }
 
-/// Gets squares attacked or defended by a queen on [square], given [occupied]
+/// Gets squares attacked or defended by a queen on `square`, given `occupied`
 /// squares.
 SquareSet queenAttacks(int square, SquareSet occupied) =>
     bishopAttacks(square, occupied).xor(rookAttacks(square, occupied));
+
+/// Gets all squares of the rank, file or diagonal with the two squares
+/// `a` and `b`, or an empty set if they are not aligned.
+SquareSet ray(int a, int b) {
+  final other = SquareSet.fromSquare(b);
+  if (_rankRange[a].isIntersected(other)) {
+    return _rankRange[a].withSquare(a);
+  }
+  if (_antiDiagRange[a].isIntersected(other)) {
+    return _antiDiagRange[a].withSquare(a);
+  }
+  if (_diagRange[a].isIntersected(other)) {
+    return _diagRange[a].withSquare(a);
+  }
+  if (_fileRange[a].isIntersected(other)) {
+    return _fileRange[a].withSquare(a);
+  }
+  return SquareSet.empty;
+}
+
+/// Gets all squares between `a` and `b` (bounds not included), or an empty set
+/// if they are not on the same rank, file or diagonal.
+SquareSet between(int a, int b) => ray(a, b)
+    .intersect(SquareSet.full.shl(a).xor(SquareSet.full.shl(b)))
+    .withoutFirst();
 
 // --
 

@@ -107,9 +107,9 @@ class SquareSet {
   /// Returns square if it is single, otherwise returns null.
   int? get singleSquare => moreThanOne ? null : last;
 
-  bool has(int square) {
-    return value & (1 << square) != 0;
-  }
+  bool has(int square) => value & (1 << square) != 0;
+  bool isIntersected(SquareSet other) => intersect(other).isNotEmpty;
+  bool isDisjoint(SquareSet other) => intersect(other).isEmpty;
 
   SquareSet withSquare(int square) {
     return SquareSet(value | (1 << square));
@@ -117,6 +117,11 @@ class SquareSet {
 
   SquareSet withoutSquare(int square) {
     return SquareSet(value & ~(1 << square));
+  }
+
+  SquareSet withoutFirst() {
+    final f = first;
+    return f != null ? withoutSquare(f) : empty;
   }
 
   @override
@@ -128,6 +133,9 @@ class SquareSet {
 
   @override
   int get hashCode => value.hashCode;
+
+  @override
+  toString() => 'SquareSet(${value.toRadixString(16)})';
 
   Iterable<int> _iterateSquares() sync* {
     int bitboard = value;

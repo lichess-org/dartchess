@@ -132,9 +132,9 @@ class Board {
     return fen;
   }
 
-  Iterable<Tuple<int, Piece>> get pieces sync* {
+  Iterable<Tuple2<int, Piece>> get pieces sync* {
     for (final square in occupied.squares) {
-      yield Tuple(square, pieceAt(square)!);
+      yield Tuple2(square, pieceAt(square)!);
     }
   }
 
@@ -254,18 +254,8 @@ class Board {
   }
 
   @override
-  int get hashCode => Object.hash(
-        occupied,
-        promoted,
-        white,
-        black,
-        pawn,
-        knight,
-        bishop,
-        rook,
-        queen,
-        king,
-      );
+  int get hashCode => Object.hash(occupied, promoted, white, black, pawn,
+      knight, bishop, rook, queen, king);
 }
 
 Piece? _charToPiece(String ch, bool promoted) {
