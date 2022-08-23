@@ -14,6 +14,8 @@ Square? parseSquare(String str) {
   return file + 8 * rank;
 }
 
+Color opposite(Color color) => color == Color.white ? Color.black : Color.white;
+
 int? parseSmallUint(String str) =>
     RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;
 

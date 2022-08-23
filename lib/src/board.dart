@@ -1,5 +1,6 @@
 import './square_set.dart';
 import './models.dart';
+import './attacks.dart';
 import './utils.dart';
 
 /// [Piece] positions on a board.
@@ -15,6 +16,8 @@ class Board {
   final SquareSet occupied;
 
   /// All squares occupied by pieces known to be promoted.
+  ///
+  /// This information is relevant in chess variants like Crazyhouse.
   final SquareSet promoted;
 
   final ByColor<SquareSet> colors;
@@ -105,6 +108,9 @@ class Board {
   /// All squares occupied by kings.
   SquareSet get kings => roles[Role.king]!;
 
+  SquareSet get rooksAndQueens => rooks.union(queens);
+  SquareSet get bishopsAndQueens => bishops.union(queens);
+
   /// Board part of the Forsyth-Edwards-Notation.
   String get fen {
     String fen = '';
@@ -189,6 +195,16 @@ class Board {
   Square? kingOf(Color color) {
     return byPiece(Piece(color: color, role: Role.king)).singleSquare;
   }
+
+  /// Finds the squares who are attacking `square` by the `attacker` [Color].
+  SquareSet attacksTo(Square square, Color attacker, {SquareSet? occupied}) =>
+      byColor(attacker).intersect(rookAttacks(square, occupied ?? this.occupied)
+          .intersect(rooksAndQueens)
+          .union(bishopAttacks(square, occupied ?? this.occupied)
+              .intersect(bishopsAndQueens))
+          .union(knightAttacks(square).intersect(knights))
+          .union(kingAttacks(square).intersect(kings))
+          .union(pawnAttacks(opposite(attacker), square).intersect(pawns)));
 
   /// Puts a [Piece] on a [Square] overriding the existing one, if any.
   Board setPieceAt(Square square, Piece piece) {

@@ -29,4 +29,54 @@ void main() {
           Castles.standard.discardRookAt(7).rook[Color.white], Tuple2(0, null));
     });
   });
+
+  group('Position validation', () {
+    test('Empty board', () {
+      expect(
+          () => Chess.fromSetup(Setup.parseFen(kEmptyFEN)),
+          throwsA(predicate((e) =>
+              e is PositionError && e.cause == IllegalSetup.empty)));
+    });
+
+    test('Missing king', () {
+      expect(
+          () => Chess.fromSetup(Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1BNR w HAkq - 0 1')),
+          throwsA(predicate((e) =>
+              e is PositionError && e.cause == IllegalSetup.kings)));
+    });
+
+    test('Opposite check', () {
+      expect(
+          () => Chess.fromSetup(Setup.parseFen('rnbqkbnr/pppp1ppp/8/8/8/8/PPPPQPPP/RNB1KBNR w KQkq - 0 1')),
+          throwsA(predicate((e) =>
+              e is PositionError && e.cause == IllegalSetup.oppositeCheck)));
+    });
+
+    test('Backrank pawns', () {
+      expect(
+          () => Chess.fromSetup(Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPNP/RNBQKBPR w KQkq - 0 1')),
+          throwsA(predicate((e) =>
+              e is PositionError && e.cause == IllegalSetup.pawnsOnBackrank)));
+    });
+
+    test('checkers alignment', () {
+      // Multiple checkers aligned with king.
+      expect(
+          () => Chess.fromSetup(
+              Setup.parseFen('3R4/8/q4k2/2B5/1NK5/3b4/8/8 w - - 0 1')),
+          throwsA(predicate((e) =>
+              e is PositionError && e.cause == IllegalSetup.impossibleCheck)));
+
+      // Checkers aligned with opponent king are fine.
+      Chess.fromSetup(
+          Setup.parseFen('8/8/5k2/p1q5/PP1rp1P1/3P1N2/2RK1r2/5nN1 w - - 0 3'));
+
+      // En passant square aligned with checker and king.
+      expect(
+          () => Chess.fromSetup(
+              Setup.parseFen('8/8/8/1k6/3Pp3/8/8/4KQ2 b - d3 0 1')),
+          throwsA(predicate((e) =>
+              e is PositionError && e.cause == IllegalSetup.impossibleCheck)));
+    });
+  });
 }

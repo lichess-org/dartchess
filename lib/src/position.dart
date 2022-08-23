@@ -3,11 +3,21 @@ import './attacks.dart';
 import './models.dart';
 import './board.dart';
 import './setup.dart';
+import './utils.dart';
 
 /// A playable chess or chess variant position.
 ///
 /// See [Chess] for a concrete implementation.
 abstract class Position {
+  const Position({
+    required this.board,
+    required this.turn,
+    required this.castles,
+    this.epSquare,
+    required this.halfmoves,
+    required this.fullmoves,
+  });
+
   /// Piece positions on the board.
   final Board board;
 
@@ -26,14 +36,101 @@ abstract class Position {
   /// Current move number.
   final int fullmoves;
 
-  const Position({
-    required this.board,
-    required this.turn,
-    required this.castles,
-    this.epSquare,
-    required this.halfmoves,
-    required this.fullmoves,
-  });
+  Position.standard()
+      : board = Board.standard,
+        turn = Color.white,
+        castles = Castles.standard,
+        epSquare = null,
+        halfmoves = 0,
+        fullmoves = 1;
+
+  Position._fromSetupUnchecked(Setup setup)
+      : board = setup.board,
+        turn = setup.turn,
+        castles = Castles.fromSetup(setup),
+        epSquare = _validEpSquare(setup),
+        halfmoves = setup.halfmoves,
+        fullmoves = setup.fullmoves;
+
+  void _validate({bool? ignoreImpossibleCheck}) {
+    if (board.occupied.isEmpty) {
+      throw PositionError(IllegalSetup.empty);
+    }
+    if (board.kings.size != 2) {
+      throw PositionError(IllegalSetup.kings);
+    }
+    final ourKing = board.kingOf(turn);
+    if (ourKing == null) {
+      throw PositionError(IllegalSetup.kings);
+    }
+    final otherKing = board.kingOf(opposite(turn));
+    if (otherKing == null) {
+      throw PositionError(IllegalSetup.kings);
+    }
+    if (board.attacksTo(otherKing, turn).isNotEmpty) {
+      throw PositionError(IllegalSetup.oppositeCheck);
+    }
+    if (SquareSet.backranks.intersect(board.pawns).isNotEmpty) {
+      throw PositionError(IllegalSetup.pawnsOnBackrank);
+    }
+    final skipImpossibleCheck = ignoreImpossibleCheck ?? false;
+    if (!skipImpossibleCheck) {
+      final checkers = board.attacksTo(ourKing, opposite(turn));
+      if (checkers.isNotEmpty) {
+        if (epSquare != null) {
+          // The pushed pawn must be the only checker, or it has uncovered
+          // check by a single sliding piece.
+          final pushedTo = epSquare! ^ 8;
+          final pushedFrom = epSquare! ^ 24;
+          if (checkers.moreThanOne ||
+              (checkers.first != pushedTo &&
+                  board
+                      .attacksTo(ourKing, opposite(turn),
+                          occupied: board.occupied
+                              .withoutSquare(pushedTo)
+                              .withSquare(pushedFrom))
+                      .isNotEmpty)) {
+            throw PositionError(IllegalSetup.impossibleCheck);
+          }
+        } else {
+          // Multiple sliding checkers aligned with king.
+          if (checkers.size > 2 ||
+              (checkers.size == 2 &&
+                  ray(checkers.first!, checkers.last!).has(ourKing))) {
+            throw PositionError(IllegalSetup.impossibleCheck);
+          }
+        }
+      }
+    }
+  }
+}
+
+class Chess extends Position {
+  Chess._fromSetupUnchecked(Setup setup) : super._fromSetupUnchecked(setup);
+
+  /// Set up a playable [Chess] position.
+  ///
+  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// requirements.
+  factory Chess.fromSetup(Setup setup) {
+    final unchecked = Chess._fromSetupUnchecked(setup);
+    unchecked._validate();
+    return unchecked;
+  }
+}
+
+enum IllegalSetup {
+  empty,
+  oppositeCheck,
+  impossibleCheck,
+  pawnsOnBackrank,
+  kings,
+  variant,
+}
+
+class PositionError implements Exception {
+  final IllegalSetup cause;
+  PositionError(this.cause);
 }
 
 enum CastlingSide {
@@ -203,4 +300,16 @@ Square _kingCastlesTo(Color color, CastlingSide side) {
       : side == CastlingSide.queen
           ? 58
           : 62;
+}
+
+Square? _validEpSquare(Setup setup) {
+  if (setup.epSquare == null) return null;
+  final epRank = setup.turn == Color.white ? 5 : 2;
+  final forward = setup.turn == Color.white ? 8 : -8;
+  if (squareRank(setup.epSquare!) != epRank) return null;
+  if (setup.board.occupied.has(setup.epSquare! + forward)) return null;
+  final pawn = setup.epSquare! - forward;
+  if (!setup.board.pawns.has(pawn) ||
+      !setup.board.byColor(opposite(setup.turn)).has(pawn)) return null;
+  return setup.epSquare;
 }
