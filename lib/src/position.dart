@@ -120,14 +120,31 @@ class Chess extends Position {
 }
 
 enum IllegalSetup {
+  /// There are no pieces on the board.
   empty,
+
+  /// The player not to move is in check.
   oppositeCheck,
+
+  /// There are impossibly many checkers, two sliding checkers are
+  /// aligned, or check is not possible because the last move was a
+  /// double pawn push.
+  ///
+  /// Such a position cannot be reached by any sequence of legal moves.
   impossibleCheck,
+
+  /// There are pawns on the backrank. Only [Horde] allows players to
+  /// have pawns on their own backrank.
   pawnsOnBackrank,
+
+  /// A king is missing, or there are too many kings.
   kings,
+
+  /// A variant specific rule is violated.
   variant,
 }
 
+/// Error when trying to create a [Position] from an illegal [Setup].
 class PositionError implements Exception {
   final IllegalSetup cause;
   PositionError(this.cause);
