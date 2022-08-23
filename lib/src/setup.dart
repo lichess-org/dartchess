@@ -19,7 +19,7 @@ class Setup {
   /// En passant target square.
   ///
   /// Valid target squares are on the third or sixth rank.
-  final int? epSquare;
+  final Square? epSquare;
 
   /// Number of half-moves since the last capture or pawn move.
   final int halfmoves;
@@ -88,7 +88,7 @@ class Setup {
     }
 
     // En passant square
-    int? epSquare;
+    Square? epSquare;
     if (parts.isNotEmpty) {
       final epPart = parts.removeAt(0);
       if (epPart != '-') {
@@ -178,7 +178,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
     final backrankMask = SquareSet.fromRank(color == Color.white ? 0 : 7);
     final backrank = backrankMask.intersect(board.byColor(color));
 
-    Iterable<int> candidates;
+    Iterable<Square> candidates;
     if (lower == 'q') {
       candidates = backrank.squares;
     } else if (lower == 'k') {

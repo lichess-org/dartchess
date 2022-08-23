@@ -1,5 +1,8 @@
+import './models.dart';
+
 /// A set of squares represented by a 64 bit integer mask, using little endian
 /// rank-file (LERF) mapping.
+///
 /// This is how the mapping looks like:
 ///
 ///  8 | 56 57 58 59 60 61 62 63
@@ -18,7 +21,7 @@ class SquareSet {
   const SquareSet(this.value);
 
   /// Creates a [SquareSet] with a single [square].
-  const SquareSet.fromSquare(int square)
+  const SquareSet.fromSquare(Square square)
       : value = 1 << square,
         assert(square >= 0 && square < 64);
 
@@ -100,22 +103,22 @@ class SquareSet {
   bool get isNotEmpty => value != 0;
   int? get first => _getFirstSquare(value);
   int? get last => _getLastSquare(value);
-  Iterable<int> get squares => _iterateSquares();
-  Iterable<int> get squaresReversed => _iterateSquaresReversed();
+  Iterable<Square> get squares => _iterateSquares();
+  Iterable<Square> get squaresReversed => _iterateSquaresReversed();
   bool get moreThanOne => isNotEmpty && size > 1;
 
   /// Returns square if it is single, otherwise returns null.
   int? get singleSquare => moreThanOne ? null : last;
 
-  bool has(int square) => value & (1 << square) != 0;
+  bool has(Square square) => value & (1 << square) != 0;
   bool isIntersected(SquareSet other) => intersect(other).isNotEmpty;
   bool isDisjoint(SquareSet other) => intersect(other).isEmpty;
 
-  SquareSet withSquare(int square) {
+  SquareSet withSquare(Square square) {
     return SquareSet(value | (1 << square));
   }
 
-  SquareSet withoutSquare(int square) {
+  SquareSet withoutSquare(Square square) {
     return SquareSet(value & ~(1 << square));
   }
 
@@ -137,7 +140,7 @@ class SquareSet {
   @override
   toString() {
     String b = '';
-    for (int square = 0; square < 64; square++) {
+    for (Square square = 0; square < 64; square++) {
       b += (has(square) ? '1' : '0');
     }
     final first = int.parse(b.substring(0, 32), radix: 2)
@@ -151,7 +154,7 @@ class SquareSet {
     return 'SquareSet(0x$first$last)';
   }
 
-  Iterable<int> _iterateSquares() sync* {
+  Iterable<Square> _iterateSquares() sync* {
     int bitboard = value;
     while (bitboard != 0) {
       final square = _getFirstSquare(bitboard);
@@ -160,7 +163,7 @@ class SquareSet {
     }
   }
 
-  Iterable<int> _iterateSquaresReversed() sync* {
+  Iterable<Square> _iterateSquaresReversed() sync* {
     int bitboard = value;
     while (bitboard != 0) {
       final square = _getLastSquare(bitboard);

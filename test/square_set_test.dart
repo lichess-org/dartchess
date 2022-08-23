@@ -15,7 +15,7 @@ void main() {
   });
 
   test('full set has all', () {
-    for (int square = 0; square < 64; square++) {
+    for (Square square = 0; square < 64; square++) {
       expect(SquareSet.full.has(square), true);
     }
   });
@@ -50,7 +50,7 @@ void main() {
   });
 
   test('first', () {
-    for (int square = 0; square < 64; square++) {
+    for (Square square = 0; square < 64; square++) {
       expect(SquareSet.fromSquare(square).first, square);
     }
     expect(SquareSet.full.first, 0);
@@ -61,7 +61,7 @@ void main() {
   });
 
   test('last', () {
-    for (int square = 0; square < 64; square++) {
+    for (Square square = 0; square < 64; square++) {
       expect(SquareSet.fromSquare(square).last, square);
     }
     expect(SquareSet.full.last, 63);

@@ -18,7 +18,7 @@ abstract class Position {
   final Castles castles;
 
   /// En passant target square.
-  final int? epSquare;
+  final Square? epSquare;
 
   /// Number of half-moves since the last capture or pawn move.
   final int halfmoves;
@@ -47,7 +47,7 @@ class Castles {
   /// Rooks positions pair.
   ///
   /// First item is queen side, second is king side.
-  final ByColor<Tuple2<int?, int?>> rook;
+  final ByColor<Tuple2<Square?, Square?>> rook;
 
   /// Squares between the white king and rooks.
   ///
@@ -99,8 +99,8 @@ class Castles {
     return castles;
   }
 
-  /// Gets the rook square by color and castling side.
-  int? rookOf(Color color, CastlingSide side) =>
+  /// Gets the rook [Square] by color and castling side.
+  Square? rookOf(Color color, CastlingSide side) =>
       side == CastlingSide.queen ? rook[color]!.item1 : rook[color]!.item2;
 
   /// Gets the squares that need to be empty so that castling is possible
@@ -110,7 +110,7 @@ class Castles {
   SquareSet pathOf(Color color, CastlingSide side) =>
       side == CastlingSide.queen ? path[color]!.item1 : path[color]!.item2;
 
-  Castles discardRookAt(int square) {
+  Castles discardRookAt(Square square) {
     final whiteRook = rook[Color.white]!;
     final blackRook = rook[Color.black]!;
     return unmovedRooks.has(square)
@@ -134,7 +134,7 @@ class Castles {
         : this;
   }
 
-  Castles _add(Color color, CastlingSide side, int king, int rook) {
+  Castles _add(Color color, CastlingSide side, Square king, Square rook) {
     final kingTo = _kingCastlesTo(color, side);
     final rookTo = _rookCastlesTo(color, side);
     final path = between(rook, rookTo)
@@ -159,7 +159,7 @@ class Castles {
 
   Castles _copyWith({
     SquareSet? unmovedRooks,
-    ByColor<Tuple2<int?, int?>>? rook,
+    ByColor<Tuple2<Square?, Square?>>? rook,
     ByColor<Tuple2<SquareSet, SquareSet>>? path,
   }) {
     return Castles(
@@ -189,7 +189,7 @@ class Castles {
       rook[Color.black], path[Color.white], path[Color.black]);
 }
 
-int _rookCastlesTo(Color color, CastlingSide side) {
+Square _rookCastlesTo(Color color, CastlingSide side) {
   return color == Color.white
       ? (side == CastlingSide.queen ? 3 : 5)
       : side == CastlingSide.queen
@@ -197,7 +197,7 @@ int _rookCastlesTo(Color color, CastlingSide side) {
           : 61;
 }
 
-int _kingCastlesTo(Color color, CastlingSide side) {
+Square _kingCastlesTo(Color color, CastlingSide side) {
   return color == Color.white
       ? (side == CastlingSide.queen ? 2 : 6)
       : side == CastlingSide.queen

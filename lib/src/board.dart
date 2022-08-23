@@ -135,8 +135,8 @@ class Board {
     return fen;
   }
 
-  /// An [Iterable] of each [Piece] associated to its `square`.
-  Iterable<Tuple2<int, Piece>> get pieces sync* {
+  /// An iterable of each [Piece] associated to its [Square].
+  Iterable<Tuple2<Square, Piece>> get pieces sync* {
     for (final square in occupied.squares) {
       yield Tuple2(square, pieceAt(square)!);
     }
@@ -153,8 +153,8 @@ class Board {
     return colors[piece.color]!.intersect(roles[piece.role]!);
   }
 
-  /// Gets the [Color] at this `square`, if any.
-  Color? colorAt(int square) {
+  /// Gets the [Color] at this [Square], if any.
+  Color? colorAt(Square square) {
     if (colors[Color.white]!.has(square)) {
       return Color.white;
     } else if (colors[Color.black]!.has(square)) {
@@ -164,8 +164,8 @@ class Board {
     }
   }
 
-  /// Gets the [Role] at this `square`, if any.
-  Role? roleAt(int square) {
+  /// Gets the [Role] at this [Square], if any.
+  Role? roleAt(Square square) {
     for (final role in Role.values) {
       if (roles[role]!.has(square)) {
         return role;
@@ -174,8 +174,8 @@ class Board {
     return null;
   }
 
-  /// Gets the [Piece] at this `square`, if any.
-  Piece? pieceAt(int square) {
+  /// Gets the [Piece] at this [Square], if any.
+  Piece? pieceAt(Square square) {
     final color = colorAt(square);
     if (color == null) {
       return null;
@@ -185,13 +185,13 @@ class Board {
     return Piece(color: color, role: role, promoted: prom);
   }
 
-  /// Finds the unique king of the given [Color], if any.
-  int? kingOf(Color color) {
+  /// Finds the unique king [Square] of the given [Color], if any.
+  Square? kingOf(Color color) {
     return byPiece(Piece(color: color, role: Role.king)).singleSquare;
   }
 
-  /// Puts a [Piece] on a `square` overriding the existing one, if any.
-  Board setPieceAt(int square, Piece piece) {
+  /// Puts a [Piece] on a [Square] overriding the existing one, if any.
+  Board setPieceAt(Square square, Piece piece) {
     return _copyWith(
       occupied: occupied.withSquare(square),
       promoted: piece.promoted ? promoted.withSquare(square) : null,

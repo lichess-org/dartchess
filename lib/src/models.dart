@@ -18,6 +18,11 @@ enum Color {
 
 enum Role { king, queen, knight, bishop, rook, pawn }
 
+/// Number between 0 and 63 included representing a square on the board.
+///
+/// See [SquareSet] to see how the mapping looks like.
+typedef Square = int;
+
 typedef ByColor<T> = Map<Color, T>;
 typedef ByRole<T> = Map<Role, T>;
 

@@ -3,10 +3,10 @@ import './board.dart';
 import './models.dart';
 import './constants.dart';
 
-int squareRank(int square) => square >> 3;
-int squareFile(int square) => square & 0x7;
+Square squareRank(Square square) => square >> 3;
+Square squareFile(Square square) => square & 0x7;
 
-int? parseSquare(String str) {
+Square? parseSquare(String str) {
   if (str.length != 2) return null;
   final file = str.codeUnitAt(0) - 'a'.codeUnitAt(0);
   final rank = str.codeUnitAt(1) - '1'.codeUnitAt(0);
@@ -17,7 +17,7 @@ int? parseSquare(String str) {
 int? parseSmallUint(String str) =>
     RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;
 
-String makeSquare(int square) =>
+String makeSquare(Square square) =>
     kFileNames[squareFile(square)] + kRankNames[squareRank(square)];
 
 Role? charToRole(String ch) {

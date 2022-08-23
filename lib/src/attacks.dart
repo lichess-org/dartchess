@@ -2,47 +2,47 @@ import './square_set.dart';
 import './utils.dart';
 import './models.dart';
 
-/// Gets squares attacked or defended by a king on `square`.
-SquareSet kingAttacks(int square) {
+/// Gets squares attacked or defended by a king on [Square].
+SquareSet kingAttacks(Square square) {
   assert(square >= 0 && square < 64);
   return _kingAttacks[square];
 }
 
-/// Gets squares attacked or defended by a knight on `square`.
-SquareSet knightAttacks(int square) {
+/// Gets squares attacked or defended by a knight on [Square].
+SquareSet knightAttacks(Square square) {
   assert(square >= 0 && square < 64);
   return _knightAttacks[square];
 }
 
 /// Gets squares attacked or defended by a pawn of the given `color`
-/// on `square`.
-SquareSet pawnAttacks(Color color, int square) {
+/// on [Square].
+SquareSet pawnAttacks(Color color, Square square) {
   assert(square >= 0 && square < 64);
   return _pawnAttacks[color]![square];
 }
 
-/// Gets squares attacked or defended by a bishop on `square`, given `occupied`
+/// Gets squares attacked or defended by a bishop on [Square], given `occupied`
 /// squares.
-SquareSet bishopAttacks(int square, SquareSet occupied) {
+SquareSet bishopAttacks(Square square, SquareSet occupied) {
   final bit = SquareSet.fromSquare(square);
   return _hyperbola(bit, _diagRange[square], occupied)
       .xor(_hyperbola(bit, _antiDiagRange[square], occupied));
 }
 
-/// Gets squares attacked or defended by a rook on `square`, given `occupied`
+/// Gets squares attacked or defended by a rook on [Square], given `occupied`
 /// squares.
-SquareSet rookAttacks(int square, SquareSet occupied) {
+SquareSet rookAttacks(Square square, SquareSet occupied) {
   return _fileAttacks(square, occupied).xor(_rankAttacks(square, occupied));
 }
 
-/// Gets squares attacked or defended by a queen on `square`, given `occupied`
+/// Gets squares attacked or defended by a queen on [Square], given `occupied`
 /// squares.
-SquareSet queenAttacks(int square, SquareSet occupied) =>
+SquareSet queenAttacks(Square square, SquareSet occupied) =>
     bishopAttacks(square, occupied).xor(rookAttacks(square, occupied));
 
 /// Gets all squares of the rank, file or diagonal with the two squares
 /// `a` and `b`, or an empty set if they are not aligned.
-SquareSet ray(int a, int b) {
+SquareSet ray(Square a, Square b) {
   final other = SquareSet.fromSquare(b);
   if (_rankRange[a].isIntersected(other)) {
     return _rankRange[a].withSquare(a);
@@ -61,13 +61,13 @@ SquareSet ray(int a, int b) {
 
 /// Gets all squares between `a` and `b` (bounds not included), or an empty set
 /// if they are not on the same rank, file or diagonal.
-SquareSet between(int a, int b) => ray(a, b)
+SquareSet between(Square a, Square b) => ray(a, b)
     .intersect(SquareSet.full.shl(a).xor(SquareSet.full.shl(b)))
     .withoutFirst();
 
 // --
 
-SquareSet _computeRange(int square, List<int> deltas) {
+SquareSet _computeRange(Square square, List<int> deltas) {
   SquareSet range = SquareSet.empty;
   for (final delta in deltas) {
     final sq = square + delta;
@@ -80,9 +80,9 @@ SquareSet _computeRange(int square, List<int> deltas) {
   return range;
 }
 
-List<T> _tabulate<T>(T Function(int square) f) {
+List<T> _tabulate<T>(T Function(Square square) f) {
   final List<T> table = [];
-  for (int square = 0; square < 64; square++) {
+  for (Square square = 0; square < 64; square++) {
     table.insert(square, f(square));
   }
   return table;
@@ -125,10 +125,10 @@ SquareSet _hyperbola(SquareSet bit, SquareSet range, SquareSet occupied) {
   return forward.xor(reverse.flipVertical()).intersect(range);
 }
 
-SquareSet _fileAttacks(int square, SquareSet occupied) =>
+SquareSet _fileAttacks(Square square, SquareSet occupied) =>
     _hyperbola(SquareSet.fromSquare(square), _fileRange[square], occupied);
 
-SquareSet _rankAttacks(int square, SquareSet occupied) {
+SquareSet _rankAttacks(Square square, SquareSet occupied) {
   final range = _rankRange[square];
   final bit = SquareSet.fromSquare(square);
   SquareSet forward = occupied.intersect(range);
