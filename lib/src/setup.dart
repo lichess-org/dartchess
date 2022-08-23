@@ -191,8 +191,8 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
       throw FenError('ERR_CASTLING');
     }
     for (final square in candidates) {
-      if (board.king.has(square)) break;
-      if (board.rook.has(square)) {
+      if (board.kings.has(square)) break;
+      if (board.rooks.has(square)) {
         unmovedRooks = unmovedRooks.withSquare(square);
         break;
       }

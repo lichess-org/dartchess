@@ -82,7 +82,7 @@ class Castles {
 
   factory Castles.fromSetup(Setup setup) {
     Castles castles = Castles.empty;
-    final rooks = setup.unmovedRooks.intersect(setup.board.rook);
+    final rooks = setup.unmovedRooks.intersect(setup.board.rooks);
     for (final color in Color.values) {
       final backrank = SquareSet.fromRank(color == Color.white ? 0 : 7);
       final king = setup.board.kingOf(color);
@@ -145,13 +145,11 @@ class Castles {
     return _copyWith(
       unmovedRooks: unmovedRooks.withSquare(rook),
       rook: {
-        ...this.rook,
         color: side == CastlingSide.queen
             ? this.rook[color]!.withItem1(rook)
             : this.rook[color]!.withItem2(rook),
       },
       path: {
-        ...this.path,
         color: side == CastlingSide.queen
             ? this.path[color]!.withItem1(path)
             : this.path[color]!.withItem2(path),
@@ -166,8 +164,10 @@ class Castles {
   }) {
     return Castles(
       unmovedRooks: unmovedRooks ?? this.unmovedRooks,
-      rook: rook != null ? Map.unmodifiable(rook) : this.rook,
-      path: path != null ? Map.unmodifiable(path) : this.path,
+      rook:
+          rook != null ? Map.unmodifiable({...this.rook, ...rook}) : this.rook,
+      path:
+          path != null ? Map.unmodifiable({...this.path, ...path}) : this.path,
     );
   }
 
@@ -185,7 +185,8 @@ class Castles {
       other.path[Color.black] == path[Color.black];
 
   @override
-  int get hashCode => Object.hash(unmovedRooks, rook, path);
+  int get hashCode => Object.hash(unmovedRooks, rook[Color.white],
+      rook[Color.black], path[Color.white], path[Color.black]);
 }
 
 int _rookCastlesTo(Color color, CastlingSide side) {

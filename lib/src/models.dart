@@ -16,9 +16,10 @@ enum Color {
   }
 }
 
-typedef ByColor<T> = Map<Color, T>;
-
 enum Role { king, queen, knight, bishop, rook, pawn }
+
+typedef ByColor<T> = Map<Color, T>;
+typedef ByRole<T> = Map<Role, T>;
 
 class Piece {
   const Piece({
