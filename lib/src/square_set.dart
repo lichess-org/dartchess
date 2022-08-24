@@ -75,6 +75,10 @@ class SquareSet {
     return SquareSet(value & other.value);
   }
 
+  SquareSet diff(SquareSet other) {
+    return SquareSet(value & ~other.value);
+  }
+
   SquareSet minus(SquareSet other) {
     return SquareSet(value - other.value);
   }

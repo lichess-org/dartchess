@@ -52,6 +52,32 @@ abstract class Position {
         halfmoves = setup.halfmoves,
         fullmoves = setup.fullmoves;
 
+  bool get isVariantEnd;
+
+  bool get isInsufficientMaterial =>
+      Color.values.every((color) => hasInsufficientMaterial(color));
+
+  bool hasInsufficientMaterial(Color color) {
+    if (board
+        .byColor(color)
+        .intersect(board.pawns.union(board.rooksAndQueens))
+        .isNotEmpty) return false;
+    if (board.byColor(color).isIntersected(board.knights)) {
+      return (board.byColor(color).size <= 2 &&
+          board
+              .byColor(opposite(color))
+              .diff(board.kings)
+              .diff(board.queens)
+              .isEmpty);
+    }
+    if (board.byColor(color).isIntersected(board.bishops)) {
+      final sameColor = !board.bishops.isIntersected(SquareSet.darkSquares) ||
+          !board.bishops.isIntersected(SquareSet.lightSquares);
+      return sameColor && board.pawns.isEmpty && board.knights.isEmpty;
+    }
+    return true;
+  }
+
   void _validate({bool? ignoreImpossibleCheck}) {
     if (board.occupied.isEmpty) {
       throw PositionError(IllegalSetup.empty);
@@ -107,6 +133,9 @@ abstract class Position {
 
 class Chess extends Position {
   Chess._fromSetupUnchecked(Setup setup) : super._fromSetupUnchecked(setup);
+
+  @override
+  bool get isVariantEnd => false;
 
   /// Set up a playable [Chess] position.
   ///
