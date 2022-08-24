@@ -8,7 +8,7 @@ import './utils.dart';
 /// A playable chess or chess variant position.
 ///
 /// See [Chess] for a concrete implementation.
-abstract class Position {
+abstract class Position<T> {
   const Position({
     required this.board,
     required this.turn,
@@ -51,6 +51,15 @@ abstract class Position {
         epSquare = _validEpSquare(setup),
         halfmoves = setup.halfmoves,
         fullmoves = setup.fullmoves;
+
+  T _copyWith({
+    Board? board,
+    Color? turn,
+    Castles? castles,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  });
 
   /// Checks if the game is over due to a special variant end condition.
   bool get isVariantEnd;
@@ -219,6 +228,62 @@ abstract class Position {
     return pseudo;
   }
 
+  T play(Move move) {
+    final piece = board.pieceAt(move.from);
+    if (piece == null) {
+      return _copyWith();
+    }
+    final castlingMoveSide = _isCastlingMove(move);
+    Square? newEpSquare;
+    Board newBoard = board;
+    if (piece.role == Role.pawn) {
+      if (move.to == epSquare) {
+        newBoard =
+            newBoard.removePieceAt(move.to + (turn == Color.white ? -8 : 8));
+      }
+      final delta = move.from - move.to;
+      if (delta.abs() == 16 && 8 <= move.from && move.from <= 55) {
+        newEpSquare = (move.from + move.to) >> 1;
+      }
+    } else if (piece.role == Role.king) {
+      if (castlingMoveSide != null) {
+        final rookFrom = castles.rookOf(turn, castlingMoveSide);
+        if (rookFrom != null) {
+          final rook = board.pieceAt(rookFrom);
+          newBoard = newBoard.setPieceAt(
+              _kingCastlesTo(turn, castlingMoveSide), piece);
+          if (rook != null) {
+            newBoard = newBoard.setPieceAt(
+                _rookCastlesTo(turn, castlingMoveSide), rook);
+          }
+        }
+      }
+    }
+
+    if (castlingMoveSide == null) {
+      newBoard = newBoard.setPieceAt(move.to, piece);
+    }
+
+    final isCapture = board.pieceAt(move.to) != null || move.to == epSquare;
+    final capturedPiece = board.pieceAt(move.to);
+    final newCastles = piece.role == Role.king
+        ? castles.discardColor(turn)
+        : piece.role == Role.rook
+            ? castles.discardRookAt(move.from)
+            : capturedPiece != null && capturedPiece.role == Role.rook
+                ? castles.discardRookAt(move.to)
+                : null;
+
+    return _copyWith(
+      halfmoves: isCapture || piece.role == Role.pawn ? 0 : halfmoves + 1,
+      fullmoves: turn == Color.black ? fullmoves + 1 : fullmoves,
+      board: newBoard,
+      turn: opposite(turn),
+      castles: newCastles,
+      epSquare: newEpSquare,
+    );
+  }
+
   SquareSet _castlingDest(CastlingSide side, Square king, SquareSet checkers) {
     if (checkers.isNotEmpty) return SquareSet.empty;
     final rook = castles.rookOf(turn, side);
@@ -257,6 +322,17 @@ abstract class Position {
         .toggleSquare(epSquare!)
         .toggleSquare(captured);
     return !board.attacksTo(king, opposite(turn)).isIntersected(occupied);
+  }
+
+  CastlingSide? _isCastlingMove(Move move) {
+    final delta = move.to - move.from;
+    if (delta.abs() != 2 && !board.byColor(turn).has(move.to)) {
+      return null;
+    }
+    if (!board.kings.has(move.from)) {
+      return null;
+    }
+    return delta > 0 ? CastlingSide.king : CastlingSide.queen;
   }
 
   void _validate({bool? ignoreImpossibleCheck}) {
@@ -333,7 +409,16 @@ class Outcome {
   int get hashCode => winner.hashCode;
 }
 
-class Chess extends Position {
+class Chess extends Position<Chess> {
+  const Chess({
+    required super.board,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  });
+
   Chess._fromSetupUnchecked(Setup setup) : super._fromSetupUnchecked(setup);
   const Chess._standard() : super._standard();
 
@@ -353,6 +438,25 @@ class Chess extends Position {
     final unchecked = Chess._fromSetupUnchecked(setup);
     unchecked._validate();
     return unchecked;
+  }
+
+  @override
+  Chess _copyWith({
+    Board? board,
+    Color? turn,
+    Castles? castles,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return Chess(
+      board: board ?? this.board,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+    );
   }
 }
 
@@ -483,6 +587,16 @@ class Castles {
             },
           )
         : this;
+  }
+
+  Castles discardColor(Color color) {
+    return _copyWith(
+      unmovedRooks:
+          unmovedRooks.diff(SquareSet.fromRank(color == Color.white ? 0 : 7)),
+      rook: {
+        color: Tuple2(null, null),
+      },
+    );
   }
 
   Castles _add(Color color, CastlingSide side, Square king, Square rook) {

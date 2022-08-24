@@ -220,6 +220,23 @@ class Board {
     );
   }
 
+  /// Removes the [Piece] at this [Square] if it exists.
+  Board removePieceAt(Square square) {
+    final piece = pieceAt(square);
+    return piece != null
+        ? _copyWith(
+            occupied: occupied.withoutSquare(square),
+            promoted: piece.promoted ? promoted.withoutSquare(square) : null,
+            colors: {
+              piece.color: colors[piece.color]!.withoutSquare(square),
+            },
+            roles: {
+              piece.role: roles[piece.role]!.withoutSquare(square),
+            },
+          )
+        : this;
+  }
+
   Board _copyWith({
     SquareSet? occupied,
     SquareSet? promoted,

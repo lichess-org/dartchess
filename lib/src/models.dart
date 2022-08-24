@@ -44,6 +44,18 @@ class Piece {
     return r;
   }
 
+  Piece copyWith({
+    Color? color,
+    Role? role,
+    bool? promoted,
+  }) {
+    return Piece(
+      color: color ?? this.color,
+      role: role ?? this.role,
+      promoted: promoted ?? this.promoted,
+    );
+  }
+
   @override
   toString() {
     return '${color.name}${role.name}';

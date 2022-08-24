@@ -18,6 +18,12 @@ void main() {
     expect(board.pieceAt(0), piece);
   });
 
+  test('removePieceAt', () {
+    final piece = Piece(color: Color.white, role: Role.king);
+    final board = Board.empty.setPieceAt(10, piece);
+    expect(board.removePieceAt(10), Board.empty);
+  });
+
   test('parse board fen', () {
     final board = Board.parseFen(kInitialBoardFEN);
     expect(board, Board.standard);

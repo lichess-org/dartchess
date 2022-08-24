@@ -83,7 +83,7 @@ void main() {
     });
   });
 
-  group('Chess rules', () {
+  group('Chess rules getters', () {
     test('hasInsufficientMaterial', () {
       const insufficientMaterial = [
         ['8/5k2/8/8/8/8/3K4/8 w - - 0 1', true, true],
@@ -201,6 +201,37 @@ void main() {
         final pos = Chess.fromSetup(Setup.parseFen(test[0] as String));
         expect(pos.outcome, test[1]);
       }
+    });
+  });
+
+  group('Play a move', () {
+    test('e2 e4 on standard position', () {
+      final pos = Chess.standard.play(Move(from: 12, to: 28));
+      expect(pos.board.pieceAt(28), Piece(color: Color.white, role: Role.pawn));
+      expect(pos.turn, Color.black);
+    });
+
+    test('halfmoves increment', () {
+      // pawn move
+      expect(Chess.standard.play(Move(from: 12, to: 28)).halfmoves, 0);
+
+      // piece move
+      final pos = Chess.fromSetup(Setup.parseFen(
+              'r2qr2k/5Qpp/2R1nn2/3p4/3P4/1B3P2/PB4PP/4R1K1 b - - 0 29'))
+          .play(Move(from: 44, to: 38));
+      expect(pos.halfmoves, 1);
+
+      // capture move
+      final pos2 = Chess.fromSetup(Setup.parseFen(
+              'r2qr2k/5Qpp/2R2n2/3p2n1/3P4/1B3P2/PB4PP/4R1K1 w - - 1 30'))
+          .play(Move(from: 17, to: 35));
+      expect(pos2.halfmoves, 0);
+    });
+
+    test('fullmoves increment', () {
+      final pos = Chess.standard.play(Move(from: 12, to: 28));
+      expect(pos.fullmoves, 1);
+      expect(pos.play(Move(from: 53, to: 36)).fullmoves, 2);
     });
   });
 }
