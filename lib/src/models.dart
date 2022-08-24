@@ -62,6 +62,27 @@ class Piece {
   int get hashCode => Object.hash(color, role, promoted);
 }
 
+/// Represents a move, possibly a promotion.
+class Move {
+  const Move({
+    required this.from,
+    required this.to,
+    this.promotion,
+  });
+
+  final Square from;
+  final Square to;
+  final Role? promotion;
+
+  @override
+  bool operator ==(Object other) {
+    return other.runtimeType == runtimeType && hashCode == other.hashCode;
+  }
+
+  @override
+  int get hashCode => Object.hash(from, to, promotion);
+}
+
 /// Represents a 2-tuple, or pair.
 class Tuple2<T1, T2> {
   /// First item of the tuple.
