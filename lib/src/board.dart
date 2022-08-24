@@ -148,6 +148,11 @@ class Board {
     }
   }
 
+  /// A [SquareSet] of all the pieces matching this [Color] and [Role].
+  SquareSet piecesOf(Color color, Role role) {
+    return byColor(color).intersect(byRole(role));
+  }
+
   /// Gets all squares occupied by [Color].
   SquareSet byColor(Color color) => colors[color]!;
 

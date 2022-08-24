@@ -1,6 +1,5 @@
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
-import 'package:dartchess/src/utils.dart';
 
 void main() {
   group('Castles', () {
@@ -237,16 +236,8 @@ void main() {
       expect(pos.turn, Color.black);
       expect(pos.halfmoves, 0);
       expect(pos.fullmoves, 4);
-      expect(printBoard(pos.board), '''
-r . b q k b n r
-p p p . . Q p p
-. . n p . . . .
-. . . . p . . .
-. . B . P . . .
-. . . . . . . .
-P P P P . P P P
-R N B . K . N R
-''');
+      expect(pos.fen,
+          'r1bqkbnr/ppp2Qpp/2np4/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4');
     });
 
     test('halfmoves increment', () {

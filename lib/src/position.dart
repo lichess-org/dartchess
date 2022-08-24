@@ -67,6 +67,18 @@ abstract class Position<T> {
   /// Tests special variant winning, losing and drawing conditions.
   Outcome? get variantOutcome;
 
+  /// Gets the Forsyth-Edwards-Notation string of this position.
+  String get fen {
+    return Setup(
+      board: board,
+      turn: turn,
+      unmovedRooks: castles.unmovedRooks,
+      epSquare: _legalEpSquare(),
+      halfmoves: halfmoves,
+      fullmoves: fullmoves,
+    ).fen;
+  }
+
   /// Tests if the king is in check.
   bool get isCheck {
     final king = board.kingOf(turn);
@@ -333,6 +345,19 @@ abstract class Position<T> {
       return null;
     }
     return delta > 0 ? CastlingSide.king : CastlingSide.queen;
+  }
+
+  Square? _legalEpSquare() {
+    if (epSquare == null) return null;
+    final ourPawns = board.piecesOf(turn, Role.pawn);
+    final candidates =
+        ourPawns.intersect(pawnAttacks(opposite(turn), epSquare!));
+    for (final candidate in candidates.squares) {
+      if (legalMovesOf(candidate).has(epSquare!)) {
+        return epSquare;
+      }
+    }
+    return null;
   }
 
   void _validate({bool? ignoreImpossibleCheck}) {
