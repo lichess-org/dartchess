@@ -83,7 +83,7 @@ void main() {
     });
   });
 
-  group('Position methods', () {
+  group('Chess rules', () {
     test('hasInsufficientMaterial', () {
       const insufficientMaterial = [
         ['8/5k2/8/8/8/8/3K4/8 w - - 0 1', true, true],
@@ -115,6 +115,38 @@ void main() {
           Chess.fromSetup(Setup.parseFen('3b4/8/8/6b1/8/8/R7/K1k5 w - - 0 1'))
               .isInsufficientMaterial,
           false);
+    });
+
+    test('Standard position legal moves', () {
+      final moves = {
+        0: SquareSet.empty,
+        1: SquareSet.fromSquare(16).withSquare(18),
+        2: SquareSet.empty,
+        3: SquareSet.empty,
+        4: SquareSet.empty,
+        5: SquareSet.empty,
+        6: SquareSet.fromSquare(21).withSquare(23),
+        7: SquareSet.empty,
+        8: SquareSet.fromSquare(16).withSquare(24),
+        9: SquareSet.fromSquare(17).withSquare(25),
+        10: SquareSet.fromSquare(18).withSquare(26),
+        11: SquareSet.fromSquare(19).withSquare(27),
+        12: SquareSet.fromSquare(20).withSquare(28),
+        13: SquareSet.fromSquare(21).withSquare(29),
+        14: SquareSet.fromSquare(22).withSquare(30),
+        15: SquareSet.fromSquare(23).withSquare(31),
+      };
+      expect(Chess.standard.legalMoves, equals(moves));
+    });
+
+    test('Most known legal moves', () {
+      expect(
+          Chess.fromSetup(Setup.parseFen(
+                  'R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1'))
+              .legalMoves
+              .values
+              .fold<int>(0, (value, el) => value + el.size),
+          218);
     });
   });
 }

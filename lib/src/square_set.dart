@@ -126,6 +126,10 @@ class SquareSet {
     return SquareSet(value & ~(1 << square));
   }
 
+  SquareSet toggleSquare(Square square) {
+    return SquareSet(value ^ (1 << square));
+  }
+
   SquareSet withoutFirst() {
     final f = first;
     return f != null ? withoutSquare(f) : empty;
