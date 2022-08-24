@@ -148,5 +148,59 @@ void main() {
               .fold<int>(0, (value, el) => value + el.size),
           218);
     });
+
+    test('isCheck', () {
+      expect(
+          Chess.fromSetup(Setup.parseFen(
+                  'rnbqkbnr/pppp2pp/8/4pp1Q/4P3/2N5/PPPP1PPP/R1B1KBNR b KQkq - 0 1'))
+              .isCheck,
+          true);
+    });
+
+    test('isGameOver', () {
+      const fenTests = [
+        ['rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', false],
+        ['r2q2k1/5pQp/p2p4/2pP4/1p6/1P6/PBPb1PPP/4R1K1 b - - 0 20', true],
+        ['8/8/8/8/8/1pk5/p7/K7 w - - 0 70', true],
+        ['8/8/8/8/6k1/2N5/2K5/8 w - - 0 1', true],
+      ];
+      for (final test in fenTests) {
+        final pos = Chess.fromSetup(Setup.parseFen(test[0] as String));
+        expect(pos.isGameOver, test[1]);
+      }
+    });
+
+    test('isCheckmate', () {
+      expect(Chess.standard.isGameOver, false);
+      expect(
+          Chess.fromSetup(Setup.parseFen(
+                  'r2q2k1/5pQp/p2p4/2pP4/1p6/1P6/PBPb1PPP/4R1K1 b - - 0 20'))
+              .isGameOver,
+          true);
+    });
+
+    test('isStalemate', () {
+      expect(Chess.standard.isGameOver, false);
+      expect(
+          Chess.fromSetup(Setup.parseFen('8/8/8/8/8/1pk5/p7/K7 w - - 0 70'))
+              .isStalemate,
+          true);
+    });
+
+    test('outcome', () {
+      const fenTests = [
+        ['rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', null],
+        [
+          'r3r2k/6Q1/1qp1Nn2/p1b5/Pp3P2/8/1P4PP/R6K b - - 2 29',
+          Outcome.whiteWins
+        ],
+        ['8/8/8/8/8/1pk5/p7/K7 w - - 0 70', Outcome.draw],
+        ['8/8/8/8/6k1/2N5/2K5/8 w - - 0 1', Outcome.draw],
+      ];
+      for (final test in fenTests) {
+        final pos = Chess.fromSetup(Setup.parseFen(test[0] as String));
+        expect(pos.outcome, test[1]);
+      }
+    });
   });
 }

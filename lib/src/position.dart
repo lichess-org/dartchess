@@ -52,17 +52,71 @@ abstract class Position {
         halfmoves = setup.halfmoves,
         fullmoves = setup.fullmoves;
 
+  /// Checks if the game is over due to a special variant end condition.
   bool get isVariantEnd;
 
+  /// Tests special variant winning, losing and drawing conditions.
+  Outcome? get variantOutcome;
+
+  /// Tests if the king is in check.
+  bool get isCheck {
+    final king = board.kingOf(turn);
+    return king != null && board.attacksTo(king, opposite(turn)).isNotEmpty;
+  }
+
+  /// Tests if the game is over.
+  bool get isGameOver =>
+      isVariantEnd || isInsufficientMaterial || !hasSomeLegalMoves;
+
+  /// Tests for checkmate.
+  bool get isCheckmate =>
+      !isVariantEnd && checkers.isNotEmpty && !hasSomeLegalMoves;
+
+  /// Tests for stalemate.
+  bool get isStalemate =>
+      !isVariantEnd && checkers.isEmpty && !hasSomeLegalMoves;
+
+  /// The outcome of the game, or `null` if the game is not over.
+  Outcome? get outcome {
+    if (variantOutcome != null) {
+      return variantOutcome;
+    } else if (isCheckmate) {
+      return Outcome(winner: opposite(turn));
+    } else if (isInsufficientMaterial || isStalemate) {
+      return Outcome(winner: null);
+    } else {
+      return null;
+    }
+  }
+
+  /// Tests if both [Color] have insufficient winning material.
   bool get isInsufficientMaterial =>
       Color.values.every((color) => hasInsufficientMaterial(color));
 
+  /// Tests if the position has at least one legal move.
+  bool get hasSomeLegalMoves {
+    for (final square in board.byColor(turn).squares) {
+      if (legalMovesOf(square).isNotEmpty) return true;
+    }
+    return false;
+  }
+
+  /// Gets all the legal moves of this position.
   Map<Square, SquareSet> get legalMoves {
     if (isVariantEnd) return Map.unmodifiable({});
     return Map.unmodifiable(
         {for (final s in board.byColor(turn).squares) s: legalMovesOf(s)});
   }
 
+  /// SquareSet of pieces giving check.
+  SquareSet get checkers {
+    final king = board.kingOf(turn);
+    return king != null
+        ? board.attacksTo(king, opposite(turn))
+        : SquareSet.empty;
+  }
+
+  /// Tests if a [Color] has insufficient winning material.
   bool hasInsufficientMaterial(Color color) {
     if (board
         .byColor(color)
@@ -84,6 +138,7 @@ abstract class Position {
     return true;
   }
 
+  /// Gets the legal moves for that [Square].
   SquareSet legalMovesOf(Square square) {
     if (isVariantEnd) return SquareSet.empty;
     final piece = board.pieceAt(square);
@@ -257,6 +312,27 @@ abstract class Position {
   }
 }
 
+class Outcome {
+  const Outcome({this.winner});
+
+  final Color? winner;
+
+  static const whiteWins = Outcome(winner: Color.white);
+  static const blackWins = Outcome(winner: Color.black);
+  static const draw = Outcome();
+
+  @override
+  toString() {
+    return 'winner: $winner';
+  }
+
+  @override
+  bool operator ==(Object other) => other is Outcome && winner == other.winner;
+
+  @override
+  int get hashCode => winner.hashCode;
+}
+
 class Chess extends Position {
   Chess._fromSetupUnchecked(Setup setup) : super._fromSetupUnchecked(setup);
   const Chess._standard() : super._standard();
@@ -265,6 +341,9 @@ class Chess extends Position {
 
   @override
   bool get isVariantEnd => false;
+
+  @override
+  Outcome? get variantOutcome => null;
 
   /// Set up a playable [Chess] position.
   ///
