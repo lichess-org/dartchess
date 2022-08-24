@@ -28,6 +28,16 @@ void main() {
       expect(
           Castles.standard.discardRookAt(7).rook[Color.white], Tuple2(0, null));
     });
+
+    test('discard color', () {
+      expect(
+          Castles.standard.discardColor(Color.white).rook,
+          equals(
+              {Color.white: Tuple2(null, null), Color.black: Tuple2(56, 63)}));
+
+      expect(Castles.standard.discardColor(Color.black).rook,
+          equals({Color.white: Tuple2(0, 7), Color.black: Tuple2(null, null)}));
+    });
   });
 
   group('Position validation', () {
