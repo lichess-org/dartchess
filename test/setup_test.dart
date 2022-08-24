@@ -25,8 +25,17 @@ void main() {
         () =>
             Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w BGL')
                 .unmovedRooks,
-        throwsA(predicate(
-            (e) => e is FenError && e.message == 'ERR_CASTLING')));
+        throwsA(
+            predicate((e) => e is FenError && e.message == 'ERR_CASTLING')));
+  });
+
+  test('parse en passant square', () {
+    expect(Setup.parseFen(kInitialFEN).epSquare, null);
+    expect(
+        Setup.parseFen(
+                'r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6')
+            .epSquare,
+        45);
   });
 
   test('parse initial fen', () {

@@ -235,7 +235,7 @@ abstract class Position<T> {
     }
     final castlingMoveSide = _isCastlingMove(move);
     Square? newEpSquare;
-    Board newBoard = board;
+    Board newBoard = board.removePieceAt(move.from);
     if (piece.role == Role.pawn) {
       if (move.to == epSquare) {
         newBoard =

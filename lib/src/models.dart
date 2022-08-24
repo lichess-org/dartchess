@@ -72,6 +72,20 @@ class Piece {
 
   @override
   int get hashCode => Object.hash(color, role, promoted);
+
+  static const whitePawn = Piece(color: Color.white, role: Role.pawn);
+  static const whiteKnight = Piece(color: Color.white, role: Role.knight);
+  static const whiteBishop = Piece(color: Color.white, role: Role.bishop);
+  static const whiteRook = Piece(color: Color.white, role: Role.rook);
+  static const whiteQueen = Piece(color: Color.white, role: Role.queen);
+  static const whiteKing = Piece(color: Color.white, role: Role.king);
+
+  static const blackPawn = Piece(color: Color.black, role: Role.pawn);
+  static const blackKnight = Piece(color: Color.black, role: Role.knight);
+  static const blackBishop = Piece(color: Color.black, role: Role.bishop);
+  static const blackRook = Piece(color: Color.black, role: Role.rook);
+  static const blackQueen = Piece(color: Color.black, role: Role.queen);
+  static const blackKing = Piece(color: Color.black, role: Role.king);
 }
 
 /// Represents a move, possibly a promotion.

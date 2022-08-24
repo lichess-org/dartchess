@@ -1,5 +1,6 @@
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
+import 'package:dartchess/src/utils.dart';
 
 void main() {
   group('Castles', () {
@@ -217,8 +218,35 @@ void main() {
   group('Play a move', () {
     test('e2 e4 on standard position', () {
       final pos = Chess.standard.play(Move(from: 12, to: 28));
-      expect(pos.board.pieceAt(28), Piece(color: Color.white, role: Role.pawn));
+      expect(pos.board.pieceAt(28), Piece.whitePawn);
+      expect(pos.board.pieceAt(12), null);
       expect(pos.turn, Color.black);
+    });
+
+    test('play the scholar mate', () {
+      final pos = Chess.standard
+          .play(Move(from: 12, to: 28))
+          .play(Move(from: 52, to: 36))
+          .play(Move(from: 5, to: 26))
+          .play(Move(from: 57, to: 42))
+          .play(Move(from: 3, to: 21))
+          .play(Move(from: 51, to: 43))
+          .play(Move(from: 21, to: 53));
+
+      expect(pos.isCheckmate, true);
+      expect(pos.turn, Color.black);
+      expect(pos.halfmoves, 0);
+      expect(pos.fullmoves, 4);
+      expect(printBoard(pos.board), '''
+r . b q k b n r
+p p p . . Q p p
+. . n p . . . .
+. . . . p . . .
+. . B . P . . .
+. . . . . . . .
+P P P P . P P P
+R N B . K . N R
+''');
     });
 
     test('halfmoves increment', () {
@@ -242,6 +270,47 @@ void main() {
       final pos = Chess.standard.play(Move(from: 12, to: 28));
       expect(pos.fullmoves, 1);
       expect(pos.play(Move(from: 53, to: 36)).fullmoves, 2);
+    });
+
+    test('epSquare is correctly set after a double push move', () {
+      final pos = Chess.standard.play(Move(from: 12, to: 28));
+      expect(pos.epSquare, 20);
+    });
+
+    test('en passant capture', () {
+      final pos = Chess.fromSetup(Setup.parseFen(
+              'r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'))
+          .play(Move(from: 36, to: 45));
+      expect(pos.board.pieceAt(45), Piece.whitePawn);
+      expect(pos.board.pieceAt(37), null);
+      expect(pos.epSquare, null);
+    });
+
+    test('castling move', () {
+      final pos = Chess.fromSetup(Setup.parseFen(
+              'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
+          .play(Move(from: 4, to: 6));
+      expect(pos.board.pieceAt(6), Piece.whiteKing);
+      expect(pos.board.pieceAt(5), Piece.whiteRook);
+      expect(
+          pos.castles.unmovedRooks.isIntersected(SquareSet.fromRank(0)), false);
+      expect(pos.castles.rook[Color.white], equals(Tuple2(null, null)));
+    });
+
+    test('rook move removes castling right', () {
+      final pos = Chess.fromSetup(Setup.parseFen(
+              'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
+          .play(Move(from: 7, to: 5));
+      expect(pos.castles.rook[Color.white], equals(Tuple2(0, null)));
+      expect(pos.castles.unmovedRooks.has(7), false);
+    });
+
+    test('capturing a rook removes castling right', () {
+      final pos = Chess.fromSetup(Setup.parseFen(
+              'r1bqk1nr/pppp1pbp/2n1p1p1/8/2B1P3/1P3N2/P1PP1PPP/RNBQK2R b KQkq - 4 4'))
+          .play(Move(from: 54, to: 0));
+      expect(pos.castles.rook[Color.white], equals(Tuple2(null, 7)));
+      expect(pos.castles.unmovedRooks.has(0), false);
     });
   });
 }
