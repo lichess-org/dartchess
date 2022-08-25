@@ -93,7 +93,7 @@ void main() {
     });
   });
 
-  group('Chess rules getters', () {
+  group('Chess rules getters:', () {
     test('hasInsufficientMaterial', () {
       const insufficientMaterial = [
         ['8/5k2/8/8/8/8/3K4/8 w - - 0 1', true, true],
@@ -127,7 +127,7 @@ void main() {
           false);
     });
 
-    test('Standard position legal moves', () {
+    test('standard position legal moves', () {
       final moves = {
         0: SquareSet.empty,
         1: SquareSet.fromSquare(16).withSquare(18),
@@ -149,7 +149,7 @@ void main() {
       expect(Chess.standard.legalMoves, equals(moves));
     });
 
-    test('Most known legal moves', () {
+    test('most known legal moves', () {
       expect(
           Chess.fromSetup(Setup.parseFen(
                   'R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1'))
@@ -212,9 +212,29 @@ void main() {
         expect(pos.outcome, test[1]);
       }
     });
+
+    test('isLegal', () {
+      expect(Chess.standard.isLegal(Move(from: 12, to: 28)), true);
+      expect(Chess.standard.isLegal(Move(from: 12, to: 29)), false);
+      final promPos = Chess.fromSetup(
+          Setup.parseFen('8/5P2/2RK2P1/8/4k3/8/8/7r w - - 0 1'));
+      expect(
+          promPos.isLegal(Move(from: 53, to: 61, promotion: Role.king)), false);
+      expect(promPos.isLegal(Move(from: 42, to: 58, promotion: Role.queen)),
+          false);
+      expect(promPos.isLegal(Move(from: 46, to: 54, promotion: Role.queen)),
+          false);
+      expect(
+          promPos.isLegal(Move(from: 53, to: 61, promotion: Role.queen)), true);
+    });
   });
 
-  group('Play a move', () {
+  group('Play a move:', () {
+    test('not valid', () {
+      expect(() => Chess.standard.play(Move(from: 12, to: 44)),
+          throwsA(TypeMatcher<PlayError>()));
+    });
+
     test('e2 e4 on standard position', () {
       final pos = Chess.standard.play(Move(from: 12, to: 28));
       expect(pos.board.pieceAt(28), Piece.whitePawn);
@@ -222,7 +242,7 @@ void main() {
       expect(pos.turn, Color.black);
     });
 
-    test('play the scholar mate', () {
+    test('scholar mate', () {
       final pos = Chess.standard
           .play(Move(from: 12, to: 28))
           .play(Move(from: 52, to: 36))
@@ -260,7 +280,7 @@ void main() {
     test('fullmoves increment', () {
       final pos = Chess.standard.play(Move(from: 12, to: 28));
       expect(pos.fullmoves, 1);
-      expect(pos.play(Move(from: 53, to: 36)).fullmoves, 2);
+      expect(pos.play(Move(from: 52, to: 36)).fullmoves, 2);
     });
 
     test('epSquare is correctly set after a double push move', () {

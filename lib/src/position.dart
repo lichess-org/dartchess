@@ -159,6 +159,18 @@ abstract class Position<T> {
     return true;
   }
 
+  /// Tests a move for legality.
+  bool isLegal(Move move) {
+    if (move.promotion == Role.pawn) return false;
+    if (move.promotion == Role.king) return false;
+    if (move.promotion != null &&
+        (!board.pawns.has(move.from) || !SquareSet.backranks.has(move.to))) {
+      return false;
+    }
+    final legalMoves = legalMovesOf(move.from);
+    return legalMoves.has(move.to) || legalMoves.has(_normalizeMove(move).to);
+  }
+
   /// Gets the legal moves for that [Square].
   SquareSet legalMovesOf(Square square) {
     if (isVariantEnd) return SquareSet.empty;
@@ -240,7 +252,19 @@ abstract class Position<T> {
     return pseudo;
   }
 
+  /// Plays a move.
+  ///
+  /// Throws a [PlayError] if the move is not legal.
   T play(Move move) {
+    if (isLegal(move)) {
+      return playUnchecked(move);
+    } else {
+      throw PlayError('Invalid move');
+    }
+  }
+
+  /// Plays a move without checking if the move is legal.
+  T playUnchecked(Move move) {
     final piece = board.pieceAt(move.from);
     if (piece == null) {
       return _copyWith();
@@ -293,6 +317,16 @@ abstract class Position<T> {
       turn: opposite(turn),
       castles: newCastles,
       epSquare: newEpSquare,
+    );
+  }
+
+  Move _normalizeMove(Move move) {
+    final side = _isCastlingMove(move);
+    if (side == null) return move;
+    final rookFrom = castles.rookOf(turn, side);
+    return Move(
+      from: move.from,
+      to: rookFrom ?? move.to,
     );
   }
 
@@ -508,6 +542,11 @@ enum IllegalSetup {
 
   /// A variant specific rule is violated.
   variant,
+}
+
+class PlayError implements Exception {
+  final String message;
+  PlayError(this.message);
 }
 
 /// Error when trying to create a [Position] from an illegal [Setup].
