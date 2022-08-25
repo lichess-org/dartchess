@@ -67,7 +67,10 @@ abstract class Position<T> {
   /// Tests special variant winning, losing and drawing conditions.
   Outcome? get variantOutcome;
 
-  /// Gets the Forsyth-Edwards-Notation string of this position.
+  /// Gets the FEN string of this position.
+  ///
+  /// Contrary to the FEN given by [Setup], this should always be a legal
+  /// position.
   String get fen {
     return Setup(
       board: board,
