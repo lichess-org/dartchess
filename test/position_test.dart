@@ -146,7 +146,7 @@ void main() {
         14: SquareSet.fromSquare(22).withSquare(30),
         15: SquareSet.fromSquare(23).withSquare(31),
       };
-      expect(Chess.standard.legalMoves, equals(moves));
+      expect(Chess.initial.legalMoves, equals(moves));
     });
 
     test('most known legal moves', () {
@@ -181,7 +181,7 @@ void main() {
     });
 
     test('isCheckmate', () {
-      expect(Chess.standard.isGameOver, false);
+      expect(Chess.initial.isGameOver, false);
       expect(
           Chess.fromSetup(Setup.parseFen(
                   'r2q2k1/5pQp/p2p4/2pP4/1p6/1P6/PBPb1PPP/4R1K1 b - - 0 20'))
@@ -190,7 +190,7 @@ void main() {
     });
 
     test('isStalemate', () {
-      expect(Chess.standard.isGameOver, false);
+      expect(Chess.initial.isGameOver, false);
       expect(
           Chess.fromSetup(Setup.parseFen('8/8/8/8/8/1pk5/p7/K7 w - - 0 70'))
               .isStalemate,
@@ -214,8 +214,8 @@ void main() {
     });
 
     test('isLegal', () {
-      expect(Chess.standard.isLegal(Move(from: 12, to: 28)), true);
-      expect(Chess.standard.isLegal(Move(from: 12, to: 29)), false);
+      expect(Chess.initial.isLegal(Move(from: 12, to: 28)), true);
+      expect(Chess.initial.isLegal(Move(from: 12, to: 29)), false);
       final promPos = Chess.fromSetup(
           Setup.parseFen('8/5P2/2RK2P1/8/4k3/8/8/7r w - - 0 1'));
       expect(
@@ -231,19 +231,19 @@ void main() {
 
   group('Play a move:', () {
     test('not valid', () {
-      expect(() => Chess.standard.play(Move(from: 12, to: 44)),
+      expect(() => Chess.initial.play(Move(from: 12, to: 44)),
           throwsA(TypeMatcher<PlayError>()));
     });
 
     test('e2 e4 on standard position', () {
-      final pos = Chess.standard.play(Move(from: 12, to: 28));
+      final pos = Chess.initial.play(Move(from: 12, to: 28));
       expect(pos.board.pieceAt(28), Piece.whitePawn);
       expect(pos.board.pieceAt(12), null);
       expect(pos.turn, Color.black);
     });
 
     test('scholar mate', () {
-      final pos = Chess.standard
+      final pos = Chess.initial
           .play(Move(from: 12, to: 28))
           .play(Move(from: 52, to: 36))
           .play(Move(from: 5, to: 26))
@@ -262,7 +262,7 @@ void main() {
 
     test('halfmoves increment', () {
       // pawn move
-      expect(Chess.standard.play(Move(from: 12, to: 28)).halfmoves, 0);
+      expect(Chess.initial.play(Move(from: 12, to: 28)).halfmoves, 0);
 
       // piece move
       final pos = Chess.fromSetup(Setup.parseFen(
@@ -278,13 +278,13 @@ void main() {
     });
 
     test('fullmoves increment', () {
-      final pos = Chess.standard.play(Move(from: 12, to: 28));
+      final pos = Chess.initial.play(Move(from: 12, to: 28));
       expect(pos.fullmoves, 1);
       expect(pos.play(Move(from: 52, to: 36)).fullmoves, 2);
     });
 
     test('epSquare is correctly set after a double push move', () {
-      final pos = Chess.standard.play(Move(from: 12, to: 28));
+      final pos = Chess.initial.play(Move(from: 12, to: 28));
       expect(pos.epSquare, 20);
     });
 

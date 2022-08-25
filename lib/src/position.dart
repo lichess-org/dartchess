@@ -36,7 +36,7 @@ abstract class Position<T> {
   /// Current move number.
   final int fullmoves;
 
-  const Position._standard()
+  const Position._initial()
       : board = Board.standard,
         turn = Color.white,
         castles = Castles.standard,
@@ -479,9 +479,9 @@ class Chess extends Position<Chess> {
   });
 
   Chess._fromSetupUnchecked(Setup setup) : super._fromSetupUnchecked(setup);
-  const Chess._standard() : super._standard();
+  const Chess._initial() : super._initial();
 
-  static const standard = Chess._standard();
+  static const initial = Chess._initial();
 
   @override
   bool get isVariantEnd => false;
