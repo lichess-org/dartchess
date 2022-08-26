@@ -148,7 +148,7 @@ class SquareSet {
   @override
   toString() {
     String b = '';
-    for (Square square = 0; square < 64; square++) {
+    for (Square square = 63; square >= 0; square--) {
       b += (has(square) ? '1' : '0');
     }
     final first = int.parse(b.substring(0, 32), radix: 2)
