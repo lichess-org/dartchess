@@ -213,7 +213,7 @@ class Board {
 
   /// Puts a [Piece] on a [Square] overriding the existing one, if any.
   Board setPieceAt(Square square, Piece piece) {
-    return _copyWith(
+    return removePieceAt(square)._copyWith(
       occupied: occupied.withSquare(square),
       promoted: piece.promoted ? promoted.withSquare(square) : null,
       colors: {

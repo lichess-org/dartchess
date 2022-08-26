@@ -14,8 +14,28 @@ void main() {
   test('setPieceAt', () {
     final piece = Piece(color: Color.white, role: Role.king);
     final board = Board.empty.setPieceAt(0, piece);
+    expect(board.occupied, SquareSet(0x0000000000000001));
     expect(board.pieces.length, 1);
     expect(board.pieceAt(0), piece);
+
+    final board2 = Board.standard.setPieceAt(60, piece);
+    expect(board2.pieceAt(60), piece);
+    expect(
+        board2.colors,
+        equals({
+          Color.white: SquareSet(0x100000000000FFFF),
+          Color.black: SquareSet(0xEFFF000000000000)
+        }));
+    expect(
+        board2.roles,
+        equals({
+          Role.pawn: SquareSet(0x00FF00000000FF00),
+          Role.knight: SquareSet(0x4200000000000042),
+          Role.bishop: SquareSet(0x2400000000000024),
+          Role.rook: SquareSet(0x8100000000000081),
+          Role.queen: SquareSet(0x0800000000000008),
+          Role.king: SquareSet(0x1000000000000010)
+        }));
   });
 
   test('removePieceAt', () {
@@ -36,13 +56,10 @@ void main() {
   });
 
   test('invalid board fen', () {
-    expect(
-        () => Board.parseFen('4k2r/8/8/8/8/RR2K2R'),
-        throwsA(predicate(
-            (e) => e is FenError && e.message == 'ERR_BOARD')));
+    expect(() => Board.parseFen('4k2r/8/8/8/8/RR2K2R'),
+        throwsA(predicate((e) => e is FenError && e.message == 'ERR_BOARD')));
 
-    expect(() => Board.parseFen('lol'),
-        throwsA(TypeMatcher<FenError>()));
+    expect(() => Board.parseFen('lol'), throwsA(TypeMatcher<FenError>()));
   });
 
   test('make board fen', () {
