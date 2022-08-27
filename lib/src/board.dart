@@ -261,6 +261,9 @@ class Board {
   }
 
   @override
+  toString() => fen;
+
+  @override
   bool operator ==(Object other) {
     return other is Board &&
         other.occupied == occupied &&

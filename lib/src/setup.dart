@@ -100,7 +100,7 @@ class Setup {
     // halfmoves
     int halfmoves = 0;
     if (parts.isNotEmpty) {
-      final int? parsed = parseSmallUint(parts.removeAt(0));
+      final int? parsed = _parseSmallUint(parts.removeAt(0));
       if (parsed == null) {
         throw FenError('ERR_HALFMOVES');
       } else {
@@ -111,7 +111,7 @@ class Setup {
     // fullmoves
     int fullmoves = 1;
     if (parts.isNotEmpty) {
-      final int? parsed = parseSmallUint(parts.removeAt(0));
+      final int? parsed = _parseSmallUint(parts.removeAt(0));
       if (parsed == null) {
         throw FenError('ERR_FULLMOVES');
       } else {
@@ -175,7 +175,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
     final c = castlingPart[i];
     final lower = c.toLowerCase();
     final color = c == lower ? Color.black : Color.white;
-    final backrankMask = SquareSet.fromRank(color == Color.white ? 0 : 7);
+    final backrankMask = SquareSet.backrankOf(color);
     final backrank = backrankMask.intersect(board.byColor(color));
 
     Iterable<Square> candidates;
@@ -208,7 +208,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
 String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
   String fen = '';
   for (final color in Color.values) {
-    final backrank = SquareSet.fromRank(color == Color.white ? 0 : 7);
+    final backrank = SquareSet.backrankOf(color);
     final king = board.kingOf(color);
     final candidates =
         board.byPiece(Piece(color: color, role: Role.rook)).intersect(backrank);
@@ -225,3 +225,6 @@ String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
   }
   return fen != '' ? fen : '-';
 }
+
+int? _parseSmallUint(String str) =>
+    RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;

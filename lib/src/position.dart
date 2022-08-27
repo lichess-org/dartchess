@@ -282,14 +282,14 @@ abstract class Position<T> {
       }
       final delta = move.from - move.to;
       if (delta.abs() == 16 && 8 <= move.from && move.from <= 55) {
-        newEpSquare = (move.from + move.to) >> 1;
+        newEpSquare = (move.from + move.to) >>> 1;
       }
     } else if (piece.role == Role.king) {
       if (castlingMoveSide != null) {
         final rookFrom = castles.rookOf(turn, castlingMoveSide);
         if (rookFrom != null) {
           final rook = board.pieceAt(rookFrom);
-          newBoard = newBoard.setPieceAt(
+          newBoard = newBoard.removePieceAt(rookFrom).setPieceAt(
               _kingCastlesTo(turn, castlingMoveSide), piece);
           if (rook != null) {
             newBoard = newBoard.setPieceAt(
@@ -300,11 +300,14 @@ abstract class Position<T> {
     }
 
     if (castlingMoveSide == null) {
-      newBoard = newBoard.setPieceAt(move.to, piece);
+      final newPiece = move.promotion != null
+          ? piece.copyWith(role: move.promotion!)
+          : piece;
+      newBoard = newBoard.setPieceAt(move.to, newPiece);
     }
 
-    final isCapture = board.pieceAt(move.to) != null || move.to == epSquare;
     final capturedPiece = board.pieceAt(move.to);
+    final isCapture = capturedPiece != null || move.to == epSquare;
     final newCastles = piece.role == Role.king
         ? castles.discardColor(turn)
         : piece.role == Role.rook
@@ -606,7 +609,7 @@ class Castles {
     Castles castles = Castles.empty;
     final rooks = setup.unmovedRooks.intersect(setup.board.rooks);
     for (final color in Color.values) {
-      final backrank = SquareSet.fromRank(color == Color.white ? 0 : 7);
+      final backrank = SquareSet.backrankOf(color);
       final king = setup.board.kingOf(color);
       if (king == null || !backrank.has(king)) continue;
       final side =
@@ -658,8 +661,7 @@ class Castles {
 
   Castles discardColor(Color color) {
     return _copyWith(
-      unmovedRooks:
-          unmovedRooks.diff(SquareSet.fromRank(color == Color.white ? 0 : 7)),
+      unmovedRooks: unmovedRooks.diff(SquareSet.backrankOf(color)),
       rook: {
         color: Tuple2(null, null),
       },
