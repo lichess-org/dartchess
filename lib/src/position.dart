@@ -195,7 +195,7 @@ abstract class Position<T> {
     final checkers = board.attacksTo(king, opposite(turn));
 
     SquareSet pseudo;
-    SquareSet? legal;
+    SquareSet? legalEpSquare;
     if (piece.role == Role.pawn) {
       pseudo =
           pawnAttacks(turn, square).intersect(board.byColor(opposite(turn)));
@@ -209,11 +209,11 @@ abstract class Position<T> {
         if (canDoubleStep && !board.occupied.has(doubleStep)) {
           pseudo = pseudo.withSquare(doubleStep);
         }
-        if (epSquare != null && _canCaptureEp(square)) {
-          final pawn = epSquare! - delta;
-          if (checkers.isEmpty || checkers.singleSquare == pawn) {
-            legal = SquareSet.fromSquare(epSquare!);
-          }
+      }
+      if (epSquare != null && _canCaptureEp(square)) {
+        final pawn = epSquare! - delta;
+        if (checkers.isEmpty || checkers.singleSquare == pawn) {
+          legalEpSquare = SquareSet.fromSquare(epSquare!);
         }
       }
     } else if (piece.role == Role.bishop) {
@@ -250,7 +250,7 @@ abstract class Position<T> {
 
     if (blockers.has(square)) pseudo = pseudo.intersect(ray(square, king));
 
-    if (legal != null) pseudo = pseudo.union(legal);
+    if (legalEpSquare != null) pseudo = pseudo.union(legalEpSquare);
 
     return pseudo;
   }
@@ -281,7 +281,7 @@ abstract class Position<T> {
             newBoard.removePieceAt(move.to + (turn == Color.white ? -8 : 8));
       }
       final delta = move.from - move.to;
-      if (delta.abs() == 16 && 8 <= move.from && move.from <= 55) {
+      if (delta.abs() == 16 && move.from >= 8 && move.from <= 55) {
         newEpSquare = (move.from + move.to) >>> 1;
       }
     } else if (piece.role == Role.king) {
@@ -289,8 +289,9 @@ abstract class Position<T> {
         final rookFrom = castles.rookOf(turn, castlingMoveSide);
         if (rookFrom != null) {
           final rook = board.pieceAt(rookFrom);
-          newBoard = newBoard.removePieceAt(rookFrom).setPieceAt(
-              _kingCastlesTo(turn, castlingMoveSide), piece);
+          newBoard = newBoard
+              .removePieceAt(rookFrom)
+              .setPieceAt(_kingCastlesTo(turn, castlingMoveSide), piece);
           if (rook != null) {
             newBoard = newBoard.setPieceAt(
                 _rookCastlesTo(turn, castlingMoveSide), rook);
@@ -373,7 +374,9 @@ abstract class Position<T> {
         .toggleSquare(pawn)
         .toggleSquare(epSquare!)
         .toggleSquare(captured);
-    return !board.attacksTo(king, opposite(turn)).isIntersected(occupied);
+    return !board
+        .attacksTo(king, opposite(turn), occupied: occupied)
+        .isIntersected(occupied);
   }
 
   CastlingSide? _isCastlingMove(Move move) {

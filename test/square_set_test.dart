@@ -11,7 +11,8 @@ void main() {
     expect(SquareSet.antidiagonal.toString(), 'SquareSet(0x0102040810204080)');
     expect(SquareSet.corners.toString(), 'SquareSet(0x8100000000000081)');
     expect(SquareSet.backranks.toString(), 'SquareSet(0xFF000000000000FF)');
-    expect(SquareSet(0x0000000000000001).toString(), 'SquareSet(0x0000000000000001)');
+    expect(SquareSet(0x0000000000000001).toString(),
+        'SquareSet(0x0000000000000001)');
     expect(SquareSet(0xf).toString(), 'SquareSet(0x000000000000000F)');
   });
 

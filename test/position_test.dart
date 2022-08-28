@@ -160,7 +160,8 @@ void main() {
     });
 
     test('castling legal moves', () {
-      final pos = Chess.fromSetup(Setup.parseFen('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
+      final pos = Chess.fromSetup(Setup.parseFen(
+          'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
       expect(pos.legalMovesOf(4), SquareSet(0x00000000000000A9));
     });
 
@@ -343,24 +344,23 @@ void main() {
       for (final t in _tricky) {
         final pos = Chess.fromSetup(Setup.parseFen(t[1] as String));
         expect(perft(pos, 1), t[2]);
-        perft(pos.playUnchecked(Move(from: 12, to: 28)), 1, shouldLog: true);
         expect(perft(pos, 2), t[3]);
         expect(perft(pos, 3), t[4]);
       }
     });
 
-    // test('random', () {
-    //   for (final t in _random) {
-    //     final pos = Chess.fromSetup(Setup.parseFen(t[1] as String));
-    //     expect(perft(pos, 1), t[2]);
-    //     expect(perft(pos, 2), t[3]);
-    //     expect(perft(pos, 3), t[4]);
-    //     expect(perft(pos, 4), t[5]);
-    //     if (t[6] as int < 100000) {
-    //       expect(perft(pos, 5), t[6]);
-    //     }
-    //   }
-    // });
+    test('random', () {
+      for (final t in _random) {
+        final pos = Chess.fromSetup(Setup.parseFen(t[1] as String));
+        expect(perft(pos, 1), t[2]);
+        expect(perft(pos, 2), t[3]);
+        expect(perft(pos, 3), t[4]);
+        expect(perft(pos, 4), t[5]);
+        if (t[6] as int < 100000) {
+          expect(perft(pos, 5), t[6]);
+        }
+      }
+    });
   });
 }
 
@@ -440,18 +440,121 @@ final _tricky = [
 ];
 
 final _random = [
-  ['gentest-1', 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -', 20, 400, 8902, 197281, 4865609],
-  ['gentest-2', 'rnbqkbnr/pp1ppppp/2p5/8/6P1/2P5/PP1PPP1P/RNBQKBNR b KQkq -', 21, 463, 11138, 274234, 7290026],
-  ['gentest-3', 'rnb1kbnr/ppq1pppp/2pp4/8/6P1/2P5/PP1PPPBP/RNBQK1NR w KQkq -', 27, 734, 20553, 579004, 16988496],
-  ['gentest-4', 'rnb1kbnr/p1q1pppp/1ppp4/8/4B1P1/2P5/PPQPPP1P/RNB1K1NR b KQkq -', 28, 837, 22536, 699777, 19118920],
-  ['gentest-5', 'rn2kbnr/p1q1ppp1/1ppp3p/8/4B1b1/2P4P/PPQPPP2/RNB1K1NR w KQkq -', 29, 827, 24815, 701084, 21819626],
-  ['gentest-6', 'rn1qkbnr/p3ppp1/1ppp2Qp/3B4/6b1/2P4P/PP1PPP2/RNB1K1NR b KQkq -', 25, 976, 23465, 872551, 21984216],
-  ['gentest-7', 'rnkq1bnr/p3ppp1/1ppp3p/3B4/6b1/2PQ3P/PP1PPP2/RNB1K1NR w KQ -', 36, 957, 33542, 891412, 31155934],
-  ['gentest-8', 'rnkq1bnr/p3ppp1/1ppp3p/5b2/8/2PQ3P/PP1PPPB1/RNB1K1NR b KQ -', 29, 927, 25822, 832461, 23480361],
-  ['gentest-9', 'rn1q1bnr/p2kppp1/2pp3p/1p3b2/1P6/2PQ3P/P2PPPB1/RNB1K1NR w KQ -', 31, 834, 25926, 715605, 22575950],
-  ['gentest-10', 'rn1q1bnr/3kppp1/p1pp3p/1p3b2/1P6/2P2N1P/P1QPPPB1/RNB1K2R b KQ -', 29, 900, 25008, 781431, 22075119],
-  ['gentest-94', '2b1kbnB/rppqp3/3p3p/3P1pp1/pnP3P1/PP2P2P/4QP2/RN2KBNR b KQ -', 27, 729, 20665, 613681, 18161673],
-  ['gentest-95', '2b1kbnB/r1pqp3/n2p3p/1p1P1pp1/p1P3P1/PP2P2P/Q4P2/RN2KBNR w KQ -', 30, 689, 21830, 556204, 18152100],
-  ['gentest-96', '2b1kbn1/r1pqp3/n2p3p/3P1pp1/ppP3P1/PPB1P2P/Q4P2/RN2KBNR b KQ -', 23, 685, 17480, 532817, 14672791],
+  [
+    'gentest-1',
+    'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -',
+    20,
+    400,
+    8902,
+    197281,
+    4865609
+  ],
+  [
+    'gentest-2',
+    'rnbqkbnr/pp1ppppp/2p5/8/6P1/2P5/PP1PPP1P/RNBQKBNR b KQkq -',
+    21,
+    463,
+    11138,
+    274234,
+    7290026
+  ],
+  [
+    'gentest-3',
+    'rnb1kbnr/ppq1pppp/2pp4/8/6P1/2P5/PP1PPPBP/RNBQK1NR w KQkq -',
+    27,
+    734,
+    20553,
+    579004,
+    16988496
+  ],
+  [
+    'gentest-4',
+    'rnb1kbnr/p1q1pppp/1ppp4/8/4B1P1/2P5/PPQPPP1P/RNB1K1NR b KQkq -',
+    28,
+    837,
+    22536,
+    699777,
+    19118920
+  ],
+  [
+    'gentest-5',
+    'rn2kbnr/p1q1ppp1/1ppp3p/8/4B1b1/2P4P/PPQPPP2/RNB1K1NR w KQkq -',
+    29,
+    827,
+    24815,
+    701084,
+    21819626
+  ],
+  [
+    'gentest-6',
+    'rn1qkbnr/p3ppp1/1ppp2Qp/3B4/6b1/2P4P/PP1PPP2/RNB1K1NR b KQkq -',
+    25,
+    976,
+    23465,
+    872551,
+    21984216
+  ],
+  [
+    'gentest-7',
+    'rnkq1bnr/p3ppp1/1ppp3p/3B4/6b1/2PQ3P/PP1PPP2/RNB1K1NR w KQ -',
+    36,
+    957,
+    33542,
+    891412,
+    31155934
+  ],
+  [
+    'gentest-8',
+    'rnkq1bnr/p3ppp1/1ppp3p/5b2/8/2PQ3P/PP1PPPB1/RNB1K1NR b KQ -',
+    29,
+    927,
+    25822,
+    832461,
+    23480361
+  ],
+  [
+    'gentest-9',
+    'rn1q1bnr/p2kppp1/2pp3p/1p3b2/1P6/2PQ3P/P2PPPB1/RNB1K1NR w KQ -',
+    31,
+    834,
+    25926,
+    715605,
+    22575950
+  ],
+  [
+    'gentest-10',
+    'rn1q1bnr/3kppp1/p1pp3p/1p3b2/1P6/2P2N1P/P1QPPPB1/RNB1K2R b KQ -',
+    29,
+    900,
+    25008,
+    781431,
+    22075119
+  ],
+  [
+    'gentest-94',
+    '2b1kbnB/rppqp3/3p3p/3P1pp1/pnP3P1/PP2P2P/4QP2/RN2KBNR b KQ -',
+    27,
+    729,
+    20665,
+    613681,
+    18161673
+  ],
+  [
+    'gentest-95',
+    '2b1kbnB/r1pqp3/n2p3p/1p1P1pp1/p1P3P1/PP2P2P/Q4P2/RN2KBNR w KQ -',
+    30,
+    689,
+    21830,
+    556204,
+    18152100
+  ],
+  [
+    'gentest-96',
+    '2b1kbn1/r1pqp3/n2p3p/3P1pp1/ppP3P1/PPB1P2P/Q4P2/RN2KBNR b KQ -',
+    23,
+    685,
+    17480,
+    532817,
+    14672791
+  ],
 ];
-
