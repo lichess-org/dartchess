@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest  ]
+        os: [ubuntu-latest]
         sdk: [stable]
         architecture: [x64, arm, arm64]
     steps:
@@ -23,7 +23,7 @@ jobs:
 
       - name: Install dependencies
         run: dart pub get
-        
+
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
 
