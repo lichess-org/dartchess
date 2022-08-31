@@ -98,7 +98,7 @@ int perft(Position pos, int depth, {shouldLog = false}) {
       for (final to in dests.squares) {
         for (final promotion in promotions) {
           final move = Move(from: from, to: to, promotion: promotion);
-          Position child = pos.playUnchecked(move);
+          final child = pos.playUnchecked(move);
           final children = perft(child, depth - 1);
           if (shouldLog) print('${makeUci(move)} $children');
           nodes += children;
