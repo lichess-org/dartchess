@@ -44,7 +44,7 @@ abstract class Position<T> {
         halfmoves = 0,
         fullmoves = 1;
 
-  Position._fromSetupUnchecked(Setup setup)
+  Position.fromSetupUnchecked(Setup setup)
       : board = setup.board,
         turn = setup.turn,
         castles = Castles.fromSetup(setup),
@@ -139,9 +139,12 @@ abstract class Position<T> {
   /// SquareSet of pieces giving check.
   SquareSet get checkers {
     final king = board.kingOf(turn);
-    return king != null
-        ? board.attacksTo(king, opposite(turn))
-        : SquareSet.empty;
+    return king != null ? kingAttackers(king, opposite(turn)) : SquareSet.empty;
+  }
+
+  /// Attacks that a king on `square` would have to deal with.
+  SquareSet kingAttackers(Square square, Color attacker, {SquareSet? occupied}) {
+    return board.attacksTo(square, attacker, occupied: occupied);
   }
 
   /// Tests if a [Color] has insufficient winning material.
@@ -181,82 +184,6 @@ abstract class Position<T> {
   /// Gets the legal moves for that [Square].
   SquareSet legalMovesOf(Square square) {
     return _legalMovesOf(square);
-  }
-
-  /// Gets the legal moves for that [Square].
-  ///
-  /// Optionnaly pass a [_Context] of the position, to optimize performance when
-  /// calling this method several times.
-  SquareSet _legalMovesOf(Square square, {_Context? context}) {
-    if (isVariantEnd) return SquareSet.empty;
-    final piece = board.pieceAt(square);
-    if (piece == null || piece.color != turn) return SquareSet.empty;
-
-    final king = context != null ? context.king : board.kingOf(turn);
-    if (king == null) return SquareSet.empty;
-
-    final blockers = context?.blockers ?? _sliderBlockers(king);
-    final checkers = context?.checkers ?? board.attacksTo(king, opposite(turn));
-
-    SquareSet pseudo;
-    SquareSet? legalEpSquare;
-    if (piece.role == Role.pawn) {
-      pseudo =
-          pawnAttacks(turn, square).intersect(board.byColor(opposite(turn)));
-      final delta = turn == Color.white ? 8 : -8;
-      final step = square + delta;
-      if (0 <= step && step < 64 && !board.occupied.has(step)) {
-        pseudo = pseudo.withSquare(step);
-        final canDoubleStep =
-            turn == Color.white ? square < 16 : square >= 64 - 16;
-        final doubleStep = step + delta;
-        if (canDoubleStep && !board.occupied.has(doubleStep)) {
-          pseudo = pseudo.withSquare(doubleStep);
-        }
-      }
-      if (epSquare != null && _canCaptureEp(square)) {
-        final pawn = epSquare! - delta;
-        if (checkers.isEmpty || checkers.singleSquare == pawn) {
-          legalEpSquare = SquareSet.fromSquare(epSquare!);
-        }
-      }
-    } else if (piece.role == Role.bishop) {
-      pseudo = bishopAttacks(square, board.occupied);
-    } else if (piece.role == Role.knight) {
-      pseudo = knightAttacks(square);
-    } else if (piece.role == Role.rook) {
-      pseudo = rookAttacks(square, board.occupied);
-    } else if (piece.role == Role.queen) {
-      pseudo = queenAttacks(square, board.occupied);
-    } else {
-      pseudo = kingAttacks(square);
-    }
-
-    pseudo = pseudo.diff(board.byColor(turn));
-
-    if (piece.role == Role.king) {
-      final occ = board.occupied.withoutSquare(square);
-      for (final to in pseudo.squares) {
-        if (board.attacksTo(to, opposite(turn), occupied: occ).isNotEmpty) {
-          pseudo = pseudo.withoutSquare(to);
-        }
-      }
-      return pseudo
-          .union(_castlingDest(CastlingSide.queen, king, checkers))
-          .union(_castlingDest(CastlingSide.king, king, checkers));
-    }
-
-    if (checkers.isNotEmpty) {
-      final checker = checkers.singleSquare;
-      if (checker == null) return SquareSet.empty;
-      pseudo = pseudo.intersect(between(checker, king).withSquare(checker));
-    }
-
-    if (blockers.has(square)) pseudo = pseudo.intersect(ray(square, king));
-
-    if (legalEpSquare != null) pseudo = pseudo.union(legalEpSquare);
-
-    return pseudo;
   }
 
   /// Plays a move.
@@ -331,6 +258,145 @@ abstract class Position<T> {
     );
   }
 
+  /// Checks the legality of this position.
+  ///
+  /// Throws a [PositionError] if it does not meet basic validity requirements.
+  void validate({bool? ignoreImpossibleCheck}) {
+    if (board.occupied.isEmpty) {
+      throw PositionError(IllegalSetup.empty);
+    }
+    if (board.kings.size != 2) {
+      throw PositionError(IllegalSetup.kings);
+    }
+    final ourKing = board.kingOf(turn);
+    if (ourKing == null) {
+      throw PositionError(IllegalSetup.kings);
+    }
+    final otherKing = board.kingOf(opposite(turn));
+    if (otherKing == null) {
+      throw PositionError(IllegalSetup.kings);
+    }
+    if (kingAttackers(otherKing, turn).isNotEmpty) {
+      throw PositionError(IllegalSetup.oppositeCheck);
+    }
+    if (SquareSet.backranks.intersect(board.pawns).isNotEmpty) {
+      throw PositionError(IllegalSetup.pawnsOnBackrank);
+    }
+    final skipImpossibleCheck = ignoreImpossibleCheck ?? false;
+    if (!skipImpossibleCheck) {
+      _validateCheckers(ourKing);
+    }
+  }
+
+  /// Checks if checkers are legal in this position.
+  ///
+  /// Throws a [PositionError.impossibleCheck] if it does not meet validity
+  /// requirements.
+  void _validateCheckers(Square ourKing) {
+    final checkers = kingAttackers(ourKing, opposite(turn));
+    if (checkers.isNotEmpty) {
+      if (epSquare != null) {
+        // The pushed pawn must be the only checker, or it has uncovered
+        // check by a single sliding piece.
+        final pushedTo = epSquare! ^ 8;
+        final pushedFrom = epSquare! ^ 24;
+        if (checkers.moreThanOne ||
+            (checkers.first != pushedTo &&
+                board
+                    .attacksTo(ourKing, opposite(turn),
+                        occupied: board.occupied
+                            .withoutSquare(pushedTo)
+                            .withSquare(pushedFrom))
+                    .isNotEmpty)) {
+          throw PositionError(IllegalSetup.impossibleCheck);
+        }
+      } else {
+        // Multiple sliding checkers aligned with king.
+        if (checkers.size > 2 ||
+            (checkers.size == 2 &&
+                ray(checkers.first!, checkers.last!).has(ourKing))) {
+          throw PositionError(IllegalSetup.impossibleCheck);
+        }
+      }
+    }
+  }
+
+  /// Gets the legal moves for that [Square].
+  ///
+  /// Optionnaly pass a [_Context] of the position, to optimize performance when
+  /// calling this method several times.
+  SquareSet _legalMovesOf(Square square, {_Context? context}) {
+    if (isVariantEnd) return SquareSet.empty;
+    final piece = board.pieceAt(square);
+    if (piece == null || piece.color != turn) return SquareSet.empty;
+
+    final king = context != null ? context.king : board.kingOf(turn);
+    if (king == null) return SquareSet.empty;
+
+    final blockers = context?.blockers ?? _sliderBlockers(king);
+    final checkers = context?.checkers ?? kingAttackers(king, opposite(turn));
+
+    SquareSet pseudo;
+    SquareSet? legalEpSquare;
+    if (piece.role == Role.pawn) {
+      pseudo =
+          pawnAttacks(turn, square).intersect(board.byColor(opposite(turn)));
+      final delta = turn == Color.white ? 8 : -8;
+      final step = square + delta;
+      if (0 <= step && step < 64 && !board.occupied.has(step)) {
+        pseudo = pseudo.withSquare(step);
+        final canDoubleStep =
+            turn == Color.white ? square < 16 : square >= 64 - 16;
+        final doubleStep = step + delta;
+        if (canDoubleStep && !board.occupied.has(doubleStep)) {
+          pseudo = pseudo.withSquare(doubleStep);
+        }
+      }
+      if (epSquare != null && _canCaptureEp(square)) {
+        final pawn = epSquare! - delta;
+        if (checkers.isEmpty || checkers.singleSquare == pawn) {
+          legalEpSquare = SquareSet.fromSquare(epSquare!);
+        }
+      }
+    } else if (piece.role == Role.bishop) {
+      pseudo = bishopAttacks(square, board.occupied);
+    } else if (piece.role == Role.knight) {
+      pseudo = knightAttacks(square);
+    } else if (piece.role == Role.rook) {
+      pseudo = rookAttacks(square, board.occupied);
+    } else if (piece.role == Role.queen) {
+      pseudo = queenAttacks(square, board.occupied);
+    } else {
+      pseudo = kingAttacks(square);
+    }
+
+    pseudo = pseudo.diff(board.byColor(turn));
+
+    if (piece.role == Role.king) {
+      final occ = board.occupied.withoutSquare(square);
+      for (final to in pseudo.squares) {
+        if (kingAttackers(to, opposite(turn), occupied: occ).isNotEmpty) {
+          pseudo = pseudo.withoutSquare(to);
+        }
+      }
+      return pseudo
+          .union(_castlingMoves(CastlingSide.queen, king, checkers))
+          .union(_castlingMoves(CastlingSide.king, king, checkers));
+    }
+
+    if (checkers.isNotEmpty) {
+      final checker = checkers.singleSquare;
+      if (checker == null) return SquareSet.empty;
+      pseudo = pseudo.intersect(between(checker, king).withSquare(checker));
+    }
+
+    if (blockers.has(square)) pseudo = pseudo.intersect(ray(square, king));
+
+    if (legalEpSquare != null) pseudo = pseudo.union(legalEpSquare);
+
+    return pseudo;
+  }
+
   Move _normalizeMove(Move move) {
     final side = _isCastlingMove(move);
     if (side == null) return move;
@@ -368,8 +434,9 @@ abstract class Position<T> {
     return blockers;
   }
 
-  SquareSet _castlingDest(CastlingSide side, Square king, SquareSet checkers) {
-    if (checkers.isNotEmpty) return SquareSet.empty;
+  SquareSet _castlingMoves(
+      CastlingSide side, Square? king, SquareSet checkers) {
+    if (king == null || checkers.isNotEmpty) return SquareSet.empty;
     final rook = castles.rookOf(turn, side);
     if (rook == null) return SquareSet.empty;
     if (castles.pathOf(turn, side).isIntersected(board.occupied)) {
@@ -380,7 +447,7 @@ abstract class Position<T> {
     final kingPath = between(king, kingTo);
     final occ = board.occupied.withoutSquare(king);
     for (final sq in kingPath.squares) {
-      if (board.attacksTo(sq, opposite(turn), occupied: occ).isNotEmpty) {
+      if (kingAttackers(sq, opposite(turn), occupied: occ).isNotEmpty) {
         return SquareSet.empty;
       }
     }
@@ -389,7 +456,7 @@ abstract class Position<T> {
         .toggleSquare(king)
         .toggleSquare(rook)
         .toggleSquare(rookTo);
-    if (board.attacksTo(kingTo, opposite(turn), occupied: after).isNotEmpty) {
+    if (kingAttackers(kingTo, opposite(turn), occupied: after).isNotEmpty) {
       return SquareSet.empty;
     }
     return SquareSet.fromSquare(rook);
@@ -433,57 +500,273 @@ abstract class Position<T> {
     }
     return null;
   }
+}
 
-  void _validate({bool? ignoreImpossibleCheck}) {
+class Chess extends Position<Chess> {
+  const Chess({
+    required super.board,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  });
+
+  Chess.fromSetupUnchecked(Setup setup) : super.fromSetupUnchecked(setup);
+  const Chess._initial() : super._initial();
+
+  static const initial = Chess._initial();
+
+  @override
+  bool get isVariantEnd => false;
+
+  @override
+  Outcome? get variantOutcome => null;
+
+  /// Set up a playable [Chess] position.
+  ///
+  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// requirements.
+  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
+  /// requirement.
+  factory Chess.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+    final unchecked = Chess.fromSetupUnchecked(setup);
+    unchecked.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+    return unchecked;
+  }
+
+  @override
+  Chess _copyWith({
+    Board? board,
+    Color? turn,
+    Castles? castles,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return Chess(
+      board: board ?? this.board,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+    );
+  }
+}
+
+class Atomic extends Position<Atomic> {
+  const Atomic({
+    required super.board,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  });
+
+  Atomic.fromSetupUnchecked(Setup setup) : super.fromSetupUnchecked(setup);
+  const Atomic._initial() : super._initial();
+
+  static const initial = Atomic._initial();
+
+  @override
+  bool get isVariantEnd => variantOutcome != null;
+
+  @override
+  Outcome? get variantOutcome {
+    for (final color in Color.values) {
+      if (board.piecesOf(color, Role.king).isEmpty) {
+        return Outcome(winner: opposite(color));
+      }
+    }
+    return null;
+  }
+
+  /// Set up a playable [Atomic] position.
+  ///
+  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// requirements.
+  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
+  /// requirement.
+  factory Atomic.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+    final unchecked = Atomic.fromSetupUnchecked(setup);
+    unchecked.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+    return unchecked;
+  }
+
+  /// Attacks that a king on `square` would have to deal with.
+  ///
+  /// Contrary to chess, in Atomic kings can attack each other, without causing
+  /// check.
+  @override
+  SquareSet kingAttackers(Square square, Color attacker, {SquareSet? occupied}) {
+    final attackerKings = board.piecesOf(attacker, Role.king);
+    if (attackerKings.isEmpty ||
+        kingAttacks(square).isIntersected(attackerKings)) {
+      return SquareSet.empty;
+    }
+    return super.kingAttackers(square, attacker, occupied: occupied);
+  }
+
+  /// Checks the legality of this position.
+  ///
+  /// Validation is kike chess, but it allows our king to be missing.
+  /// Throws a [PositionError] if it does not meet basic validity requirements.
+  @override
+  void validate({bool? ignoreImpossibleCheck}) {
     if (board.occupied.isEmpty) {
-      throw PositionError(IllegalSetup.empty);
+      throw PositionError.empty;
     }
-    if (board.kings.size != 2) {
-      throw PositionError(IllegalSetup.kings);
-    }
-    final ourKing = board.kingOf(turn);
-    if (ourKing == null) {
-      throw PositionError(IllegalSetup.kings);
+    if (board.kings.size > 2) {
+      throw PositionError.kings;
     }
     final otherKing = board.kingOf(opposite(turn));
     if (otherKing == null) {
-      throw PositionError(IllegalSetup.kings);
+      throw PositionError.kings;
     }
-    if (board.attacksTo(otherKing, turn).isNotEmpty) {
+    if (kingAttackers(otherKing, turn).isNotEmpty) {
       throw PositionError(IllegalSetup.oppositeCheck);
     }
     if (SquareSet.backranks.intersect(board.pawns).isNotEmpty) {
       throw PositionError(IllegalSetup.pawnsOnBackrank);
     }
     final skipImpossibleCheck = ignoreImpossibleCheck ?? false;
-    if (!skipImpossibleCheck) {
-      final checkers = board.attacksTo(ourKing, opposite(turn));
-      if (checkers.isNotEmpty) {
-        if (epSquare != null) {
-          // The pushed pawn must be the only checker, or it has uncovered
-          // check by a single sliding piece.
-          final pushedTo = epSquare! ^ 8;
-          final pushedFrom = epSquare! ^ 24;
-          if (checkers.moreThanOne ||
-              (checkers.first != pushedTo &&
-                  board
-                      .attacksTo(ourKing, opposite(turn),
-                          occupied: board.occupied
-                              .withoutSquare(pushedTo)
-                              .withSquare(pushedFrom))
-                      .isNotEmpty)) {
-            throw PositionError(IllegalSetup.impossibleCheck);
+    final ourKing = board.kingOf(turn);
+    if (!skipImpossibleCheck && ourKing != null) {
+      _validateCheckers(ourKing);
+    }
+  }
+
+  @override
+  void _validateCheckers(Square ourKing) {
+    // Other king moving away can cause many checks to be given at the
+    // same time. Not checking details or even that the king is close enough.
+    if (epSquare == null) {
+      super._validateCheckers(ourKing);
+    }
+  }
+
+  /// Plays a move without checking if the move is legal.
+  ///
+  /// In addition to standard rules, all captures cause an explosion by which
+  /// the captured piece, the piece used to capture, and all surrounding pieces
+  /// except pawns that are within a one square radius are removed from the
+  /// board.
+  @override
+  Atomic playUnchecked(Move move) {
+    final capturedPiece = board.pieceAt(move.to);
+    final isCapture = capturedPiece != null || move.to == epSquare;
+    final newPos = super.playUnchecked(move);
+
+    if (isCapture) {
+      Castles newCastles = newPos.castles;
+      Board newBoard = newPos.board.removePieceAt(move.to);
+      for (final explode in kingAttacks(move.to)
+          .intersect(newBoard.occupied)
+          .diff(newBoard.pawns)
+          .squares) {
+        final piece = newBoard.pieceAt(explode);
+        newBoard = newBoard.removePieceAt(explode);
+        if (piece != null) {
+          if (piece.role == Role.rook) {
+            newCastles = newCastles.discardRookAt(explode);
           }
-        } else {
-          // Multiple sliding checkers aligned with king.
-          if (checkers.size > 2 ||
-              (checkers.size == 2 &&
-                  ray(checkers.first!, checkers.last!).has(ourKing))) {
-            throw PositionError(IllegalSetup.impossibleCheck);
+          if (piece.role == Role.king) {
+            newCastles = newCastles.discardColor(piece.color);
           }
         }
       }
+      return newPos._copyWith(board: newBoard, castles: newCastles);
+    } else {
+      return newPos;
     }
+  }
+
+  /// Tests if a [Color] has insufficient winning material.
+  @override
+  bool hasInsufficientMaterial(Color color) {
+    // Remaining material does not matter if the enemy king is already
+    // exploded.
+    if (board.piecesOf(opposite(color), Role.king).isEmpty) return false;
+
+    // Bare king cannot mate.
+    if (board.byColor(color).diff(board.kings).isEmpty) return true;
+
+    // As long as the enemy king is not alone, there is always a chance their
+    // own pieces explode next to it.
+    if (board.byColor(opposite(color)).diff(board.kings).isNotEmpty) {
+      // Unless there are only bishops that cannot explode each other.
+      if (board.occupied == board.bishops.union(board.kings)) {
+        if (!board.bishops
+            .intersect(board.white)
+            .isIntersected(SquareSet.darkSquares)) {
+          return !board.bishops
+              .intersect(board.black)
+              .isIntersected(SquareSet.lightSquares);
+        }
+        if (!board.bishops
+            .intersect(board.white)
+            .isIntersected(SquareSet.lightSquares)) {
+          return !board.bishops
+              .intersect(board.black)
+              .isIntersected(SquareSet.darkSquares);
+        }
+      }
+      return false;
+    }
+
+    // Queen or pawn (future queen) can give mate against bare king.
+    if (board.queens.isNotEmpty || board.pawns.isNotEmpty) return false;
+
+    // Single knight, bishop or rook cannot mate against bare king.
+    if (board.knights.union(board.bishops).union(board.rooks).size == 1) {
+      return true;
+    }
+
+    // If only knights, more than two are required to mate bare king.
+    if (board.occupied == board.knights.union(board.kings)) {
+      return board.knights.size <= 2;
+    }
+
+    return false;
+  }
+
+  @override
+  SquareSet _legalMovesOf(Square square, {_Context? context}) {
+    SquareSet moves = SquareSet.empty;
+    final ctx = context ?? _makeContext();
+    for (final to in _pseudoLegalMoves(this, square, ctx).squares) {
+      final after = playUnchecked(Move(from: square, to: to));
+      final ourKing = after.board.kingOf(turn);
+      if (
+        ourKing != null &&
+        (after.board.kingOf(after.turn) == null ||
+          after.kingAttackers(ourKing, after.turn).isEmpty)
+      ) {
+        moves = moves.withSquare(to);
+      }
+    }
+    return moves;
+  }
+
+  @override
+  Atomic _copyWith({
+    Board? board,
+    Color? turn,
+    Castles? castles,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return Atomic(
+      board: board ?? this.board,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+    );
   }
 }
 
@@ -506,59 +789,6 @@ class Outcome {
 
   @override
   int get hashCode => winner.hashCode;
-}
-
-class Chess extends Position<Chess> {
-  const Chess({
-    required super.board,
-    required super.turn,
-    required super.castles,
-    super.epSquare,
-    required super.halfmoves,
-    required super.fullmoves,
-  });
-
-  Chess._fromSetupUnchecked(Setup setup) : super._fromSetupUnchecked(setup);
-  const Chess._initial() : super._initial();
-
-  static const initial = Chess._initial();
-
-  @override
-  bool get isVariantEnd => false;
-
-  @override
-  Outcome? get variantOutcome => null;
-
-  /// Set up a playable [Chess] position.
-  ///
-  /// Throws a [PositionError] if the [Setup] does not meet basic validity
-  /// requirements.
-  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
-  /// requirement.
-  factory Chess.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-    final unchecked = Chess._fromSetupUnchecked(setup);
-    unchecked._validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
-    return unchecked;
-  }
-
-  @override
-  Chess _copyWith({
-    Board? board,
-    Color? turn,
-    Castles? castles,
-    Square? epSquare,
-    int? halfmoves,
-    int? fullmoves,
-  }) {
-    return Chess(
-      board: board ?? this.board,
-      turn: turn ?? this.turn,
-      castles: castles ?? this.castles,
-      epSquare: epSquare,
-      halfmoves: halfmoves ?? this.halfmoves,
-      fullmoves: fullmoves ?? this.fullmoves,
-    );
-  }
 }
 
 enum IllegalSetup {
@@ -588,13 +818,20 @@ enum IllegalSetup {
 
 class PlayError implements Exception {
   final String message;
-  PlayError(this.message);
+  const PlayError(this.message);
 }
 
 /// Error when trying to create a [Position] from an illegal [Setup].
 class PositionError implements Exception {
   final IllegalSetup cause;
-  PositionError(this.cause);
+  const PositionError(this.cause);
+
+  static const empty = PositionError(IllegalSetup.empty);
+  static const oppositeCheck = PositionError(IllegalSetup.oppositeCheck);
+  static const impossibleCheck = PositionError(IllegalSetup.impossibleCheck);
+  static const pawnsOnBackrank = PositionError(IllegalSetup.pawnsOnBackrank);
+  static const kings = PositionError(IllegalSetup.kings);
+  static const variant = PositionError(IllegalSetup.variant);
 }
 
 enum CastlingSide {
@@ -797,4 +1034,41 @@ Square? _validEpSquare(Setup setup) {
   if (!setup.board.pawns.has(pawn) ||
       !setup.board.byColor(opposite(setup.turn)).has(pawn)) return null;
   return setup.epSquare;
+}
+
+SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
+  if (pos.isVariantEnd) return SquareSet.empty;
+  final piece = pos.board.pieceAt(square);
+  if (piece == null || piece.color != pos.turn) return SquareSet.empty;
+
+  SquareSet pseudo = attacks(piece, square, pos.board.occupied);
+  if (piece.role == Role.pawn) {
+    SquareSet captureTargets = pos.board.byColor(opposite(pos.turn));
+    if (pos.epSquare != null) {
+      captureTargets = captureTargets.withSquare(pos.epSquare!);
+    }
+    pseudo = pseudo.intersect(captureTargets);
+    final delta = pos.turn == Color.white ? 8 : -8;
+    final step = square + delta;
+    if (0 <= step && step < 64 && !pos.board.occupied.has(step)) {
+      pseudo = pseudo.withSquare(step);
+      final canDoubleStep =
+          pos.turn == Color.white ? square < 16 : square >= 64 - 16;
+      final doubleStep = step + delta;
+      if (canDoubleStep && !pos.board.occupied.has(doubleStep)) {
+        pseudo = pseudo.withSquare(doubleStep);
+      }
+    }
+    return pseudo;
+  } else {
+    pseudo = pseudo.diff(pos.board.byColor(pos.turn));
+  }
+  if (square == context.king) {
+    final checkers = pos.checkers;
+    return pseudo
+        .union(pos._castlingMoves(CastlingSide.queen, context.king, checkers))
+        .union(pos._castlingMoves(CastlingSide.king, context.king, checkers));
+  } else {
+    return pseudo;
+  }
 }

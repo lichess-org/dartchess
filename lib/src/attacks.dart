@@ -40,6 +40,25 @@ SquareSet rookAttacks(Square square, SquareSet occupied) {
 SquareSet queenAttacks(Square square, SquareSet occupied) =>
     bishopAttacks(square, occupied).xor(rookAttacks(square, occupied));
 
+/// Gets squares attacked or defended by a `piece` on `square`, given
+/// `occupied` squares.
+attacks(Piece piece, Square square, SquareSet occupied) {
+  switch (piece.role) {
+    case Role.pawn:
+      return pawnAttacks(piece.color, square);
+    case Role.knight:
+      return knightAttacks(square);
+    case Role.bishop:
+      return bishopAttacks(square, occupied);
+    case Role.rook:
+      return rookAttacks(square, occupied);
+    case Role.queen:
+      return queenAttacks(square, occupied);
+    case Role.king:
+      return kingAttacks(square);
+  }
+}
+
 /// Gets all squares of the rank, file or diagonal with the two squares
 /// `a` and `b`, or an empty set if they are not aligned.
 SquareSet ray(Square a, Square b) {
