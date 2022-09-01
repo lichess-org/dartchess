@@ -533,9 +533,11 @@ class Chess extends Position<Chess> {
   ///
   /// Throws a [PositionError] if the [Setup] does not meet basic validity
   /// requirements.
-  factory Chess.fromSetup(Setup setup) {
+  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
+  /// requirement.
+  factory Chess.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     final unchecked = Chess._fromSetupUnchecked(setup);
-    unchecked._validate();
+    unchecked._validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
     return unchecked;
   }
 

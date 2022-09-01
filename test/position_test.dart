@@ -329,6 +329,27 @@ void main() {
       expect(pos.castles.rook[Color.white], equals(Tuple2(null, 7)));
       expect(pos.castles.unmovedRooks.has(0), false);
     });
+
+    test('king captures unmoved rook', () {
+      final pos = Chess.fromSetup(
+          Setup.parseFen('8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K - 0 1'));
+      final move = Move(from: 14, to: 7);
+      expect(pos.isLegal(move), true);
+      final pos2 = pos.play(move);
+      expect(pos2.fen, '8/8/8/B2p3Q/2qPp1P1/b7/2P2P1P/4K2k w - - 0 2');
+    });
+
+    test('en passant and unrelated check', () {
+      final setup = Setup.parseFen(
+          'rnbqk1nr/bb3p1p/1q2r3/2pPp3/3P4/7P/1PP1NpPP/R1BQKBNR w KQkq c6');
+      expect(
+          () => Chess.fromSetup(setup),
+          throwsA(predicate((e) =>
+              e is PositionError && e.cause == IllegalSetup.impossibleCheck)));
+      final pos = Chess.fromSetup(setup, ignoreImpossibleCheck: true);
+      final enPassant = Move(from: 35, to: 42);
+      expect(pos.isLegal(enPassant), false);
+    });
   });
 
   group('perft', () {
