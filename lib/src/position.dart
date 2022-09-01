@@ -85,7 +85,7 @@ abstract class Position<T> {
   /// Tests if the king is in check.
   bool get isCheck {
     final king = board.kingOf(turn);
-    return king != null && board.attacksTo(king, opposite(turn)).isNotEmpty;
+    return king != null && checkers.isNotEmpty;
   }
 
   /// Tests if the game is over.
@@ -119,8 +119,9 @@ abstract class Position<T> {
 
   /// Tests if the position has at least one legal move.
   bool get hasSomeLegalMoves {
+    final context = _makeContext();
     for (final square in board.byColor(turn).squares) {
-      if (legalMovesOf(square).isNotEmpty) return true;
+      if (_legalMovesOf(square, context: context).isNotEmpty) return true;
     }
     return false;
   }
@@ -128,8 +129,11 @@ abstract class Position<T> {
   /// Gets all the legal moves of this position.
   Map<Square, SquareSet> get legalMoves {
     if (isVariantEnd) return Map.unmodifiable({});
-    return Map.unmodifiable(
-        {for (final s in board.byColor(turn).squares) s: legalMovesOf(s)});
+    final context = _makeContext();
+    return Map.unmodifiable({
+      for (final s in board.byColor(turn).squares)
+        s: _legalMovesOf(s, context: context)
+    });
   }
 
   /// SquareSet of pieces giving check.
@@ -170,29 +174,29 @@ abstract class Position<T> {
         (!board.pawns.has(move.from) || !SquareSet.backranks.has(move.to))) {
       return false;
     }
-    final legalMoves = legalMovesOf(move.from);
+    final legalMoves = _legalMovesOf(move.from);
     return legalMoves.has(move.to) || legalMoves.has(_normalizeMove(move).to);
   }
 
   /// Gets the legal moves for that [Square].
   SquareSet legalMovesOf(Square square) {
+    return _legalMovesOf(square);
+  }
+
+  /// Gets the legal moves for that [Square].
+  ///
+  /// Optionnaly pass a [_Context] of the position, to optimize performance when
+  /// calling this method several times.
+  SquareSet _legalMovesOf(Square square, {_Context? context}) {
     if (isVariantEnd) return SquareSet.empty;
     final piece = board.pieceAt(square);
     if (piece == null || piece.color != turn) return SquareSet.empty;
-    final king = board.kingOf(turn);
+
+    final king = context != null ? context.king : board.kingOf(turn);
     if (king == null) return SquareSet.empty;
 
-    final snipers = rookAttacks(king, SquareSet.empty)
-        .intersect(board.rooksAndQueens)
-        .union(bishopAttacks(king, SquareSet.empty)
-            .intersect(board.bishopsAndQueens))
-        .intersect(board.byColor(opposite(turn)));
-    SquareSet blockers = SquareSet.empty;
-    for (final sniper in snipers.squares) {
-      final b = between(king, sniper).intersect(board.occupied);
-      if (!b.moreThanOne) blockers = blockers.union(b);
-    }
-    final checkers = board.attacksTo(king, opposite(turn));
+    final blockers = context?.blockers ?? _sliderBlockers(king);
+    final checkers = context?.checkers ?? board.attacksTo(king, opposite(turn));
 
     SquareSet pseudo;
     SquareSet? legalEpSquare;
@@ -337,6 +341,33 @@ abstract class Position<T> {
     );
   }
 
+  _Context _makeContext() {
+    final king = board.kingOf(turn);
+    if (king == null) {
+      return _Context(
+          king: king, blockers: SquareSet.empty, checkers: SquareSet.empty);
+    }
+    return _Context(
+      king: king,
+      blockers: _sliderBlockers(king),
+      checkers: checkers,
+    );
+  }
+
+  SquareSet _sliderBlockers(Square king) {
+    final snipers = rookAttacks(king, SquareSet.empty)
+        .intersect(board.rooksAndQueens)
+        .union(bishopAttacks(king, SquareSet.empty)
+            .intersect(board.bishopsAndQueens))
+        .intersect(board.byColor(opposite(turn)));
+    SquareSet blockers = SquareSet.empty;
+    for (final sniper in snipers.squares) {
+      final b = between(king, sniper).intersect(board.occupied);
+      if (!b.moreThanOne) blockers = blockers.union(b);
+    }
+    return blockers;
+  }
+
   SquareSet _castlingDest(CastlingSide side, Square king, SquareSet checkers) {
     if (checkers.isNotEmpty) return SquareSet.empty;
     final rook = castles.rookOf(turn, side);
@@ -396,7 +427,7 @@ abstract class Position<T> {
     final candidates =
         ourPawns.intersect(pawnAttacks(opposite(turn), epSquare!));
     for (final candidate in candidates.squares) {
-      if (legalMovesOf(candidate).has(epSquare!)) {
+      if (_legalMovesOf(candidate).has(epSquare!)) {
         return epSquare;
       }
     }
@@ -724,6 +755,18 @@ class Castles {
   @override
   int get hashCode => Object.hash(unmovedRooks, rook[Color.white],
       rook[Color.black], path[Color.white], path[Color.black]);
+}
+
+class _Context {
+  const _Context({
+    required this.king,
+    required this.blockers,
+    required this.checkers,
+  });
+
+  final Square? king;
+  final SquareSet blockers;
+  final SquareSet checkers;
 }
 
 Square _rookCastlesTo(Color color, CastlingSide side) {
