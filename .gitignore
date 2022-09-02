@@ -9,4 +9,4 @@ build/
 # https://dart.dev/guides/libraries/private-files#pubspeclock.
 pubspec.lock
 
-example/dartchess_example.exe
+example/*.exe
