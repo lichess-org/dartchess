@@ -204,7 +204,7 @@ abstract class Position<T> {
     if (piece == null) {
       return _copyWith();
     }
-    final castlingMoveSide = _getCastlingSide(move);
+    final castlingSide = _getCastlingSide(move);
     Square? newEpSquare;
     Board newBoard = board.removePieceAt(move.from);
     if (piece.role == Role.pawn) {
@@ -217,30 +217,29 @@ abstract class Position<T> {
         newEpSquare = (move.from + move.to) >>> 1;
       }
     } else if (piece.role == Role.king) {
-      if (castlingMoveSide != null) {
-        final rookFrom = castles.rookOf(turn, castlingMoveSide);
+      if (castlingSide != null) {
+        final rookFrom = castles.rookOf(turn, castlingSide);
         if (rookFrom != null) {
           final rook = board.pieceAt(rookFrom);
           newBoard = newBoard
               .removePieceAt(rookFrom)
-              .setPieceAt(_kingCastlesTo(turn, castlingMoveSide), piece);
+              .setPieceAt(_kingCastlesTo(turn, castlingSide), piece);
           if (rook != null) {
-            newBoard = newBoard.setPieceAt(
-                _rookCastlesTo(turn, castlingMoveSide), rook);
+            newBoard =
+                newBoard.setPieceAt(_rookCastlesTo(turn, castlingSide), rook);
           }
         }
       }
     }
 
-    Piece? capturedPiece;
-    if (castlingMoveSide == null) {
-      capturedPiece = board.pieceAt(move.to);
+    if (castlingSide == null) {
       final newPiece = move.promotion != null
           ? piece.copyWith(role: move.promotion!)
           : piece;
       newBoard = newBoard.setPieceAt(move.to, newPiece);
     }
 
+    final capturedPiece = castlingSide == null ? board.pieceAt(move.to) : null;
     final isCapture = capturedPiece != null || move.to == epSquare;
     final newCastles = piece.role == Role.king
         ? castles.discardColor(turn)
@@ -390,8 +389,8 @@ abstract class Position<T> {
         }
       }
       return pseudo
-          .union(_castlingMoves(CastlingSide.queen, king, ctx.checkers))
-          .union(_castlingMoves(CastlingSide.king, king, ctx.checkers));
+          .union(_castlingMoves(CastlingSide.queen, ctx))
+          .union(_castlingMoves(CastlingSide.king, ctx));
     }
 
     if (ctx.checkers.isNotEmpty) {
@@ -438,9 +437,11 @@ abstract class Position<T> {
     return blockers;
   }
 
-  SquareSet _castlingMoves(
-      CastlingSide side, Square? king, SquareSet checkers) {
-    if (king == null || checkers.isNotEmpty) return SquareSet.empty;
+  SquareSet _castlingMoves(CastlingSide side, _Context context) {
+    final king = context.king;
+    if (king == null || context.checkers.isNotEmpty) {
+      return SquareSet.empty;
+    }
     final rook = castles.rookOf(turn, side);
     if (rook == null) return SquareSet.empty;
     if (castles.pathOf(turn, side).isIntersected(board.occupied)) {
@@ -660,7 +661,8 @@ class Atomic extends Position<Atomic> {
   /// board.
   @override
   Atomic playUnchecked(Move move) {
-    final capturedPiece = board.pieceAt(move.to);
+    final castlingSide = _getCastlingSide(move);
+    final capturedPiece = castlingSide == null ? board.pieceAt(move.to) : null;
     final isCapture = capturedPiece != null || move.to == epSquare;
     final newPos = super.playUnchecked(move);
 
@@ -1069,10 +1071,9 @@ SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
     pseudo = pseudo.diff(pos.board.byColor(pos.turn));
   }
   if (square == context.king) {
-    final checkers = pos.checkers;
     return pseudo
-        .union(pos._castlingMoves(CastlingSide.queen, context.king, checkers))
-        .union(pos._castlingMoves(CastlingSide.king, context.king, checkers));
+        .union(pos._castlingMoves(CastlingSide.queen, context))
+        .union(pos._castlingMoves(CastlingSide.king, context));
   } else {
     return pseudo;
   }
