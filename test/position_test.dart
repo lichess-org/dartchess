@@ -302,17 +302,6 @@ void main() {
         expect(pos.epSquare, null);
       });
 
-      test('castling move', () {
-        final pos = Chess.fromSetup(Setup.parseFen(
-                'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
-            .play(Move(from: 4, to: 6));
-        expect(pos.board.pieceAt(6), Piece.whiteKing);
-        expect(pos.board.pieceAt(5), Piece.whiteRook);
-        expect(pos.castles.unmovedRooks.isIntersected(SquareSet.fromRank(0)),
-            false);
-        expect(pos.castles.rook[Color.white], equals(Tuple2(null, null)));
-      });
-
       test('rook move removes castling right', () {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
@@ -349,6 +338,39 @@ void main() {
         final pos = Chess.fromSetup(setup, ignoreImpossibleCheck: true);
         final enPassant = Move(from: 35, to: 42);
         expect(pos.isLegal(enPassant), false);
+      });
+
+      test('castling move', () {
+        final pos = Chess.fromSetup(Setup.parseFen(
+                'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
+            .play(Move(from: 4, to: 6));
+        expect(pos.board.pieceAt(6), Piece.whiteKing);
+        expect(pos.board.pieceAt(5), Piece.whiteRook);
+        expect(pos.castles.unmovedRooks.isIntersected(SquareSet.fromRank(0)),
+            false);
+        expect(pos.castles.rook[Color.white], equals(Tuple2(null, null)));
+      });
+
+      test('castling moves', () {
+        final pos =
+            Chess.fromSetup(Setup.parseFen('2r5/8/8/8/8/8/6PP/k2KR3 w K -'));
+        final move = Move(from: 3, to: 4);
+        expect(pos.play(move).fen, '2r5/8/8/8/8/8/6PP/k4RK1 b - - 1 1');
+
+        final pos2 = Chess.fromSetup(Setup.parseFen(
+            'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
+        final move2 = Move(from: 4, to: 0);
+        expect(pos2.play(move2).fen,
+            'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/2KR3R b kq - 1 1');
+
+        final pos3 = Chess.fromSetup(Setup.parseFen(
+            '1r2k2r/p1b1n1pp/1q3p2/1p2pPQ1/4P3/2P4P/1B2B1P1/R3K2R w KQk - 0 20'));
+        const queenSide = Move(from: 4, to: 0);
+        const altQueenSide = Move(from: 4, to: 2);
+        expect(pos3.normalizeMove(queenSide), queenSide);
+        expect(pos3.normalizeMove(altQueenSide), queenSide);
+        expect(pos3.play(altQueenSide).fen,
+            '1r2k2r/p1b1n1pp/1q3p2/1p2pPQ1/4P3/2P4P/1B2B1P1/2KR3R b k - 1 20');
       });
     });
 
@@ -387,16 +409,14 @@ void main() {
 
   group('Atomic', () {
     test('king exploded', () {
-      final pos1 = Atomic.fromSetup(
-          Setup.parseFen('r4b1r/ppp1pppp/7n/8/8/8/PPPPPPPP/RNBQKB1R b KQ - 0 3')
-      );
+      final pos1 = Atomic.fromSetup(Setup.parseFen(
+          'r4b1r/ppp1pppp/7n/8/8/8/PPPPPPPP/RNBQKB1R b KQ - 0 3'));
       expect(pos1.isGameOver, true);
       expect(pos1.isVariantEnd, true);
       expect(pos1.outcome, Outcome.whiteWins);
 
-      final pos2 = Atomic.fromSetup(
-          Setup.parseFen('rn5r/pp4pp/2p3Nn/5p2/1b2P1PP/8/PPP2P2/R1B1KB1R b KQ - 0 9')
-      );
+      final pos2 = Atomic.fromSetup(Setup.parseFen(
+          'rn5r/pp4pp/2p3Nn/5p2/1b2P1PP/8/PPP2P2/R1B1KB1R b KQ - 0 9'));
       expect(pos2.isGameOver, true);
       expect(pos2.isVariantEnd, true);
       expect(pos2.outcome, Outcome.whiteWins);

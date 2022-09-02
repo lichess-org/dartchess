@@ -128,8 +128,8 @@ abstract class Position<T> {
 
   /// Gets all the legal moves of this position.
   Map<Square, SquareSet> get legalMoves {
-    if (isVariantEnd) return Map.unmodifiable({});
     final context = _makeContext();
+    if (context.isVariantEnd) return Map.unmodifiable({});
     return Map.unmodifiable({
       for (final s in board.byColor(turn).squares)
         s: _legalMovesOf(s, context: context)
@@ -143,7 +143,8 @@ abstract class Position<T> {
   }
 
   /// Attacks that a king on `square` would have to deal with.
-  SquareSet kingAttackers(Square square, Color attacker, {SquareSet? occupied}) {
+  SquareSet kingAttackers(Square square, Color attacker,
+      {SquareSet? occupied}) {
     return board.attacksTo(square, attacker, occupied: occupied);
   }
 
@@ -178,7 +179,7 @@ abstract class Position<T> {
       return false;
     }
     final legalMoves = _legalMovesOf(move.from);
-    return legalMoves.has(move.to) || legalMoves.has(_normalizeMove(move).to);
+    return legalMoves.has(move.to) || legalMoves.has(normalizeMove(move).to);
   }
 
   /// Gets the legal moves for that [Square].
@@ -203,7 +204,7 @@ abstract class Position<T> {
     if (piece == null) {
       return _copyWith();
     }
-    final castlingMoveSide = _isCastlingMove(move);
+    final castlingMoveSide = _getCastlingSide(move);
     Square? newEpSquare;
     Board newBoard = board.removePieceAt(move.from);
     if (piece.role == Role.pawn) {
@@ -231,14 +232,15 @@ abstract class Position<T> {
       }
     }
 
+    Piece? capturedPiece;
     if (castlingMoveSide == null) {
+      capturedPiece = board.pieceAt(move.to);
       final newPiece = move.promotion != null
           ? piece.copyWith(role: move.promotion!)
           : piece;
       newBoard = newBoard.setPieceAt(move.to, newPiece);
     }
 
-    final capturedPiece = board.pieceAt(move.to);
     final isCapture = capturedPiece != null || move.to == epSquare;
     final newCastles = piece.role == Role.king
         ? castles.discardColor(turn)
@@ -255,6 +257,17 @@ abstract class Position<T> {
       turn: opposite(turn),
       castles: newCastles,
       epSquare: newEpSquare,
+    );
+  }
+
+  /// Returns the normalized form of a [Move] to avoid castling inconsistencies.
+  Move normalizeMove(Move move) {
+    final side = _getCastlingSide(move);
+    if (side == null) return move;
+    final castlingRook = castles.rookOf(turn, side);
+    return Move(
+      from: move.from,
+      to: castlingRook ?? move.to,
     );
   }
 
@@ -326,15 +339,12 @@ abstract class Position<T> {
   /// Optionnaly pass a [_Context] of the position, to optimize performance when
   /// calling this method several times.
   SquareSet _legalMovesOf(Square square, {_Context? context}) {
-    if (isVariantEnd) return SquareSet.empty;
+    final ctx = context ?? _makeContext();
+    if (ctx.isVariantEnd) return SquareSet.empty;
     final piece = board.pieceAt(square);
     if (piece == null || piece.color != turn) return SquareSet.empty;
-
-    final king = context != null ? context.king : board.kingOf(turn);
+    final king = ctx.king;
     if (king == null) return SquareSet.empty;
-
-    final blockers = context?.blockers ?? _sliderBlockers(king);
-    final checkers = context?.checkers ?? kingAttackers(king, opposite(turn));
 
     SquareSet pseudo;
     SquareSet? legalEpSquare;
@@ -354,7 +364,7 @@ abstract class Position<T> {
       }
       if (epSquare != null && _canCaptureEp(square)) {
         final pawn = epSquare! - delta;
-        if (checkers.isEmpty || checkers.singleSquare == pawn) {
+        if (ctx.checkers.isEmpty || ctx.checkers.singleSquare == pawn) {
           legalEpSquare = SquareSet.fromSquare(epSquare!);
         }
       }
@@ -380,40 +390,34 @@ abstract class Position<T> {
         }
       }
       return pseudo
-          .union(_castlingMoves(CastlingSide.queen, king, checkers))
-          .union(_castlingMoves(CastlingSide.king, king, checkers));
+          .union(_castlingMoves(CastlingSide.queen, king, ctx.checkers))
+          .union(_castlingMoves(CastlingSide.king, king, ctx.checkers));
     }
 
-    if (checkers.isNotEmpty) {
-      final checker = checkers.singleSquare;
+    if (ctx.checkers.isNotEmpty) {
+      final checker = ctx.checkers.singleSquare;
       if (checker == null) return SquareSet.empty;
       pseudo = pseudo.intersect(between(checker, king).withSquare(checker));
     }
 
-    if (blockers.has(square)) pseudo = pseudo.intersect(ray(square, king));
+    if (ctx.blockers.has(square)) pseudo = pseudo.intersect(ray(square, king));
 
     if (legalEpSquare != null) pseudo = pseudo.union(legalEpSquare);
 
     return pseudo;
   }
 
-  Move _normalizeMove(Move move) {
-    final side = _isCastlingMove(move);
-    if (side == null) return move;
-    final rookFrom = castles.rookOf(turn, side);
-    return Move(
-      from: move.from,
-      to: rookFrom ?? move.to,
-    );
-  }
-
   _Context _makeContext() {
     final king = board.kingOf(turn);
     if (king == null) {
       return _Context(
-          king: king, blockers: SquareSet.empty, checkers: SquareSet.empty);
+          isVariantEnd: isVariantEnd,
+          king: king,
+          blockers: SquareSet.empty,
+          checkers: SquareSet.empty);
     }
     return _Context(
+      isVariantEnd: isVariantEnd,
       king: king,
       blockers: _sliderBlockers(king),
       checkers: checkers,
@@ -477,7 +481,7 @@ abstract class Position<T> {
         .isIntersected(occupied);
   }
 
-  CastlingSide? _isCastlingMove(Move move) {
+  CastlingSide? _getCastlingSide(Move move) {
     final delta = move.to - move.from;
     if (delta.abs() != 2 && !board.byColor(turn).has(move.to)) {
       return null;
@@ -600,7 +604,8 @@ class Atomic extends Position<Atomic> {
   /// Contrary to chess, in Atomic kings can attack each other, without causing
   /// check.
   @override
-  SquareSet kingAttackers(Square square, Color attacker, {SquareSet? occupied}) {
+  SquareSet kingAttackers(Square square, Color attacker,
+      {SquareSet? occupied}) {
     final attackerKings = board.piecesOf(attacker, Role.king);
     if (attackerKings.isEmpty ||
         kingAttacks(square).isIntersected(attackerKings)) {
@@ -739,11 +744,9 @@ class Atomic extends Position<Atomic> {
     for (final to in _pseudoLegalMoves(this, square, ctx).squares) {
       final after = playUnchecked(Move(from: square, to: to));
       final ourKing = after.board.kingOf(turn);
-      if (
-        ourKing != null &&
-        (after.board.kingOf(after.turn) == null ||
-          after.kingAttackers(ourKing, after.turn).isEmpty)
-      ) {
+      if (ourKing != null &&
+          (after.board.kingOf(after.turn) == null ||
+              after.kingAttackers(ourKing, after.turn).isEmpty)) {
         moves = moves.withSquare(to);
       }
     }
@@ -998,11 +1001,13 @@ class Castles {
 
 class _Context {
   const _Context({
+    required this.isVariantEnd,
     required this.king,
     required this.blockers,
     required this.checkers,
   });
 
+  final bool isVariantEnd;
   final Square? king;
   final SquareSet blockers;
   final SquareSet checkers;
