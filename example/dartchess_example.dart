@@ -2,8 +2,7 @@ import 'package:dartchess/dartchess.dart';
 
 void main() {
   // Parse fen and create a valid chess position
-  final setup = Setup.parseFen(
-      'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+  final setup = Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
   final pos = Chess.fromSetup(setup);
 
   // Generate legal moves

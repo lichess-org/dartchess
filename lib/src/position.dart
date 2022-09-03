@@ -89,16 +89,13 @@ abstract class Position<T> {
   }
 
   /// Tests if the game is over.
-  bool get isGameOver =>
-      isVariantEnd || isInsufficientMaterial || !hasSomeLegalMoves;
+  bool get isGameOver => isVariantEnd || isInsufficientMaterial || !hasSomeLegalMoves;
 
   /// Tests for checkmate.
-  bool get isCheckmate =>
-      !isVariantEnd && checkers.isNotEmpty && !hasSomeLegalMoves;
+  bool get isCheckmate => !isVariantEnd && checkers.isNotEmpty && !hasSomeLegalMoves;
 
   /// Tests for stalemate.
-  bool get isStalemate =>
-      !isVariantEnd && checkers.isEmpty && !hasSomeLegalMoves;
+  bool get isStalemate => !isVariantEnd && checkers.isEmpty && !hasSomeLegalMoves;
 
   /// The outcome of the game, or `null` if the game is not over.
   Outcome? get outcome {
@@ -114,8 +111,7 @@ abstract class Position<T> {
   }
 
   /// Tests if both [Color] have insufficient winning material.
-  bool get isInsufficientMaterial =>
-      Color.values.every((color) => hasInsufficientMaterial(color));
+  bool get isInsufficientMaterial => Color.values.every((color) => hasInsufficientMaterial(color));
 
   /// Tests if the position has at least one legal move.
   bool get hasSomeLegalMoves {
@@ -130,10 +126,8 @@ abstract class Position<T> {
   Map<Square, SquareSet> get legalMoves {
     final context = _makeContext();
     if (context.isVariantEnd) return Map.unmodifiable({});
-    return Map.unmodifiable({
-      for (final s in board.byColor(turn).squares)
-        s: _legalMovesOf(s, context: context)
-    });
+    return Map.unmodifiable(
+        {for (final s in board.byColor(turn).squares) s: _legalMovesOf(s, context: context)});
   }
 
   /// SquareSet of pieces giving check.
@@ -143,24 +137,18 @@ abstract class Position<T> {
   }
 
   /// Attacks that a king on `square` would have to deal with.
-  SquareSet kingAttackers(Square square, Color attacker,
-      {SquareSet? occupied}) {
+  SquareSet kingAttackers(Square square, Color attacker, {SquareSet? occupied}) {
     return board.attacksTo(square, attacker, occupied: occupied);
   }
 
   /// Tests if a [Color] has insufficient winning material.
   bool hasInsufficientMaterial(Color color) {
-    if (board
-        .byColor(color)
-        .intersect(board.pawns.union(board.rooksAndQueens))
-        .isNotEmpty) return false;
+    if (board.byColor(color).intersect(board.pawns.union(board.rooksAndQueens)).isNotEmpty) {
+      return false;
+    }
     if (board.byColor(color).isIntersected(board.knights)) {
       return (board.byColor(color).size <= 2 &&
-          board
-              .byColor(opposite(color))
-              .diff(board.kings)
-              .diff(board.queens)
-              .isEmpty);
+          board.byColor(opposite(color)).diff(board.kings).diff(board.queens).isEmpty);
     }
     if (board.byColor(color).isIntersected(board.bishops)) {
       final sameColor = !board.bishops.isIntersected(SquareSet.darkSquares) ||
@@ -209,8 +197,7 @@ abstract class Position<T> {
     Board newBoard = board.removePieceAt(move.from);
     if (piece.role == Role.pawn) {
       if (move.to == epSquare) {
-        newBoard =
-            newBoard.removePieceAt(move.to + (turn == Color.white ? -8 : 8));
+        newBoard = newBoard.removePieceAt(move.to + (turn == Color.white ? -8 : 8));
       }
       final delta = move.from - move.to;
       if (delta.abs() == 16 && move.from >= 8 && move.from <= 55) {
@@ -225,17 +212,14 @@ abstract class Position<T> {
               .removePieceAt(rookFrom)
               .setPieceAt(_kingCastlesTo(turn, castlingSide), piece);
           if (rook != null) {
-            newBoard =
-                newBoard.setPieceAt(_rookCastlesTo(turn, castlingSide), rook);
+            newBoard = newBoard.setPieceAt(_rookCastlesTo(turn, castlingSide), rook);
           }
         }
       }
     }
 
     if (castlingSide == null) {
-      final newPiece = move.promotion != null
-          ? piece.copyWith(role: move.promotion!)
-          : piece;
+      final newPiece = move.promotion != null ? piece.copyWith(role: move.promotion!) : piece;
       newBoard = newBoard.setPieceAt(move.to, newPiece);
     }
 
@@ -316,17 +300,14 @@ abstract class Position<T> {
             (checkers.first != pushedTo &&
                 board
                     .attacksTo(ourKing, opposite(turn),
-                        occupied: board.occupied
-                            .withoutSquare(pushedTo)
-                            .withSquare(pushedFrom))
+                        occupied: board.occupied.withoutSquare(pushedTo).withSquare(pushedFrom))
                     .isNotEmpty)) {
           throw PositionError(IllegalSetup.impossibleCheck);
         }
       } else {
         // Multiple sliding checkers aligned with king.
         if (checkers.size > 2 ||
-            (checkers.size == 2 &&
-                ray(checkers.first!, checkers.last!).has(ourKing))) {
+            (checkers.size == 2 && ray(checkers.first!, checkers.last!).has(ourKing))) {
           throw PositionError(IllegalSetup.impossibleCheck);
         }
       }
@@ -348,14 +329,12 @@ abstract class Position<T> {
     SquareSet pseudo;
     SquareSet? legalEpSquare;
     if (piece.role == Role.pawn) {
-      pseudo =
-          pawnAttacks(turn, square).intersect(board.byColor(opposite(turn)));
+      pseudo = pawnAttacks(turn, square).intersect(board.byColor(opposite(turn)));
       final delta = turn == Color.white ? 8 : -8;
       final step = square + delta;
       if (0 <= step && step < 64 && !board.occupied.has(step)) {
         pseudo = pseudo.withSquare(step);
-        final canDoubleStep =
-            turn == Color.white ? square < 16 : square >= 64 - 16;
+        final canDoubleStep = turn == Color.white ? square < 16 : square >= 64 - 16;
         final doubleStep = step + delta;
         if (canDoubleStep && !board.occupied.has(doubleStep)) {
           pseudo = pseudo.withSquare(doubleStep);
@@ -426,8 +405,7 @@ abstract class Position<T> {
   SquareSet _sliderBlockers(Square king) {
     final snipers = rookAttacks(king, SquareSet.empty)
         .intersect(board.rooksAndQueens)
-        .union(bishopAttacks(king, SquareSet.empty)
-            .intersect(board.bishopsAndQueens))
+        .union(bishopAttacks(king, SquareSet.empty).intersect(board.bishopsAndQueens))
         .intersect(board.byColor(opposite(turn)));
     SquareSet blockers = SquareSet.empty;
     for (final sniper in snipers.squares) {
@@ -457,10 +435,7 @@ abstract class Position<T> {
       }
     }
     final rookTo = _rookCastlesTo(turn, side);
-    final after = board.occupied
-        .toggleSquare(king)
-        .toggleSquare(rook)
-        .toggleSquare(rookTo);
+    final after = board.occupied.toggleSquare(king).toggleSquare(rook).toggleSquare(rookTo);
     if (kingAttackers(kingTo, opposite(turn), occupied: after).isNotEmpty) {
       return SquareSet.empty;
     }
@@ -473,13 +448,9 @@ abstract class Position<T> {
     final king = board.kingOf(turn);
     if (king == null) return true;
     final captured = epSquare! + (turn == Color.white ? -8 : 8);
-    final occupied = board.occupied
-        .toggleSquare(pawn)
-        .toggleSquare(epSquare!)
-        .toggleSquare(captured);
-    return !board
-        .attacksTo(king, opposite(turn), occupied: occupied)
-        .isIntersected(occupied);
+    final occupied =
+        board.occupied.toggleSquare(pawn).toggleSquare(epSquare!).toggleSquare(captured);
+    return !board.attacksTo(king, opposite(turn), occupied: occupied).isIntersected(occupied);
   }
 
   CastlingSide? _getCastlingSide(Move move) {
@@ -496,8 +467,7 @@ abstract class Position<T> {
   Square? _legalEpSquare() {
     if (epSquare == null) return null;
     final ourPawns = board.piecesOf(turn, Role.pawn);
-    final candidates =
-        ourPawns.intersect(pawnAttacks(opposite(turn), epSquare!));
+    final candidates = ourPawns.intersect(pawnAttacks(opposite(turn), epSquare!));
     for (final candidate in candidates.squares) {
       if (_legalMovesOf(candidate).has(epSquare!)) {
         return epSquare;
@@ -605,11 +575,9 @@ class Atomic extends Position<Atomic> {
   /// Contrary to chess, in Atomic kings can attack each other, without causing
   /// check.
   @override
-  SquareSet kingAttackers(Square square, Color attacker,
-      {SquareSet? occupied}) {
+  SquareSet kingAttackers(Square square, Color attacker, {SquareSet? occupied}) {
     final attackerKings = board.piecesOf(attacker, Role.king);
-    if (attackerKings.isEmpty ||
-        kingAttacks(square).isIntersected(attackerKings)) {
+    if (attackerKings.isEmpty || kingAttacks(square).isIntersected(attackerKings)) {
       return SquareSet.empty;
     }
     return super.kingAttackers(square, attacker, occupied: occupied);
@@ -669,10 +637,8 @@ class Atomic extends Position<Atomic> {
     if (isCapture) {
       Castles newCastles = newPos.castles;
       Board newBoard = newPos.board.removePieceAt(move.to);
-      for (final explode in kingAttacks(move.to)
-          .intersect(newBoard.occupied)
-          .diff(newBoard.pawns)
-          .squares) {
+      for (final explode
+          in kingAttacks(move.to).intersect(newBoard.occupied).diff(newBoard.pawns).squares) {
         final piece = newBoard.pieceAt(explode);
         newBoard = newBoard.removePieceAt(explode);
         if (piece != null) {
@@ -705,19 +671,11 @@ class Atomic extends Position<Atomic> {
     if (board.byColor(opposite(color)).diff(board.kings).isNotEmpty) {
       // Unless there are only bishops that cannot explode each other.
       if (board.occupied == board.bishops.union(board.kings)) {
-        if (!board.bishops
-            .intersect(board.white)
-            .isIntersected(SquareSet.darkSquares)) {
-          return !board.bishops
-              .intersect(board.black)
-              .isIntersected(SquareSet.lightSquares);
+        if (!board.bishops.intersect(board.white).isIntersected(SquareSet.darkSquares)) {
+          return !board.bishops.intersect(board.black).isIntersected(SquareSet.lightSquares);
         }
-        if (!board.bishops
-            .intersect(board.white)
-            .isIntersected(SquareSet.lightSquares)) {
-          return !board.bishops
-              .intersect(board.black)
-              .isIntersected(SquareSet.darkSquares);
+        if (!board.bishops.intersect(board.white).isIntersected(SquareSet.lightSquares)) {
+          return !board.bishops.intersect(board.black).isIntersected(SquareSet.darkSquares);
         }
       }
       return false;
@@ -867,10 +825,8 @@ class Castles {
     unmovedRooks: SquareSet.corners,
     rook: {Color.white: Tuple2(0, 7), Color.black: Tuple2(56, 63)},
     path: {
-      Color.white:
-          Tuple2(SquareSet(0x000000000000000e), SquareSet(0x0000000000000060)),
-      Color.black:
-          Tuple2(SquareSet(0x0e00000000000000), SquareSet(0x6000000000000000))
+      Color.white: Tuple2(SquareSet(0x000000000000000e), SquareSet(0x0000000000000060)),
+      Color.black: Tuple2(SquareSet(0x0e00000000000000), SquareSet(0x6000000000000000))
     },
   );
 
@@ -890,8 +846,7 @@ class Castles {
       final backrank = SquareSet.backrankOf(color);
       final king = setup.board.kingOf(color);
       if (king == null || !backrank.has(king)) continue;
-      final side =
-          rooks.intersect(setup.board.byColor(color)).intersect(backrank);
+      final side = rooks.intersect(setup.board.byColor(color)).intersect(backrank);
       if (side.first != null && side.first! < king) {
         castles = castles._add(color, CastlingSide.queen, king, side.first!);
       }
@@ -976,16 +931,13 @@ class Castles {
   }) {
     return Castles(
       unmovedRooks: unmovedRooks ?? this.unmovedRooks,
-      rook:
-          rook != null ? Map.unmodifiable({...this.rook, ...rook}) : this.rook,
-      path:
-          path != null ? Map.unmodifiable({...this.path, ...path}) : this.path,
+      rook: rook != null ? Map.unmodifiable({...this.rook, ...rook}) : this.rook,
+      path: path != null ? Map.unmodifiable({...this.path, ...path}) : this.path,
     );
   }
 
   @override
-  toString() =>
-      'Castles(unmovedRooks: $unmovedRooks, rook: $rook, path: $path)';
+  toString() => 'Castles(unmovedRooks: $unmovedRooks, rook: $rook, path: $path)';
 
   @override
   bool operator ==(Object other) =>
@@ -997,8 +949,8 @@ class Castles {
       other.path[Color.black] == path[Color.black];
 
   @override
-  int get hashCode => Object.hash(unmovedRooks, rook[Color.white],
-      rook[Color.black], path[Color.white], path[Color.black]);
+  int get hashCode => Object.hash(
+      unmovedRooks, rook[Color.white], rook[Color.black], path[Color.white], path[Color.black]);
 }
 
 class _Context {
@@ -1038,8 +990,9 @@ Square? _validEpSquare(Setup setup) {
   if (squareRank(setup.epSquare!) != epRank) return null;
   if (setup.board.occupied.has(setup.epSquare! + forward)) return null;
   final pawn = setup.epSquare! - forward;
-  if (!setup.board.pawns.has(pawn) ||
-      !setup.board.byColor(opposite(setup.turn)).has(pawn)) return null;
+  if (!setup.board.pawns.has(pawn) || !setup.board.byColor(opposite(setup.turn)).has(pawn)) {
+    return null;
+  }
   return setup.epSquare;
 }
 
@@ -1059,8 +1012,7 @@ SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
     final step = square + delta;
     if (0 <= step && step < 64 && !pos.board.occupied.has(step)) {
       pseudo = pseudo.withSquare(step);
-      final canDoubleStep =
-          pos.turn == Color.white ? square < 16 : square >= 64 - 16;
+      final canDoubleStep = pos.turn == Color.white ? square < 16 : square >= 64 - 16;
       final doubleStep = step + delta;
       if (canDoubleStep && !pos.board.occupied.has(doubleStep)) {
         pseudo = pseudo.withSquare(doubleStep);

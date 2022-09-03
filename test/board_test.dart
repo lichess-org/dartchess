@@ -50,8 +50,7 @@ void main() {
   });
 
   test('parse board fen, promoted piece', () {
-    final board =
-        Board.parseFen('rQ~q1kb1r/pp2pppp/2p5/8/3P1Bb1/4PN2/PPP3PP/R2QKB1R');
+    final board = Board.parseFen('rQ~q1kb1r/pp2pppp/2p5/8/3P1Bb1/4PN2/PPP3PP/R2QKB1R');
     expect(board.promoted.squares.length, 1);
   });
 

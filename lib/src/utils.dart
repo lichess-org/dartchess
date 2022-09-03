@@ -14,8 +14,7 @@ Square? parseSquare(String str) {
 
 Color opposite(Color color) => color == Color.white ? Color.black : Color.white;
 
-String makeSquare(Square square) =>
-    kFileNames[squareFile(square)] + kRankNames[squareRank(square)];
+String makeSquare(Square square) => kFileNames[squareFile(square)] + kRankNames[squareRank(square)];
 
 /// Converts a move to UCI notation, like `g1f3` for a normal move,
 /// `a7a8q` for promotion to a queen.

@@ -130,8 +130,7 @@ class Tuple2<T1, T2> {
   String toString() => '[$item1, $item2]';
 
   @override
-  bool operator ==(Object other) =>
-      other is Tuple2 && item1 == other.item1 && item2 == other.item2;
+  bool operator ==(Object other) => other is Tuple2 && item1 == other.item1 && item2 == other.item2;
 
   @override
   int get hashCode => Object.hash(item1, item2);

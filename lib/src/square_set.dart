@@ -141,9 +141,7 @@ class SquareSet {
 
   @override
   bool operator ==(Object other) {
-    return other is SquareSet &&
-        other.runtimeType == runtimeType &&
-        other.value == value;
+    return other is SquareSet && other.runtimeType == runtimeType && other.value == value;
   }
 
   @override
@@ -155,14 +153,10 @@ class SquareSet {
     for (Square square = 63; square >= 0; square--) {
       b += (has(square) ? '1' : '0');
     }
-    final first = int.parse(b.substring(0, 32), radix: 2)
-        .toRadixString(16)
-        .toUpperCase()
-        .padLeft(8, '0');
-    final last = int.parse(b.substring(32, 64), radix: 2)
-        .toRadixString(16)
-        .toUpperCase()
-        .padLeft(8, '0');
+    final first =
+        int.parse(b.substring(0, 32), radix: 2).toRadixString(16).toUpperCase().padLeft(8, '0');
+    final last =
+        int.parse(b.substring(32, 64), radix: 2).toRadixString(16).toUpperCase().padLeft(8, '0');
     return 'SquareSet(0x$first$last)';
   }
 
@@ -197,8 +191,7 @@ class SquareSet {
 
 int _popcnt64(int n) {
   final count2 = n - ((n >>> 1) & 0x5555555555555555);
-  final count4 =
-      (count2 & 0x3333333333333333) + ((count2 >>> 2) & 0x3333333333333333);
+  final count4 = (count2 & 0x3333333333333333) + ((count2 >>> 2) & 0x3333333333333333);
   final count8 = (count4 + (count4 >>> 4)) & 0x0f0f0f0f0f0f0f0f;
   return (count8 * 0x0101010101010101) >>> 56;
 }

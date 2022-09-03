@@ -184,9 +184,8 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
     } else if (lower == 'k') {
       candidates = backrank.squaresReversed;
     } else if ('a'.compareTo(lower) <= 0 && lower.compareTo('h') <= 0) {
-      candidates = SquareSet.fromFile(lower.codeUnitAt(0) - 'a'.codeUnitAt(0))
-          .intersect(backrank)
-          .squares;
+      candidates =
+          SquareSet.fromFile(lower.codeUnitAt(0) - 'a'.codeUnitAt(0)).intersect(backrank).squares;
     } else {
       throw FenError('ERR_CASTLING');
     }
@@ -210,8 +209,7 @@ String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
   for (final color in Color.values) {
     final backrank = SquareSet.backrankOf(color);
     final king = board.kingOf(color);
-    final candidates =
-        board.byPiece(Piece(color: color, role: Role.rook)).intersect(backrank);
+    final candidates = board.byPiece(Piece(color: color, role: Role.rook)).intersect(backrank);
     for (final rook in unmovedRooks.intersect(candidates).squaresReversed) {
       if (rook == candidates.first && king != null && rook < king) {
         fen += color == Color.white ? 'Q' : 'q';
@@ -226,5 +224,4 @@ String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
   return fen != '' ? fen : '-';
 }
 
-int? _parseSmallUint(String str) =>
-    RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;
+int? _parseSmallUint(String str) => RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;

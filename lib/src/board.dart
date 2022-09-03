@@ -24,24 +24,20 @@ class Board {
   final ByRole<SquareSet> roles;
 
   /// Standard chess starting position.
-  static const standard = Board(
-      occupied: SquareSet(0xffff00000000ffff),
-      promoted: SquareSet.empty,
-      colors: {
-        Color.white: SquareSet(0xffff),
-        Color.black: SquareSet(0xffff000000000000),
-      },
-      roles: {
-        Role.pawn: SquareSet(0x00ff00000000ff00),
-        Role.knight: SquareSet(0x4200000000000042),
-        Role.bishop: SquareSet(0x2400000000000024),
-        Role.rook: SquareSet(0x8100000000000081),
-        Role.queen: SquareSet(0x0800000000000008),
-        Role.king: SquareSet(0x1000000000000010),
-      });
+  static const standard =
+      Board(occupied: SquareSet(0xffff00000000ffff), promoted: SquareSet.empty, colors: {
+    Color.white: SquareSet(0xffff),
+    Color.black: SquareSet(0xffff000000000000),
+  }, roles: {
+    Role.pawn: SquareSet(0x00ff00000000ff00),
+    Role.knight: SquareSet(0x4200000000000042),
+    Role.bishop: SquareSet(0x2400000000000024),
+    Role.rook: SquareSet(0x8100000000000081),
+    Role.queen: SquareSet(0x0800000000000008),
+    Role.king: SquareSet(0x1000000000000010),
+  });
 
-  static const empty =
-      Board(occupied: SquareSet.empty, promoted: SquareSet.empty, colors: {
+  static const empty = Board(occupied: SquareSet.empty, promoted: SquareSet.empty, colors: {
     Color.white: SquareSet.empty,
     Color.black: SquareSet.empty,
   }, roles: {
@@ -205,8 +201,7 @@ class Board {
   SquareSet attacksTo(Square square, Color attacker, {SquareSet? occupied}) =>
       byColor(attacker).intersect(rookAttacks(square, occupied ?? this.occupied)
           .intersect(rooksAndQueens)
-          .union(bishopAttacks(square, occupied ?? this.occupied)
-              .intersect(bishopsAndQueens))
+          .union(bishopAttacks(square, occupied ?? this.occupied).intersect(bishopsAndQueens))
           .union(knightAttacks(square).intersect(knights))
           .union(kingAttacks(square).intersect(kings))
           .union(pawnAttacks(opposite(attacker), square).intersect(pawns)));
@@ -251,12 +246,8 @@ class Board {
     return Board(
       occupied: occupied ?? this.occupied,
       promoted: promoted ?? this.promoted,
-      colors: colors != null
-          ? Map.unmodifiable({...this.colors, ...colors})
-          : this.colors,
-      roles: roles != null
-          ? Map.unmodifiable({...this.roles, ...roles})
-          : this.roles,
+      colors: colors != null ? Map.unmodifiable({...this.colors, ...colors}) : this.colors,
+      roles: roles != null ? Map.unmodifiable({...this.roles, ...roles}) : this.roles,
     );
   }
 
@@ -279,17 +270,15 @@ class Board {
   }
 
   @override
-  int get hashCode => Object.hash(occupied, promoted, white, black, pawns,
-      knights, bishops, rooks, queens, kings);
+  int get hashCode =>
+      Object.hash(occupied, promoted, white, black, pawns, knights, bishops, rooks, queens, kings);
 }
 
 Piece? _charToPiece(String ch, bool promoted) {
   final role = charToRole(ch);
   if (role != null) {
     return Piece(
-        role: role,
-        color: ch == ch.toLowerCase() ? Color.black : Color.white,
-        promoted: promoted);
+        role: role, color: ch == ch.toLowerCase() ? Color.black : Color.white, promoted: promoted);
   }
   return null;
 }

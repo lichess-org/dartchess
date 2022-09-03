@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
         sdk: [stable]
     steps:
       - uses: actions/checkout@v2
@@ -23,7 +23,7 @@ jobs:
         run: dart pub get
 
       - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed .
+        run: dart format -l 100 --output=none --set-exit-if-changed .
 
       - name: Analyze project source
         run: dart analyze
