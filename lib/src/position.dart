@@ -195,6 +195,7 @@ abstract class Position<T> {
     final castlingSide = _getCastlingSide(move);
     Square? newEpSquare;
     Board newBoard = board.removePieceAt(move.from);
+    Castles newCastles = castles;
     if (piece.role == Role.pawn) {
       if (move.to == epSquare) {
         newBoard = newBoard.removePieceAt(move.to + (turn == Color.white ? -8 : 8));
@@ -203,6 +204,8 @@ abstract class Position<T> {
       if (delta.abs() == 16 && move.from >= 8 && move.from <= 55) {
         newEpSquare = (move.from + move.to) >>> 1;
       }
+    } else if (piece.role == Role.rook) {
+      newCastles = newCastles.discardRookAt(move.from);
     } else if (piece.role == Role.king) {
       if (castlingSide != null) {
         final rookFrom = castles.rookOf(turn, castlingSide);
@@ -216,6 +219,7 @@ abstract class Position<T> {
           }
         }
       }
+      newCastles = newCastles.discardColor(turn);
     }
 
     if (castlingSide == null) {
@@ -225,13 +229,10 @@ abstract class Position<T> {
 
     final capturedPiece = castlingSide == null ? board.pieceAt(move.to) : null;
     final isCapture = capturedPiece != null || move.to == epSquare;
-    final newCastles = piece.role == Role.king
-        ? castles.discardColor(turn)
-        : piece.role == Role.rook
-            ? castles.discardRookAt(move.from)
-            : capturedPiece != null && capturedPiece.role == Role.rook
-                ? castles.discardRookAt(move.to)
-                : null;
+
+    if (capturedPiece != null && capturedPiece.role == Role.rook) {
+      newCastles = newCastles.discardRookAt(move.to);
+    }
 
     return _copyWith(
       halfmoves: isCapture || piece.role == Role.pawn ? 0 : halfmoves + 1,
@@ -368,8 +369,8 @@ abstract class Position<T> {
         }
       }
       return pseudo
-          .union(_castlingMoves(CastlingSide.queen, ctx))
-          .union(_castlingMoves(CastlingSide.king, ctx));
+          .union(_castlingMove(CastlingSide.queen, ctx))
+          .union(_castlingMove(CastlingSide.king, ctx));
     }
 
     if (ctx.checkers.isNotEmpty) {
@@ -415,7 +416,7 @@ abstract class Position<T> {
     return blockers;
   }
 
-  SquareSet _castlingMoves(CastlingSide side, _Context context) {
+  SquareSet _castlingMove(CastlingSide side, _Context context) {
     final king = context.king;
     if (king == null || context.checkers.isNotEmpty) {
       return SquareSet.empty;
@@ -453,6 +454,9 @@ abstract class Position<T> {
     return !board.attacksTo(king, opposite(turn), occupied: occupied).isIntersected(occupied);
   }
 
+  /// Detects if a move is a castling move.
+  ///
+  /// Returns the [CastlingSide] or `null` if the move is a regular move.
   CastlingSide? _getCastlingSide(Move move) {
     final delta = move.to - move.from;
     if (delta.abs() != 2 && !board.byColor(turn).has(move.to)) {
@@ -1024,8 +1028,8 @@ SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
   }
   if (square == context.king) {
     return pseudo
-        .union(pos._castlingMoves(CastlingSide.queen, context))
-        .union(pos._castlingMoves(CastlingSide.king, context));
+        .union(pos._castlingMove(CastlingSide.queen, context))
+        .union(pos._castlingMove(CastlingSide.king, context));
   } else {
     return pseudo;
   }
