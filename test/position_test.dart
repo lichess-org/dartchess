@@ -384,8 +384,46 @@ void main() {
       expect(pos2.outcome, Outcome.whiteWins);
     });
 
+    test('insufficient material', () {
+      for (final test in [
+        ['8/3k4/8/8/2N5/8/3K4/8 b - -', true, true],
+        ['8/4rk2/8/8/8/8/3K4/8 w - -', true, true],
+        ['8/4qk2/8/8/8/8/3K4/8 w - -', true, false],
+        ['8/1k6/8/2n5/8/3NK3/8/8 b - -', false, false],
+        ['8/4bk2/8/8/8/8/3KB3/8 w - -', true, true],
+        ['4b3/5k2/8/8/8/8/3KB3/8 w - -', false, false],
+        ['3Q4/5kKB/8/8/8/8/8/8 b - -', false, true],
+        ['8/5k2/8/8/8/8/5K2/4bb2 w - -', true, false],
+        ['8/5k2/8/8/8/8/5K2/4nb2 w - -', true, false],
+      ]) {
+        final pos = Atomic.fromSetup(Setup.parseFen(test[0] as String));
+        expect(pos.hasInsufficientMaterial(Color.white), test[1]);
+        expect(pos.hasInsufficientMaterial(Color.black), test[2]);
+      }
+    });
+
     test('perft', () {
-      for (final t in _atomicPerft) {
+      for (final t in [
+        ['atomic-start', 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -', 20, 400, 8902],
+        ['programfox-2', 'rn1qkb1r/p5pp/2p5/3p4/N3P3/5P2/PPP4P/R1BQK3 w Qkq -', 28, 833, 23353],
+        ['atomic960-castle-1', '8/8/8/8/8/8/2k5/rR4KR w KQ -', 18, 180, 4364],
+        ['atomic960-castle-2', 'r3k1rR/5K2/8/8/8/8/8/8 b kq -', 25, 282, 6753],
+        ['atomic960-castle-3', 'Rr2k1rR/3K4/3p4/8/8/8/7P/8 w kq -', 21, 465, 10631],
+        [
+          'shakmaty-bench',
+          'rn2kb1r/1pp1p2p/p2q1pp1/3P4/2P3b1/4PN2/PP3PPP/R2QKB1R b KQkq -',
+          40,
+          1238,
+          45237
+        ],
+        [
+          'near-king-explosion',
+          'rnbqk2r/pp1p2pp/2p3Nn/5p2/1b2P1PP/8/PPP2P2/R1BQKB1R w KQkq -',
+          5,
+          132,
+          4973
+        ],
+      ]) {
         final pos = Atomic.fromSetup(Setup.parseFen(t[1] as String));
         expect(perft(pos, 1), t[2]);
         expect(perft(pos, 2), t[3]);
@@ -560,27 +598,5 @@ final _randomPerft = [
     17480,
     532817,
     14672791
-  ],
-];
-
-final _atomicPerft = [
-  ['atomic-start', 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -', 20, 400, 8902],
-  ['programfox-2', 'rn1qkb1r/p5pp/2p5/3p4/N3P3/5P2/PPP4P/R1BQK3 w Qkq -', 28, 833, 23353],
-  ['atomic960-castle-1', '8/8/8/8/8/8/2k5/rR4KR w KQ -', 18, 180, 4364],
-  ['atomic960-castle-2', 'r3k1rR/5K2/8/8/8/8/8/8 b kq -', 25, 282, 6753],
-  ['atomic960-castle-3', 'Rr2k1rR/3K4/3p4/8/8/8/7P/8 w kq -', 21, 465, 10631],
-  [
-    'shakmaty-bench',
-    'rn2kb1r/1pp1p2p/p2q1pp1/3P4/2P3b1/4PN2/PP3PPP/R2QKB1R b KQkq -',
-    40,
-    1238,
-    45237
-  ],
-  [
-    'near-king-explosion',
-    'rnbqk2r/pp1p2pp/2p3Nn/5p2/1b2P1PP/8/PPP2P2/R1BQKB1R w KQkq -',
-    5,
-    132,
-    4973
   ],
 ];
