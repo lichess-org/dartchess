@@ -22,6 +22,8 @@ Dart chess library for native platforms with an immutable API.
     - game end and outcome
     - insufficient material
     - setup validation
+- Chess variants: Atomic
+- Attacks and rays using hyperbola quintessence
 - Immutability: all the classes are immutable.
 
 ## Example
