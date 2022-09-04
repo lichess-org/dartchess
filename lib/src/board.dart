@@ -104,8 +104,8 @@ class Board {
   /// All squares occupied by kings.
   SquareSet get kings => roles[Role.king]!;
 
-  SquareSet get rooksAndQueens => rooks.union(queens);
-  SquareSet get bishopsAndQueens => bishops.union(queens);
+  SquareSet get rooksAndQueens => rooks | queens;
+  SquareSet get bishopsAndQueens => bishops | queens;
 
   /// Board part of the Forsyth-Edwards-Notation.
   String get fen {
@@ -146,7 +146,7 @@ class Board {
 
   /// A [SquareSet] of all the pieces matching this [Color] and [Role].
   SquareSet piecesOf(Color color, Role role) {
-    return byColor(color).intersect(byRole(role));
+    return byColor(color) & byRole(role);
   }
 
   /// Gets all squares occupied by [Color].
@@ -157,7 +157,7 @@ class Board {
 
   /// Gets all squares occupied by [Piece].
   SquareSet byPiece(Piece piece) {
-    return colors[piece.color]!.intersect(roles[piece.role]!);
+    return colors[piece.color]! & roles[piece.role]!;
   }
 
   /// Gets the [Color] at this [Square], if any.

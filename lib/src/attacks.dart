@@ -25,20 +25,20 @@ SquareSet pawnAttacks(Color color, Square square) {
 /// squares.
 SquareSet bishopAttacks(Square square, SquareSet occupied) {
   final bit = SquareSet.fromSquare(square);
-  return _hyperbola(bit, _diagRange[square], occupied)
-      .xor(_hyperbola(bit, _antiDiagRange[square], occupied));
+  return _hyperbola(bit, _diagRange[square], occupied) ^
+      _hyperbola(bit, _antiDiagRange[square], occupied);
 }
 
 /// Gets squares attacked or defended by a rook on [Square], given `occupied`
 /// squares.
 SquareSet rookAttacks(Square square, SquareSet occupied) {
-  return _fileAttacks(square, occupied).xor(_rankAttacks(square, occupied));
+  return _fileAttacks(square, occupied) ^ _rankAttacks(square, occupied);
 }
 
 /// Gets squares attacked or defended by a queen on [Square], given `occupied`
 /// squares.
 SquareSet queenAttacks(Square square, SquareSet occupied) =>
-    bishopAttacks(square, occupied).xor(rookAttacks(square, occupied));
+    bishopAttacks(square, occupied) ^ rookAttacks(square, occupied);
 
 /// Gets squares attacked or defended by a `piece` on `square`, given
 /// `occupied` squares.
@@ -125,11 +125,11 @@ final _antiDiagRange = _tabulate((sq) {
 });
 
 SquareSet _hyperbola(SquareSet bit, SquareSet range, SquareSet occupied) {
-  SquareSet forward = occupied.intersect(range);
+  SquareSet forward = occupied & range;
   SquareSet reverse = forward.flipVertical(); // Assumes no more than 1 bit per rank
-  forward = forward.minus(bit);
-  reverse = reverse.minus(bit.flipVertical());
-  return forward.xor(reverse.flipVertical()).intersect(range);
+  forward = forward - bit;
+  reverse = reverse - bit.flipVertical();
+  return (forward ^ reverse.flipVertical()) & range;
 }
 
 SquareSet _fileAttacks(Square square, SquareSet occupied) =>
@@ -138,9 +138,9 @@ SquareSet _fileAttacks(Square square, SquareSet occupied) =>
 SquareSet _rankAttacks(Square square, SquareSet occupied) {
   final range = _rankRange[square];
   final bit = SquareSet.fromSquare(square);
-  SquareSet forward = occupied.intersect(range);
+  SquareSet forward = occupied & range;
   SquareSet reverse = forward.mirrorHorizontal();
-  forward = forward.minus(bit);
-  reverse = reverse.minus(bit.mirrorHorizontal());
-  return forward.xor(reverse.mirrorHorizontal()).intersect(range);
+  forward = forward - bit;
+  reverse = reverse - bit.mirrorHorizontal();
+  return (forward ^ reverse.mirrorHorizontal()) & range;
 }

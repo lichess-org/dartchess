@@ -120,16 +120,7 @@ void main() {
   });
 
   test('with square', () {
-    expect(makeSquareSet('''
-. . . . . . . .
-. . . . . . . .
-. . . . . . . .
-. . . 1 1 . . .
-. . . 1 1 . . .
-. . . . . . . .
-. . . . . . . .
-. . . . . . . .
-''').withSquare(43), makeSquareSet('''
+    expect(SquareSet.center.withSquare(43), makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . 1 . . . .
@@ -142,16 +133,7 @@ void main() {
   });
 
   test('without square', () {
-    expect(makeSquareSet('''
-. . . . . . . .
-. . . . . . . .
-. . . . . . . .
-. . . 1 1 . . .
-. . . 1 1 . . .
-. . . . . . . .
-. . . . . . . .
-. . . . . . . .
-''').withoutSquare(27), makeSquareSet('''
+    expect(SquareSet.center.withoutSquare(27), makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
@@ -164,16 +146,7 @@ void main() {
   });
 
   test('toggle square', () {
-    expect(makeSquareSet('''
-. . . . . . . .
-. . . . . . . .
-. . . . . . . .
-. . . 1 1 . . .
-. . . 1 1 . . .
-. . . . . . . .
-. . . . . . . .
-. . . . . . . .
-''').toggleSquare(35).toggleSquare(43), makeSquareSet('''
+    expect(SquareSet.center.toggleSquare(35).toggleSquare(43), makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . 1 . . . .

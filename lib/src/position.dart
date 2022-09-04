@@ -143,7 +143,7 @@ abstract class Position<T> {
 
   /// Tests if a [Color] has insufficient winning material.
   bool hasInsufficientMaterial(Color color) {
-    if (board.byColor(color).intersect(board.pawns.union(board.rooksAndQueens)).isNotEmpty) {
+    if (board.byColor(color).isIntersected(board.pawns | board.rooksAndQueens)) {
       return false;
     }
     if (board.byColor(color).isIntersected(board.knights)) {
@@ -276,7 +276,7 @@ abstract class Position<T> {
     if (kingAttackers(otherKing, turn).isNotEmpty) {
       throw PositionError(IllegalSetup.oppositeCheck);
     }
-    if (SquareSet.backranks.intersect(board.pawns).isNotEmpty) {
+    if (SquareSet.backranks.isIntersected(board.pawns)) {
       throw PositionError(IllegalSetup.pawnsOnBackrank);
     }
     final skipImpossibleCheck = ignoreImpossibleCheck ?? false;
@@ -330,7 +330,7 @@ abstract class Position<T> {
     SquareSet pseudo;
     SquareSet? legalEpSquare;
     if (piece.role == Role.pawn) {
-      pseudo = pawnAttacks(turn, square).intersect(board.byColor(opposite(turn)));
+      pseudo = pawnAttacks(turn, square) & board.byColor(opposite(turn));
       final delta = turn == Color.white ? 8 : -8;
       final step = square + delta;
       if (0 <= step && step < 64 && !board.occupied.has(step)) {
@@ -376,12 +376,16 @@ abstract class Position<T> {
     if (ctx.checkers.isNotEmpty) {
       final checker = ctx.checkers.singleSquare;
       if (checker == null) return SquareSet.empty;
-      pseudo = pseudo.intersect(between(checker, king).withSquare(checker));
+      pseudo = pseudo & between(checker, king).withSquare(checker);
     }
 
-    if (ctx.blockers.has(square)) pseudo = pseudo.intersect(ray(square, king));
+    if (ctx.blockers.has(square)) {
+      pseudo = pseudo & ray(square, king);
+    }
 
-    if (legalEpSquare != null) pseudo = pseudo.union(legalEpSquare);
+    if (legalEpSquare != null) {
+      pseudo = pseudo | legalEpSquare;
+    }
 
     return pseudo;
   }
@@ -410,8 +414,8 @@ abstract class Position<T> {
         .intersect(board.byColor(opposite(turn)));
     SquareSet blockers = SquareSet.empty;
     for (final sniper in snipers.squares) {
-      final b = between(king, sniper).intersect(board.occupied);
-      if (!b.moreThanOne) blockers = blockers.union(b);
+      final b = between(king, sniper) & board.occupied;
+      if (!b.moreThanOne) blockers = blockers | b;
     }
     return blockers;
   }
@@ -471,7 +475,7 @@ abstract class Position<T> {
   Square? _legalEpSquare() {
     if (epSquare == null) return null;
     final ourPawns = board.piecesOf(turn, Role.pawn);
-    final candidates = ourPawns.intersect(pawnAttacks(opposite(turn), epSquare!));
+    final candidates = ourPawns & pawnAttacks(opposite(turn), epSquare!);
     for (final candidate in candidates.squares) {
       if (_legalMovesOf(candidate).has(epSquare!)) {
         return epSquare;
@@ -606,7 +610,7 @@ class Atomic extends Position<Atomic> {
     if (kingAttackers(otherKing, turn).isNotEmpty) {
       throw PositionError(IllegalSetup.oppositeCheck);
     }
-    if (SquareSet.backranks.intersect(board.pawns).isNotEmpty) {
+    if (SquareSet.backranks.isIntersected(board.pawns)) {
       throw PositionError(IllegalSetup.pawnsOnBackrank);
     }
     final skipImpossibleCheck = ignoreImpossibleCheck ?? false;
@@ -674,12 +678,12 @@ class Atomic extends Position<Atomic> {
     // own pieces explode next to it.
     if (board.byColor(opposite(color)).diff(board.kings).isNotEmpty) {
       // Unless there are only bishops that cannot explode each other.
-      if (board.occupied == board.bishops.union(board.kings)) {
-        if (!board.bishops.intersect(board.white).isIntersected(SquareSet.darkSquares)) {
-          return !board.bishops.intersect(board.black).isIntersected(SquareSet.lightSquares);
+      if (board.occupied == board.bishops | board.kings) {
+        if (!(board.bishops & board.white).isIntersected(SquareSet.darkSquares)) {
+          return !(board.bishops & board.black).isIntersected(SquareSet.lightSquares);
         }
-        if (!board.bishops.intersect(board.white).isIntersected(SquareSet.lightSquares)) {
-          return !board.bishops.intersect(board.black).isIntersected(SquareSet.darkSquares);
+        if (!(board.bishops & board.white).isIntersected(SquareSet.lightSquares)) {
+          return !(board.bishops & board.black).isIntersected(SquareSet.darkSquares);
         }
       }
       return false;
@@ -689,12 +693,12 @@ class Atomic extends Position<Atomic> {
     if (board.queens.isNotEmpty || board.pawns.isNotEmpty) return false;
 
     // Single knight, bishop or rook cannot mate against bare king.
-    if (board.knights.union(board.bishops).union(board.rooks).size == 1) {
+    if ((board.knights | board.bishops | board.rooks).size == 1) {
       return true;
     }
 
     // If only knights, more than two are required to mate bare king.
-    if (board.occupied == board.knights.union(board.kings)) {
+    if (board.occupied == board.knights | board.kings) {
       return board.knights.size <= 2;
     }
 
@@ -845,12 +849,12 @@ class Castles {
 
   factory Castles.fromSetup(Setup setup) {
     Castles castles = Castles.empty;
-    final rooks = setup.unmovedRooks.intersect(setup.board.rooks);
+    final rooks = setup.unmovedRooks & setup.board.rooks;
     for (final color in Color.values) {
       final backrank = SquareSet.backrankOf(color);
       final king = setup.board.kingOf(color);
       if (king == null || !backrank.has(king)) continue;
-      final side = rooks.intersect(setup.board.byColor(color)).intersect(backrank);
+      final side = rooks & setup.board.byColor(color) & backrank;
       if (side.first != null && side.first! < king) {
         castles = castles._add(color, CastlingSide.queen, king, side.first!);
       }
@@ -1011,7 +1015,7 @@ SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
     if (pos.epSquare != null) {
       captureTargets = captureTargets.withSquare(pos.epSquare!);
     }
-    pseudo = pseudo.intersect(captureTargets);
+    pseudo = pseudo & captureTargets;
     final delta = pos.turn == Color.white ? 8 : -8;
     final step = square + delta;
     if (0 <= step && step < 64 && !pos.board.occupied.has(step)) {

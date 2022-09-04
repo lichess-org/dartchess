@@ -20,7 +20,7 @@ class SquareSet {
   /// Creates a [SquareSet] with the provided 64bit integer value.
   const SquareSet(this.value);
 
-  /// Creates a [SquareSet] with a single [square].
+  /// Creates a [SquareSet] with a single [Square].
   const SquareSet.fromSquare(Square square)
       : value = 1 << square,
         assert(square >= 0 && square < 64);
@@ -49,43 +49,36 @@ class SquareSet {
   static const diagonal = SquareSet(0x8040201008040201);
   static const antidiagonal = SquareSet(0x0102040810204080);
   static const corners = SquareSet(0x8100000000000081);
+  static const center = SquareSet(0x0000001818000000);
   static const backranks = SquareSet(0xff000000000000ff);
 
+  /// Bitwise right shift
   SquareSet shr(int shift) {
     if (shift >= 64) return SquareSet.empty;
     if (shift > 0) return SquareSet(value >>> shift);
     return this;
   }
 
+  /// Bitwise left shift
   SquareSet shl(int shift) {
     if (shift >= 64) return SquareSet.empty;
     if (shift > 0) return SquareSet(value << shift);
     return this;
   }
 
-  SquareSet complement() {
-    return SquareSet(~value);
-  }
+  SquareSet xor(SquareSet other) => SquareSet(value ^ other.value);
+  SquareSet operator ^(SquareSet other) => SquareSet(value ^ other.value);
 
-  SquareSet xor(SquareSet other) {
-    return SquareSet(value ^ other.value);
-  }
+  SquareSet union(SquareSet other) => SquareSet(value | other.value);
+  SquareSet operator |(SquareSet other) => SquareSet(value | other.value);
 
-  SquareSet union(SquareSet other) {
-    return SquareSet(value | other.value);
-  }
+  SquareSet intersect(SquareSet other) => SquareSet(value & other.value);
+  SquareSet operator &(SquareSet other) => SquareSet(value & other.value);
 
-  SquareSet intersect(SquareSet other) {
-    return SquareSet(value & other.value);
-  }
+  SquareSet minus(SquareSet other) => SquareSet(value - other.value);
+  SquareSet operator -(SquareSet other) => SquareSet(value - other.value);
 
-  SquareSet diff(SquareSet other) {
-    return SquareSet(value & ~other.value);
-  }
-
-  SquareSet minus(SquareSet other) {
-    return SquareSet(value - other.value);
-  }
+  SquareSet diff(SquareSet other) => SquareSet(value & ~other.value);
 
   SquareSet flipVertical() {
     const k1 = 0x00FF00FF00FF00FF;

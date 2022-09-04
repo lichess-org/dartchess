@@ -176,7 +176,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
     final lower = c.toLowerCase();
     final color = c == lower ? Color.black : Color.white;
     final backrankMask = SquareSet.backrankOf(color);
-    final backrank = backrankMask.intersect(board.byColor(color));
+    final backrank = backrankMask & board.byColor(color);
 
     Iterable<Square> candidates;
     if (lower == 'q') {
@@ -184,8 +184,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
     } else if (lower == 'k') {
       candidates = backrank.squaresReversed;
     } else if ('a'.compareTo(lower) <= 0 && lower.compareTo('h') <= 0) {
-      candidates =
-          SquareSet.fromFile(lower.codeUnitAt(0) - 'a'.codeUnitAt(0)).intersect(backrank).squares;
+      candidates = (SquareSet.fromFile(lower.codeUnitAt(0) - 'a'.codeUnitAt(0)) & backrank).squares;
     } else {
       throw FenError('ERR_CASTLING');
     }
@@ -197,8 +196,8 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
       }
     }
   }
-  if (SquareSet.fromRank(0).intersect(unmovedRooks).size > 2 ||
-      SquareSet.fromRank(7).intersect(unmovedRooks).size > 2) {
+  if ((SquareSet.fromRank(0) & unmovedRooks).size > 2 ||
+      (SquareSet.fromRank(7) & unmovedRooks).size > 2) {
     throw FenError('ERR_CASTLING');
   }
   return unmovedRooks;
@@ -209,8 +208,8 @@ String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
   for (final color in Color.values) {
     final backrank = SquareSet.backrankOf(color);
     final king = board.kingOf(color);
-    final candidates = board.byPiece(Piece(color: color, role: Role.rook)).intersect(backrank);
-    for (final rook in unmovedRooks.intersect(candidates).squaresReversed) {
+    final candidates = board.byPiece(Piece(color: color, role: Role.rook)) & backrank;
+    for (final rook in (unmovedRooks & candidates).squaresReversed) {
       if (rook == candidates.first && king != null && rook < king) {
         fen += color == Color.white ? 'Q' : 'q';
       } else if (rook == candidates.last && king != null && king < rook) {
