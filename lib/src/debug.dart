@@ -99,7 +99,7 @@ int perft(Position pos, int depth, {shouldLog = false}) {
           final move = Move(from: from, to: to, promotion: promotion);
           final child = pos.playUnchecked(move);
           final children = perft(child, depth - 1);
-          if (shouldLog) print('${makeUci(move)} $children');
+          if (shouldLog) print('${move.uci} $children');
           nodes += children;
         }
       }

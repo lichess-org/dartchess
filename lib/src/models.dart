@@ -1,22 +1,51 @@
 import './utils.dart';
 
-enum Color {
-  white,
-  black;
+enum Color { white, black }
 
-  Color fromName(String name) {
-    switch (name) {
-      case 'white':
-        return Color.white;
-      case 'black':
-        return Color.black;
+enum Role {
+  king,
+  queen,
+  knight,
+  bishop,
+  rook,
+  pawn;
+
+  static Role? fromChar(String ch) {
+    switch (ch.toLowerCase()) {
+      case 'p':
+        return Role.pawn;
+      case 'n':
+        return Role.knight;
+      case 'b':
+        return Role.bishop;
+      case 'r':
+        return Role.rook;
+      case 'q':
+        return Role.queen;
+      case 'k':
+        return Role.king;
       default:
-        throw Exception('$name is not a valid color for Color');
+        return null;
+    }
+  }
+
+  String get char {
+    switch (this) {
+      case Role.pawn:
+        return 'p';
+      case Role.knight:
+        return 'n';
+      case Role.bishop:
+        return 'b';
+      case Role.rook:
+        return 'r';
+      case Role.queen:
+        return 'q';
+      case Role.king:
+        return 'k';
     }
   }
 }
-
-enum Role { king, queen, knight, bishop, rook, pawn }
 
 /// Number between 0 and 63 included representing a square on the board.
 ///
@@ -38,7 +67,7 @@ class Piece {
   final bool promoted;
 
   String get fenChar {
-    String r = roleToChar(role);
+    String r = role.char;
     if (color == Color.white) r = r.toUpperCase();
     if (promoted) r += '~';
     return r;
@@ -96,9 +125,33 @@ class Move {
     this.promotion,
   });
 
+  /// Constructs a [Move] from an UCI string.
+  ///
+  /// Throws an [ArgumentError] if the argument is not a valid UCI string.
+  factory Move.fromUci(String str) {
+    if (str.length == 4 || str.length == 5) {
+      final from = parseSquare(str.substring(0, 2));
+      final to = parseSquare(str.substring(2, 4));
+      Role? promotion;
+      if (str.length == 5) {
+        promotion = Role.fromChar(str[4]);
+        if (promotion == null) {
+          throw ArgumentError('Invalid UCI string');
+        }
+      }
+      if (from != null && to != null) {
+        return Move(from: from, to: to);
+      }
+    }
+    throw ArgumentError('Invalid UCI string');
+  }
+
   final Square from;
   final Square to;
   final Role? promotion;
+
+  /// Gets UCI notation, like `g1f3` for a normal move, `a7a8q` for promotion to a queen.
+  String get uci => makeSquare(from) + makeSquare(to) + (promotion != null ? promotion!.char : '');
 
   @override
   bool operator ==(Object other) {

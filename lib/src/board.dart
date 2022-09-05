@@ -275,7 +275,7 @@ class Board {
 }
 
 Piece? _charToPiece(String ch, bool promoted) {
-  final role = charToRole(ch);
+  final role = Role.fromChar(ch);
   if (role != null) {
     return Piece(
         role: role, color: ch == ch.toLowerCase() ? Color.black : Color.white, promoted: promoted);
