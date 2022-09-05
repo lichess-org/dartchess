@@ -139,7 +139,7 @@ class Setup {
         board.fen,
         turnLetter,
         _makeCastlingFen(board, unmovedRooks),
-        epSquare != null ? makeSquare(epSquare!) : '-',
+        epSquare != null ? toAlgebraic(epSquare!) : '-',
         math.max(0, math.min(halfmoves, 9999)),
         math.max(1, math.min(fullmoves, 9999)),
       ].join(' ');

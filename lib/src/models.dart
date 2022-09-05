@@ -151,7 +151,8 @@ class Move {
   final Role? promotion;
 
   /// Gets UCI notation, like `g1f3` for a normal move, `a7a8q` for promotion to a queen.
-  String get uci => makeSquare(from) + makeSquare(to) + (promotion != null ? promotion!.char : '');
+  String get uci =>
+      toAlgebraic(from) + toAlgebraic(to) + (promotion != null ? promotion!.char : '');
 
   @override
   bool operator ==(Object other) {

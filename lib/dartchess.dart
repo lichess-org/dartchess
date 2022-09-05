@@ -2,7 +2,7 @@ library dartchess;
 
 export 'src/constants.dart';
 export 'src/models.dart';
-export 'src/utils.dart' show squareRank, squareFile, parseSquare, opposite, makeSquare;
+export 'src/utils.dart';
 export 'src/square_set.dart';
 export 'src/attacks.dart';
 export 'src/board.dart';
