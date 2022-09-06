@@ -46,7 +46,7 @@ abstract class Position<T extends Position<T>> {
         halfmoves = 0,
         fullmoves = 1;
 
-  Position.fromSetupUnchecked(Setup setup)
+  Position._fromSetupUnchecked(Setup setup)
       : board = setup.board,
         turn = setup.turn,
         castles = Castles.fromSetup(setup),
@@ -486,12 +486,14 @@ abstract class Position<T extends Position<T>> {
     if (king == null) {
       return _Context(
           isVariantEnd: isVariantEnd,
+          mustCapture: false,
           king: king,
           blockers: SquareSet.empty,
           checkers: SquareSet.empty);
     }
     return _Context(
       isVariantEnd: isVariantEnd,
+      mustCapture: false,
       king: king,
       blockers: _sliderBlockers(king),
       checkers: checkers,
@@ -587,7 +589,7 @@ class Chess extends Position<Chess> {
     required super.fullmoves,
   });
 
-  Chess.fromSetupUnchecked(Setup setup) : super.fromSetupUnchecked(setup);
+  Chess._fromSetupUnchecked(Setup setup) : super._fromSetupUnchecked(setup);
   const Chess._initial() : super._initial();
 
   static const initial = Chess._initial();
@@ -605,13 +607,13 @@ class Chess extends Position<Chess> {
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
   factory Chess.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-    final unchecked = Chess.fromSetupUnchecked(setup);
+    final unchecked = Chess._fromSetupUnchecked(setup);
     unchecked.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
     return unchecked;
   }
 
   @override
-  Position<Chess> _copyWith({
+  Chess _copyWith({
     Board? board,
     Color? turn,
     Castles? castles,
@@ -620,6 +622,130 @@ class Chess extends Position<Chess> {
     int? fullmoves,
   }) {
     return Chess(
+      board: board ?? this.board,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+    );
+  }
+}
+
+/// A variant of chess where you lose all your pieces or get stalemated to win.
+class Antichess extends Position<Antichess> {
+  const Antichess({
+    required super.board,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  });
+
+  Antichess._fromSetupUnchecked(Setup setup) : super._fromSetupUnchecked(setup);
+
+  const Antichess._initial() : super._initial();
+
+  static const initial = Antichess._initial();
+
+  @override
+  bool get isVariantEnd => board.byColor(turn).isEmpty;
+
+  @override
+  Outcome? get variantOutcome {
+    if (isVariantEnd || isStalemate) {
+      return Outcome(winner: turn);
+    }
+    return null;
+  }
+
+  /// Set up a playable [Antichess] position.
+  ///
+  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// requirements.
+  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
+  /// requirement.
+  factory Antichess.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+    final unchecked = Antichess._fromSetupUnchecked(setup);
+    final noCastles = unchecked._copyWith(castles: Castles.empty);
+    noCastles.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+    return noCastles;
+  }
+
+  @override
+  void validate({bool? ignoreImpossibleCheck}) {
+    if (board.occupied.isEmpty) {
+      throw PositionError(IllegalSetup.empty);
+    }
+    if (SquareSet.backranks.isIntersected(board.pawns)) {
+      throw PositionError(IllegalSetup.pawnsOnBackrank);
+    }
+  }
+
+  @override
+  SquareSet kingAttackers(Square square, Color attacker, {SquareSet? occupied}) {
+    return SquareSet.empty;
+  }
+
+  @override
+  _Context _makeContext() {
+    final ctx = super._makeContext();
+    if (epSquare != null &&
+        pawnAttacks(opposite(turn), epSquare!).isIntersected(board.piecesOf(turn, Role.pawn))) {
+      return ctx.copyWith(mustCapture: true);
+    }
+    final enemy = board.byColor(opposite(turn));
+    for (final from in board.byColor(turn).squares) {
+      if (_pseudoLegalMoves(this, from, ctx).isIntersected(enemy)) {
+        return ctx.copyWith(mustCapture: true);
+      }
+    }
+    return ctx;
+  }
+
+  @override
+  SquareSet _legalMovesOf(Square square, {_Context? context}) {
+    final ctx = context ?? _makeContext();
+    final dests = _pseudoLegalMoves(this, square, ctx);
+    final enemy = board.byColor(opposite(turn));
+    return dests &
+        (ctx.mustCapture
+            ? epSquare != null && board.roleAt(square) == Role.pawn
+                ? enemy.withSquare(epSquare!)
+                : enemy
+            : SquareSet.full);
+  }
+
+  @override
+  bool hasInsufficientMaterial(Color color) {
+    if (board.byColor(color).isEmpty) return false;
+    if (board.byColor(opposite(color)).isEmpty) return true;
+    if (board.occupied == board.bishops) {
+      final weSomeOnLight = board.byColor(color).isIntersected(SquareSet.lightSquares);
+      final weSomeOnDark = board.byColor(color).isIntersected(SquareSet.darkSquares);
+      final theyAllOnDark = board.byColor(opposite(color)).isDisjoint(SquareSet.lightSquares);
+      final theyAllOnLight = board.byColor(opposite(color)).isDisjoint(SquareSet.darkSquares);
+      return (weSomeOnLight && theyAllOnDark) || (weSomeOnDark && theyAllOnLight);
+    }
+    if (board.occupied == board.knights && board.occupied.size == 2) {
+      return ((board.white.isIntersected(SquareSet.lightSquares) !=
+              board.black.isIntersected(SquareSet.darkSquares)) !=
+          (turn == color));
+    }
+    return false;
+  }
+
+  @override
+  Antichess _copyWith({
+    Board? board,
+    Color? turn,
+    Castles? castles,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return Antichess(
       board: board ?? this.board,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
@@ -641,7 +767,7 @@ class Atomic extends Position<Atomic> {
     required super.fullmoves,
   });
 
-  Atomic.fromSetupUnchecked(Setup setup) : super.fromSetupUnchecked(setup);
+  Atomic._fromSetupUnchecked(Setup setup) : super._fromSetupUnchecked(setup);
   const Atomic._initial() : super._initial();
 
   static const initial = Atomic._initial();
@@ -666,7 +792,7 @@ class Atomic extends Position<Atomic> {
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
   factory Atomic.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-    final unchecked = Atomic.fromSetupUnchecked(setup);
+    final unchecked = Atomic._fromSetupUnchecked(setup);
     unchecked.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
     return unchecked;
   }
@@ -729,11 +855,11 @@ class Atomic extends Position<Atomic> {
   /// except pawns that are within a one square radius are removed from the
   /// board.
   @override
-  Position<Atomic> playUnchecked(Move move) {
+  Atomic playUnchecked(Move move) {
     final castlingSide = _getCastlingSide(move);
     final capturedPiece = castlingSide == null ? board.pieceAt(move.to) : null;
     final isCapture = capturedPiece != null || move.to == epSquare;
-    final newPos = super.playUnchecked(move);
+    final newPos = super.playUnchecked(move) as Atomic;
 
     if (isCapture) {
       Castles newCastles = newPos.castles;
@@ -815,7 +941,7 @@ class Atomic extends Position<Atomic> {
   }
 
   @override
-  Position<Atomic> _copyWith({
+  Atomic _copyWith({
     Board? board,
     Color? turn,
     Castles? castles,
@@ -1060,12 +1186,30 @@ class _Context {
     required this.king,
     required this.blockers,
     required this.checkers,
+    required this.mustCapture,
   });
 
   final bool isVariantEnd;
+  final bool mustCapture;
   final Square? king;
   final SquareSet blockers;
   final SquareSet checkers;
+
+  _Context copyWith({
+    bool? isVariantEnd,
+    bool? mustCapture,
+    Square? king,
+    SquareSet? blockers,
+    SquareSet? checkers,
+  }) {
+    return _Context(
+      isVariantEnd: isVariantEnd ?? this.isVariantEnd,
+      mustCapture: mustCapture ?? this.mustCapture,
+      king: king,
+      blockers: blockers ?? this.blockers,
+      checkers: checkers ?? this.checkers,
+    );
+  }
 }
 
 Square _rookCastlesTo(Color color, CastlingSide side) {

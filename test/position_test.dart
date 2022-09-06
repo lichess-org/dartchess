@@ -458,6 +458,41 @@ void main() {
       }
     });
   });
+
+  group('Antichess', () {
+    test('insufficient material', () {
+      const falseNegative = false;
+      for (final test in [
+        ['8/4bk2/8/8/8/8/3KB3/8 w - -', false, false],
+        ['4b3/5k2/8/8/8/8/3KB3/8 w - -', false, false],
+        ['8/8/8/6b1/8/3B4/4B3/5B2 w - -', true, true],
+        ['8/8/5b2/8/8/3B4/3B4/8 w - -', true, false],
+        ['8/5p2/5P2/8/3B4/1bB5/8/8 b - -', falseNegative, falseNegative],
+        ['8/8/8/1n2N3/8/8/8/8 w - - 0 32', true, false],
+        ['8/3N4/8/1n6/8/8/8/8 b - - 1 32', true, false],
+        ['6n1/8/8/4N3/8/8/8/8 b - - 0 27', false, true],
+        ['8/8/5n2/4N3/8/8/8/8 w - - 1 28', false, true],
+        ['8/3n4/8/8/8/8/8/8 w - - 0 29', false, true],
+      ]) {
+        final pos = Antichess.fromSetup(Setup.parseFen(test[0] as String));
+        expect(pos.hasInsufficientMaterial(Color.white), test[1]);
+        expect(pos.hasInsufficientMaterial(Color.black), test[2]);
+      }
+    });
+
+    test('perft', () {
+      for (final t in [
+        ['antichess-start', 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -', 20, 400, 8067],
+        ['a-pawn-vs-b-pawn', '8/1p6/8/8/8/8/P7/8 w - -', 2, 4, 4],
+        ['a-pawn-vs-c-pawn', '8/2p5/8/8/8/8/P7/8 w - -', 2, 4, 4],
+      ]) {
+        final pos = Antichess.fromSetup(Setup.parseFen(t[1] as String));
+        expect(perft(pos, 1), t[2]);
+        expect(perft(pos, 2), t[3]);
+        expect(perft(pos, 3), t[4]);
+      }
+    });
+  });
 }
 
 final _trickyPerft = [
