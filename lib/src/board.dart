@@ -3,7 +3,7 @@ import './models.dart';
 import './attacks.dart';
 import './utils.dart';
 
-/// [Piece] positions on a board.
+/// A board represented by several square sets for each piece.
 class Board {
   const Board({
     required this.occupied,

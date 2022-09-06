@@ -6,9 +6,9 @@ import './board.dart';
 import './setup.dart';
 import './utils.dart';
 
-/// A playable chess or chess variant position.
+/// A base class for playable chess or chess variant positions.
 ///
-/// See [Chess] for a concrete implementation.
+/// See [Chess] for a concrete implementation of standard rules.
 abstract class Position<T extends Position<T>> {
   const Position({
     required this.board,
@@ -37,6 +37,7 @@ abstract class Position<T extends Position<T>> {
   /// Current move number.
   final int fullmoves;
 
+  /// Abstract const constructor to be used by subclasses.
   const Position._initial()
       : board = Board.standard,
         turn = Color.white,
@@ -575,6 +576,7 @@ abstract class Position<T extends Position<T>> {
   }
 }
 
+/// A standard chess position.
 class Chess extends Position<Chess> {
   const Chess({
     required super.board,
@@ -628,6 +630,7 @@ class Chess extends Position<Chess> {
   }
 }
 
+/// A variant of chess where captures cause an explosion to the surrounding pieces.
 class Atomic extends Position<Atomic> {
   const Atomic({
     required super.board,
@@ -831,6 +834,7 @@ class Atomic extends Position<Atomic> {
   }
 }
 
+/// The outcome of a [Position]. No `winner` means a draw.
 class Outcome {
   const Outcome({this.winner});
 
@@ -866,8 +870,7 @@ enum IllegalSetup {
   /// Such a position cannot be reached by any sequence of legal moves.
   impossibleCheck,
 
-  /// There are pawns on the backrank. Only [Horde] allows players to
-  /// have pawns on their own backrank.
+  /// There are pawns on the backrank.
   pawnsOnBackrank,
 
   /// A king is missing, or there are too many kings.

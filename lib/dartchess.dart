@@ -1,3 +1,6 @@
+/// Dart chess library for native platforms only.
+///
+/// The API is entirely immutable.
 library dartchess;
 
 export 'src/constants.dart';

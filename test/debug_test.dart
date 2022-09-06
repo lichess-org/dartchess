@@ -14,6 +14,7 @@ void main() {
 . 1 . . 1 . . .
 ''';
     final sq = makeSquareSet(rep);
+    print(sq);
 
     expect(rep, printSquareSet(sq));
     expect(makeSquareSet('''
