@@ -493,6 +493,33 @@ void main() {
       }
     });
   });
+
+  group('King of the hill', () {
+    test('insufficient material', () {
+      for (final test in [
+        ['8/5k2/8/8/8/8/3K4/8 w - -', false, false],
+      ]) {
+        final pos = KingOfTheHill.fromSetup(Setup.parseFen(test[0] as String));
+        expect(pos.hasInsufficientMaterial(Color.white), test[1]);
+        expect(pos.hasInsufficientMaterial(Color.black), test[2]);
+      }
+    });
+    test('game end conditions', () {
+      final pos = KingOfTheHill.fromSetup(Setup.parseFen('8/5k2/8/8/8/8/1K6/8 w - - 0 1'));
+      expect(pos.isInsufficientMaterial, false);
+      expect(pos.isCheck, false);
+      expect(pos.isVariantEnd, false);
+      expect(pos.variantOutcome, null);
+      expect(pos.outcome, null);
+      expect(pos.isGameOver, false);
+
+      final pos2 = KingOfTheHill.fromSetup(
+          Setup.parseFen('r1bqkbnr/ppp2ppp/2np4/4p3/4K3/8/PPPP1PPP/RNBQ1BNR w HAkq - 0 1'));
+      expect(pos2.isVariantEnd, true);
+      expect(pos2.isGameOver, true);
+      expect(pos2.variantOutcome, Outcome.whiteWins);
+    });
+  });
 }
 
 final _trickyPerft = [

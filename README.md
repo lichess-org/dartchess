@@ -10,7 +10,7 @@ Dart chess library for native platforms with an immutable API.
     - insufficient material
     - setup validation
 - Chess960 support
-- Chess variants: Atomic
+- Chess variants: Antichess, Atomic, KingOfTheHill
 - Attacks and rays using hyperbola quintessence
 - Immutability: all the classes are immutable.
 

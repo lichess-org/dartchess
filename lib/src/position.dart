@@ -960,6 +960,71 @@ class Atomic extends Position<Atomic> {
   }
 }
 
+/// A variant similar to standard chess, where you win by putting your king on the center
+/// of the board.
+class KingOfTheHill extends Position<KingOfTheHill> {
+  const KingOfTheHill({
+    required super.board,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  });
+
+  KingOfTheHill._fromSetupUnchecked(Setup setup) : super._fromSetupUnchecked(setup);
+  const KingOfTheHill._initial() : super._initial();
+
+  static const initial = KingOfTheHill._initial();
+
+  @override
+  bool get isVariantEnd => board.kings.isIntersected(SquareSet.center);
+
+  @override
+  Outcome? get variantOutcome {
+    for (final color in Color.values) {
+      if (board.piecesOf(color, Role.king).isIntersected(SquareSet.center)) {
+        return Outcome(winner: color);
+      }
+    }
+    return null;
+  }
+
+  /// Set up a playable [KingOfTheHill] position.
+  ///
+  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// requirements.
+  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
+  /// requirement.
+  factory KingOfTheHill.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+    final unchecked = KingOfTheHill._fromSetupUnchecked(setup);
+    unchecked.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+    return unchecked;
+  }
+
+  @override
+  bool hasInsufficientMaterial(Color color) => false;
+
+  @override
+  KingOfTheHill _copyWith({
+    Board? board,
+    Color? turn,
+    Castles? castles,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return KingOfTheHill(
+      board: board ?? this.board,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+    );
+  }
+}
+
 /// The outcome of a [Position]. No `winner` means a draw.
 class Outcome {
   const Outcome({this.winner});
