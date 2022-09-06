@@ -27,6 +27,9 @@ class Setup {
   /// Current move number.
   final int fullmoves;
 
+  /// Number of remainingChecks for white (`item1`) and black (`item2`).
+  final Tuple2<int, int>? remainingChecks;
+
   const Setup({
     required this.board,
     required this.turn,
@@ -34,6 +37,7 @@ class Setup {
     this.epSquare,
     required this.halfmoves,
     required this.fullmoves,
+    this.remainingChecks,
   });
 
   static const standard = Setup(
@@ -97,26 +101,33 @@ class Setup {
       }
     }
 
-    // halfmoves
-    int halfmoves = 0;
-    if (parts.isNotEmpty) {
-      final int? parsed = _parseSmallUint(parts.removeAt(0));
-      if (parsed == null) {
-        throw FenError('ERR_HALFMOVES');
-      } else {
-        halfmoves = parsed;
-      }
+    // move counters or remainingChecks
+    String? halfmovePart = parts.isNotEmpty ? parts.removeAt(0) : null;
+    Tuple2<int, int>? earlyRemainingChecks;
+    if (halfmovePart != null && halfmovePart.contains('+')) {
+      earlyRemainingChecks = parseRemainingChecks(halfmovePart);
+      halfmovePart = parts.isNotEmpty ? parts.removeAt(0) : null;
+    }
+    final halfmoves = halfmovePart != null ? _parseSmallUint(halfmovePart) : 0;
+    if (halfmoves == null) {
+      throw FenError('ERR_HALFMOVES');
     }
 
-    // fullmoves
-    int fullmoves = 1;
-    if (parts.isNotEmpty) {
-      final int? parsed = _parseSmallUint(parts.removeAt(0));
-      if (parsed == null) {
-        throw FenError('ERR_FULLMOVES');
-      } else {
-        fullmoves = parsed;
+    final fullmovesPart = parts.isNotEmpty ? parts.removeAt(0) : null;
+    final fullmoves = fullmovesPart != null ? _parseSmallUint(fullmovesPart) : 1;
+    if (fullmoves == null) {
+      throw FenError('ERR_FULLMOVES');
+    }
+
+    final remainingChecksPart = parts.isNotEmpty ? parts.removeAt(0) : null;
+    Tuple2<int, int>? remainingChecks;
+    if (remainingChecksPart != null) {
+      if (earlyRemainingChecks != null) {
+        throw FenError('ERR_REMAINING_CHECKS');
       }
+      remainingChecks = parseRemainingChecks(remainingChecksPart);
+    } else if (earlyRemainingChecks != null) {
+      remainingChecks = earlyRemainingChecks;
     }
 
     if (parts.isNotEmpty) {
@@ -130,6 +141,7 @@ class Setup {
       epSquare: epSquare,
       halfmoves: halfmoves,
       fullmoves: fullmoves,
+      remainingChecks: remainingChecks,
     );
   }
 
@@ -140,6 +152,7 @@ class Setup {
         turnLetter,
         _makeCastlingFen(board, unmovedRooks),
         epSquare != null ? toAlgebraic(epSquare!) : '-',
+        ...(remainingChecks != null ? [_makeRemainingChecks(remainingChecks!)] : []),
         math.max(0, math.min(halfmoves, 9999)),
         math.max(1, math.min(fullmoves, 9999)),
       ].join(' ');
@@ -164,6 +177,27 @@ class Setup {
         halfmoves,
         fullmoves,
       );
+}
+
+Tuple2<int, int> parseRemainingChecks(String part) {
+  final parts = part.split('+');
+  if (parts.length == 3 && parts[0] == '') {
+    final white = _parseSmallUint(parts[1]);
+    final black = _parseSmallUint(parts[2]);
+    if (white == null || white > 3 || black == null || black > 3) {
+      throw FenError('ERR_REMAINING_CHECKS');
+    }
+    return Tuple2(3 - white, 3 - black);
+  } else if (parts.length == 2) {
+    final white = _parseSmallUint(parts[0]);
+    final black = _parseSmallUint(parts[1]);
+    if (white == null || white > 3 || black == null || black > 3) {
+      throw FenError('ERR_REMAINING_CHECKS');
+    }
+    return Tuple2(white, black);
+  } else {
+    throw FenError('ERR_REMAINING_CHECKS');
+  }
 }
 
 SquareSet _parseCastlingFen(Board board, String castlingPart) {
@@ -222,5 +256,7 @@ String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
   }
   return fen != '' ? fen : '-';
 }
+
+String _makeRemainingChecks(Tuple2<int, int> checks) => '${checks.item1}+${checks.item2}';
 
 int? _parseSmallUint(String str) => RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;

@@ -520,6 +520,44 @@ void main() {
       expect(pos2.variantOutcome, Outcome.whiteWins);
     });
   });
+
+  group('Three check', () {
+    test('insufficient material', () {
+      for (final test in [
+        ['8/5k2/8/8/8/8/3K4/8 w - - 3+3', true, true],
+        ['8/5k2/8/8/8/8/3K2N1/8 w - - 3+3', false, true],
+      ]) {
+        final pos = ThreeCheck.fromSetup(Setup.parseFen(test[0] as String));
+        expect(pos.hasInsufficientMaterial(Color.white), test[1]);
+        expect(pos.hasInsufficientMaterial(Color.black), test[2]);
+      }
+    });
+
+    test('remaining checks', () {
+      final pos = ThreeCheck.fromSetup(
+          Setup.parseFen('rnbqkbnr/ppp1pppp/3p4/8/8/4P3/PPPP1PPP/RNBQKBNR w KQkq - 3+3 0 2'));
+      expect(pos.play(Move.fromUci('f1b5')).fen,
+          'rnbqkbnr/ppp1pppp/3p4/1B6/8/4P3/PPPP1PPP/RNBQK1NR b KQkq - 2+3 1 2');
+    });
+
+    test('perft', () {
+      for (final t in [
+        [
+          'kiwipete',
+          'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 1+1',
+          48,
+          2039,
+          97848
+        ],
+        ['castling', 'r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 1+1', 26, 562, 13410],
+      ]) {
+        final pos = ThreeCheck.fromSetup(Setup.parseFen(t[1] as String));
+        expect(perft(pos, 1), t[2]);
+        expect(perft(pos, 2), t[3]);
+        expect(perft(pos, 3), t[4]);
+      }
+    });
+  });
 }
 
 final _trickyPerft = [

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import './constants.dart';
 import './square_set.dart';
 import './attacks.dart';
@@ -1021,6 +1022,120 @@ class KingOfTheHill extends Position<KingOfTheHill> {
       epSquare: epSquare,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
+    );
+  }
+}
+
+/// A variant similar to standard chess, where you can win if you put your opponent king
+/// into the third check.
+class ThreeCheck extends Position<ThreeCheck> {
+  const ThreeCheck({
+    required super.board,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+    required this.remainingChecks,
+  });
+
+  /// Number of remainingChecks for white (`item1`) and black (`item2`).
+  final Tuple2<int, int> remainingChecks;
+
+  const ThreeCheck._initial()
+      : remainingChecks = _defaultRemainingChecks,
+        super._initial();
+
+  static const initial = ThreeCheck._initial();
+
+  static const _defaultRemainingChecks = Tuple2(3, 3);
+
+  @override
+  bool get isVariantEnd => remainingChecks.item1 <= 0 || remainingChecks.item2 <= 0;
+
+  @override
+  Outcome? get variantOutcome {
+    if (remainingChecks.item1 <= 0) {
+      return Outcome.whiteWins;
+    }
+    if (remainingChecks.item2 <= 0) {
+      return Outcome.blackWins;
+    }
+    return null;
+  }
+
+  /// Set up a playable [ThreeCheck] position.
+  ///
+  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// requirements.
+  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
+  /// requirement.
+  factory ThreeCheck.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+    if (setup.remainingChecks == null) {
+      throw PositionError(IllegalSetup.variant);
+    } else {
+      final unchecked = ThreeCheck(
+        board: setup.board,
+        turn: setup.turn,
+        castles: Castles.fromSetup(setup),
+        epSquare: _validEpSquare(setup),
+        halfmoves: setup.halfmoves,
+        fullmoves: setup.fullmoves,
+        remainingChecks: setup.remainingChecks!,
+      );
+      unchecked.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+      return unchecked;
+    }
+  }
+
+  @override
+  String get fen {
+    return Setup(
+      board: board,
+      turn: turn,
+      unmovedRooks: castles.unmovedRooks,
+      epSquare: _legalEpSquare(),
+      halfmoves: halfmoves,
+      fullmoves: fullmoves,
+      remainingChecks: remainingChecks,
+    ).fen;
+  }
+
+  @override
+  bool hasInsufficientMaterial(Color color) =>
+      board.piecesOf(color, Role.king) == board.byColor(color);
+
+  @override
+  ThreeCheck playUnchecked(Move move) {
+    final newPos = super.playUnchecked(move) as ThreeCheck;
+    if (newPos.isCheck) {
+      return newPos._copyWith(
+          remainingChecks: turn == Color.white
+              ? remainingChecks.withItem1(math.max(remainingChecks.item1 - 1, 0))
+              : remainingChecks.withItem2(math.max(remainingChecks.item2 - 1, 0)));
+    } else {
+      return newPos;
+    }
+  }
+
+  @override
+  ThreeCheck _copyWith({
+    Board? board,
+    Color? turn,
+    Castles? castles,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+    Tuple2<int, int>? remainingChecks,
+  }) {
+    return ThreeCheck(
+      board: board ?? this.board,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+      remainingChecks: remainingChecks ?? this.remainingChecks,
     );
   }
 }
