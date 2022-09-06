@@ -2,6 +2,33 @@ import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('SAN', () {
+    test('en passant', () {
+      final setup = Setup.parseFen('6bk/7b/8/3pP3/8/8/8/Q3K3 w - d6 0 2');
+      final pos = Chess.fromSetup(setup);
+      final move = Move.fromUci('e5d6');
+      expect(pos.toSan(move), 'exd6#');
+    });
+
+    test('playToSan with scholar mate', () {
+      const moves = [
+        Move(from: 12, to: 28),
+        Move(from: 52, to: 36),
+        Move(from: 5, to: 26),
+        Move(from: 57, to: 42),
+        Move(from: 3, to: 21),
+        Move(from: 51, to: 43),
+        Move(from: 21, to: 53),
+      ];
+      final sans =
+          moves.fold<Tuple2<Position<Chess>, List<String>>>(Tuple2(Chess.initial, []), (acc, e) {
+        final ret = acc.item1.playToSan(e);
+        return Tuple2(ret.item1, [...acc.item2, ret.item2]);
+      });
+      expect(sans.item2, equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));
+    });
+  });
+
   group('Castles', () {
     test('Castles.fromSetup', () {
       final castles = Castles.fromSetup(Setup.standard);

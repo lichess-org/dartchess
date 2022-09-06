@@ -1,3 +1,4 @@
+import './constants.dart';
 import './square_set.dart';
 import './attacks.dart';
 import './models.dart';
@@ -8,7 +9,7 @@ import './utils.dart';
 /// A playable chess or chess variant position.
 ///
 /// See [Chess] for a concrete implementation.
-abstract class Position<T> {
+abstract class Position<T extends Position<T>> {
   const Position({
     required this.board,
     required this.turn,
@@ -52,7 +53,7 @@ abstract class Position<T> {
         halfmoves = setup.halfmoves,
         fullmoves = setup.fullmoves;
 
-  T _copyWith({
+  Position<T> _copyWith({
     Board? board,
     Color? turn,
     Castles? castles,
@@ -175,10 +176,37 @@ abstract class Position<T> {
     return _legalMovesOf(square);
   }
 
+  /// Returns the Standard Algebraic Notation of this [Move] from the current [Position].
+  String toSan(Move move) {
+    final san = _makeSanWithoutSuffix(move);
+    final newPos = playUnchecked(move);
+    if (newPos.outcome?.winner != null) return '$san#';
+    if (newPos.isCheck) return '$san+';
+    return san;
+  }
+
+  /// Plays a move and returns the SAN representation of the [Move] from the [Position].
+  ///
+  /// Throws a [PlayError] if the move is not legal.
+  Tuple2<Position<T>, String> playToSan(Move move) {
+    if (isLegal(move)) {
+      final san = _makeSanWithoutSuffix(move);
+      final newPos = playUnchecked(move);
+      final suffixed = newPos.outcome?.winner != null
+          ? '$san#'
+          : newPos.isCheck
+              ? '$san+'
+              : san;
+      return Tuple2(newPos, suffixed);
+    } else {
+      throw PlayError('Invalid move');
+    }
+  }
+
   /// Plays a move.
   ///
   /// Throws a [PlayError] if the move is not legal.
-  T play(Move move) {
+  Position<T> play(Move move) {
     if (isLegal(move)) {
       return playUnchecked(move);
     } else {
@@ -187,7 +215,7 @@ abstract class Position<T> {
   }
 
   /// Plays a move without checking if the move is legal.
-  T playUnchecked(Move move) {
+  Position<T> playUnchecked(Move move) {
     final piece = board.pieceAt(move.from);
     if (piece == null) {
       return _copyWith();
@@ -313,6 +341,68 @@ abstract class Position<T> {
         }
       }
     }
+  }
+
+  String _makeSanWithoutSuffix(Move move) {
+    String san = '';
+    final role = board.roleAt(move.from);
+    if (role == null) return '--';
+    if (role == Role.king &&
+        (board.byColor(turn).has(move.to) || (move.to - move.from).abs() == 2)) {
+      san = move.to > move.from ? 'O-O' : 'O-O-O';
+    } else {
+      final capture = board.occupied.has(move.to) ||
+          (role == Role.pawn && squareFile(move.from) != squareFile(move.to));
+      if (role != Role.pawn) {
+        san = role.char.toUpperCase();
+
+        // Disambiguation
+        SquareSet others;
+        if (role == Role.king) {
+          others = kingAttacks(move.to) & board.kings;
+        } else if (role == Role.queen) {
+          others = queenAttacks(move.to, board.occupied) & board.queens;
+        } else if (role == Role.rook) {
+          others = rookAttacks(move.to, board.occupied) & board.rooks;
+        } else if (role == Role.bishop) {
+          others = bishopAttacks(move.to, board.occupied) & board.bishops;
+        } else {
+          others = knightAttacks(move.to) & board.knights;
+        }
+        others = others.intersect(board.byColor(turn)).withoutSquare(move.from);
+
+        if (others.isNotEmpty) {
+          final ctx = _makeContext();
+          for (final from in others.squares) {
+            if (!_legalMovesOf(from, context: ctx).has(move.to)) {
+              others = others.withoutSquare(from);
+            }
+          }
+          if (others.isNotEmpty) {
+            bool row = false;
+            bool column = others.isIntersected(SquareSet.fromRank(squareRank(move.from)));
+            if (others.isIntersected(SquareSet.fromFile(squareFile(move.from)))) {
+              row = true;
+            } else {
+              column = true;
+            }
+            if (column) {
+              san += kFileNames[squareFile(move.from)];
+            }
+            if (row) {
+              san += kRankNames[squareRank(move.from)];
+            }
+          }
+        }
+      } else if (capture) {
+        san = kFileNames[squareFile(move.from)];
+      }
+
+      if (capture) san += 'x';
+      san += toAlgebraic(move.to);
+      if (move.promotion != null) san += '=${move.promotion!.char.toUpperCase()}';
+    }
+    return san;
   }
 
   /// Gets the legal moves for that [Square].
@@ -519,7 +609,7 @@ class Chess extends Position<Chess> {
   }
 
   @override
-  Chess _copyWith({
+  Position<Chess> _copyWith({
     Board? board,
     Color? turn,
     Castles? castles,
@@ -636,7 +726,7 @@ class Atomic extends Position<Atomic> {
   /// except pawns that are within a one square radius are removed from the
   /// board.
   @override
-  Atomic playUnchecked(Move move) {
+  Position<Atomic> playUnchecked(Move move) {
     final castlingSide = _getCastlingSide(move);
     final capturedPiece = castlingSide == null ? board.pieceAt(move.to) : null;
     final isCapture = capturedPiece != null || move.to == epSquare;
@@ -722,7 +812,7 @@ class Atomic extends Position<Atomic> {
   }
 
   @override
-  Atomic _copyWith({
+  Position<Atomic> _copyWith({
     Board? board,
     Color? turn,
     Castles? castles,
