@@ -12,13 +12,13 @@ void main() {
 
     test('playToSan with scholar mate', () {
       const moves = [
-        Move(from: 12, to: 28),
-        Move(from: 52, to: 36),
-        Move(from: 5, to: 26),
-        Move(from: 57, to: 42),
-        Move(from: 3, to: 21),
-        Move(from: 51, to: 43),
-        Move(from: 21, to: 53),
+        NormalMove(from: 12, to: 28),
+        NormalMove(from: 52, to: 36),
+        NormalMove(from: 5, to: 26),
+        NormalMove(from: 57, to: 42),
+        NormalMove(from: 3, to: 21),
+        NormalMove(from: 51, to: 43),
+        NormalMove(from: 21, to: 53),
       ];
       final sans =
           moves.fold<Tuple2<Position<Chess>, List<String>>>(Tuple2(Chess.initial, []), (acc, e) {
@@ -220,22 +220,23 @@ void main() {
     });
 
     test('isLegal', () {
-      expect(Chess.initial.isLegal(Move(from: 12, to: 28)), true);
-      expect(Chess.initial.isLegal(Move(from: 12, to: 29)), false);
+      expect(Chess.initial.isLegal(NormalMove(from: 12, to: 28)), true);
+      expect(Chess.initial.isLegal(NormalMove(from: 12, to: 29)), false);
       final promPos = Chess.fromSetup(Setup.parseFen('8/5P2/2RK2P1/8/4k3/8/8/7r w - - 0 1'));
-      expect(promPos.isLegal(Move(from: 53, to: 61, promotion: Role.king)), false);
-      expect(promPos.isLegal(Move(from: 42, to: 58, promotion: Role.queen)), false);
-      expect(promPos.isLegal(Move(from: 46, to: 54, promotion: Role.queen)), false);
-      expect(promPos.isLegal(Move(from: 53, to: 61, promotion: Role.queen)), true);
+      expect(promPos.isLegal(NormalMove(from: 53, to: 61, promotion: Role.king)), false);
+      expect(promPos.isLegal(NormalMove(from: 42, to: 58, promotion: Role.queen)), false);
+      expect(promPos.isLegal(NormalMove(from: 46, to: 54, promotion: Role.queen)), false);
+      expect(promPos.isLegal(NormalMove(from: 53, to: 61, promotion: Role.queen)), true);
     });
 
     group('Play a move:', () {
       test('not valid', () {
-        expect(() => Chess.initial.play(Move(from: 12, to: 44)), throwsA(TypeMatcher<PlayError>()));
+        expect(() => Chess.initial.play(NormalMove(from: 12, to: 44)),
+            throwsA(TypeMatcher<PlayError>()));
       });
 
       test('e2 e4 on standard position', () {
-        final pos = Chess.initial.play(Move(from: 12, to: 28));
+        final pos = Chess.initial.play(NormalMove(from: 12, to: 28));
         expect(pos.board.pieceAt(28), Piece.whitePawn);
         expect(pos.board.pieceAt(12), null);
         expect(pos.turn, Color.black);
@@ -243,13 +244,13 @@ void main() {
 
       test('scholar mate', () {
         final pos = Chess.initial
-            .play(Move(from: 12, to: 28))
-            .play(Move(from: 52, to: 36))
-            .play(Move(from: 5, to: 26))
-            .play(Move(from: 57, to: 42))
-            .play(Move(from: 3, to: 21))
-            .play(Move(from: 51, to: 43))
-            .play(Move(from: 21, to: 53));
+            .play(NormalMove(from: 12, to: 28))
+            .play(NormalMove(from: 52, to: 36))
+            .play(NormalMove(from: 5, to: 26))
+            .play(NormalMove(from: 57, to: 42))
+            .play(NormalMove(from: 3, to: 21))
+            .play(NormalMove(from: 51, to: 43))
+            .play(NormalMove(from: 21, to: 53));
 
         expect(pos.isCheckmate, true);
         expect(pos.turn, Color.black);
@@ -260,36 +261,36 @@ void main() {
 
       test('halfmoves increment', () {
         // pawn move
-        expect(Chess.initial.play(Move(from: 12, to: 28)).halfmoves, 0);
+        expect(Chess.initial.play(NormalMove(from: 12, to: 28)).halfmoves, 0);
 
         // piece move
         final pos = Chess.fromSetup(
                 Setup.parseFen('r2qr2k/5Qpp/2R1nn2/3p4/3P4/1B3P2/PB4PP/4R1K1 b - - 0 29'))
-            .play(Move(from: 44, to: 38));
+            .play(NormalMove(from: 44, to: 38));
         expect(pos.halfmoves, 1);
 
         // capture move
         final pos2 = Chess.fromSetup(
                 Setup.parseFen('r2qr2k/5Qpp/2R2n2/3p2n1/3P4/1B3P2/PB4PP/4R1K1 w - - 1 30'))
-            .play(Move(from: 17, to: 35));
+            .play(NormalMove(from: 17, to: 35));
         expect(pos2.halfmoves, 0);
       });
 
       test('fullmoves increment', () {
-        final pos = Chess.initial.play(Move(from: 12, to: 28));
+        final pos = Chess.initial.play(NormalMove(from: 12, to: 28));
         expect(pos.fullmoves, 1);
-        expect(pos.play(Move(from: 52, to: 36)).fullmoves, 2);
+        expect(pos.play(NormalMove(from: 52, to: 36)).fullmoves, 2);
       });
 
       test('epSquare is correctly set after a double push move', () {
-        final pos = Chess.initial.play(Move(from: 12, to: 28));
+        final pos = Chess.initial.play(NormalMove(from: 12, to: 28));
         expect(pos.epSquare, 20);
       });
 
       test('en passant capture', () {
         final pos = Chess.fromSetup(
                 Setup.parseFen('r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'))
-            .play(Move(from: 36, to: 45));
+            .play(NormalMove(from: 36, to: 45));
         expect(pos.board.pieceAt(45), Piece.whitePawn);
         expect(pos.board.pieceAt(37), null);
         expect(pos.epSquare, null);
@@ -298,7 +299,7 @@ void main() {
       test('rook move removes castling right', () {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
-            .play(Move(from: 7, to: 5));
+            .play(NormalMove(from: 7, to: 5));
         expect(pos.castles.rook[Color.white], equals(Tuple2(0, null)));
         expect(pos.castles.unmovedRooks.has(7), false);
       });
@@ -306,14 +307,14 @@ void main() {
       test('capturing a rook removes castling right', () {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqk1nr/pppp1pbp/2n1p1p1/8/2B1P3/1P3N2/P1PP1PPP/RNBQK2R b KQkq - 4 4'))
-            .play(Move(from: 54, to: 0));
+            .play(NormalMove(from: 54, to: 0));
         expect(pos.castles.rook[Color.white], equals(Tuple2(null, 7)));
         expect(pos.castles.unmovedRooks.has(0), false);
       });
 
       test('king captures unmoved rook', () {
         final pos = Chess.fromSetup(Setup.parseFen('8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K - 0 1'));
-        final move = Move(from: 14, to: 7);
+        final move = NormalMove(from: 14, to: 7);
         expect(pos.isLegal(move), true);
         final pos2 = pos.play(move);
         expect(pos2.fen, '8/8/8/B2p3Q/2qPp1P1/b7/2P2P1P/4K2k w - - 0 2');
@@ -327,14 +328,14 @@ void main() {
             throwsA(
                 predicate((e) => e is PositionError && e.cause == IllegalSetup.impossibleCheck)));
         final pos = Chess.fromSetup(setup, ignoreImpossibleCheck: true);
-        final enPassant = Move(from: 35, to: 42);
+        final enPassant = NormalMove(from: 35, to: 42);
         expect(pos.isLegal(enPassant), false);
       });
 
       test('castling move', () {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
-            .play(Move(from: 4, to: 6));
+            .play(NormalMove(from: 4, to: 6));
         expect(pos.board.pieceAt(6), Piece.whiteKing);
         expect(pos.board.pieceAt(5), Piece.whiteRook);
         expect(pos.castles.unmovedRooks.isIntersected(SquareSet.fromRank(0)), false);
@@ -343,19 +344,19 @@ void main() {
 
       test('castling moves', () {
         final pos = Chess.fromSetup(Setup.parseFen('2r5/8/8/8/8/8/6PP/k2KR3 w K -'));
-        final move = Move(from: 3, to: 4);
+        final move = NormalMove(from: 3, to: 4);
         expect(pos.play(move).fen, '2r5/8/8/8/8/8/6PP/k4RK1 b - - 1 1');
 
         final pos2 = Chess.fromSetup(
             Setup.parseFen('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
-        final move2 = Move(from: 4, to: 0);
+        final move2 = NormalMove(from: 4, to: 0);
         expect(pos2.play(move2).fen,
             'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/2KR3R b kq - 1 1');
 
         final pos3 = Chess.fromSetup(
             Setup.parseFen('1r2k2r/p1b1n1pp/1q3p2/1p2pPQ1/4P3/2P4P/1B2B1P1/R3K2R w KQk - 0 20'));
-        const queenSide = Move(from: 4, to: 0);
-        const altQueenSide = Move(from: 4, to: 2);
+        const queenSide = NormalMove(from: 4, to: 0);
+        const altQueenSide = NormalMove(from: 4, to: 2);
         expect(pos3.normalizeMove(queenSide), queenSide);
         expect(pos3.normalizeMove(altQueenSide), queenSide);
         expect(pos3.play(altQueenSide).fen,
@@ -373,7 +374,53 @@ void main() {
       });
 
       test('tricky', () {
-        for (final t in _trickyPerft) {
+        for (final t in [
+          [
+            'pos-2',
+            'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -',
+            48,
+            2039,
+            97862
+          ], // Kiwipete by Peter McKenzie
+          ['pos-3', '8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -', 14, 191, 2812, 43238],
+          ['pos-4', 'r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ -', 6, 264, 9467],
+          [
+            'pos-5',
+            'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ -',
+            44,
+            1486,
+            62379
+          ], // http://www.talkchess.com/forum/viewtopic.php?t=42463
+          [
+            'pos-6',
+            'r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - -',
+            46,
+            2079,
+            89890
+          ], // By Steven Edwards
+
+          // http://www.talkchess.com/forum/viewtopic.php?t=55274
+          ['xfen-00', 'r1k1r2q/p1ppp1pp/8/8/8/8/P1PPP1PP/R1K1R2Q w KQkq -', 23, 522, 12333, 285754],
+          ['xfen-01', 'r1k2r1q/p1ppp1pp/8/8/8/8/P1PPP1PP/R1K2R1Q w KQkq -', 28, 738, 20218, 541480],
+          ['xfen-02', '8/8/8/4B2b/6nN/8/5P2/2R1K2k w Q -', 34, 318, 9002, 118388],
+          ['xfen-03', '2r5/8/8/8/8/8/6PP/k2KR3 w K -', 17, 242, 3931, 57700],
+          ['xfen-04', '4r3/3k4/8/8/8/8/6PP/qR1K1R2 w KQ -', 19, 628, 12858, 405636],
+
+          // Regression tests
+          ['ep-evasion', '8/8/8/5k2/3p4/8/4P3/4K3 w - -', 6, 54, 343, 2810, 19228],
+          ['prison', '2b5/kpPp4/1p1P4/1P6/6p1/4p1P1/4PpPK/5B2 w - -', 1, 1, 1],
+          ['king-walk', '8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K -', 26, 611, 14583, 366807],
+          ['a1-check', '4k3/5p2/5p1p/8/rbR5/1N6/5PPP/5K2 b - - 1 29', 22, 580, 12309],
+
+          // https://github.com/ornicar/lila/issues/4625
+          [
+            'hside-rook-blocks-aside-castling',
+            '4rrk1/pbbp2p1/1ppnp3/3n1pqp/3N1PQP/1PPNP3/PBBP2P1/4RRK1 w Ff -',
+            42,
+            1743,
+            71908,
+          ],
+        ]) {
           final pos = Chess.fromSetup(Setup.parseFen(t[1] as String));
           expect(perft(pos, 1), t[2]);
           expect(perft(pos, 2), t[3]);
@@ -382,7 +429,125 @@ void main() {
       });
 
       test('random', () {
-        for (final t in _randomPerft) {
+        for (final t in [
+          [
+            'gentest-1',
+            'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -',
+            20,
+            400,
+            8902,
+            197281,
+            4865609
+          ],
+          [
+            'gentest-2',
+            'rnbqkbnr/pp1ppppp/2p5/8/6P1/2P5/PP1PPP1P/RNBQKBNR b KQkq -',
+            21,
+            463,
+            11138,
+            274234,
+            7290026
+          ],
+          [
+            'gentest-3',
+            'rnb1kbnr/ppq1pppp/2pp4/8/6P1/2P5/PP1PPPBP/RNBQK1NR w KQkq -',
+            27,
+            734,
+            20553,
+            579004,
+            16988496
+          ],
+          [
+            'gentest-4',
+            'rnb1kbnr/p1q1pppp/1ppp4/8/4B1P1/2P5/PPQPPP1P/RNB1K1NR b KQkq -',
+            28,
+            837,
+            22536,
+            699777,
+            19118920
+          ],
+          [
+            'gentest-5',
+            'rn2kbnr/p1q1ppp1/1ppp3p/8/4B1b1/2P4P/PPQPPP2/RNB1K1NR w KQkq -',
+            29,
+            827,
+            24815,
+            701084,
+            21819626
+          ],
+          [
+            'gentest-6',
+            'rn1qkbnr/p3ppp1/1ppp2Qp/3B4/6b1/2P4P/PP1PPP2/RNB1K1NR b KQkq -',
+            25,
+            976,
+            23465,
+            872551,
+            21984216
+          ],
+          [
+            'gentest-7',
+            'rnkq1bnr/p3ppp1/1ppp3p/3B4/6b1/2PQ3P/PP1PPP2/RNB1K1NR w KQ -',
+            36,
+            957,
+            33542,
+            891412,
+            31155934
+          ],
+          [
+            'gentest-8',
+            'rnkq1bnr/p3ppp1/1ppp3p/5b2/8/2PQ3P/PP1PPPB1/RNB1K1NR b KQ -',
+            29,
+            927,
+            25822,
+            832461,
+            23480361
+          ],
+          [
+            'gentest-9',
+            'rn1q1bnr/p2kppp1/2pp3p/1p3b2/1P6/2PQ3P/P2PPPB1/RNB1K1NR w KQ -',
+            31,
+            834,
+            25926,
+            715605,
+            22575950
+          ],
+          [
+            'gentest-10',
+            'rn1q1bnr/3kppp1/p1pp3p/1p3b2/1P6/2P2N1P/P1QPPPB1/RNB1K2R b KQ -',
+            29,
+            900,
+            25008,
+            781431,
+            22075119
+          ],
+          [
+            'gentest-94',
+            '2b1kbnB/rppqp3/3p3p/3P1pp1/pnP3P1/PP2P2P/4QP2/RN2KBNR b KQ -',
+            27,
+            729,
+            20665,
+            613681,
+            18161673
+          ],
+          [
+            'gentest-95',
+            '2b1kbnB/r1pqp3/n2p3p/1p1P1pp1/p1P3P1/PP2P2P/Q4P2/RN2KBNR w KQ -',
+            30,
+            689,
+            21830,
+            556204,
+            18152100
+          ],
+          [
+            'gentest-96',
+            '2b1kbn1/r1pqp3/n2p3p/3P1pp1/ppP3P1/PPB1P2P/Q4P2/RN2KBNR b KQ -',
+            23,
+            685,
+            17480,
+            532817,
+            14672791
+          ],
+        ]) {
           final pos = Chess.fromSetup(Setup.parseFen(t[1] as String));
           expect(perft(pos, 1), t[2]);
           expect(perft(pos, 2), t[3]);
@@ -494,6 +659,41 @@ void main() {
     });
   });
 
+  group('Crazyhouse', () {
+    test('insufficient material', () {
+      for (final test in [
+        ['8/5k2/8/8/8/8/3K2N1/8[] w - -', true, true],
+        ['8/5k2/8/8/8/5B2/3KB3/8[] w - -', false, false],
+        ['8/8/8/8/3k4/3N~4/3K4/8 w - - 0 1', false, false],
+      ]) {
+        final pos = Crazyhouse.fromSetup(Setup.parseFen(test[0] as String));
+        expect(pos.hasInsufficientMaterial(Color.white), test[1]);
+        expect(pos.hasInsufficientMaterial(Color.black), test[2]);
+      }
+    });
+
+    test('perft', () {
+      const skip = 0;
+      for (final t in [
+        ['zh-all-drop-types', '2k5/8/8/8/8/8/8/4K3[QRBNPqrbnp] w - -', 301, 75353, skip],
+        ['zh-drops', '2k5/8/8/8/8/8/8/4K3[Qn] w - -', 67, 3083, 88634],
+        [
+          'zh-middlegame',
+          'r1bqk2r/pppp1ppp/2n1p3/4P3/1b1Pn3/2NB1N2/PPP2PPP/R1BQK2R[] b KQkq -',
+          42,
+          1347,
+          58057,
+        ],
+        ['zh-promoted', '4k3/1Q~6/8/8/4b3/8/Kpp5/8/ b - -', 20, 360, 5445],
+      ]) {
+        final pos = Crazyhouse.fromSetup(Setup.parseFen(t[1] as String));
+        expect(perft(pos, 1), t[2]);
+        expect(perft(pos, 2), t[3]);
+        expect(perft(pos, 3), t[4]);
+      }
+    });
+  });
+
   group('King of the hill', () {
     test('insufficient material', () {
       for (final test in [
@@ -559,171 +759,3 @@ void main() {
     });
   });
 }
-
-final _trickyPerft = [
-  [
-    'pos-2',
-    'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -',
-    48,
-    2039,
-    97862
-  ], // Kiwipete by Peter McKenzie
-  ['pos-3', '8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -', 14, 191, 2812, 43238],
-  ['pos-4', 'r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ -', 6, 264, 9467],
-  [
-    'pos-5',
-    'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ -',
-    44,
-    1486,
-    62379
-  ], // http://www.talkchess.com/forum/viewtopic.php?t=42463
-  [
-    'pos-6',
-    'r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - -',
-    46,
-    2079,
-    89890
-  ], // By Steven Edwards
-
-  // http://www.talkchess.com/forum/viewtopic.php?t=55274
-  ['xfen-00', 'r1k1r2q/p1ppp1pp/8/8/8/8/P1PPP1PP/R1K1R2Q w KQkq -', 23, 522, 12333, 285754],
-  ['xfen-01', 'r1k2r1q/p1ppp1pp/8/8/8/8/P1PPP1PP/R1K2R1Q w KQkq -', 28, 738, 20218, 541480],
-  ['xfen-02', '8/8/8/4B2b/6nN/8/5P2/2R1K2k w Q -', 34, 318, 9002, 118388],
-  ['xfen-03', '2r5/8/8/8/8/8/6PP/k2KR3 w K -', 17, 242, 3931, 57700],
-  ['xfen-04', '4r3/3k4/8/8/8/8/6PP/qR1K1R2 w KQ -', 19, 628, 12858, 405636],
-
-  // Regression tests
-  ['ep-evasion', '8/8/8/5k2/3p4/8/4P3/4K3 w - -', 6, 54, 343, 2810, 19228],
-  ['prison', '2b5/kpPp4/1p1P4/1P6/6p1/4p1P1/4PpPK/5B2 w - -', 1, 1, 1],
-  ['king-walk', '8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K -', 26, 611, 14583, 366807],
-  ['a1-check', '4k3/5p2/5p1p/8/rbR5/1N6/5PPP/5K2 b - - 1 29', 22, 580, 12309],
-
-  // https://github.com/ornicar/lila/issues/4625
-  [
-    'hside-rook-blocks-aside-castling',
-    '4rrk1/pbbp2p1/1ppnp3/3n1pqp/3N1PQP/1PPNP3/PBBP2P1/4RRK1 w Ff -',
-    42,
-    1743,
-    71908,
-  ],
-];
-
-final _randomPerft = [
-  [
-    'gentest-1',
-    'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -',
-    20,
-    400,
-    8902,
-    197281,
-    4865609
-  ],
-  [
-    'gentest-2',
-    'rnbqkbnr/pp1ppppp/2p5/8/6P1/2P5/PP1PPP1P/RNBQKBNR b KQkq -',
-    21,
-    463,
-    11138,
-    274234,
-    7290026
-  ],
-  [
-    'gentest-3',
-    'rnb1kbnr/ppq1pppp/2pp4/8/6P1/2P5/PP1PPPBP/RNBQK1NR w KQkq -',
-    27,
-    734,
-    20553,
-    579004,
-    16988496
-  ],
-  [
-    'gentest-4',
-    'rnb1kbnr/p1q1pppp/1ppp4/8/4B1P1/2P5/PPQPPP1P/RNB1K1NR b KQkq -',
-    28,
-    837,
-    22536,
-    699777,
-    19118920
-  ],
-  [
-    'gentest-5',
-    'rn2kbnr/p1q1ppp1/1ppp3p/8/4B1b1/2P4P/PPQPPP2/RNB1K1NR w KQkq -',
-    29,
-    827,
-    24815,
-    701084,
-    21819626
-  ],
-  [
-    'gentest-6',
-    'rn1qkbnr/p3ppp1/1ppp2Qp/3B4/6b1/2P4P/PP1PPP2/RNB1K1NR b KQkq -',
-    25,
-    976,
-    23465,
-    872551,
-    21984216
-  ],
-  [
-    'gentest-7',
-    'rnkq1bnr/p3ppp1/1ppp3p/3B4/6b1/2PQ3P/PP1PPP2/RNB1K1NR w KQ -',
-    36,
-    957,
-    33542,
-    891412,
-    31155934
-  ],
-  [
-    'gentest-8',
-    'rnkq1bnr/p3ppp1/1ppp3p/5b2/8/2PQ3P/PP1PPPB1/RNB1K1NR b KQ -',
-    29,
-    927,
-    25822,
-    832461,
-    23480361
-  ],
-  [
-    'gentest-9',
-    'rn1q1bnr/p2kppp1/2pp3p/1p3b2/1P6/2PQ3P/P2PPPB1/RNB1K1NR w KQ -',
-    31,
-    834,
-    25926,
-    715605,
-    22575950
-  ],
-  [
-    'gentest-10',
-    'rn1q1bnr/3kppp1/p1pp3p/1p3b2/1P6/2P2N1P/P1QPPPB1/RNB1K2R b KQ -',
-    29,
-    900,
-    25008,
-    781431,
-    22075119
-  ],
-  [
-    'gentest-94',
-    '2b1kbnB/rppqp3/3p3p/3P1pp1/pnP3P1/PP2P2P/4QP2/RN2KBNR b KQ -',
-    27,
-    729,
-    20665,
-    613681,
-    18161673
-  ],
-  [
-    'gentest-95',
-    '2b1kbnB/r1pqp3/n2p3p/1p1P1pp1/p1P3P1/PP2P2P/Q4P2/RN2KBNR w KQ -',
-    30,
-    689,
-    21830,
-    556204,
-    18152100
-  ],
-  [
-    'gentest-96',
-    '2b1kbn1/r1pqp3/n2p3p/3P1pp1/ppP3P1/PPB1P2P/Q4P2/RN2KBNR b KQ -',
-    23,
-    685,
-    17480,
-    532817,
-    14672791
-  ],
-];

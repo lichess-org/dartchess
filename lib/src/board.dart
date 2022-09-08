@@ -17,7 +17,7 @@ class Board {
 
   /// All squares occupied by pieces known to be promoted.
   ///
-  /// This information is relevant in chess variants like Crazyhouse.
+  /// This information is relevant in chess variants like [Crazyhouse].
   final SquareSet promoted;
 
   final ByColor<SquareSet> colors;
@@ -235,6 +235,10 @@ class Board {
             },
           )
         : this;
+  }
+
+  Board withPromoted(SquareSet promoted) {
+    return _copyWith(promoted: promoted);
   }
 
   Board _copyWith({

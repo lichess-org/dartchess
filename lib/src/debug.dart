@@ -78,7 +78,10 @@ final _promotionRoles = [Role.queen, Role.rook, Role.knight, Role.bishop];
 int perft(Position pos, int depth, {shouldLog = false}) {
   if (depth < 1) return 1;
 
-  if (!shouldLog && depth == 1) {
+  final promotionRoles = pos is Antichess ? [..._promotionRoles, Role.king] : _promotionRoles;
+  final legalDrops = pos.legalDrops;
+
+  if (!shouldLog && depth == 1 && legalDrops.isEmpty) {
     // Optimization for leaf nodes.
     int nodes = 0;
     for (final entry in pos.legalMoves.entries) {
@@ -87,7 +90,7 @@ int perft(Position pos, int depth, {shouldLog = false}) {
       nodes += to.size;
       if (pos.board.pawns.has(from)) {
         final backrank = SquareSet.backrankOf(opposite(pos.turn));
-        nodes += to.intersect(backrank).size * (_promotionRoles.length - 1);
+        nodes += to.intersect(backrank).size * (promotionRoles.length - 1);
       }
     }
     return nodes;
@@ -98,15 +101,29 @@ int perft(Position pos, int depth, {shouldLog = false}) {
       final dests = entry.value;
       final promotions =
           squareRank(from) == (pos.turn == Color.white ? 6 : 1) && pos.board.pawns.has(from)
-              ? _promotionRoles
+              ? promotionRoles
               : [null];
       for (final to in dests.squares) {
         for (final promotion in promotions) {
-          final move = Move(from: from, to: to, promotion: promotion);
+          final move = NormalMove(from: from, to: to, promotion: promotion);
           final child = pos.playUnchecked(move);
           final children = perft(child, depth - 1);
           if (shouldLog) print('${move.uci} $children');
           nodes += children;
+        }
+      }
+    }
+    if (pos.pockets != null) {
+      for (final role in Role.values) {
+        if (pos.pockets!.of(pos.turn, role) > 0) {
+          for (final to
+              in (role == Role.pawn ? legalDrops.diff(SquareSet.backranks) : legalDrops).squares) {
+            final drop = DropMove(role: role, to: to);
+            final child = pos.playUnchecked(drop);
+            final children = perft(child, depth - 1);
+            if (shouldLog) print('${drop.uci} $children');
+            nodes += children;
+          }
         }
       }
     }

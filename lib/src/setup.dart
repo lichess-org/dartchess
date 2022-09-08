@@ -10,6 +10,9 @@ class Setup {
   /// Piece positions on the board.
   final Board board;
 
+  /// Pockets in chess variants like [Crazyhouse].
+  final Pockets? pockets;
+
   /// Side to move.
   final Color turn;
 
@@ -32,6 +35,7 @@ class Setup {
 
   const Setup({
     required this.board,
+    this.pockets,
     required this.turn,
     required this.unmovedRooks,
     this.epSquare,
@@ -63,9 +67,26 @@ class Setup {
     final parts = fen.split(RegExp(r'[\s_]+'));
     if (parts.isEmpty) throw FenError('ERR_FEN');
 
-    // board
+    // board and pockets
     final boardPart = parts.removeAt(0);
-    final board = Board.parseFen(boardPart);
+    Pockets? pockets;
+    Board board;
+    if (boardPart.endsWith(']')) {
+      final pocketStart = boardPart.indexOf('[');
+      if (pocketStart == -1) {
+        throw FenError('ERR_FEN');
+      }
+      board = Board.parseFen(boardPart.substring(0, pocketStart));
+      pockets = _parsePockets(boardPart.substring(pocketStart + 1, boardPart.length - 1));
+    } else {
+      final pocketStart = _nthIndexOf(boardPart, '/', 7);
+      if (pocketStart == -1) {
+        board = Board.parseFen(boardPart);
+      } else {
+        board = Board.parseFen(boardPart.substring(0, pocketStart));
+        pockets = _parsePockets(boardPart.substring(pocketStart + 1));
+      }
+    }
 
     // turn
     Color turn;
@@ -105,7 +126,7 @@ class Setup {
     String? halfmovePart = parts.isNotEmpty ? parts.removeAt(0) : null;
     Tuple2<int, int>? earlyRemainingChecks;
     if (halfmovePart != null && halfmovePart.contains('+')) {
-      earlyRemainingChecks = parseRemainingChecks(halfmovePart);
+      earlyRemainingChecks = _parseRemainingChecks(halfmovePart);
       halfmovePart = parts.isNotEmpty ? parts.removeAt(0) : null;
     }
     final halfmoves = halfmovePart != null ? _parseSmallUint(halfmovePart) : 0;
@@ -125,7 +146,7 @@ class Setup {
       if (earlyRemainingChecks != null) {
         throw FenError('ERR_REMAINING_CHECKS');
       }
-      remainingChecks = parseRemainingChecks(remainingChecksPart);
+      remainingChecks = _parseRemainingChecks(remainingChecksPart);
     } else if (earlyRemainingChecks != null) {
       remainingChecks = earlyRemainingChecks;
     }
@@ -136,6 +157,7 @@ class Setup {
 
     return Setup(
       board: board,
+      pockets: pockets,
       turn: turn,
       unmovedRooks: unmovedRooks,
       epSquare: epSquare,
@@ -148,7 +170,7 @@ class Setup {
   String get turnLetter => turn.name[0];
 
   String get fen => [
-        board.fen,
+        board.fen + (pockets != null ? _makePockets(pockets!) : ''),
         turnLetter,
         _makeCastlingFen(board, unmovedRooks),
         epSquare != null ? toAlgebraic(epSquare!) : '-',
@@ -179,7 +201,95 @@ class Setup {
       );
 }
 
-Tuple2<int, int> parseRemainingChecks(String part) {
+class Pockets {
+  const Pockets({
+    required this.value,
+  });
+
+  final ByColor<ByRole<int>> value;
+
+  static const empty = Pockets(value: {
+    Color.white: {
+      Role.pawn: 0,
+      Role.knight: 0,
+      Role.bishop: 0,
+      Role.rook: 0,
+      Role.queen: 0,
+      Role.king: 0,
+    },
+    Color.black: {
+      Role.pawn: 0,
+      Role.knight: 0,
+      Role.bishop: 0,
+      Role.rook: 0,
+      Role.queen: 0,
+      Role.king: 0,
+    },
+  });
+
+  int of(Color color, Role role) {
+    return value[color]![role]!;
+  }
+
+  int count(Role role) {
+    return value[Color.white]![role]! + value[Color.black]![role]!;
+  }
+
+  bool hasQuality(Color color) {
+    final byColor = value[color]!;
+    return byColor[Role.knight]! > 0 ||
+        byColor[Role.bishop]! > 0 ||
+        byColor[Role.rook]! > 0 ||
+        byColor[Role.queen]! > 0 ||
+        byColor[Role.king]! > 0;
+  }
+
+  bool hasPawn(Color color) {
+    return value[color]![Role.pawn]! > 0;
+  }
+
+  Pockets increment(Color color, Role role) {
+    return Pockets(
+        value: Map.unmodifiable({
+      ...value,
+      color: {
+        ...value[color]!,
+        role: of(color, role) + 1,
+      },
+    }));
+  }
+
+  Pockets decrement(Color color, Role role) {
+    return Pockets(
+        value: Map.unmodifiable({
+      ...value,
+      color: {
+        ...value[color]!,
+        role: of(color, role) - 1,
+      },
+    }));
+  }
+
+  int get size => value.values.fold(0, (acc, e) => acc + e.values.fold(0, (acc, e) => acc + e));
+}
+
+Pockets _parsePockets(String pocketPart) {
+  if (pocketPart.length > 64) {
+    throw FenError('ERR_POCKETS');
+  }
+  Pockets pockets = Pockets.empty;
+  for (int i = 0; i < pocketPart.length; i++) {
+    final c = pocketPart[i];
+    final piece = Piece.fromChar(c);
+    if (piece == null) {
+      throw FenError('ERR_POCKETS');
+    }
+    pockets = pockets.increment(piece.color, piece.role);
+  }
+  return pockets;
+}
+
+Tuple2<int, int> _parseRemainingChecks(String part) {
   final parts = part.split('+');
   if (parts.length == 3 && parts[0] == '') {
     final white = _parseSmallUint(parts[1]);
@@ -237,6 +347,14 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
   return unmovedRooks;
 }
 
+String _makePockets(Pockets pockets) {
+  final wPart =
+      [for (final r in Role.values) ...List.filled(pockets.of(Color.white, r), r.char)].join('');
+  final bPart =
+      [for (final r in Role.values) ...List.filled(pockets.of(Color.black, r), r.char)].join('');
+  return '[${wPart.toUpperCase()}$bPart]';
+}
+
 String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
   String fen = '';
   for (final color in Color.values) {
@@ -260,3 +378,12 @@ String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
 String _makeRemainingChecks(Tuple2<int, int> checks) => '${checks.item1}+${checks.item2}';
 
 int? _parseSmallUint(String str) => RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;
+
+int _nthIndexOf(String haystack, String needle, int n) {
+  int index = haystack.indexOf(needle);
+  while (n-- > 0) {
+    if (index == -1) break;
+    index = haystack.indexOf(needle, index + needle.length);
+  }
+  return index;
+}

@@ -1,3 +1,5 @@
+import 'package:dartchess/dartchess.dart';
+
 import './models.dart';
 
 /// A set of squares represented by a 64 bit integer mask, using little endian
@@ -77,6 +79,8 @@ class SquareSet {
 
   SquareSet minus(SquareSet other) => SquareSet(value - other.value);
   SquareSet operator -(SquareSet other) => SquareSet(value - other.value);
+
+  SquareSet complement() => SquareSet(~value);
 
   SquareSet diff(SquareSet other) => SquareSet(value & ~other.value);
 

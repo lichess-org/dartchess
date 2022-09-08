@@ -3,12 +3,12 @@ import './utils.dart';
 enum Color { white, black }
 
 enum Role {
-  king,
-  queen,
+  pawn,
   knight,
   bishop,
   rook,
-  pawn;
+  king,
+  queen;
 
   static Role? fromChar(String ch) {
     switch (ch.toLowerCase()) {
@@ -66,6 +66,14 @@ class Piece {
   final Role role;
   final bool promoted;
 
+  static Piece? fromChar(String ch) {
+    final role = Role.fromChar(ch);
+    if (role != null) {
+      return Piece(role: role, color: ch.toLowerCase() == ch ? Color.black : Color.white);
+    }
+    return null;
+  }
+
   String get fenChar {
     String r = role.char;
     if (color == Color.white) r = r.toUpperCase();
@@ -117,19 +125,29 @@ class Piece {
   static const blackKing = Piece(color: Color.black, role: Role.king);
 }
 
-/// Represents a move, possibly a promotion.
-class Move {
+/// Base class for a generic chess move.
+///
+/// A move can be either a [NormalMove] or a [DropMove].
+abstract class Move {
   const Move({
-    required this.from,
     required this.to,
-    this.promotion,
   });
+
+  /// The target square of this move.
+  final Square to;
+
+  /// Gets the UCI notation of this move.
+  String get uci;
 
   /// Constructs a [Move] from an UCI string.
   ///
   /// Throws an [ArgumentError] if the argument is not a valid UCI string.
-  factory Move.fromUci(String str) {
-    if (str.length == 4 || str.length == 5) {
+  static Move fromUci(String str) {
+    if (str[1] == '@' && str.length == 4) {
+      final role = Role.fromChar(str[0]);
+      final to = parseSquare(str.substring(2));
+      if (role != null && to != null) return DropMove(to: to, role: role);
+    } else if (str.length == 4 || str.length == 5) {
       final from = parseSquare(str.substring(0, 2));
       final to = parseSquare(str.substring(2, 4));
       Role? promotion;
@@ -140,17 +158,29 @@ class Move {
         }
       }
       if (from != null && to != null) {
-        return Move(from: from, to: to);
+        return NormalMove(from: from, to: to);
       }
     }
     throw ArgumentError('Invalid UCI string');
   }
+}
 
+/// Represents a chess move, possibly a promotion.
+class NormalMove extends Move {
+  const NormalMove({
+    required this.from,
+    required super.to,
+    this.promotion,
+  });
+
+  /// The origin square of this move.
   final Square from;
-  final Square to;
+
+  /// The role of the promoted piece, if any.
   final Role? promotion;
 
   /// Gets UCI notation, like `g1f3` for a normal move, `a7a8q` for promotion to a queen.
+  @override
   String get uci =>
       toAlgebraic(from) + toAlgebraic(to) + (promotion != null ? promotion!.char : '');
 
@@ -161,6 +191,28 @@ class Move {
 
   @override
   int get hashCode => Object.hash(from, to, promotion);
+}
+
+/// Represents a drop move.
+class DropMove extends Move {
+  const DropMove({
+    required super.to,
+    required this.role,
+  });
+
+  final Role role;
+
+  /// Gets UCI notation of the drop, like `Q@f7`.
+  @override
+  String get uci => '${role.char.toUpperCase()}@${toAlgebraic(to)}';
+
+  @override
+  bool operator ==(Object other) {
+    return other.runtimeType == runtimeType && hashCode == other.hashCode;
+  }
+
+  @override
+  int get hashCode => Object.hash(to, role);
 }
 
 /// Represents a 2-tuple, or pair.

@@ -59,6 +59,10 @@ void main() {
   test('parse and make fen', () {
     for (final fen in [
       '8/8/8/8/8/8/8/8 w - - 1+2 12 42',
+      '8/8/8/8/8/8/8/8[Q] b - - 0 1',
+      'r3k2r/8/8/8/8/8/8/R3K2R[] w Qkq - 0 1',
+      'r3kb1r/p1pN1ppp/2p1p3/8/2Pn4/3Q4/PP3PPP/R1B2q~K1[] w kq - 0 1',
+      'rQ~q1kb1r/pp2pppp/2p5/8/3P1Bb1/4PN2/PPP3PP/R2QKB1R[NNpn] b KQkq - 0 9',
       'rnb1kbnr/ppp1pppp/2Pp2PP/1P3PPP/PPP1PPPP/PPP1PPPP/PPP1PPP1/PPPqPP2 w kq - 0 1',
       '5b1r/1p5p/4ppp1/4Bn2/1PPP1PP1/4P2P/3k4/4K2R w K - 1 1',
       'rnbqkb1r/p1p1nppp/2Pp4/3P1PP1/PPPPPP1P/PPP1PPPP/PPPnbqkb/PPPPPPPP w ha - 1 6',
@@ -66,5 +70,20 @@ void main() {
       final setup = Setup.parseFen(fen);
       expect(setup.fen, fen);
     }
+  });
+
+  group('Pockets', () {
+    test('increment', () {
+      final pockets = Pockets.empty.increment(Color.white, Role.knight);
+      expect(pockets.hasPawn(Color.white), false);
+      expect(pockets.hasQuality(Color.white), true);
+      expect(pockets.of(Color.white, Role.knight), 1);
+      expect(pockets.increment(Color.white, Role.knight).of(Color.white, Role.knight), 2);
+    });
+
+    test('decrement', () {
+      final pockets = Pockets.empty.increment(Color.white, Role.knight);
+      expect(pockets.decrement(Color.white, Role.knight).of(Color.white, Role.knight), 0);
+    });
   });
 }
