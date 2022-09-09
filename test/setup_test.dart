@@ -78,6 +78,7 @@ void main() {
       expect(pockets.hasPawn(Color.white), false);
       expect(pockets.hasQuality(Color.white), true);
       expect(pockets.of(Color.white, Role.knight), 1);
+      expect(pockets.size, 1);
       expect(pockets.increment(Color.white, Role.knight).of(Color.white, Role.knight), 2);
     });
 
