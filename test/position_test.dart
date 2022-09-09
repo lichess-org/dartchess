@@ -673,9 +673,8 @@ void main() {
     });
 
     test('perft', () {
-      const skip = 0;
       for (final t in [
-        ['zh-all-drop-types', '2k5/8/8/8/8/8/8/4K3[QRBNPqrbnp] w - -', 301, 75353, skip],
+        ['zh-all-drop-types', '2k5/8/8/8/8/8/8/4K3[QRBNPqrbnp] w - -', 301, 75353, null],
         ['zh-drops', '2k5/8/8/8/8/8/8/4K3[Qn] w - -', 67, 3083, 88634],
         [
           'zh-middlegame',
@@ -689,7 +688,9 @@ void main() {
         final pos = Crazyhouse.fromSetup(Setup.parseFen(t[1] as String));
         expect(perft(pos, 1), t[2]);
         expect(perft(pos, 2), t[3]);
-        expect(perft(pos, 3), t[4]);
+        if (t[4] != null) {
+          expect(perft(pos, 3), t[4]);
+        }
       }
     });
   });

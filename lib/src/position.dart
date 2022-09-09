@@ -311,6 +311,8 @@ abstract class Position<T extends Position<T>> {
     } else if (move is DropMove) {
       return _copyWith(
         halfmoves: move.role == Role.pawn ? 0 : halfmoves + 1,
+        fullmoves: turn == Color.black ? fullmoves + 1 : fullmoves,
+        turn: opposite(turn),
         board: board.setPieceAt(move.to, Piece(color: turn, role: move.role)),
         pockets: pockets?.decrement(turn, move.role),
       );
