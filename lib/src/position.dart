@@ -1051,17 +1051,10 @@ class Crazyhouse extends Position<Crazyhouse> {
   );
 
   @override
-  bool get isVariantEnd => board.kings.isIntersected(SquareSet.center);
+  bool get isVariantEnd => false;
 
   @override
-  Outcome? get variantOutcome {
-    for (final color in Color.values) {
-      if (board.piecesOf(color, Role.king).isIntersected(SquareSet.center)) {
-        return Outcome(winner: color);
-      }
-    }
-    return null;
-  }
+  Outcome? get variantOutcome => null;
 
   /// Set up a playable [Crazyhouse] position.
   ///
