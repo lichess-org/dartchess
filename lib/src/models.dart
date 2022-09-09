@@ -125,7 +125,7 @@ class Piece {
   static const blackKing = Piece(color: Color.black, role: Role.king);
 }
 
-/// Base class for a generic chess move.
+/// Base class for a chess move.
 ///
 /// A move can be either a [NormalMove] or a [DropMove].
 abstract class Move {

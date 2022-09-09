@@ -263,14 +263,14 @@ class Board {
     return other is Board &&
         other.occupied == occupied &&
         other.promoted == promoted &&
-        other.colors[Color.white] == colors[Color.white] &&
-        other.colors[Color.black] == colors[Color.black] &&
-        other.roles[Role.pawn] == roles[Role.pawn] &&
-        other.roles[Role.knight] == roles[Role.knight] &&
-        other.roles[Role.bishop] == roles[Role.bishop] &&
-        other.roles[Role.rook] == roles[Role.rook] &&
-        other.roles[Role.queen] == roles[Role.queen] &&
-        other.roles[Role.king] == roles[Role.king];
+        other.white == white &&
+        other.black == black &&
+        other.pawns == pawns &&
+        other.knights == knights &&
+        other.bishops == bishops &&
+        other.rooks == rooks &&
+        other.queens == queens &&
+        other.kings == kings;
   }
 
   @override

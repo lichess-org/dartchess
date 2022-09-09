@@ -201,6 +201,7 @@ class Setup {
       );
 }
 
+/// Pockets (captured pieces) in chess variants like [Crazyhouse].
 class Pockets {
   const Pockets({
     required this.value,
@@ -208,6 +209,7 @@ class Pockets {
 
   final ByColor<ByRole<int>> value;
 
+  /// An empty pocket.
   static const empty = Pockets(value: {
     Color.white: {
       Role.pawn: 0,
@@ -227,14 +229,20 @@ class Pockets {
     },
   });
 
+  /// Gets the total number of pieces in the pocket.
+  int get size => value.values.fold(0, (acc, e) => acc + e.values.fold(0, (acc, e) => acc + e));
+
+  /// Gets the number of pieces of that [Color] and [Role] in the pocket.
   int of(Color color, Role role) {
     return value[color]![role]!;
   }
 
+  /// Counts the number of pieces by [Role].
   int count(Role role) {
     return value[Color.white]![role]! + value[Color.black]![role]!;
   }
 
+  /// Checks whether this side has at least 1 quality (any piece but a pawn).
   bool hasQuality(Color color) {
     final byColor = value[color]!;
     return byColor[Role.knight]! > 0 ||
@@ -244,10 +252,12 @@ class Pockets {
         byColor[Role.king]! > 0;
   }
 
+  /// Checks whether this side has at least 1 pawn.
   bool hasPawn(Color color) {
     return value[color]![Role.pawn]! > 0;
   }
 
+  /// Increments the number of pieces in the pocket of that [Color] and [Role].
   Pockets increment(Color color, Role role) {
     return Pockets(
         value: Map.unmodifiable({
@@ -259,6 +269,7 @@ class Pockets {
     }));
   }
 
+  /// Decrements the number of pieces in the pocket of that [Color] and [Role].
   Pockets decrement(Color color, Role role) {
     return Pockets(
         value: Map.unmodifiable({
@@ -270,7 +281,26 @@ class Pockets {
     }));
   }
 
-  int get size => value.values.fold(0, (acc, e) => acc + e.values.fold(0, (acc, e) => acc + e));
+  @override
+  bool operator ==(Object other) {
+    if (other is Pockets) {
+      bool sameVal = true;
+      for (final c in Color.values) {
+        for (final r in Role.values) {
+          sameVal = other.value[c]![r] == value[c]![r];
+          if (!sameVal) break;
+        }
+      }
+      return sameVal;
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+        for (final c in Color.values)
+          for (final r in Role.values) value[c]![r]
+      ]);
 }
 
 Pockets _parsePockets(String pocketPart) {
