@@ -3,7 +3,6 @@ import './models.dart';
 /// A set of squares represented by a 64 bit integer mask, using little endian
 /// rank-file (LERF) mapping.
 ///
-/// This is how the mapping looks like:
 /// ```
 ///  8 | 56 57 58 59 60 61 62 63
 ///  7 | 48 49 50 51 52 53 54 55
@@ -113,19 +112,27 @@ class SquareSet {
   /// Returns square if it is single, otherwise returns null.
   int? get singleSquare => moreThanOne ? null : last;
 
-  bool has(Square square) => value & (1 << square) != 0;
+  bool has(Square square) {
+    assert(square >= 0 && square < 64);
+    return value & (1 << square) != 0;
+  }
+
   bool isIntersected(SquareSet other) => intersect(other).isNotEmpty;
   bool isDisjoint(SquareSet other) => intersect(other).isEmpty;
 
   SquareSet withSquare(Square square) {
+    assert(square >= 0 && square < 64);
     return SquareSet(value | (1 << square));
   }
 
   SquareSet withoutSquare(Square square) {
+    assert(square >= 0 && square < 64);
     return SquareSet(value & ~(1 << square));
   }
 
+  /// Removes [Square] if present, or put it if absent.
   SquareSet toggleSquare(Square square) {
+    assert(square >= 0 && square < 64);
     return SquareSet(value ^ (1 << square));
   }
 

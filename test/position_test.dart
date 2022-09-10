@@ -2,35 +2,8 @@ import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('SAN', () {
-    test('en passant', () {
-      final setup = Setup.parseFen('6bk/7b/8/3pP3/8/8/8/Q3K3 w - d6 0 2');
-      final pos = Chess.fromSetup(setup);
-      final move = Move.fromUci('e5d6');
-      expect(pos.toSan(move), 'exd6#');
-    });
-
-    test('playToSan with scholar mate', () {
-      const moves = [
-        NormalMove(from: 12, to: 28),
-        NormalMove(from: 52, to: 36),
-        NormalMove(from: 5, to: 26),
-        NormalMove(from: 57, to: 42),
-        NormalMove(from: 3, to: 21),
-        NormalMove(from: 51, to: 43),
-        NormalMove(from: 21, to: 53),
-      ];
-      final sans =
-          moves.fold<Tuple2<Position<Chess>, List<String>>>(Tuple2(Chess.initial, []), (acc, e) {
-        final ret = acc.item1.playToSan(e);
-        return Tuple2(ret.item1, [...acc.item2, ret.item2]);
-      });
-      expect(sans.item2, equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));
-    });
-  });
-
   group('Castles', () {
-    test('Castles.fromSetup', () {
+    test('fromSetup', () {
       final castles = Castles.fromSetup(Setup.standard);
       expect(castles.unmovedRooks, SquareSet.corners);
       expect(castles, Castles.standard);
@@ -60,48 +33,80 @@ void main() {
     });
   });
 
-  group('Position validation', () {
-    test('Empty board', () {
-      expect(() => Chess.fromSetup(Setup.parseFen(kEmptyFEN)),
-          throwsA(predicate((e) => e is PositionError && e.cause == IllegalSetup.empty)));
-    });
-
-    test('Missing king', () {
-      expect(
-          () => Chess.fromSetup(
-              Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1BNR w HAkq - 0 1')),
-          throwsA(predicate((e) => e is PositionError && e.cause == IllegalSetup.kings)));
-    });
-
-    test('Opposite check', () {
-      expect(
-          () => Chess.fromSetup(
-              Setup.parseFen('rnbqkbnr/pppp1ppp/8/8/8/8/PPPPQPPP/RNB1KBNR w KQkq - 0 1')),
-          throwsA(predicate((e) => e is PositionError && e.cause == IllegalSetup.oppositeCheck)));
-    });
-
-    test('Backrank pawns', () {
-      expect(
-          () => Chess.fromSetup(
-              Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPNP/RNBQKBPR w KQkq - 0 1')),
-          throwsA(predicate((e) => e is PositionError && e.cause == IllegalSetup.pawnsOnBackrank)));
-    });
-
-    test('checkers alignment', () {
-      // Multiple checkers aligned with king.
-      expect(() => Chess.fromSetup(Setup.parseFen('3R4/8/q4k2/2B5/1NK5/3b4/8/8 w - - 0 1')),
-          throwsA(predicate((e) => e is PositionError && e.cause == IllegalSetup.impossibleCheck)));
-
-      // Checkers aligned with opponent king are fine.
-      Chess.fromSetup(Setup.parseFen('8/8/5k2/p1q5/PP1rp1P1/3P1N2/2RK1r2/5nN1 w - - 0 3'));
-
-      // En passant square aligned with checker and king.
-      expect(() => Chess.fromSetup(Setup.parseFen('8/8/8/1k6/3Pp3/8/8/4KQ2 b - d3 0 1')),
-          throwsA(predicate((e) => e is PositionError && e.cause == IllegalSetup.impossibleCheck)));
-    });
-  });
-
   group('Chess', () {
+    group('Position validation', () {
+      test('Empty board', () {
+        expect(() => Chess.fromSetup(Setup.parseFen(kEmptyFEN)),
+            throwsA(predicate((e) => e is PositionError && e.cause == IllegalSetup.empty)));
+      });
+
+      test('Missing king', () {
+        expect(
+            () => Chess.fromSetup(
+                Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1BNR w HAkq - 0 1')),
+            throwsA(predicate((e) => e is PositionError && e.cause == IllegalSetup.kings)));
+      });
+
+      test('Opposite check', () {
+        expect(
+            () => Chess.fromSetup(
+                Setup.parseFen('rnbqkbnr/pppp1ppp/8/8/8/8/PPPPQPPP/RNB1KBNR w KQkq - 0 1')),
+            throwsA(predicate((e) => e is PositionError && e.cause == IllegalSetup.oppositeCheck)));
+      });
+
+      test('Backrank pawns', () {
+        expect(
+            () => Chess.fromSetup(
+                Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPNP/RNBQKBPR w KQkq - 0 1')),
+            throwsA(
+                predicate((e) => e is PositionError && e.cause == IllegalSetup.pawnsOnBackrank)));
+      });
+
+      test('checkers alignment', () {
+        // Multiple checkers aligned with king.
+        expect(
+            () => Chess.fromSetup(Setup.parseFen('3R4/8/q4k2/2B5/1NK5/3b4/8/8 w - - 0 1')),
+            throwsA(
+                predicate((e) => e is PositionError && e.cause == IllegalSetup.impossibleCheck)));
+
+        // Checkers aligned with opponent king are fine.
+        Chess.fromSetup(Setup.parseFen('8/8/5k2/p1q5/PP1rp1P1/3P1N2/2RK1r2/5nN1 w - - 0 3'));
+
+        // En passant square aligned with checker and king.
+        expect(
+            () => Chess.fromSetup(Setup.parseFen('8/8/8/1k6/3Pp3/8/8/4KQ2 b - d3 0 1')),
+            throwsA(
+                predicate((e) => e is PositionError && e.cause == IllegalSetup.impossibleCheck)));
+      });
+    });
+
+    group('san', () {
+      test('en passant', () {
+        final setup = Setup.parseFen('6bk/7b/8/3pP3/8/8/8/Q3K3 w - d6 0 2');
+        final pos = Chess.fromSetup(setup);
+        final move = Move.fromUci('e5d6');
+        expect(pos.toSan(move), 'exd6#');
+      });
+
+      test('playToSan with scholar mate', () {
+        const moves = [
+          NormalMove(from: 12, to: 28),
+          NormalMove(from: 52, to: 36),
+          NormalMove(from: 5, to: 26),
+          NormalMove(from: 57, to: 42),
+          NormalMove(from: 3, to: 21),
+          NormalMove(from: 51, to: 43),
+          NormalMove(from: 21, to: 53),
+        ];
+        final sans =
+            moves.fold<Tuple2<Position<Chess>, List<String>>>(Tuple2(Chess.initial, []), (acc, e) {
+          final ret = acc.item1.playToSan(e);
+          return Tuple2(ret.item1, [...acc.item2, ret.item2]);
+        });
+        expect(sans.item2, equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));
+      });
+    });
+
     test('hasInsufficientMaterial', () {
       const insufficientMaterial = [
         ['8/5k2/8/8/8/8/3K4/8 w - - 0 1', true, true],
@@ -229,8 +234,8 @@ void main() {
       expect(promPos.isLegal(NormalMove(from: 53, to: 61, promotion: Role.queen)), true);
     });
 
-    group('Play a move:', () {
-      test('not valid', () {
+    group('play', () {
+      test('a move not valid', () {
         expect(() => Chess.initial.play(NormalMove(from: 12, to: 44)),
             throwsA(TypeMatcher<PlayError>()));
       });

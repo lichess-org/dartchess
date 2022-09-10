@@ -89,11 +89,13 @@ void main() {
   test('squares', () {
     expect(SquareSet.empty.squares.toList(), []);
     expect(SquareSet.full.squares.toList(), [for (int i = 0; i < 64; i++) i]);
+    expect(SquareSet.diagonal.squares, equals([0, 9, 18, 27, 36, 45, 54, 63]));
   });
 
   test('squaresReversed', () {
     expect(SquareSet.empty.squaresReversed.toList(), []);
     expect(SquareSet.full.squaresReversed.toList(), [for (int i = 63; i >= 0; i--) i]);
+    expect(SquareSet.diagonal.squaresReversed, equals([63, 54, 45, 36, 27, 18, 9, 0]));
   });
 
   test('from file', () {
