@@ -158,7 +158,7 @@ abstract class Move {
         }
       }
       if (from != null && to != null) {
-        return NormalMove(from: from, to: to);
+        return NormalMove(from: from, to: to, promotion: promotion);
       }
     }
     throw ArgumentError('Invalid UCI string');
