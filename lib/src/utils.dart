@@ -1,5 +1,6 @@
 import './models.dart';
 import './constants.dart';
+import './position.dart';
 
 /// Gets the rank of that square.
 Square squareRank(Square square) => square >> 3;
@@ -22,3 +23,31 @@ String toAlgebraic(Square square) =>
     kFileNames[squareFile(square)] + kRankNames[squareRank(square)];
 
 Color opposite(Color color) => color == Color.white ? Color.black : Color.white;
+
+/// Gets all the legal moves of this position in the algebraic coordinate notation.
+///
+/// Includes both possible representations of castling moves (unless `chess960` is true).
+Map<String, Set<String>> algebraicLegalMoves(Position pos, {bool isChess960 = false}) {
+  final Map<String, Set<String>> result = {};
+  for (final entry in pos.legalMoves.entries) {
+    final dests = entry.value.squares;
+    if (dests.isNotEmpty) {
+      final from = entry.key;
+      final destSet = dests.map((e) => toAlgebraic(e)).toSet();
+      if (!isChess960 && from == pos.board.kingOf(pos.turn) && squareFile(entry.key) == 4) {
+        if (dests.contains(0)) {
+          destSet.add('c1');
+        } else if (dests.contains(56)) {
+          destSet.add('c8');
+        }
+        if (dests.contains(7)) {
+          destSet.add('g1');
+        } else if (dests.contains(63)) {
+          destSet.add('g8');
+        }
+      }
+      result[toAlgebraic(from)] = Set.unmodifiable(destSet);
+    }
+  }
+  return Map.unmodifiable(result);
+}
