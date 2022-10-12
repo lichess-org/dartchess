@@ -12,7 +12,7 @@ void main() {
   });
 
   test('setPieceAt', () {
-    final piece = Piece(color: Color.white, role: Role.king);
+    final piece = Piece(color: Side.white, role: Role.king);
     final board = Board.empty.setPieceAt(0, piece);
     expect(board.occupied, SquareSet(0x0000000000000001));
     expect(board.pieces.length, 1);
@@ -21,10 +21,10 @@ void main() {
     final board2 = Board.standard.setPieceAt(60, piece);
     expect(board2.pieceAt(60), piece);
     expect(
-        board2.colors,
+        board2.sides,
         equals({
-          Color.white: SquareSet(0x100000000000FFFF),
-          Color.black: SquareSet(0xEFFF000000000000)
+          Side.white: SquareSet(0x100000000000FFFF),
+          Side.black: SquareSet(0xEFFF000000000000)
         }));
     expect(
         board2.roles,
@@ -39,7 +39,7 @@ void main() {
   });
 
   test('removePieceAt', () {
-    final piece = Piece(color: Color.white, role: Role.king);
+    final piece = Piece(color: Side.white, role: Role.king);
     final board = Board.empty.setPieceAt(10, piece);
     expect(board.removePieceAt(10), Board.empty);
   });

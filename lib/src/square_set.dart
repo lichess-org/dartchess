@@ -34,9 +34,8 @@ class SquareSet {
       : value = 0x0101010101010101 << file,
         assert(file >= 0 && file < 8);
 
-  /// Create a [SquareSet] containing all squares of the given backrank [Color].
-  const SquareSet.backrankOf(Color color)
-      : value = color == Color.white ? 0xff : 0xff00000000000000;
+  /// Create a [SquareSet] containing all squares of the given backrank [Side].
+  const SquareSet.backrankOf(Side side) : value = side == Side.white ? 0xff : 0xff00000000000000;
 
   /// 64 bit integer representing the square set.
   final int value;

@@ -28,7 +28,7 @@ abstract class Position<T extends Position<T>> {
   final Pockets? pockets;
 
   /// Side to move.
-  final Color turn;
+  final Side turn;
 
   /// Castling paths and unmoved rooks.
   final Castles castles;
@@ -46,7 +46,7 @@ abstract class Position<T extends Position<T>> {
   const Position._initial()
       : board = Board.standard,
         pockets = null,
-        turn = Color.white,
+        turn = Side.white,
         castles = Castles.standard,
         epSquare = null,
         halfmoves = 0,
@@ -64,7 +64,7 @@ abstract class Position<T extends Position<T>> {
   Position<T> _copyWith({
     Board? board,
     Pockets? pockets,
-    Color? turn,
+    Side? turn,
     Castles? castles,
     Square? epSquare,
     int? halfmoves,
@@ -121,13 +121,13 @@ abstract class Position<T extends Position<T>> {
     }
   }
 
-  /// Tests if both [Color] have insufficient winning material.
-  bool get isInsufficientMaterial => Color.values.every((color) => hasInsufficientMaterial(color));
+  /// Tests if both [Side] have insufficient winning material.
+  bool get isInsufficientMaterial => Side.values.every((side) => hasInsufficientMaterial(side));
 
   /// Tests if the position has at least one legal move.
   bool get hasSomeLegalMoves {
     final context = _makeContext();
-    for (final square in board.byColor(turn).squares) {
+    for (final square in board.bySide(turn).squares) {
       if (_legalMovesOf(square, context: context).isNotEmpty) return true;
     }
     return false;
@@ -138,7 +138,7 @@ abstract class Position<T extends Position<T>> {
     final context = _makeContext();
     if (context.isVariantEnd) return Map.unmodifiable({});
     return Map.unmodifiable(
-        {for (final s in board.byColor(turn).squares) s: _legalMovesOf(s, context: context)});
+        {for (final s in board.bySide(turn).squares) s: _legalMovesOf(s, context: context)});
   }
 
   /// Gets all the legal drops of this position.
@@ -151,20 +151,20 @@ abstract class Position<T extends Position<T>> {
   }
 
   /// Attacks that a king on `square` would have to deal with.
-  SquareSet kingAttackers(Square square, Color attacker, {SquareSet? occupied}) {
+  SquareSet kingAttackers(Square square, Side attacker, {SquareSet? occupied}) {
     return board.attacksTo(square, attacker, occupied: occupied);
   }
 
-  /// Tests if a [Color] has insufficient winning material.
-  bool hasInsufficientMaterial(Color color) {
-    if (board.byColor(color).isIntersected(board.pawns | board.rooksAndQueens)) {
+  /// Tests if a [Side] has insufficient winning material.
+  bool hasInsufficientMaterial(Side side) {
+    if (board.bySide(side).isIntersected(board.pawns | board.rooksAndQueens)) {
       return false;
     }
-    if (board.byColor(color).isIntersected(board.knights)) {
-      return (board.byColor(color).size <= 2 &&
-          board.byColor(opposite(color)).diff(board.kings).diff(board.queens).isEmpty);
+    if (board.bySide(side).isIntersected(board.knights)) {
+      return (board.bySide(side).size <= 2 &&
+          board.bySide(opposite(side)).diff(board.kings).diff(board.queens).isEmpty);
     }
-    if (board.byColor(color).isIntersected(board.bishops)) {
+    if (board.bySide(side).isIntersected(board.bishops)) {
       final sameColor = !board.bishops.isIntersected(SquareSet.darkSquares) ||
           !board.bishops.isIntersected(SquareSet.lightSquares);
       return sameColor && board.pawns.isEmpty && board.knights.isEmpty;
@@ -248,7 +248,7 @@ abstract class Position<T extends Position<T>> {
         return _copyWith();
       }
       final castlingSide = _getCastlingSide(move);
-      final epCaptureTarget = move.to + (turn == Color.white ? -8 : 8);
+      final epCaptureTarget = move.to + (turn == Side.white ? -8 : 8);
       Square? newEpSquare;
       Board newBoard = board.removePieceAt(move.from);
       Castles newCastles = castles;
@@ -275,7 +275,7 @@ abstract class Position<T extends Position<T>> {
             }
           }
         }
-        newCastles = newCastles.discardColor(turn);
+        newCastles = newCastles.discardSide(turn);
       }
 
       if (castlingSide == null) {
@@ -298,7 +298,7 @@ abstract class Position<T extends Position<T>> {
 
       return _copyWith(
         halfmoves: isCapture || piece.role == Role.pawn ? 0 : halfmoves + 1,
-        fullmoves: turn == Color.black ? fullmoves + 1 : fullmoves,
+        fullmoves: turn == Side.black ? fullmoves + 1 : fullmoves,
         pockets: capturedPiece != null
             ? pockets?.increment(opposite(capturedPiece.color),
                 capturedPiece.promoted ? Role.pawn : capturedPiece.role)
@@ -311,7 +311,7 @@ abstract class Position<T extends Position<T>> {
     } else if (move is DropMove) {
       return _copyWith(
         halfmoves: move.role == Role.pawn ? 0 : halfmoves + 1,
-        fullmoves: turn == Color.black ? fullmoves + 1 : fullmoves,
+        fullmoves: turn == Side.black ? fullmoves + 1 : fullmoves,
         turn: opposite(turn),
         board: board.setPieceAt(move.to, Piece(color: turn, role: move.role)),
         pockets: pockets?.decrement(turn, move.role),
@@ -398,7 +398,7 @@ abstract class Position<T extends Position<T>> {
       final role = board.roleAt(move.from);
       if (role == null) return '--';
       if (role == Role.king &&
-          (board.byColor(turn).has(move.to) || (move.to - move.from).abs() == 2)) {
+          (board.bySide(turn).has(move.to) || (move.to - move.from).abs() == 2)) {
         san = move.to > move.from ? 'O-O' : 'O-O-O';
       } else {
         final capture = board.occupied.has(move.to) ||
@@ -419,7 +419,7 @@ abstract class Position<T extends Position<T>> {
           } else {
             others = knightAttacks(move.to) & board.knights;
           }
-          others = others.intersect(board.byColor(turn)).withoutSquare(move.from);
+          others = others.intersect(board.bySide(turn)).withoutSquare(move.from);
 
           if (others.isNotEmpty) {
             final ctx = _makeContext();
@@ -475,12 +475,12 @@ abstract class Position<T extends Position<T>> {
     SquareSet pseudo;
     SquareSet? legalEpSquare;
     if (piece.role == Role.pawn) {
-      pseudo = pawnAttacks(turn, square) & board.byColor(opposite(turn));
-      final delta = turn == Color.white ? 8 : -8;
+      pseudo = pawnAttacks(turn, square) & board.bySide(opposite(turn));
+      final delta = turn == Side.white ? 8 : -8;
       final step = square + delta;
       if (0 <= step && step < 64 && !board.occupied.has(step)) {
         pseudo = pseudo.withSquare(step);
-        final canDoubleStep = turn == Color.white ? square < 16 : square >= 64 - 16;
+        final canDoubleStep = turn == Side.white ? square < 16 : square >= 64 - 16;
         final doubleStep = step + delta;
         if (canDoubleStep && !board.occupied.has(doubleStep)) {
           pseudo = pseudo.withSquare(doubleStep);
@@ -504,7 +504,7 @@ abstract class Position<T extends Position<T>> {
       pseudo = kingAttacks(square);
     }
 
-    pseudo = pseudo.diff(board.byColor(turn));
+    pseudo = pseudo.diff(board.bySide(turn));
 
     if (piece.role == Role.king) {
       final occ = board.occupied.withoutSquare(square);
@@ -558,7 +558,7 @@ abstract class Position<T extends Position<T>> {
     final snipers = rookAttacks(king, SquareSet.empty)
         .intersect(board.rooksAndQueens)
         .union(bishopAttacks(king, SquareSet.empty).intersect(board.bishopsAndQueens))
-        .intersect(board.byColor(opposite(turn)));
+        .intersect(board.bySide(opposite(turn)));
     SquareSet blockers = SquareSet.empty;
     for (final sniper in snipers.squares) {
       final b = between(king, sniper) & board.occupied;
@@ -599,7 +599,7 @@ abstract class Position<T extends Position<T>> {
     if (!pawnAttacks(turn, pawn).has(epSquare!)) return false;
     final king = board.kingOf(turn);
     if (king == null) return true;
-    final captured = epSquare! + (turn == Color.white ? -8 : 8);
+    final captured = epSquare! + (turn == Side.white ? -8 : 8);
     final occupied =
         board.occupied.toggleSquare(pawn).toggleSquare(epSquare!).toggleSquare(captured);
     return !board.attacksTo(king, opposite(turn), occupied: occupied).isIntersected(occupied);
@@ -611,7 +611,7 @@ abstract class Position<T extends Position<T>> {
   CastlingSide? _getCastlingSide(Move move) {
     if (move is NormalMove) {
       final delta = move.to - move.from;
-      if (delta.abs() != 2 && !board.byColor(turn).has(move.to)) {
+      if (delta.abs() != 2 && !board.bySide(turn).has(move.to)) {
         return null;
       }
       if (!board.kings.has(move.from)) {
@@ -674,7 +674,7 @@ class Chess extends Position<Chess> {
   Chess _copyWith({
     Board? board,
     Pockets? pockets,
-    Color? turn,
+    Side? turn,
     Castles? castles,
     Square? epSquare,
     int? halfmoves,
@@ -711,7 +711,7 @@ class Antichess extends Position<Antichess> {
   static const initial = Antichess._initial();
 
   @override
-  bool get isVariantEnd => board.byColor(turn).isEmpty;
+  bool get isVariantEnd => board.bySide(turn).isEmpty;
 
   @override
   Outcome? get variantOutcome {
@@ -745,7 +745,7 @@ class Antichess extends Position<Antichess> {
   }
 
   @override
-  SquareSet kingAttackers(Square square, Color attacker, {SquareSet? occupied}) {
+  SquareSet kingAttackers(Square square, Side attacker, {SquareSet? occupied}) {
     return SquareSet.empty;
   }
 
@@ -756,8 +756,8 @@ class Antichess extends Position<Antichess> {
         pawnAttacks(opposite(turn), epSquare!).isIntersected(board.piecesOf(turn, Role.pawn))) {
       return ctx.copyWith(mustCapture: true);
     }
-    final enemy = board.byColor(opposite(turn));
-    for (final from in board.byColor(turn).squares) {
+    final enemy = board.bySide(opposite(turn));
+    for (final from in board.bySide(turn).squares) {
       if (_pseudoLegalMoves(this, from, ctx).isIntersected(enemy)) {
         return ctx.copyWith(mustCapture: true);
       }
@@ -769,7 +769,7 @@ class Antichess extends Position<Antichess> {
   SquareSet _legalMovesOf(Square square, {_Context? context}) {
     final ctx = context ?? _makeContext();
     final dests = _pseudoLegalMoves(this, square, ctx);
-    final enemy = board.byColor(opposite(turn));
+    final enemy = board.bySide(opposite(turn));
     return dests &
         (ctx.mustCapture
             ? epSquare != null && board.roleAt(square) == Role.pawn
@@ -779,20 +779,20 @@ class Antichess extends Position<Antichess> {
   }
 
   @override
-  bool hasInsufficientMaterial(Color color) {
-    if (board.byColor(color).isEmpty) return false;
-    if (board.byColor(opposite(color)).isEmpty) return true;
+  bool hasInsufficientMaterial(Side side) {
+    if (board.bySide(side).isEmpty) return false;
+    if (board.bySide(opposite(side)).isEmpty) return true;
     if (board.occupied == board.bishops) {
-      final weSomeOnLight = board.byColor(color).isIntersected(SquareSet.lightSquares);
-      final weSomeOnDark = board.byColor(color).isIntersected(SquareSet.darkSquares);
-      final theyAllOnDark = board.byColor(opposite(color)).isDisjoint(SquareSet.lightSquares);
-      final theyAllOnLight = board.byColor(opposite(color)).isDisjoint(SquareSet.darkSquares);
+      final weSomeOnLight = board.bySide(side).isIntersected(SquareSet.lightSquares);
+      final weSomeOnDark = board.bySide(side).isIntersected(SquareSet.darkSquares);
+      final theyAllOnDark = board.bySide(opposite(side)).isDisjoint(SquareSet.lightSquares);
+      final theyAllOnLight = board.bySide(opposite(side)).isDisjoint(SquareSet.darkSquares);
       return (weSomeOnLight && theyAllOnDark) || (weSomeOnDark && theyAllOnLight);
     }
     if (board.occupied == board.knights && board.occupied.size == 2) {
       return ((board.white.isIntersected(SquareSet.lightSquares) !=
               board.black.isIntersected(SquareSet.darkSquares)) !=
-          (turn == color));
+          (turn == side));
     }
     return false;
   }
@@ -801,7 +801,7 @@ class Antichess extends Position<Antichess> {
   Antichess _copyWith({
     Board? board,
     Pockets? pockets,
-    Color? turn,
+    Side? turn,
     Castles? castles,
     Square? epSquare,
     int? halfmoves,
@@ -841,7 +841,7 @@ class Atomic extends Position<Atomic> {
 
   @override
   Outcome? get variantOutcome {
-    for (final color in Color.values) {
+    for (final color in Side.values) {
       if (board.piecesOf(color, Role.king).isEmpty) {
         return Outcome(winner: opposite(color));
       }
@@ -866,7 +866,7 @@ class Atomic extends Position<Atomic> {
   /// Contrary to chess, in Atomic kings can attack each other, without causing
   /// check.
   @override
-  SquareSet kingAttackers(Square square, Color attacker, {SquareSet? occupied}) {
+  SquareSet kingAttackers(Square square, Side attacker, {SquareSet? occupied}) {
     final attackerKings = board.piecesOf(attacker, Role.king);
     if (attackerKings.isEmpty || kingAttacks(square).isIntersected(attackerKings)) {
       return SquareSet.empty;
@@ -937,7 +937,7 @@ class Atomic extends Position<Atomic> {
             newCastles = newCastles.discardRookAt(explode);
           }
           if (piece.role == Role.king) {
-            newCastles = newCastles.discardColor(piece.color);
+            newCastles = newCastles.discardSide(piece.color);
           }
         }
       }
@@ -947,19 +947,19 @@ class Atomic extends Position<Atomic> {
     }
   }
 
-  /// Tests if a [Color] has insufficient winning material.
+  /// Tests if a [Side] has insufficient winning material.
   @override
-  bool hasInsufficientMaterial(Color color) {
+  bool hasInsufficientMaterial(Side side) {
     // Remaining material does not matter if the enemy king is already
     // exploded.
-    if (board.piecesOf(opposite(color), Role.king).isEmpty) return false;
+    if (board.piecesOf(opposite(side), Role.king).isEmpty) return false;
 
     // Bare king cannot mate.
-    if (board.byColor(color).diff(board.kings).isEmpty) return true;
+    if (board.bySide(side).diff(board.kings).isEmpty) return true;
 
     // As long as the enemy king is not alone, there is always a chance their
     // own pieces explode next to it.
-    if (board.byColor(opposite(color)).diff(board.kings).isNotEmpty) {
+    if (board.bySide(opposite(side)).diff(board.kings).isNotEmpty) {
       // Unless there are only bishops that cannot explode each other.
       if (board.occupied == board.bishops | board.kings) {
         if (!(board.bishops & board.white).isIntersected(SquareSet.darkSquares)) {
@@ -1008,7 +1008,7 @@ class Atomic extends Position<Atomic> {
   Atomic _copyWith({
     Board? board,
     Pockets? pockets,
-    Color? turn,
+    Side? turn,
     Castles? castles,
     Square? epSquare,
     int? halfmoves,
@@ -1043,7 +1043,7 @@ class Crazyhouse extends Position<Crazyhouse> {
   static const initial = Crazyhouse(
     board: Board.standard,
     pockets: Pockets.empty,
-    turn: Color.white,
+    turn: Side.white,
     castles: Castles.standard,
     epSquare: null,
     halfmoves: 0,
@@ -1090,9 +1090,9 @@ class Crazyhouse extends Position<Crazyhouse> {
   }
 
   @override
-  bool hasInsufficientMaterial(Color color) {
+  bool hasInsufficientMaterial(Side side) {
     if (pockets == null) {
-      return super.hasInsufficientMaterial(color);
+      return super.hasInsufficientMaterial(side);
     }
     return board.occupied.size + pockets!.size <= 3 &&
         board.pawns.isEmpty &&
@@ -1128,7 +1128,7 @@ class Crazyhouse extends Position<Crazyhouse> {
   Crazyhouse _copyWith({
     Board? board,
     Pockets? pockets,
-    Color? turn,
+    Side? turn,
     Castles? castles,
     Square? epSquare,
     int? halfmoves,
@@ -1169,7 +1169,7 @@ class KingOfTheHill extends Position<KingOfTheHill> {
 
   @override
   Outcome? get variantOutcome {
-    for (final color in Color.values) {
+    for (final color in Side.values) {
       if (board.piecesOf(color, Role.king).isIntersected(SquareSet.center)) {
         return Outcome(winner: color);
       }
@@ -1190,13 +1190,13 @@ class KingOfTheHill extends Position<KingOfTheHill> {
   }
 
   @override
-  bool hasInsufficientMaterial(Color color) => false;
+  bool hasInsufficientMaterial(Side side) => false;
 
   @override
   KingOfTheHill _copyWith({
     Board? board,
     Pockets? pockets,
-    Color? turn,
+    Side? turn,
     Castles? castles,
     Square? epSquare,
     int? halfmoves,
@@ -1291,15 +1291,14 @@ class ThreeCheck extends Position<ThreeCheck> {
   }
 
   @override
-  bool hasInsufficientMaterial(Color color) =>
-      board.piecesOf(color, Role.king) == board.byColor(color);
+  bool hasInsufficientMaterial(Side side) => board.piecesOf(side, Role.king) == board.bySide(side);
 
   @override
   ThreeCheck playUnchecked(Move move) {
     final newPos = super.playUnchecked(move) as ThreeCheck;
     if (newPos.isCheck) {
       return newPos._copyWith(
-          remainingChecks: turn == Color.white
+          remainingChecks: turn == Side.white
               ? remainingChecks.withItem1(math.max(remainingChecks.item1 - 1, 0))
               : remainingChecks.withItem2(math.max(remainingChecks.item2 - 1, 0)));
     } else {
@@ -1311,7 +1310,7 @@ class ThreeCheck extends Position<ThreeCheck> {
   ThreeCheck _copyWith({
     Board? board,
     Pockets? pockets,
-    Color? turn,
+    Side? turn,
     Castles? castles,
     Square? epSquare,
     int? halfmoves,
@@ -1335,10 +1334,10 @@ class ThreeCheck extends Position<ThreeCheck> {
 class Outcome {
   const Outcome({this.winner});
 
-  final Color? winner;
+  final Side? winner;
 
-  static const whiteWins = Outcome(winner: Color.white);
-  static const blackWins = Outcome(winner: Color.black);
+  static const whiteWins = Outcome(winner: Side.white);
+  static const blackWins = Outcome(winner: Side.black);
   static const draw = Outcome();
 
   @override
@@ -1406,12 +1405,12 @@ class Castles {
   /// Rooks positions pair.
   ///
   /// First item is queen side, second is king side.
-  final ByColor<Tuple2<Square?, Square?>> rook;
+  final BySide<Tuple2<Square?, Square?>> rook;
 
   /// Squares between the white king and rooks.
   ///
   /// First item is queen side, second is king side.
-  final ByColor<Tuple2<SquareSet, SquareSet>> path;
+  final BySide<Tuple2<SquareSet, SquareSet>> path;
 
   const Castles({
     required this.unmovedRooks,
@@ -1421,66 +1420,66 @@ class Castles {
 
   static const standard = Castles(
     unmovedRooks: SquareSet.corners,
-    rook: {Color.white: Tuple2(0, 7), Color.black: Tuple2(56, 63)},
+    rook: {Side.white: Tuple2(0, 7), Side.black: Tuple2(56, 63)},
     path: {
-      Color.white: Tuple2(SquareSet(0x000000000000000e), SquareSet(0x0000000000000060)),
-      Color.black: Tuple2(SquareSet(0x0e00000000000000), SquareSet(0x6000000000000000))
+      Side.white: Tuple2(SquareSet(0x000000000000000e), SquareSet(0x0000000000000060)),
+      Side.black: Tuple2(SquareSet(0x0e00000000000000), SquareSet(0x6000000000000000))
     },
   );
 
   static const empty = Castles(
     unmovedRooks: SquareSet.empty,
-    rook: {Color.white: Tuple2(null, null), Color.black: Tuple2(null, null)},
+    rook: {Side.white: Tuple2(null, null), Side.black: Tuple2(null, null)},
     path: {
-      Color.white: Tuple2(SquareSet.empty, SquareSet.empty),
-      Color.black: Tuple2(SquareSet.empty, SquareSet.empty)
+      Side.white: Tuple2(SquareSet.empty, SquareSet.empty),
+      Side.black: Tuple2(SquareSet.empty, SquareSet.empty)
     },
   );
 
   factory Castles.fromSetup(Setup setup) {
     Castles castles = Castles.empty;
     final rooks = setup.unmovedRooks & setup.board.rooks;
-    for (final color in Color.values) {
-      final backrank = SquareSet.backrankOf(color);
-      final king = setup.board.kingOf(color);
+    for (final side in Side.values) {
+      final backrank = SquareSet.backrankOf(side);
+      final king = setup.board.kingOf(side);
       if (king == null || !backrank.has(king)) continue;
-      final side = rooks & setup.board.byColor(color) & backrank;
-      if (side.first != null && side.first! < king) {
-        castles = castles._add(color, CastlingSide.queen, king, side.first!);
+      final backrankRooks = rooks & setup.board.bySide(side) & backrank;
+      if (backrankRooks.first != null && backrankRooks.first! < king) {
+        castles = castles._add(side, CastlingSide.queen, king, backrankRooks.first!);
       }
-      if (side.last != null && king < side.last!) {
-        castles = castles._add(color, CastlingSide.king, king, side.last!);
+      if (backrankRooks.last != null && king < backrankRooks.last!) {
+        castles = castles._add(side, CastlingSide.king, king, backrankRooks.last!);
       }
     }
     return castles;
   }
 
-  /// Gets the rook [Square] by color and castling side.
-  Square? rookOf(Color color, CastlingSide side) =>
-      side == CastlingSide.queen ? rook[color]!.item1 : rook[color]!.item2;
+  /// Gets the rook [Square] by side and castling side.
+  Square? rookOf(Side side, CastlingSide cs) =>
+      cs == CastlingSide.queen ? rook[side]!.item1 : rook[side]!.item2;
 
   /// Gets the squares that need to be empty so that castling is possible
   /// on the given side.
   ///
   /// We're assuming the player still has the required castling rigths.
-  SquareSet pathOf(Color color, CastlingSide side) =>
-      side == CastlingSide.queen ? path[color]!.item1 : path[color]!.item2;
+  SquareSet pathOf(Side side, CastlingSide cs) =>
+      cs == CastlingSide.queen ? path[side]!.item1 : path[side]!.item2;
 
   Castles discardRookAt(Square square) {
-    final whiteRook = rook[Color.white]!;
-    final blackRook = rook[Color.black]!;
+    final whiteRook = rook[Side.white]!;
+    final blackRook = rook[Side.black]!;
     return unmovedRooks.has(square)
         ? _copyWith(
             unmovedRooks: unmovedRooks.withoutSquare(square),
             rook: {
               if (square <= 7)
-                Color.white: whiteRook.item1 == square
+                Side.white: whiteRook.item1 == square
                     ? whiteRook.withItem1(null)
                     : whiteRook.item2 == square
                         ? whiteRook.withItem2(null)
                         : whiteRook,
               if (square >= 56)
-                Color.black: blackRook.item1 == square
+                Side.black: blackRook.item1 == square
                     ? blackRook.withItem1(null)
                     : blackRook.item2 == square
                         ? blackRook.withItem2(null)
@@ -1490,18 +1489,18 @@ class Castles {
         : this;
   }
 
-  Castles discardColor(Color color) {
+  Castles discardSide(Side side) {
     return _copyWith(
-      unmovedRooks: unmovedRooks.diff(SquareSet.backrankOf(color)),
+      unmovedRooks: unmovedRooks.diff(SquareSet.backrankOf(side)),
       rook: {
-        color: Tuple2(null, null),
+        side: Tuple2(null, null),
       },
     );
   }
 
-  Castles _add(Color color, CastlingSide side, Square king, Square rook) {
-    final kingTo = _kingCastlesTo(color, side);
-    final rookTo = _rookCastlesTo(color, side);
+  Castles _add(Side side, CastlingSide cs, Square king, Square rook) {
+    final kingTo = _kingCastlesTo(side, cs);
+    final rookTo = _rookCastlesTo(side, cs);
     final path = between(rook, rookTo)
         .withSquare(rookTo)
         .union(between(king, kingTo).withSquare(kingTo))
@@ -1510,22 +1509,22 @@ class Castles {
     return _copyWith(
       unmovedRooks: unmovedRooks.withSquare(rook),
       rook: {
-        color: side == CastlingSide.queen
-            ? this.rook[color]!.withItem1(rook)
-            : this.rook[color]!.withItem2(rook),
+        side: cs == CastlingSide.queen
+            ? this.rook[side]!.withItem1(rook)
+            : this.rook[side]!.withItem2(rook),
       },
       path: {
-        color: side == CastlingSide.queen
-            ? this.path[color]!.withItem1(path)
-            : this.path[color]!.withItem2(path),
+        side: cs == CastlingSide.queen
+            ? this.path[side]!.withItem1(path)
+            : this.path[side]!.withItem2(path),
       },
     );
   }
 
   Castles _copyWith({
     SquareSet? unmovedRooks,
-    ByColor<Tuple2<Square?, Square?>>? rook,
-    ByColor<Tuple2<SquareSet, SquareSet>>? path,
+    BySide<Tuple2<Square?, Square?>>? rook,
+    BySide<Tuple2<SquareSet, SquareSet>>? path,
   }) {
     return Castles(
       unmovedRooks: unmovedRooks ?? this.unmovedRooks,
@@ -1541,14 +1540,14 @@ class Castles {
   bool operator ==(Object other) =>
       other is Castles &&
       other.unmovedRooks == unmovedRooks &&
-      other.rook[Color.white] == rook[Color.white] &&
-      other.rook[Color.black] == rook[Color.black] &&
-      other.path[Color.white] == path[Color.white] &&
-      other.path[Color.black] == path[Color.black];
+      other.rook[Side.white] == rook[Side.white] &&
+      other.rook[Side.black] == rook[Side.black] &&
+      other.path[Side.white] == path[Side.white] &&
+      other.path[Side.black] == path[Side.black];
 
   @override
   int get hashCode => Object.hash(
-      unmovedRooks, rook[Color.white], rook[Color.black], path[Color.white], path[Color.black]);
+      unmovedRooks, rook[Side.white], rook[Side.black], path[Side.white], path[Side.black]);
 }
 
 class _Context {
@@ -1583,30 +1582,30 @@ class _Context {
   }
 }
 
-Square _rookCastlesTo(Color color, CastlingSide side) {
-  return color == Color.white
-      ? (side == CastlingSide.queen ? 3 : 5)
-      : side == CastlingSide.queen
+Square _rookCastlesTo(Side side, CastlingSide cs) {
+  return side == Side.white
+      ? (cs == CastlingSide.queen ? 3 : 5)
+      : cs == CastlingSide.queen
           ? 59
           : 61;
 }
 
-Square _kingCastlesTo(Color color, CastlingSide side) {
-  return color == Color.white
-      ? (side == CastlingSide.queen ? 2 : 6)
-      : side == CastlingSide.queen
+Square _kingCastlesTo(Side side, CastlingSide cs) {
+  return side == Side.white
+      ? (cs == CastlingSide.queen ? 2 : 6)
+      : cs == CastlingSide.queen
           ? 58
           : 62;
 }
 
 Square? _validEpSquare(Setup setup) {
   if (setup.epSquare == null) return null;
-  final epRank = setup.turn == Color.white ? 5 : 2;
-  final forward = setup.turn == Color.white ? 8 : -8;
+  final epRank = setup.turn == Side.white ? 5 : 2;
+  final forward = setup.turn == Side.white ? 8 : -8;
   if (squareRank(setup.epSquare!) != epRank) return null;
   if (setup.board.occupied.has(setup.epSquare! + forward)) return null;
   final pawn = setup.epSquare! - forward;
-  if (!setup.board.pawns.has(pawn) || !setup.board.byColor(opposite(setup.turn)).has(pawn)) {
+  if (!setup.board.pawns.has(pawn) || !setup.board.bySide(opposite(setup.turn)).has(pawn)) {
     return null;
   }
   return setup.epSquare;
@@ -1619,16 +1618,16 @@ SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
 
   SquareSet pseudo = attacks(piece, square, pos.board.occupied);
   if (piece.role == Role.pawn) {
-    SquareSet captureTargets = pos.board.byColor(opposite(pos.turn));
+    SquareSet captureTargets = pos.board.bySide(opposite(pos.turn));
     if (pos.epSquare != null) {
       captureTargets = captureTargets.withSquare(pos.epSquare!);
     }
     pseudo = pseudo & captureTargets;
-    final delta = pos.turn == Color.white ? 8 : -8;
+    final delta = pos.turn == Side.white ? 8 : -8;
     final step = square + delta;
     if (0 <= step && step < 64 && !pos.board.occupied.has(step)) {
       pseudo = pseudo.withSquare(step);
-      final canDoubleStep = pos.turn == Color.white ? square < 16 : square >= 64 - 16;
+      final canDoubleStep = pos.turn == Side.white ? square < 16 : square >= 64 - 16;
       final doubleStep = step + delta;
       if (canDoubleStep && !pos.board.occupied.has(doubleStep)) {
         pseudo = pseudo.withSquare(doubleStep);
@@ -1636,7 +1635,7 @@ SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
     }
     return pseudo;
   } else {
-    pseudo = pseudo.diff(pos.board.byColor(pos.turn));
+    pseudo = pseudo.diff(pos.board.bySide(pos.turn));
   }
   if (square == context.king) {
     return pseudo

@@ -8,28 +8,28 @@ void main() {
       expect(castles.unmovedRooks, SquareSet.corners);
       expect(castles, Castles.standard);
 
-      expect(castles.rookOf(Color.white, CastlingSide.queen), 0);
-      expect(castles.rookOf(Color.white, CastlingSide.king), 7);
-      expect(castles.rookOf(Color.black, CastlingSide.queen), 56);
-      expect(castles.rookOf(Color.black, CastlingSide.king), 63);
+      expect(castles.rookOf(Side.white, CastlingSide.queen), 0);
+      expect(castles.rookOf(Side.white, CastlingSide.king), 7);
+      expect(castles.rookOf(Side.black, CastlingSide.queen), 56);
+      expect(castles.rookOf(Side.black, CastlingSide.king), 63);
 
-      expect(castles.pathOf(Color.white, CastlingSide.queen).squares, equals([1, 2, 3]));
-      expect(castles.pathOf(Color.white, CastlingSide.king).squares, equals([5, 6]));
-      expect(castles.pathOf(Color.black, CastlingSide.queen).squares, equals([57, 58, 59]));
-      expect(castles.pathOf(Color.black, CastlingSide.king).squares, equals([61, 62]));
+      expect(castles.pathOf(Side.white, CastlingSide.queen).squares, equals([1, 2, 3]));
+      expect(castles.pathOf(Side.white, CastlingSide.king).squares, equals([5, 6]));
+      expect(castles.pathOf(Side.black, CastlingSide.queen).squares, equals([57, 58, 59]));
+      expect(castles.pathOf(Side.black, CastlingSide.king).squares, equals([61, 62]));
     });
 
     test('discard rook', () {
       expect(Castles.standard.discardRookAt(24), Castles.standard);
-      expect(Castles.standard.discardRookAt(7).rook[Color.white], Tuple2(0, null));
+      expect(Castles.standard.discardRookAt(7).rook[Side.white], Tuple2(0, null));
     });
 
-    test('discard color', () {
-      expect(Castles.standard.discardColor(Color.white).rook,
-          equals({Color.white: Tuple2(null, null), Color.black: Tuple2(56, 63)}));
+    test('discard side', () {
+      expect(Castles.standard.discardSide(Side.white).rook,
+          equals({Side.white: Tuple2(null, null), Side.black: Tuple2(56, 63)}));
 
-      expect(Castles.standard.discardColor(Color.black).rook,
-          equals({Color.white: Tuple2(0, 7), Color.black: Tuple2(null, null)}));
+      expect(Castles.standard.discardSide(Side.black).rook,
+          equals({Side.white: Tuple2(0, 7), Side.black: Tuple2(null, null)}));
     });
   });
 
@@ -123,8 +123,8 @@ void main() {
 
       for (final test in insufficientMaterial) {
         final pos = Chess.fromSetup(Setup.parseFen(test[0] as String));
-        expect(pos.hasInsufficientMaterial(Color.white), test[1]);
-        expect(pos.hasInsufficientMaterial(Color.black), test[2]);
+        expect(pos.hasInsufficientMaterial(Side.white), test[1]);
+        expect(pos.hasInsufficientMaterial(Side.black), test[2]);
       }
     });
 
@@ -244,7 +244,7 @@ void main() {
         final pos = Chess.initial.play(NormalMove(from: 12, to: 28));
         expect(pos.board.pieceAt(28), Piece.whitePawn);
         expect(pos.board.pieceAt(12), null);
-        expect(pos.turn, Color.black);
+        expect(pos.turn, Side.black);
       });
 
       test('scholar mate', () {
@@ -258,7 +258,7 @@ void main() {
             .play(NormalMove(from: 21, to: 53));
 
         expect(pos.isCheckmate, true);
-        expect(pos.turn, Color.black);
+        expect(pos.turn, Side.black);
         expect(pos.halfmoves, 0);
         expect(pos.fullmoves, 4);
         expect(pos.fen, 'r1bqkbnr/ppp2Qpp/2np4/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4');
@@ -305,7 +305,7 @@ void main() {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
             .play(NormalMove(from: 7, to: 5));
-        expect(pos.castles.rook[Color.white], equals(Tuple2(0, null)));
+        expect(pos.castles.rook[Side.white], equals(Tuple2(0, null)));
         expect(pos.castles.unmovedRooks.has(7), false);
       });
 
@@ -313,7 +313,7 @@ void main() {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqk1nr/pppp1pbp/2n1p1p1/8/2B1P3/1P3N2/P1PP1PPP/RNBQK2R b KQkq - 4 4'))
             .play(NormalMove(from: 54, to: 0));
-        expect(pos.castles.rook[Color.white], equals(Tuple2(null, 7)));
+        expect(pos.castles.rook[Side.white], equals(Tuple2(null, 7)));
         expect(pos.castles.unmovedRooks.has(0), false);
       });
 
@@ -344,7 +344,7 @@ void main() {
         expect(pos.board.pieceAt(6), Piece.whiteKing);
         expect(pos.board.pieceAt(5), Piece.whiteRook);
         expect(pos.castles.unmovedRooks.isIntersected(SquareSet.fromRank(0)), false);
-        expect(pos.castles.rook[Color.white], equals(Tuple2(null, null)));
+        expect(pos.castles.rook[Side.white], equals(Tuple2(null, null)));
       });
 
       test('castling moves', () {
@@ -594,8 +594,8 @@ void main() {
         ['8/5k2/8/8/8/8/5K2/4nb2 w - -', true, false],
       ]) {
         final pos = Atomic.fromSetup(Setup.parseFen(test[0] as String));
-        expect(pos.hasInsufficientMaterial(Color.white), test[1]);
-        expect(pos.hasInsufficientMaterial(Color.black), test[2]);
+        expect(pos.hasInsufficientMaterial(Side.white), test[1]);
+        expect(pos.hasInsufficientMaterial(Side.black), test[2]);
       }
     });
 
@@ -645,8 +645,8 @@ void main() {
         ['8/3n4/8/8/8/8/8/8 w - - 0 29', false, true],
       ]) {
         final pos = Antichess.fromSetup(Setup.parseFen(test[0] as String));
-        expect(pos.hasInsufficientMaterial(Color.white), test[1]);
-        expect(pos.hasInsufficientMaterial(Color.black), test[2]);
+        expect(pos.hasInsufficientMaterial(Side.white), test[1]);
+        expect(pos.hasInsufficientMaterial(Side.black), test[2]);
       }
     });
 
@@ -672,8 +672,8 @@ void main() {
         ['8/8/8/8/3k4/3N~4/3K4/8 w - - 0 1', false, false],
       ]) {
         final pos = Crazyhouse.fromSetup(Setup.parseFen(test[0] as String));
-        expect(pos.hasInsufficientMaterial(Color.white), test[1]);
-        expect(pos.hasInsufficientMaterial(Color.black), test[2]);
+        expect(pos.hasInsufficientMaterial(Side.white), test[1]);
+        expect(pos.hasInsufficientMaterial(Side.black), test[2]);
       }
     });
 
@@ -706,8 +706,8 @@ void main() {
         ['8/5k2/8/8/8/8/3K4/8 w - -', false, false],
       ]) {
         final pos = KingOfTheHill.fromSetup(Setup.parseFen(test[0] as String));
-        expect(pos.hasInsufficientMaterial(Color.white), test[1]);
-        expect(pos.hasInsufficientMaterial(Color.black), test[2]);
+        expect(pos.hasInsufficientMaterial(Side.white), test[1]);
+        expect(pos.hasInsufficientMaterial(Side.black), test[2]);
       }
     });
     test('game end conditions', () {
@@ -734,8 +734,8 @@ void main() {
         ['8/5k2/8/8/8/8/3K2N1/8 w - - 3+3', false, true],
       ]) {
         final pos = ThreeCheck.fromSetup(Setup.parseFen(test[0] as String));
-        expect(pos.hasInsufficientMaterial(Color.white), test[1]);
-        expect(pos.hasInsufficientMaterial(Color.black), test[2]);
+        expect(pos.hasInsufficientMaterial(Side.white), test[1]);
+        expect(pos.hasInsufficientMaterial(Side.black), test[2]);
       }
     });
 

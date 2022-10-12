@@ -8,7 +8,7 @@ class Board {
   const Board({
     required this.occupied,
     required this.promoted,
-    required this.colors,
+    required this.sides,
     required this.roles,
   });
 
@@ -20,14 +20,14 @@ class Board {
   /// This information is relevant in chess variants like [Crazyhouse].
   final SquareSet promoted;
 
-  final ByColor<SquareSet> colors;
+  final BySide<SquareSet> sides;
   final ByRole<SquareSet> roles;
 
   /// Standard chess starting position.
   static const standard =
-      Board(occupied: SquareSet(0xffff00000000ffff), promoted: SquareSet.empty, colors: {
-    Color.white: SquareSet(0xffff),
-    Color.black: SquareSet(0xffff000000000000),
+      Board(occupied: SquareSet(0xffff00000000ffff), promoted: SquareSet.empty, sides: {
+    Side.white: SquareSet(0xffff),
+    Side.black: SquareSet(0xffff000000000000),
   }, roles: {
     Role.pawn: SquareSet(0x00ff00000000ff00),
     Role.knight: SquareSet(0x4200000000000042),
@@ -37,9 +37,9 @@ class Board {
     Role.king: SquareSet(0x1000000000000010),
   });
 
-  static const empty = Board(occupied: SquareSet.empty, promoted: SquareSet.empty, colors: {
-    Color.white: SquareSet.empty,
-    Color.black: SquareSet.empty,
+  static const empty = Board(occupied: SquareSet.empty, promoted: SquareSet.empty, sides: {
+    Side.white: SquareSet.empty,
+    Side.black: SquareSet.empty,
   }, roles: {
     Role.pawn: SquareSet.empty,
     Role.knight: SquareSet.empty,
@@ -81,10 +81,10 @@ class Board {
   }
 
   /// All squares occupied by white pieces.
-  SquareSet get white => colors[Color.white]!;
+  SquareSet get white => sides[Side.white]!;
 
   /// All squares occupied by black pieces.
-  SquareSet get black => colors[Color.black]!;
+  SquareSet get black => sides[Side.black]!;
 
   /// All squares occupied by pawns.
   SquareSet get pawns => roles[Role.pawn]!;
@@ -144,28 +144,28 @@ class Board {
     }
   }
 
-  /// A [SquareSet] of all the pieces matching this [Color] and [Role].
-  SquareSet piecesOf(Color color, Role role) {
-    return byColor(color) & byRole(role);
+  /// A [SquareSet] of all the pieces matching this [Side] and [Role].
+  SquareSet piecesOf(Side side, Role role) {
+    return bySide(side) & byRole(role);
   }
 
-  /// Gets all squares occupied by [Color].
-  SquareSet byColor(Color color) => colors[color]!;
+  /// Gets all squares occupied by [Side].
+  SquareSet bySide(Side side) => sides[side]!;
 
   /// Gets all squares occupied by [Role].
   SquareSet byRole(Role role) => roles[role]!;
 
   /// Gets all squares occupied by [Piece].
   SquareSet byPiece(Piece piece) {
-    return colors[piece.color]! & roles[piece.role]!;
+    return sides[piece.color]! & roles[piece.role]!;
   }
 
-  /// Gets the [Color] at this [Square], if any.
-  Color? colorAt(Square square) {
-    if (colors[Color.white]!.has(square)) {
-      return Color.white;
-    } else if (colors[Color.black]!.has(square)) {
-      return Color.black;
+  /// Gets the [Side] at this [Square], if any.
+  Side? sideAt(Square square) {
+    if (sides[Side.white]!.has(square)) {
+      return Side.white;
+    } else if (sides[Side.black]!.has(square)) {
+      return Side.black;
     } else {
       return null;
     }
@@ -183,23 +183,23 @@ class Board {
 
   /// Gets the [Piece] at this [Square], if any.
   Piece? pieceAt(Square square) {
-    final color = colorAt(square);
-    if (color == null) {
+    final side = sideAt(square);
+    if (side == null) {
       return null;
     }
     final role = roleAt(square)!;
     final prom = promoted.has(square);
-    return Piece(color: color, role: role, promoted: prom);
+    return Piece(color: side, role: role, promoted: prom);
   }
 
-  /// Finds the unique king [Square] of the given [Color], if any.
-  Square? kingOf(Color color) {
-    return byPiece(Piece(color: color, role: Role.king)).singleSquare;
+  /// Finds the unique king [Square] of the given [Side], if any.
+  Square? kingOf(Side side) {
+    return byPiece(Piece(color: side, role: Role.king)).singleSquare;
   }
 
-  /// Finds the squares who are attacking `square` by the `attacker` [Color].
-  SquareSet attacksTo(Square square, Color attacker, {SquareSet? occupied}) =>
-      byColor(attacker).intersect(rookAttacks(square, occupied ?? this.occupied)
+  /// Finds the squares who are attacking `square` by the `attacker` [Side].
+  SquareSet attacksTo(Square square, Side attacker, {SquareSet? occupied}) =>
+      bySide(attacker).intersect(rookAttacks(square, occupied ?? this.occupied)
           .intersect(rooksAndQueens)
           .union(bishopAttacks(square, occupied ?? this.occupied).intersect(bishopsAndQueens))
           .union(knightAttacks(square).intersect(knights))
@@ -211,8 +211,8 @@ class Board {
     return removePieceAt(square)._copyWith(
       occupied: occupied.withSquare(square),
       promoted: piece.promoted ? promoted.withSquare(square) : null,
-      colors: {
-        piece.color: colors[piece.color]!.withSquare(square),
+      sides: {
+        piece.color: sides[piece.color]!.withSquare(square),
       },
       roles: {
         piece.role: roles[piece.role]!.withSquare(square),
@@ -227,8 +227,8 @@ class Board {
         ? _copyWith(
             occupied: occupied.withoutSquare(square),
             promoted: piece.promoted ? promoted.withoutSquare(square) : null,
-            colors: {
-              piece.color: colors[piece.color]!.withoutSquare(square),
+            sides: {
+              piece.color: sides[piece.color]!.withoutSquare(square),
             },
             roles: {
               piece.role: roles[piece.role]!.withoutSquare(square),
@@ -244,13 +244,13 @@ class Board {
   Board _copyWith({
     SquareSet? occupied,
     SquareSet? promoted,
-    ByColor<SquareSet>? colors,
+    BySide<SquareSet>? sides,
     ByRole<SquareSet>? roles,
   }) {
     return Board(
       occupied: occupied ?? this.occupied,
       promoted: promoted ?? this.promoted,
-      colors: colors != null ? Map.unmodifiable({...this.colors, ...colors}) : this.colors,
+      sides: sides != null ? Map.unmodifiable({...this.sides, ...sides}) : this.sides,
       roles: roles != null ? Map.unmodifiable({...this.roles, ...roles}) : this.roles,
     );
   }
@@ -282,7 +282,7 @@ Piece? _charToPiece(String ch, bool promoted) {
   final role = Role.fromChar(ch);
   if (role != null) {
     return Piece(
-        role: role, color: ch == ch.toLowerCase() ? Color.black : Color.white, promoted: promoted);
+        role: role, color: ch == ch.toLowerCase() ? Side.black : Side.white, promoted: promoted);
   }
   return null;
 }

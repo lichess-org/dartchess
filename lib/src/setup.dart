@@ -14,7 +14,7 @@ class Setup {
   final Pockets? pockets;
 
   /// Side to move.
-  final Color turn;
+  final Side turn;
 
   /// Unmoved rooks positions used to determine castling rights.
   final SquareSet unmovedRooks;
@@ -46,7 +46,7 @@ class Setup {
 
   static const standard = Setup(
     board: Board.standard,
-    turn: Color.white,
+    turn: Side.white,
     unmovedRooks: SquareSet.corners,
     halfmoves: 0,
     fullmoves: 1,
@@ -89,15 +89,15 @@ class Setup {
     }
 
     // turn
-    Color turn;
+    Side turn;
     if (parts.isEmpty) {
-      turn = Color.white;
+      turn = Side.white;
     } else {
       final turnPart = parts.removeAt(0);
       if (turnPart == 'w') {
-        turn = Color.white;
+        turn = Side.white;
       } else if (turnPart == 'b') {
-        turn = Color.black;
+        turn = Side.black;
       } else {
         throw FenError('ERR_TURN');
       }
@@ -207,11 +207,11 @@ class Pockets {
     required this.value,
   });
 
-  final ByColor<ByRole<int>> value;
+  final BySide<ByRole<int>> value;
 
   /// An empty pocket.
   static const empty = Pockets(value: {
-    Color.white: {
+    Side.white: {
       Role.pawn: 0,
       Role.knight: 0,
       Role.bishop: 0,
@@ -219,7 +219,7 @@ class Pockets {
       Role.queen: 0,
       Role.king: 0,
     },
-    Color.black: {
+    Side.black: {
       Role.pawn: 0,
       Role.knight: 0,
       Role.bishop: 0,
@@ -232,51 +232,51 @@ class Pockets {
   /// Gets the total number of pieces in the pocket.
   int get size => value.values.fold(0, (acc, e) => acc + e.values.fold(0, (acc, e) => acc + e));
 
-  /// Gets the number of pieces of that [Color] and [Role] in the pocket.
-  int of(Color color, Role role) {
-    return value[color]![role]!;
+  /// Gets the number of pieces of that [Side] and [Role] in the pocket.
+  int of(Side side, Role role) {
+    return value[side]![role]!;
   }
 
   /// Counts the number of pieces by [Role].
   int count(Role role) {
-    return value[Color.white]![role]! + value[Color.black]![role]!;
+    return value[Side.white]![role]! + value[Side.black]![role]!;
   }
 
   /// Checks whether this side has at least 1 quality (any piece but a pawn).
-  bool hasQuality(Color color) {
-    final byColor = value[color]!;
-    return byColor[Role.knight]! > 0 ||
-        byColor[Role.bishop]! > 0 ||
-        byColor[Role.rook]! > 0 ||
-        byColor[Role.queen]! > 0 ||
-        byColor[Role.king]! > 0;
+  bool hasQuality(Side side) {
+    final bySide = value[side]!;
+    return bySide[Role.knight]! > 0 ||
+        bySide[Role.bishop]! > 0 ||
+        bySide[Role.rook]! > 0 ||
+        bySide[Role.queen]! > 0 ||
+        bySide[Role.king]! > 0;
   }
 
   /// Checks whether this side has at least 1 pawn.
-  bool hasPawn(Color color) {
-    return value[color]![Role.pawn]! > 0;
+  bool hasPawn(Side side) {
+    return value[side]![Role.pawn]! > 0;
   }
 
-  /// Increments the number of pieces in the pocket of that [Color] and [Role].
-  Pockets increment(Color color, Role role) {
+  /// Increments the number of pieces in the pocket of that [Side] and [Role].
+  Pockets increment(Side side, Role role) {
     return Pockets(
         value: Map.unmodifiable({
       ...value,
-      color: {
-        ...value[color]!,
-        role: of(color, role) + 1,
+      side: {
+        ...value[side]!,
+        role: of(side, role) + 1,
       },
     }));
   }
 
-  /// Decrements the number of pieces in the pocket of that [Color] and [Role].
-  Pockets decrement(Color color, Role role) {
+  /// Decrements the number of pieces in the pocket of that [Side] and [Role].
+  Pockets decrement(Side side, Role role) {
     return Pockets(
         value: Map.unmodifiable({
       ...value,
-      color: {
-        ...value[color]!,
-        role: of(color, role) - 1,
+      side: {
+        ...value[side]!,
+        role: of(side, role) - 1,
       },
     }));
   }
@@ -285,7 +285,7 @@ class Pockets {
   bool operator ==(Object other) {
     if (other is Pockets) {
       bool sameVal = true;
-      for (final c in Color.values) {
+      for (final c in Side.values) {
         for (final r in Role.values) {
           sameVal = other.value[c]![r] == value[c]![r];
           if (!sameVal) break;
@@ -298,7 +298,7 @@ class Pockets {
 
   @override
   int get hashCode => Object.hashAll([
-        for (final c in Color.values)
+        for (final c in Side.values)
           for (final r in Role.values) value[c]![r]
       ]);
 }
@@ -348,9 +348,9 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
   for (int i = 0; i < castlingPart.length; i++) {
     final c = castlingPart[i];
     final lower = c.toLowerCase();
-    final color = c == lower ? Color.black : Color.white;
+    final color = c == lower ? Side.black : Side.white;
     final backrankMask = SquareSet.backrankOf(color);
-    final backrank = backrankMask & board.byColor(color);
+    final backrank = backrankMask & board.bySide(color);
 
     Iterable<Square> candidates;
     if (lower == 'q') {
@@ -379,26 +379,26 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
 
 String _makePockets(Pockets pockets) {
   final wPart =
-      [for (final r in Role.values) ...List.filled(pockets.of(Color.white, r), r.char)].join('');
+      [for (final r in Role.values) ...List.filled(pockets.of(Side.white, r), r.char)].join('');
   final bPart =
-      [for (final r in Role.values) ...List.filled(pockets.of(Color.black, r), r.char)].join('');
+      [for (final r in Role.values) ...List.filled(pockets.of(Side.black, r), r.char)].join('');
   return '[${wPart.toUpperCase()}$bPart]';
 }
 
 String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
   String fen = '';
-  for (final color in Color.values) {
+  for (final color in Side.values) {
     final backrank = SquareSet.backrankOf(color);
     final king = board.kingOf(color);
     final candidates = board.byPiece(Piece(color: color, role: Role.rook)) & backrank;
     for (final rook in (unmovedRooks & candidates).squaresReversed) {
       if (rook == candidates.first && king != null && rook < king) {
-        fen += color == Color.white ? 'Q' : 'q';
+        fen += color == Side.white ? 'Q' : 'q';
       } else if (rook == candidates.last && king != null && king < rook) {
-        fen += color == Color.white ? 'K' : 'k';
+        fen += color == Side.white ? 'K' : 'k';
       } else {
         final file = kFileNames[squareFile(rook)];
-        fen += color == Color.white ? file.toUpperCase() : file;
+        fen += color == Side.white ? file.toUpperCase() : file;
       }
     }
   }

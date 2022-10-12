@@ -100,7 +100,7 @@ int perft(Position pos, int depth, {shouldLog = false}) {
       final from = entry.key;
       final dests = entry.value;
       final promotions =
-          squareRank(from) == (pos.turn == Color.white ? 6 : 1) && pos.board.pawns.has(from)
+          squareRank(from) == (pos.turn == Side.white ? 6 : 1) && pos.board.pawns.has(from)
               ? promotionRoles
               : [null];
       for (final to in dests.squares) {

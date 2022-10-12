@@ -22,7 +22,7 @@ Square? parseSquare(String str) {
 String toAlgebraic(Square square) =>
     kFileNames[squareFile(square)] + kRankNames[squareRank(square)];
 
-Color opposite(Color color) => color == Color.white ? Color.black : Color.white;
+Side opposite(Side side) => side == Side.white ? Side.black : Side.white;
 
 /// Gets all the legal moves of this position in the algebraic coordinate notation.
 ///

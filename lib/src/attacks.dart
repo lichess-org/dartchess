@@ -14,11 +14,10 @@ SquareSet knightAttacks(Square square) {
   return _knightAttacks[square];
 }
 
-/// Gets squares attacked or defended by a pawn of the given `color`
-/// on [Square].
-SquareSet pawnAttacks(Color color, Square square) {
+/// Gets squares attacked or defended by a pawn of the given [Side] on [Square].
+SquareSet pawnAttacks(Side side, Square square) {
   assert(square >= 0 && square < 64);
-  return _pawnAttacks[color]![square];
+  return _pawnAttacks[side]![square];
 }
 
 /// Gets squares attacked or defended by a bishop on [Square], given `occupied`
@@ -107,8 +106,8 @@ List<T> _tabulate<T>(T Function(Square square) f) {
 final _kingAttacks = _tabulate((sq) => _computeRange(sq, [-9, -8, -7, -1, 1, 7, 8, 9]));
 final _knightAttacks = _tabulate((sq) => _computeRange(sq, [-17, -15, -10, -6, 6, 10, 15, 17]));
 final _pawnAttacks = {
-  Color.white: _tabulate((sq) => _computeRange(sq, [7, 9])),
-  Color.black: _tabulate((sq) => _computeRange(sq, [-7, -9])),
+  Side.white: _tabulate((sq) => _computeRange(sq, [7, 9])),
+  Side.black: _tabulate((sq) => _computeRange(sq, [-7, -9])),
 };
 
 final _fileRange = _tabulate((sq) => SquareSet.fromFile(squareFile(sq)).withoutSquare(sq));

@@ -29,7 +29,7 @@ void main() {
     final setup = Setup.parseFen(kInitialFEN);
     expect(setup, Setup.standard);
     expect(setup.board, Board.standard);
-    expect(setup.turn, Color.white);
+    expect(setup.turn, Side.white);
     expect(setup.unmovedRooks, SquareSet.corners);
     expect(setup.epSquare, null);
     expect(setup.halfmoves, 0);
@@ -39,7 +39,7 @@ void main() {
   test('parse partial fen', () {
     final setup = Setup.parseFen(kInitialBoardFEN);
     expect(setup.board, Board.standard);
-    expect(setup.turn, Color.white);
+    expect(setup.turn, Side.white);
     expect(setup.unmovedRooks, SquareSet.empty);
     expect(setup.epSquare, null);
     expect(setup.halfmoves, 0);
@@ -74,17 +74,17 @@ void main() {
 
   group('Pockets', () {
     test('increment', () {
-      final pockets = Pockets.empty.increment(Color.white, Role.knight);
-      expect(pockets.hasPawn(Color.white), false);
-      expect(pockets.hasQuality(Color.white), true);
-      expect(pockets.of(Color.white, Role.knight), 1);
+      final pockets = Pockets.empty.increment(Side.white, Role.knight);
+      expect(pockets.hasPawn(Side.white), false);
+      expect(pockets.hasQuality(Side.white), true);
+      expect(pockets.of(Side.white, Role.knight), 1);
       expect(pockets.size, 1);
-      expect(pockets.increment(Color.white, Role.knight).of(Color.white, Role.knight), 2);
+      expect(pockets.increment(Side.white, Role.knight).of(Side.white, Role.knight), 2);
     });
 
     test('decrement', () {
-      final pockets = Pockets.empty.increment(Color.white, Role.knight);
-      expect(pockets.decrement(Color.white, Role.knight).of(Color.white, Role.knight), 0);
+      final pockets = Pockets.empty.increment(Side.white, Role.knight);
+      expect(pockets.decrement(Side.white, Role.knight).of(Side.white, Role.knight), 0);
     });
   });
 }

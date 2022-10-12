@@ -1,6 +1,6 @@
 import './utils.dart';
 
-enum Color { white, black }
+enum Side { white, black }
 
 enum Role {
   pawn,
@@ -52,7 +52,7 @@ enum Role {
 /// See [SquareSet] to see how the mapping looks like.
 typedef Square = int;
 
-typedef ByColor<T> = Map<Color, T>;
+typedef BySide<T> = Map<Side, T>;
 typedef ByRole<T> = Map<Role, T>;
 
 class Piece {
@@ -62,27 +62,27 @@ class Piece {
     this.promoted = false,
   });
 
-  final Color color;
+  final Side color;
   final Role role;
   final bool promoted;
 
   static Piece? fromChar(String ch) {
     final role = Role.fromChar(ch);
     if (role != null) {
-      return Piece(role: role, color: ch.toLowerCase() == ch ? Color.black : Color.white);
+      return Piece(role: role, color: ch.toLowerCase() == ch ? Side.black : Side.white);
     }
     return null;
   }
 
   String get fenChar {
     String r = role.char;
-    if (color == Color.white) r = r.toUpperCase();
+    if (color == Side.white) r = r.toUpperCase();
     if (promoted) r += '~';
     return r;
   }
 
   Piece copyWith({
-    Color? color,
+    Side? color,
     Role? role,
     bool? promoted,
   }) {
@@ -110,19 +110,19 @@ class Piece {
   @override
   int get hashCode => Object.hash(color, role, promoted);
 
-  static const whitePawn = Piece(color: Color.white, role: Role.pawn);
-  static const whiteKnight = Piece(color: Color.white, role: Role.knight);
-  static const whiteBishop = Piece(color: Color.white, role: Role.bishop);
-  static const whiteRook = Piece(color: Color.white, role: Role.rook);
-  static const whiteQueen = Piece(color: Color.white, role: Role.queen);
-  static const whiteKing = Piece(color: Color.white, role: Role.king);
+  static const whitePawn = Piece(color: Side.white, role: Role.pawn);
+  static const whiteKnight = Piece(color: Side.white, role: Role.knight);
+  static const whiteBishop = Piece(color: Side.white, role: Role.bishop);
+  static const whiteRook = Piece(color: Side.white, role: Role.rook);
+  static const whiteQueen = Piece(color: Side.white, role: Role.queen);
+  static const whiteKing = Piece(color: Side.white, role: Role.king);
 
-  static const blackPawn = Piece(color: Color.black, role: Role.pawn);
-  static const blackKnight = Piece(color: Color.black, role: Role.knight);
-  static const blackBishop = Piece(color: Color.black, role: Role.bishop);
-  static const blackRook = Piece(color: Color.black, role: Role.rook);
-  static const blackQueen = Piece(color: Color.black, role: Role.queen);
-  static const blackKing = Piece(color: Color.black, role: Role.king);
+  static const blackPawn = Piece(color: Side.black, role: Role.pawn);
+  static const blackKnight = Piece(color: Side.black, role: Role.knight);
+  static const blackBishop = Piece(color: Side.black, role: Role.bishop);
+  static const blackRook = Piece(color: Side.black, role: Role.rook);
+  static const blackQueen = Piece(color: Side.black, role: Role.queen);
+  static const blackKing = Piece(color: Side.black, role: Role.king);
 }
 
 /// Base class for a chess move.
