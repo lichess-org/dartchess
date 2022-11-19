@@ -78,7 +78,8 @@ final _promotionRoles = [Role.queen, Role.rook, Role.knight, Role.bishop];
 int perft(Position pos, int depth, {shouldLog = false}) {
   if (depth < 1) return 1;
 
-  final promotionRoles = pos is Antichess ? [..._promotionRoles, Role.king] : _promotionRoles;
+  final promotionRoles =
+      pos is Antichess ? [..._promotionRoles, Role.king] : _promotionRoles;
   final legalDrops = pos.legalDrops;
 
   if (!shouldLog && depth == 1 && legalDrops.isEmpty) {
@@ -99,10 +100,10 @@ int perft(Position pos, int depth, {shouldLog = false}) {
     for (final entry in pos.legalMoves.entries) {
       final from = entry.key;
       final dests = entry.value;
-      final promotions =
-          squareRank(from) == (pos.turn == Side.white ? 6 : 1) && pos.board.pawns.has(from)
-              ? promotionRoles
-              : [null];
+      final promotions = squareRank(from) == (pos.turn == Side.white ? 6 : 1) &&
+              pos.board.pawns.has(from)
+          ? promotionRoles
+          : [null];
       for (final to in dests.squares) {
         for (final promotion in promotions) {
           final move = NormalMove(from: from, to: to, promotion: promotion);
@@ -116,8 +117,10 @@ int perft(Position pos, int depth, {shouldLog = false}) {
     if (pos.pockets != null) {
       for (final role in Role.values) {
         if (pos.pockets!.of(pos.turn, role) > 0) {
-          for (final to
-              in (role == Role.pawn ? legalDrops.diff(SquareSet.backranks) : legalDrops).squares) {
+          for (final to in (role == Role.pawn
+                  ? legalDrops.diff(SquareSet.backranks)
+                  : legalDrops)
+              .squares) {
             final drop = DropMove(role: role, to: to);
             final child = pos.playUnchecked(drop);
             final children = perft(child, depth - 1);

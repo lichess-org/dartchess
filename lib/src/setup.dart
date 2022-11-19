@@ -77,7 +77,8 @@ class Setup {
         throw FenError('ERR_FEN');
       }
       board = Board.parseFen(boardPart.substring(0, pocketStart));
-      pockets = _parsePockets(boardPart.substring(pocketStart + 1, boardPart.length - 1));
+      pockets = _parsePockets(
+          boardPart.substring(pocketStart + 1, boardPart.length - 1));
     } else {
       final pocketStart = _nthIndexOf(boardPart, '/', 7);
       if (pocketStart == -1) {
@@ -135,7 +136,8 @@ class Setup {
     }
 
     final fullmovesPart = parts.isNotEmpty ? parts.removeAt(0) : null;
-    final fullmoves = fullmovesPart != null ? _parseSmallUint(fullmovesPart) : 1;
+    final fullmoves =
+        fullmovesPart != null ? _parseSmallUint(fullmovesPart) : 1;
     if (fullmoves == null) {
       throw FenError('ERR_FULLMOVES');
     }
@@ -174,7 +176,9 @@ class Setup {
         turnLetter,
         _makeCastlingFen(board, unmovedRooks),
         epSquare != null ? toAlgebraic(epSquare!) : '-',
-        ...(remainingChecks != null ? [_makeRemainingChecks(remainingChecks!)] : []),
+        ...(remainingChecks != null
+            ? [_makeRemainingChecks(remainingChecks!)]
+            : []),
         math.max(0, math.min(halfmoves, 9999)),
         math.max(1, math.min(fullmoves, 9999)),
       ].join(' ');
@@ -230,7 +234,8 @@ class Pockets {
   });
 
   /// Gets the total number of pieces in the pocket.
-  int get size => value.values.fold(0, (acc, e) => acc + e.values.fold(0, (acc, e) => acc + e));
+  int get size => value.values
+      .fold(0, (acc, e) => acc + e.values.fold(0, (acc, e) => acc + e));
 
   /// Gets the number of pieces of that [Side] and [Role] in the pocket.
   int of(Side side, Role role) {
@@ -358,7 +363,10 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
     } else if (lower == 'k') {
       candidates = backrank.squaresReversed;
     } else if ('a'.compareTo(lower) <= 0 && lower.compareTo('h') <= 0) {
-      candidates = (SquareSet.fromFile(lower.codeUnitAt(0) - 'a'.codeUnitAt(0)) & backrank).squares;
+      candidates =
+          (SquareSet.fromFile(lower.codeUnitAt(0) - 'a'.codeUnitAt(0)) &
+                  backrank)
+              .squares;
     } else {
       throw FenError('ERR_CASTLING');
     }
@@ -378,10 +386,14 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
 }
 
 String _makePockets(Pockets pockets) {
-  final wPart =
-      [for (final r in Role.values) ...List.filled(pockets.of(Side.white, r), r.char)].join('');
-  final bPart =
-      [for (final r in Role.values) ...List.filled(pockets.of(Side.black, r), r.char)].join('');
+  final wPart = [
+    for (final r in Role.values)
+      ...List.filled(pockets.of(Side.white, r), r.char)
+  ].join('');
+  final bPart = [
+    for (final r in Role.values)
+      ...List.filled(pockets.of(Side.black, r), r.char)
+  ].join('');
   return '[${wPart.toUpperCase()}$bPart]';
 }
 
@@ -390,7 +402,8 @@ String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
   for (final color in Side.values) {
     final backrank = SquareSet.backrankOf(color);
     final king = board.kingOf(color);
-    final candidates = board.byPiece(Piece(color: color, role: Role.rook)) & backrank;
+    final candidates =
+        board.byPiece(Piece(color: color, role: Role.rook)) & backrank;
     for (final rook in (unmovedRooks & candidates).squaresReversed) {
       if (rook == candidates.first && king != null && rook < king) {
         fen += color == Side.white ? 'Q' : 'q';
@@ -405,9 +418,11 @@ String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
   return fen != '' ? fen : '-';
 }
 
-String _makeRemainingChecks(Tuple2<int, int> checks) => '${checks.item1}+${checks.item2}';
+String _makeRemainingChecks(Tuple2<int, int> checks) =>
+    '${checks.item1}+${checks.item2}';
 
-int? _parseSmallUint(String str) => RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;
+int? _parseSmallUint(String str) =>
+    RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;
 
 int _nthIndexOf(String haystack, String needle, int n) {
   int index = haystack.indexOf(needle);

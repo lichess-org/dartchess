@@ -69,7 +69,8 @@ class Piece {
   static Piece? fromChar(String ch) {
     final role = Role.fromChar(ch);
     if (role != null) {
-      return Piece(role: role, color: ch.toLowerCase() == ch ? Side.black : Side.white);
+      return Piece(
+          role: role, color: ch.toLowerCase() == ch ? Side.black : Side.white);
     }
     return null;
   }
@@ -182,7 +183,9 @@ class NormalMove extends Move {
   /// Gets UCI notation, like `g1f3` for a normal move, `a7a8q` for promotion to a queen.
   @override
   String get uci =>
-      toAlgebraic(from) + toAlgebraic(to) + (promotion != null ? promotion!.char : '');
+      toAlgebraic(from) +
+      toAlgebraic(to) +
+      (promotion != null ? promotion!.char : '');
 
   @override
   bool operator ==(Object other) {
@@ -236,7 +239,8 @@ class Tuple2<T1, T2> {
   String toString() => '[$item1, $item2]';
 
   @override
-  bool operator ==(Object other) => other is Tuple2 && item1 == other.item1 && item2 == other.item2;
+  bool operator ==(Object other) =>
+      other is Tuple2 && item1 == other.item1 && item2 == other.item2;
 
   @override
   int get hashCode => Object.hash(item1, item2);

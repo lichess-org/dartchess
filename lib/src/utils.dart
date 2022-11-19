@@ -27,14 +27,17 @@ Side opposite(Side side) => side == Side.white ? Side.black : Side.white;
 /// Gets all the legal moves of this position in the algebraic coordinate notation.
 ///
 /// Includes both possible representations of castling moves (unless `chess960` is true).
-Map<String, Set<String>> algebraicLegalMoves(Position pos, {bool isChess960 = false}) {
+Map<String, Set<String>> algebraicLegalMoves(Position pos,
+    {bool isChess960 = false}) {
   final Map<String, Set<String>> result = {};
   for (final entry in pos.legalMoves.entries) {
     final dests = entry.value.squares;
     if (dests.isNotEmpty) {
       final from = entry.key;
       final destSet = dests.map((e) => toAlgebraic(e)).toSet();
-      if (!isChess960 && from == pos.board.kingOf(pos.turn) && squareFile(entry.key) == 4) {
+      if (!isChess960 &&
+          from == pos.board.kingOf(pos.turn) &&
+          squareFile(entry.key) == 4) {
         if (dests.contains(0)) {
           destSet.add('c1');
         } else if (dests.contains(56)) {

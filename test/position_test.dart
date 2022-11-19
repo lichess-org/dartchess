@@ -13,15 +13,20 @@ void main() {
       expect(castles.rookOf(Side.black, CastlingSide.queen), 56);
       expect(castles.rookOf(Side.black, CastlingSide.king), 63);
 
-      expect(castles.pathOf(Side.white, CastlingSide.queen).squares, equals([1, 2, 3]));
-      expect(castles.pathOf(Side.white, CastlingSide.king).squares, equals([5, 6]));
-      expect(castles.pathOf(Side.black, CastlingSide.queen).squares, equals([57, 58, 59]));
-      expect(castles.pathOf(Side.black, CastlingSide.king).squares, equals([61, 62]));
+      expect(castles.pathOf(Side.white, CastlingSide.queen).squares,
+          equals([1, 2, 3]));
+      expect(castles.pathOf(Side.white, CastlingSide.king).squares,
+          equals([5, 6]));
+      expect(castles.pathOf(Side.black, CastlingSide.queen).squares,
+          equals([57, 58, 59]));
+      expect(castles.pathOf(Side.black, CastlingSide.king).squares,
+          equals([61, 62]));
     });
 
     test('discard rook', () {
       expect(Castles.standard.discardRookAt(24), Castles.standard);
-      expect(Castles.standard.discardRookAt(7).rook[Side.white], Tuple2(0, null));
+      expect(
+          Castles.standard.discardRookAt(7).rook[Side.white], Tuple2(0, null));
     });
 
     test('discard side', () {
@@ -36,47 +41,57 @@ void main() {
   group('Chess', () {
     group('Position validation', () {
       test('Empty board', () {
-        expect(() => Chess.fromSetup(Setup.parseFen(kEmptyFEN)),
-            throwsA(predicate((e) => e is PositionError && e.cause == IllegalSetup.empty)));
+        expect(
+            () => Chess.fromSetup(Setup.parseFen(kEmptyFEN)),
+            throwsA(predicate(
+                (e) => e is PositionError && e.cause == IllegalSetup.empty)));
       });
 
       test('Missing king', () {
         expect(
-            () => Chess.fromSetup(
-                Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1BNR w HAkq - 0 1')),
-            throwsA(predicate((e) => e is PositionError && e.cause == IllegalSetup.kings)));
+            () => Chess.fromSetup(Setup.parseFen(
+                'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1BNR w HAkq - 0 1')),
+            throwsA(predicate(
+                (e) => e is PositionError && e.cause == IllegalSetup.kings)));
       });
 
       test('Opposite check', () {
         expect(
-            () => Chess.fromSetup(
-                Setup.parseFen('rnbqkbnr/pppp1ppp/8/8/8/8/PPPPQPPP/RNB1KBNR w KQkq - 0 1')),
-            throwsA(predicate((e) => e is PositionError && e.cause == IllegalSetup.oppositeCheck)));
+            () => Chess.fromSetup(Setup.parseFen(
+                'rnbqkbnr/pppp1ppp/8/8/8/8/PPPPQPPP/RNB1KBNR w KQkq - 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionError && e.cause == IllegalSetup.oppositeCheck)));
       });
 
       test('Backrank pawns', () {
         expect(
-            () => Chess.fromSetup(
-                Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPNP/RNBQKBPR w KQkq - 0 1')),
-            throwsA(
-                predicate((e) => e is PositionError && e.cause == IllegalSetup.pawnsOnBackrank)));
+            () => Chess.fromSetup(Setup.parseFen(
+                'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPNP/RNBQKBPR w KQkq - 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionError &&
+                e.cause == IllegalSetup.pawnsOnBackrank)));
       });
 
       test('checkers alignment', () {
         // Multiple checkers aligned with king.
         expect(
-            () => Chess.fromSetup(Setup.parseFen('3R4/8/q4k2/2B5/1NK5/3b4/8/8 w - - 0 1')),
-            throwsA(
-                predicate((e) => e is PositionError && e.cause == IllegalSetup.impossibleCheck)));
+            () => Chess.fromSetup(
+                Setup.parseFen('3R4/8/q4k2/2B5/1NK5/3b4/8/8 w - - 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionError &&
+                e.cause == IllegalSetup.impossibleCheck)));
 
         // Checkers aligned with opponent king are fine.
-        Chess.fromSetup(Setup.parseFen('8/8/5k2/p1q5/PP1rp1P1/3P1N2/2RK1r2/5nN1 w - - 0 3'));
+        Chess.fromSetup(Setup.parseFen(
+            '8/8/5k2/p1q5/PP1rp1P1/3P1N2/2RK1r2/5nN1 w - - 0 3'));
 
         // En passant square aligned with checker and king.
         expect(
-            () => Chess.fromSetup(Setup.parseFen('8/8/8/1k6/3Pp3/8/8/4KQ2 b - d3 0 1')),
-            throwsA(
-                predicate((e) => e is PositionError && e.cause == IllegalSetup.impossibleCheck)));
+            () => Chess.fromSetup(
+                Setup.parseFen('8/8/8/1k6/3Pp3/8/8/4KQ2 b - d3 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionError &&
+                e.cause == IllegalSetup.impossibleCheck)));
       });
     });
 
@@ -98,12 +113,13 @@ void main() {
           NormalMove(from: 51, to: 43),
           NormalMove(from: 21, to: 53),
         ];
-        final sans =
-            moves.fold<Tuple2<Position<Chess>, List<String>>>(Tuple2(Chess.initial, []), (acc, e) {
+        final sans = moves.fold<Tuple2<Position<Chess>, List<String>>>(
+            Tuple2(Chess.initial, []), (acc, e) {
           final ret = acc.item1.playToSan(e);
           return Tuple2(ret.item1, [...acc.item2, ret.item2]);
         });
-        expect(sans.item2, equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));
+        expect(sans.item2,
+            equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));
       });
     });
 
@@ -164,7 +180,8 @@ void main() {
 
     test('most known legal moves', () {
       expect(
-          Chess.fromSetup(Setup.parseFen('R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1'))
+          Chess.fromSetup(Setup.parseFen(
+                  'R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1'))
               .legalMoves
               .values
               .fold<int>(0, (value, el) => value + el.size),
@@ -172,15 +189,15 @@ void main() {
     });
 
     test('castling legal moves', () {
-      final pos = Chess.fromSetup(
-          Setup.parseFen('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
+      final pos = Chess.fromSetup(Setup.parseFen(
+          'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
       expect(pos.legalMovesOf(4), SquareSet(0x00000000000000A9));
     });
 
     test('isCheck', () {
       expect(
-          Chess.fromSetup(
-                  Setup.parseFen('rnbqkbnr/pppp2pp/8/4pp1Q/4P3/2N5/PPPP1PPP/R1B1KBNR b KQkq - 0 1'))
+          Chess.fromSetup(Setup.parseFen(
+                  'rnbqkbnr/pppp2pp/8/4pp1Q/4P3/2N5/PPPP1PPP/R1B1KBNR b KQkq - 0 1'))
               .isCheck,
           true);
     });
@@ -201,20 +218,27 @@ void main() {
     test('isCheckmate', () {
       expect(Chess.initial.isGameOver, false);
       expect(
-          Chess.fromSetup(Setup.parseFen('r2q2k1/5pQp/p2p4/2pP4/1p6/1P6/PBPb1PPP/4R1K1 b - - 0 20'))
+          Chess.fromSetup(Setup.parseFen(
+                  'r2q2k1/5pQp/p2p4/2pP4/1p6/1P6/PBPb1PPP/4R1K1 b - - 0 20'))
               .isGameOver,
           true);
     });
 
     test('isStalemate', () {
       expect(Chess.initial.isGameOver, false);
-      expect(Chess.fromSetup(Setup.parseFen('8/8/8/8/8/1pk5/p7/K7 w - - 0 70')).isStalemate, true);
+      expect(
+          Chess.fromSetup(Setup.parseFen('8/8/8/8/8/1pk5/p7/K7 w - - 0 70'))
+              .isStalemate,
+          true);
     });
 
     test('outcome', () {
       const fenTests = [
         ['rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', null],
-        ['r3r2k/6Q1/1qp1Nn2/p1b5/Pp3P2/8/1P4PP/R6K b - - 2 29', Outcome.whiteWins],
+        [
+          'r3r2k/6Q1/1qp1Nn2/p1b5/Pp3P2/8/1P4PP/R6K b - - 2 29',
+          Outcome.whiteWins
+        ],
         ['8/8/8/8/8/1pk5/p7/K7 w - - 0 70', Outcome.draw],
         ['8/8/8/8/6k1/2N5/2K5/8 w - - 0 1', Outcome.draw],
       ];
@@ -227,11 +251,20 @@ void main() {
     test('isLegal', () {
       expect(Chess.initial.isLegal(NormalMove(from: 12, to: 28)), true);
       expect(Chess.initial.isLegal(NormalMove(from: 12, to: 29)), false);
-      final promPos = Chess.fromSetup(Setup.parseFen('8/5P2/2RK2P1/8/4k3/8/8/7r w - - 0 1'));
-      expect(promPos.isLegal(NormalMove(from: 53, to: 61, promotion: Role.king)), false);
-      expect(promPos.isLegal(NormalMove(from: 42, to: 58, promotion: Role.queen)), false);
-      expect(promPos.isLegal(NormalMove(from: 46, to: 54, promotion: Role.queen)), false);
-      expect(promPos.isLegal(NormalMove(from: 53, to: 61, promotion: Role.queen)), true);
+      final promPos = Chess.fromSetup(
+          Setup.parseFen('8/5P2/2RK2P1/8/4k3/8/8/7r w - - 0 1'));
+      expect(
+          promPos.isLegal(NormalMove(from: 53, to: 61, promotion: Role.king)),
+          false);
+      expect(
+          promPos.isLegal(NormalMove(from: 42, to: 58, promotion: Role.queen)),
+          false);
+      expect(
+          promPos.isLegal(NormalMove(from: 46, to: 54, promotion: Role.queen)),
+          false);
+      expect(
+          promPos.isLegal(NormalMove(from: 53, to: 61, promotion: Role.queen)),
+          true);
     });
 
     group('play', () {
@@ -261,7 +294,8 @@ void main() {
         expect(pos.turn, Side.black);
         expect(pos.halfmoves, 0);
         expect(pos.fullmoves, 4);
-        expect(pos.fen, 'r1bqkbnr/ppp2Qpp/2np4/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4');
+        expect(pos.fen,
+            'r1bqkbnr/ppp2Qpp/2np4/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4');
       });
 
       test('halfmoves increment', () {
@@ -269,14 +303,14 @@ void main() {
         expect(Chess.initial.play(NormalMove(from: 12, to: 28)).halfmoves, 0);
 
         // piece move
-        final pos = Chess.fromSetup(
-                Setup.parseFen('r2qr2k/5Qpp/2R1nn2/3p4/3P4/1B3P2/PB4PP/4R1K1 b - - 0 29'))
+        final pos = Chess.fromSetup(Setup.parseFen(
+                'r2qr2k/5Qpp/2R1nn2/3p4/3P4/1B3P2/PB4PP/4R1K1 b - - 0 29'))
             .play(NormalMove(from: 44, to: 38));
         expect(pos.halfmoves, 1);
 
         // capture move
-        final pos2 = Chess.fromSetup(
-                Setup.parseFen('r2qr2k/5Qpp/2R2n2/3p2n1/3P4/1B3P2/PB4PP/4R1K1 w - - 1 30'))
+        final pos2 = Chess.fromSetup(Setup.parseFen(
+                'r2qr2k/5Qpp/2R2n2/3p2n1/3P4/1B3P2/PB4PP/4R1K1 w - - 1 30'))
             .play(NormalMove(from: 17, to: 35));
         expect(pos2.halfmoves, 0);
       });
@@ -293,8 +327,8 @@ void main() {
       });
 
       test('en passant capture', () {
-        final pos = Chess.fromSetup(
-                Setup.parseFen('r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'))
+        final pos = Chess.fromSetup(Setup.parseFen(
+                'r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'))
             .play(NormalMove(from: 36, to: 45));
         expect(pos.board.pieceAt(45), Piece.whitePawn);
         expect(pos.board.pieceAt(37), null);
@@ -318,7 +352,8 @@ void main() {
       });
 
       test('king captures unmoved rook', () {
-        final pos = Chess.fromSetup(Setup.parseFen('8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K - 0 1'));
+        final pos = Chess.fromSetup(
+            Setup.parseFen('8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K - 0 1'));
         final move = NormalMove(from: 14, to: 7);
         expect(pos.isLegal(move), true);
         final pos2 = pos.play(move);
@@ -326,12 +361,13 @@ void main() {
       });
 
       test('en passant and unrelated check', () {
-        final setup =
-            Setup.parseFen('rnbqk1nr/bb3p1p/1q2r3/2pPp3/3P4/7P/1PP1NpPP/R1BQKBNR w KQkq c6');
+        final setup = Setup.parseFen(
+            'rnbqk1nr/bb3p1p/1q2r3/2pPp3/3P4/7P/1PP1NpPP/R1BQKBNR w KQkq c6');
         expect(
             () => Chess.fromSetup(setup),
-            throwsA(
-                predicate((e) => e is PositionError && e.cause == IllegalSetup.impossibleCheck)));
+            throwsA(predicate((e) =>
+                e is PositionError &&
+                e.cause == IllegalSetup.impossibleCheck)));
         final pos = Chess.fromSetup(setup, ignoreImpossibleCheck: true);
         final enPassant = NormalMove(from: 35, to: 42);
         expect(pos.isLegal(enPassant), false);
@@ -343,23 +379,25 @@ void main() {
             .play(NormalMove(from: 4, to: 6));
         expect(pos.board.pieceAt(6), Piece.whiteKing);
         expect(pos.board.pieceAt(5), Piece.whiteRook);
-        expect(pos.castles.unmovedRooks.isIntersected(SquareSet.fromRank(0)), false);
+        expect(pos.castles.unmovedRooks.isIntersected(SquareSet.fromRank(0)),
+            false);
         expect(pos.castles.rook[Side.white], equals(Tuple2(null, null)));
       });
 
       test('castling moves', () {
-        final pos = Chess.fromSetup(Setup.parseFen('2r5/8/8/8/8/8/6PP/k2KR3 w K -'));
+        final pos =
+            Chess.fromSetup(Setup.parseFen('2r5/8/8/8/8/8/6PP/k2KR3 w K -'));
         final move = NormalMove(from: 3, to: 4);
         expect(pos.play(move).fen, '2r5/8/8/8/8/8/6PP/k4RK1 b - - 1 1');
 
-        final pos2 = Chess.fromSetup(
-            Setup.parseFen('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
+        final pos2 = Chess.fromSetup(Setup.parseFen(
+            'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
         final move2 = NormalMove(from: 4, to: 0);
         expect(pos2.play(move2).fen,
             'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/2KR3R b kq - 1 1');
 
-        final pos3 = Chess.fromSetup(
-            Setup.parseFen('1r2k2r/p1b1n1pp/1q3p2/1p2pPQ1/4P3/2P4P/1B2B1P1/R3K2R w KQk - 0 20'));
+        final pos3 = Chess.fromSetup(Setup.parseFen(
+            '1r2k2r/p1b1n1pp/1q3p2/1p2pPQ1/4P3/2P4P/1B2B1P1/R3K2R w KQk - 0 20'));
         const queenSide = NormalMove(from: 4, to: 0);
         const altQueenSide = NormalMove(from: 4, to: 2);
         expect(pos3.normalizeMove(queenSide), queenSide);
@@ -387,8 +425,21 @@ void main() {
             2039,
             97862
           ], // Kiwipete by Peter McKenzie
-          ['pos-3', '8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -', 14, 191, 2812, 43238],
-          ['pos-4', 'r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ -', 6, 264, 9467],
+          [
+            'pos-3',
+            '8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -',
+            14,
+            191,
+            2812,
+            43238
+          ],
+          [
+            'pos-4',
+            'r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ -',
+            6,
+            264,
+            9467
+          ],
           [
             'pos-5',
             'rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ -',
@@ -405,17 +456,66 @@ void main() {
           ], // By Steven Edwards
 
           // http://www.talkchess.com/forum/viewtopic.php?t=55274
-          ['xfen-00', 'r1k1r2q/p1ppp1pp/8/8/8/8/P1PPP1PP/R1K1R2Q w KQkq -', 23, 522, 12333, 285754],
-          ['xfen-01', 'r1k2r1q/p1ppp1pp/8/8/8/8/P1PPP1PP/R1K2R1Q w KQkq -', 28, 738, 20218, 541480],
-          ['xfen-02', '8/8/8/4B2b/6nN/8/5P2/2R1K2k w Q -', 34, 318, 9002, 118388],
+          [
+            'xfen-00',
+            'r1k1r2q/p1ppp1pp/8/8/8/8/P1PPP1PP/R1K1R2Q w KQkq -',
+            23,
+            522,
+            12333,
+            285754
+          ],
+          [
+            'xfen-01',
+            'r1k2r1q/p1ppp1pp/8/8/8/8/P1PPP1PP/R1K2R1Q w KQkq -',
+            28,
+            738,
+            20218,
+            541480
+          ],
+          [
+            'xfen-02',
+            '8/8/8/4B2b/6nN/8/5P2/2R1K2k w Q -',
+            34,
+            318,
+            9002,
+            118388
+          ],
           ['xfen-03', '2r5/8/8/8/8/8/6PP/k2KR3 w K -', 17, 242, 3931, 57700],
-          ['xfen-04', '4r3/3k4/8/8/8/8/6PP/qR1K1R2 w KQ -', 19, 628, 12858, 405636],
+          [
+            'xfen-04',
+            '4r3/3k4/8/8/8/8/6PP/qR1K1R2 w KQ -',
+            19,
+            628,
+            12858,
+            405636
+          ],
 
           // Regression tests
-          ['ep-evasion', '8/8/8/5k2/3p4/8/4P3/4K3 w - -', 6, 54, 343, 2810, 19228],
+          [
+            'ep-evasion',
+            '8/8/8/5k2/3p4/8/4P3/4K3 w - -',
+            6,
+            54,
+            343,
+            2810,
+            19228
+          ],
           ['prison', '2b5/kpPp4/1p1P4/1P6/6p1/4p1P1/4PpPK/5B2 w - -', 1, 1, 1],
-          ['king-walk', '8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K -', 26, 611, 14583, 366807],
-          ['a1-check', '4k3/5p2/5p1p/8/rbR5/1N6/5PPP/5K2 b - - 1 29', 22, 580, 12309],
+          [
+            'king-walk',
+            '8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K -',
+            26,
+            611,
+            14583,
+            366807
+          ],
+          [
+            'a1-check',
+            '4k3/5p2/5p1p/8/rbR5/1N6/5PPP/5K2 b - - 1 29',
+            22,
+            580,
+            12309
+          ],
 
           // https://github.com/ornicar/lila/issues/4625
           [
@@ -568,14 +668,14 @@ void main() {
 
   group('Atomic', () {
     test('king exploded', () {
-      final pos1 =
-          Atomic.fromSetup(Setup.parseFen('r4b1r/ppp1pppp/7n/8/8/8/PPPPPPPP/RNBQKB1R b KQ - 0 3'));
+      final pos1 = Atomic.fromSetup(Setup.parseFen(
+          'r4b1r/ppp1pppp/7n/8/8/8/PPPPPPPP/RNBQKB1R b KQ - 0 3'));
       expect(pos1.isGameOver, true);
       expect(pos1.isVariantEnd, true);
       expect(pos1.outcome, Outcome.whiteWins);
 
-      final pos2 = Atomic.fromSetup(
-          Setup.parseFen('rn5r/pp4pp/2p3Nn/5p2/1b2P1PP/8/PPP2P2/R1B1KB1R b KQ - 0 9'));
+      final pos2 = Atomic.fromSetup(Setup.parseFen(
+          'rn5r/pp4pp/2p3Nn/5p2/1b2P1PP/8/PPP2P2/R1B1KB1R b KQ - 0 9'));
       expect(pos2.isGameOver, true);
       expect(pos2.isVariantEnd, true);
       expect(pos2.outcome, Outcome.whiteWins);
@@ -601,11 +701,29 @@ void main() {
 
     test('perft', () {
       for (final t in [
-        ['atomic-start', 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -', 20, 400, 8902],
-        ['programfox-2', 'rn1qkb1r/p5pp/2p5/3p4/N3P3/5P2/PPP4P/R1BQK3 w Qkq -', 28, 833, 23353],
+        [
+          'atomic-start',
+          'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -',
+          20,
+          400,
+          8902
+        ],
+        [
+          'programfox-2',
+          'rn1qkb1r/p5pp/2p5/3p4/N3P3/5P2/PPP4P/R1BQK3 w Qkq -',
+          28,
+          833,
+          23353
+        ],
         ['atomic960-castle-1', '8/8/8/8/8/8/2k5/rR4KR w KQ -', 18, 180, 4364],
         ['atomic960-castle-2', 'r3k1rR/5K2/8/8/8/8/8/8 b kq -', 25, 282, 6753],
-        ['atomic960-castle-3', 'Rr2k1rR/3K4/3p4/8/8/8/7P/8 w kq -', 21, 465, 10631],
+        [
+          'atomic960-castle-3',
+          'Rr2k1rR/3K4/3p4/8/8/8/7P/8 w kq -',
+          21,
+          465,
+          10631
+        ],
         [
           'shakmaty-bench',
           'rn2kb1r/1pp1p2p/p2q1pp1/3P4/2P3b1/4PN2/PP3PPP/R2QKB1R b KQkq -',
@@ -652,7 +770,13 @@ void main() {
 
     test('perft', () {
       for (final t in [
-        ['antichess-start', 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -', 20, 400, 8067],
+        [
+          'antichess-start',
+          'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - -',
+          20,
+          400,
+          8067
+        ],
         ['a-pawn-vs-b-pawn', '8/1p6/8/8/8/8/P7/8 w - -', 2, 4, 4],
         ['a-pawn-vs-c-pawn', '8/2p5/8/8/8/8/P7/8 w - -', 2, 4, 4],
       ]) {
@@ -679,7 +803,13 @@ void main() {
 
     test('perft', () {
       for (final t in [
-        ['zh-all-drop-types', '2k5/8/8/8/8/8/8/4K3[QRBNPqrbnp] w - -', 301, 75353, null],
+        [
+          'zh-all-drop-types',
+          '2k5/8/8/8/8/8/8/4K3[QRBNPqrbnp] w - -',
+          301,
+          75353,
+          null
+        ],
         ['zh-drops', '2k5/8/8/8/8/8/8/4K3[Qn] w - -', 67, 3083, 88634],
         [
           'zh-middlegame',
@@ -711,7 +841,8 @@ void main() {
       }
     });
     test('game end conditions', () {
-      final pos = KingOfTheHill.fromSetup(Setup.parseFen('8/5k2/8/8/8/8/1K6/8 w - - 0 1'));
+      final pos = KingOfTheHill.fromSetup(
+          Setup.parseFen('8/5k2/8/8/8/8/1K6/8 w - - 0 1'));
       expect(pos.isInsufficientMaterial, false);
       expect(pos.isCheck, false);
       expect(pos.isVariantEnd, false);
@@ -719,8 +850,8 @@ void main() {
       expect(pos.outcome, null);
       expect(pos.isGameOver, false);
 
-      final pos2 = KingOfTheHill.fromSetup(
-          Setup.parseFen('r1bqkbnr/ppp2ppp/2np4/4p3/4K3/8/PPPP1PPP/RNBQ1BNR w HAkq - 0 1'));
+      final pos2 = KingOfTheHill.fromSetup(Setup.parseFen(
+          'r1bqkbnr/ppp2ppp/2np4/4p3/4K3/8/PPPP1PPP/RNBQ1BNR w HAkq - 0 1'));
       expect(pos2.isVariantEnd, true);
       expect(pos2.isGameOver, true);
       expect(pos2.variantOutcome, Outcome.whiteWins);
@@ -740,8 +871,8 @@ void main() {
     });
 
     test('remaining checks', () {
-      final pos = ThreeCheck.fromSetup(
-          Setup.parseFen('rnbqkbnr/ppp1pppp/3p4/8/8/4P3/PPPP1PPP/RNBQKBNR w KQkq - 3+3 0 2'));
+      final pos = ThreeCheck.fromSetup(Setup.parseFen(
+          'rnbqkbnr/ppp1pppp/3p4/8/8/4P3/PPPP1PPP/RNBQKBNR w KQkq - 3+3 0 2'));
       expect(pos.play(Move.fromUci('f1b5')).fen,
           'rnbqkbnr/ppp1pppp/3p4/1B6/8/4P3/PPPP1PPP/RNBQK1NR b KQkq - 2+3 1 2');
     });

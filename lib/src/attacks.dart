@@ -79,8 +79,9 @@ SquareSet ray(Square a, Square b) {
 
 /// Gets all squares between `a` and `b` (bounds not included), or an empty set
 /// if they are not on the same rank, file or diagonal.
-SquareSet between(Square a, Square b) =>
-    ray(a, b).intersect(SquareSet.full.shl(a).xor(SquareSet.full.shl(b))).withoutFirst();
+SquareSet between(Square a, Square b) => ray(a, b)
+    .intersect(SquareSet.full.shl(a).xor(SquareSet.full.shl(b)))
+    .withoutFirst();
 
 // --
 
@@ -88,7 +89,9 @@ SquareSet _computeRange(Square square, List<int> deltas) {
   SquareSet range = SquareSet.empty;
   for (final delta in deltas) {
     final sq = square + delta;
-    if (0 <= sq && sq < 64 && (squareFile(square) - squareFile(sq)).abs() <= 2) {
+    if (0 <= sq &&
+        sq < 64 &&
+        (squareFile(square) - squareFile(sq)).abs() <= 2) {
       range = range.withSquare(sq);
     }
   }
@@ -103,29 +106,38 @@ List<T> _tabulate<T>(T Function(Square square) f) {
   return table;
 }
 
-final _kingAttacks = _tabulate((sq) => _computeRange(sq, [-9, -8, -7, -1, 1, 7, 8, 9]));
-final _knightAttacks = _tabulate((sq) => _computeRange(sq, [-17, -15, -10, -6, 6, 10, 15, 17]));
+final _kingAttacks =
+    _tabulate((sq) => _computeRange(sq, [-9, -8, -7, -1, 1, 7, 8, 9]));
+final _knightAttacks =
+    _tabulate((sq) => _computeRange(sq, [-17, -15, -10, -6, 6, 10, 15, 17]));
 final _pawnAttacks = {
   Side.white: _tabulate((sq) => _computeRange(sq, [7, 9])),
   Side.black: _tabulate((sq) => _computeRange(sq, [-7, -9])),
 };
 
-final _fileRange = _tabulate((sq) => SquareSet.fromFile(squareFile(sq)).withoutSquare(sq));
-final _rankRange = _tabulate((sq) => SquareSet.fromRank(squareRank(sq)).withoutSquare(sq));
+final _fileRange =
+    _tabulate((sq) => SquareSet.fromFile(squareFile(sq)).withoutSquare(sq));
+final _rankRange =
+    _tabulate((sq) => SquareSet.fromRank(squareRank(sq)).withoutSquare(sq));
 final _diagRange = _tabulate((sq) {
   final shift = 8 * (squareRank(sq) - squareFile(sq));
-  return (shift >= 0 ? SquareSet.diagonal.shl(shift) : SquareSet.diagonal.shr(-shift))
+  return (shift >= 0
+          ? SquareSet.diagonal.shl(shift)
+          : SquareSet.diagonal.shr(-shift))
       .withoutSquare(sq);
 });
 final _antiDiagRange = _tabulate((sq) {
   final shift = 8 * (squareRank(sq) + squareFile(sq) - 7);
-  return (shift >= 0 ? SquareSet.antidiagonal.shl(shift) : SquareSet.antidiagonal.shr(-shift))
+  return (shift >= 0
+          ? SquareSet.antidiagonal.shl(shift)
+          : SquareSet.antidiagonal.shr(-shift))
       .withoutSquare(sq);
 });
 
 SquareSet _hyperbola(SquareSet bit, SquareSet range, SquareSet occupied) {
   SquareSet forward = occupied & range;
-  SquareSet reverse = forward.flipVertical(); // Assumes no more than 1 bit per rank
+  SquareSet reverse =
+      forward.flipVertical(); // Assumes no more than 1 bit per rank
   forward = forward - bit;
   reverse = reverse - bit.flipVertical();
   return (forward ^ reverse.flipVertical()) & range;
