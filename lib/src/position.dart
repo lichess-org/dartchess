@@ -1428,6 +1428,9 @@ enum IllegalSetup {
 class PlayError implements Exception {
   final String message;
   const PlayError(this.message);
+
+  @override
+  toString() => 'PlayError($message)';
 }
 
 /// Error when trying to create a [Position] from an illegal [Setup].
@@ -1441,6 +1444,9 @@ class PositionError implements Exception {
   static const pawnsOnBackrank = PositionError(IllegalSetup.pawnsOnBackrank);
   static const kings = PositionError(IllegalSetup.kings);
   static const variant = PositionError(IllegalSetup.variant);
+
+  @override
+  toString() => 'PositionError(${cause.name})';
 }
 
 enum CastlingSide {
