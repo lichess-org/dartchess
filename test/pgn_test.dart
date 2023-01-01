@@ -1,6 +1,9 @@
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
+
+
+
 void main() {
   test('make pgn', () {
     var root = Node<PgnNodeData>(null);
@@ -40,5 +43,11 @@ void main() {
     expect(games[0].headers['the'], 'same line');
     expect(games[0].headers['Result'], '*');
     expect(games[0].headers['Event'], '?');
+  });
+
+  test('parse pgn', () {
+
+      final game = parsePgn('1. a4 ( 1. b4 b5 -- ) 1... a5')[0];
+      //print(game.moves.children[0].children[0].data!.san);
   });
 }

@@ -252,7 +252,7 @@ class PgnParser {
   late List<String> _commentBuf = [];
   int maxBudget;
 
-  final void Function(Game<PgnNodeData>, [PgnError?]) emitGame;
+  final void Function(Game<PgnNodeData>, [Error?]) emitGame;
   final Map<String, String> Function() initHeaders;
 
   PgnParser(this.emitGame, this.initHeaders, [this.maxBudget = 1000000]) {
@@ -275,7 +275,7 @@ class PgnParser {
     }
   }
 
-  void _emit(PgnError? err) {
+  void _emit(Error? err) {
     if (_state == ParserState.comment) {
       _handleComment();
     }
@@ -312,7 +312,7 @@ class PgnParser {
         _emit(null);
       }
     } catch (err) {
-      _emit(err as PgnError);
+      _emit(err as Error);
     }
   }
 
@@ -370,7 +370,7 @@ class PgnParser {
               if (isWhitespace(line)) return _emit(null);
             }
             final tokenRegex = RegExp(
-                r'/(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/');
+                r'(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/');
             var matches = tokenRegex.allMatches(line);
 
             for (var match in matches) {
@@ -403,6 +403,8 @@ class PgnParser {
                 _consumeBudget(100);
                 _stack.add(ParserFrame(parent: frame.parent, root: false));
               } else if (token == ')') {
+                if (_stack.length > 1) _stack.removeLast();
+              } else if (token == '{') {
                 var openIndex = match.end;
                 var beginIndex =
                     line[openIndex] == ' ' ? openIndex + 1 : openIndex;
@@ -414,9 +416,8 @@ class PgnParser {
                 if (token == 'Z0' || token == '0000' || token == '@@@@') {
                   token = '--';
                 } else if (token.startsWith('0')) {
-                  token = token.replaceAll(r'/0/', '0');
+                  token = token.replaceAll(r'0', 'O');
                 }
-
                 if (frame.node != null) frame.parent = frame.node!;
                 frame.node = Node(PgnNodeData(
                     san: token, startingComments: frame.startingComments));
@@ -479,7 +480,7 @@ class PgnParser {
 var parsePgn = (String pgn,
     [Map<String, String> Function() initHeaders = defaultHeaders]) {
   List<Game<PgnNodeData>> games = [];
-  PgnParser((Game<PgnNodeData> game, [PgnError? err]) => games.add(game),
+  PgnParser((Game<PgnNodeData> game, [Error? err]) => games.add(game),
           initHeaders)
       .parse(pgn);
   return games;
