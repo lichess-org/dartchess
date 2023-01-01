@@ -233,7 +233,7 @@ String makePgn(Game<PgnNodeData> game) {
 
 const BOM = '\ufeff';
 
-var isWhitespace = (String line) => RegExp(r'\s+').hasMatch(line);
+var isWhitespace = (String line) => RegExp(r'^\s*$').hasMatch(line);
 
 var isCommentLine = (String line) => line.startsWith('%');
 
@@ -245,27 +245,25 @@ class PgnError implements Exception {
 class PgnParser {
   List<String> _lineBuf = [];
   late int _budget;
-  bool _found = false;
+  late bool _found;
   late ParserState _state = ParserState.pre;
   late Game<PgnNodeData> _game;
   late List<ParserFrame> _stack;
-  List<String> _commentBuf = [];
+  late List<String> _commentBuf = [];
   int maxBudget;
 
   final void Function(Game<PgnNodeData>, [PgnError?]) emitGame;
   final Map<String, String> Function() initHeaders;
 
   PgnParser(this.emitGame, this.initHeaders, [this.maxBudget = 1000000]) {
-    _budget = maxBudget;
-    _game = defaultGame();
-    _stack = [ParserFrame(parent: _game.moves, root: true)];
+    resetGame();
   }
 
   void resetGame() {
     _budget = maxBudget;
     _found = false;
     _state = ParserState.pre;
-    _game = defaultGame();
+    _game = defaultGame(initHeaders);
     _stack = [ParserFrame(parent: _game.moves, root: true)];
     _commentBuf = [];
   }
@@ -309,7 +307,7 @@ class PgnParser {
       _consumeBudget(data.length - idx);
       _lineBuf.add(data.substring(idx));
 
-      if (stream != null && stream) {
+      if (stream == null) {
         _handleLine();
         _emit(null);
       }
@@ -351,11 +349,12 @@ class PgnParser {
                 r'^\s*\[([A-Za-z0-9][A-Za-z0-9_+#=:-]*)\s+"((?:[^"\\]|\\"|\\\\)*)"\]');
             while (moreHeaders) {
               moreHeaders = false;
-              // TODO: find function to solve this
               line = line.replaceFirstMapped(headerReg, (match) {
                 _consumeBudget(200);
-                _game.headers[match[0]!] =
-                    match[1]!.replaceAll(r'\\"', '"').replaceAll(r'\\\\', '\\');
+                _game.headers[match[1]!] =
+                    match[2]!.replaceAll(r'\\"', '"').replaceAll(r'\\\\', '\\');
+                moreHeaders = true;
+                freshLine = false;
                 return '';
               });
             }
@@ -483,4 +482,5 @@ var parsePgn = (String pgn,
   PgnParser((Game<PgnNodeData> game, [PgnError? err]) => games.add(game),
           initHeaders)
       .parse(pgn);
+  return games;
 };

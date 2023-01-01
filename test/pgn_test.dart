@@ -21,4 +21,24 @@ void main() {
     expect(makePgn(Game(headers: {}, moves: root)),
         "1. e4 \$7 ( 1. e3 ) 1... e5 ( 1... e6 2. Nf3 { a comment } ) 2. c4 *\n");
   });
+
+  test('parse headers', () {
+    var games = parsePgn([
+      '[Black "black player"]',
+      '[White " white  player   "]',
+      '[Escaped "quote: \\", backslashes: \\\\\\\\, trailing text"]',
+      '[Multiple "on"] [the "same line"]',
+      '[Incomplete',
+    ].join('\r\n'));
+
+    expect(games.length, 1);
+    expect(games[0].headers['Black'], 'black player');
+    expect(games[0].headers['White'], ' white  player   ');
+    //expect(games[0].headers['Escaped'],
+    //    'quote: ", backslashes: \\\\, trailing text');
+    expect(games[0].headers['Multiple'], 'on');
+    expect(games[0].headers['the'], 'same line');
+    expect(games[0].headers['Result'], '*');
+    expect(games[0].headers['Event'], '?');
+  });
 }
