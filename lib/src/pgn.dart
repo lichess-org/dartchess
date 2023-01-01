@@ -2,6 +2,7 @@ import './setup.dart';
 import './models.dart';
 import './position.dart';
 
+// TODO: ensure null checkes
 class PgnNodeData {
   final String san;
   List<String>? startingComments;
@@ -12,21 +13,19 @@ class PgnNodeData {
 }
 
 class Node<T> {
-  List<ChildNode<T>> children = [];
+  List<Node<T>> children = [];
+  T? data;
+  Node(this.data);
+
 
   Iterable<T> mainline() sync* {
     var node = this;
     while (node.children.isNotEmpty) {
       var child = node.children[0];
-      yield child.data;
+      yield child.data!;
       node = child;
     }
   }
-}
-
-class ChildNode<T> extends Node<T> {
-  T data;
-  ChildNode(this.data);
 }
 
 class Game<T> {
@@ -40,7 +39,7 @@ class Game<T> {
 class ParserFrame {
   Node<PgnNodeData> parent;
   bool root;
-  ChildNode<PgnNodeData>? node;
+  Node<PgnNodeData>? node;
   List<String>? startingComments;
 
   ParserFrame({required this.parent, required this.root});
@@ -53,8 +52,8 @@ enum PgnState { pre, sidelines, end }
 class PgnFrame {
   PgnState state;
   int ply;
-  ChildNode<PgnNodeData> node;
-  Iterator<ChildNode<PgnNodeData>> sidelines;
+  Node<PgnNodeData> node;
+  Iterator<Node<PgnNodeData>> sidelines;
   bool startsVariation;
   bool inVariation;
 
@@ -78,7 +77,7 @@ Map<String, String> defaultHeaders() => {
     };
 
 Game<T> defaultGame<T>([initHeaders = defaultHeaders]) {
-  return Game<T>(headers: initHeaders(), moves: Node());
+  return Game<T>(headers: initHeaders(), moves: Node(null));
 }
 
 var escapeHeader = (String value) =>
@@ -164,8 +163,8 @@ String makePgn(Game<PgnNodeData> game) {
     switch (frame.state) {
       case PgnState.pre:
         {
-          if (frame.node.data.startingComments != null) {
-            for (var comment in frame.node.data.startingComments!) {
+          if (frame.node.data!.startingComments != null) {
+            for (var comment in frame.node.data!.startingComments!) {
               token.add('{ ${safeComment(comment)} }');
             }
             forceMoveNumber = true;
@@ -175,15 +174,15 @@ String makePgn(Game<PgnNodeData> game) {
                 '${(frame.ply / 2).floor() + 1}${frame.ply % 2 == 1 ? "..." : "."}');
             forceMoveNumber = false;
           }
-          token.add(frame.node.data.san);
-          if (frame.node.data.nags != null) {
-            for (var nag in frame.node.data.nags!) {
+          token.add(frame.node.data!.san);
+          if (frame.node.data!.nags != null) {
+            for (var nag in frame.node.data!.nags!) {
               token.add('\$$nag');
             }
             forceMoveNumber = true;
           }
-          if (frame.node.data.comments != null) {
-            for (var comment in frame.node.data.comments!) {
+          if (frame.node.data!.comments != null) {
+            for (var comment in frame.node.data!.comments!) {
               token.add('{ ${safeComment(comment)} }');
             }
           }
@@ -202,7 +201,7 @@ String makePgn(Game<PgnNodeData> game) {
                 ply: frame.ply,
                 node: frame.sidelines.current,
                 sidelines:
-                    <ChildNode<PgnNodeData>>[].iterator, // empty iterator
+                    <Node<PgnNodeData>>[].iterator, // empty iterator
                 startsVariation: true,
                 inVariation: false));
             frame.inVariation = true;
@@ -232,4 +231,256 @@ String makePgn(Game<PgnNodeData> game) {
   token.add(makeOutcome(parseOutcome(game.headers['Result'])));
   builder.add('${token.join(" ")}\n');
   return builder.join('');
+}
+
+const BOM = '\ufeff';
+
+var isWhitespace = (String line) => RegExp(r'\s+').hasMatch(line);
+
+var isCommentLine = (String line) => line.startsWith('%');
+
+class PgnError implements Exception {
+  final String message;
+  PgnError(this.message);
+}
+
+class PgnParser {
+  List<String> _lineBuf = [];
+  late int _budget;
+  bool _found = false;
+  late ParserState _state = ParserState.pre;
+  late Game<PgnNodeData> _game;
+  late List<ParserFrame> _stack;
+  List<String> _commentBuf = [];
+  int maxBudget;
+
+  final void Function(Game<PgnNodeData>, PgnError?) emitGame;
+  final Map<String, String> Function() initHeaders;
+
+  PgnParser(
+      {required this.maxBudget,
+      required this.emitGame,
+      required this.initHeaders}) {
+    _budget = maxBudget;
+    _game = defaultGame();
+    _stack = [ParserFrame(parent: _game.moves, root: true)];
+  }
+
+  void resetGame() {
+    _budget = maxBudget;
+    _found = false;
+    _state = ParserState.pre;
+    _game = defaultGame();
+    _stack = [ParserFrame(parent: _game.moves, root: true)];
+    _commentBuf = [];
+  }
+
+  void _consumeBudget(int cost) {
+    _budget -= cost;
+    if (_budget < 0) {
+      throw PgnError('ERR_PGN_BUDGET');
+    }
+  }
+
+  void _emit(PgnError? err) {
+    if (_state == ParserState.comment) {
+      // TODO: handle comment
+    }
+    if (err != null) {
+      return emitGame(_game, err);
+    }
+    if (_found) {
+      emitGame(_game, null);
+    }
+    resetGame();
+  }
+
+  void parse(String data, [bool? stream]) {
+    if (_budget < 0) return;
+    try {
+      var idx = 0;
+      for (;;) {
+        final nlIdx = data.indexOf('\n', idx);
+        if (nlIdx == -1) {
+          break;
+        }
+        final crIdx =
+            nlIdx > idx && data[nlIdx - 1] == '\r' ? nlIdx - 1 : nlIdx;
+        _consumeBudget(nlIdx - idx);
+        _lineBuf.add(data.substring(idx, crIdx));
+        idx = nlIdx + 1;
+        _handleLine();
+      }
+      _consumeBudget(data.length - idx);
+      _lineBuf.add(data.substring(idx));
+
+      if (stream != null && stream) {
+        _handleLine();
+        _emit(null);
+      }
+    } catch (err) {
+      _emit(err as PgnError);
+    }
+  }
+
+  void _handleLine() {
+    var freshLine = true;
+    var line = _lineBuf.join('');
+    _lineBuf = [];
+
+    continuedLine:
+    for (;;) {
+      switch (_state) {
+        case ParserState.bom:
+          {
+            if (line.startsWith(BOM)) {
+              line = line.substring(BOM.length);
+            }
+            _state = ParserState.pre;
+            continue;
+          }
+
+        case ParserState.pre:
+          {
+            if (isWhitespace(line) || isCommentLine(line)) return;
+            _found = true;
+            _state = ParserState.headers;
+            continue;
+          }
+
+        case ParserState.headers:
+          {
+            if (isCommentLine(line)) return;
+            var moreHeaders = true;
+            var headerReg = RegExp(
+                r'^\s*\[([A-Za-z0-9][A-Za-z0-9_+#=:-]*)\s+"((?:[^"\\]|\\"|\\\\)*)"\]');
+            while (moreHeaders) {
+              moreHeaders = false;
+              // TODO: find function to solve this
+              line = line.replaceAllMapped(
+                  headerReg,
+                  (match) => '');
+            }
+            if (isWhitespace(line)) return ;
+            _state = ParserState.moves;
+            continue;
+          }
+
+        case ParserState.moves: {
+          if (freshLine) {
+            if (isCommentLine(line)) return;
+            if (isWhitespace(line)) return _emit(null);
+          }
+          final tokenRegex = RegExp(r'/(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/');
+          var matches = tokenRegex.allMatches(line);
+
+          for (var match in matches) {
+            var frame = _stack[_stack.length - 1];
+            var token = match[0]!;
+            if (token == ';'){
+              return;
+            }
+            else if (token.startsWith('\$')){
+            _handleNag(int.parse(token.substring(1)));
+            }
+            else if (token == '!') {
+              _handleNag(1);
+            }
+             else if (token == '?') {
+              _handleNag(2);
+            }
+             else if (token == '!!') {
+              _handleNag(3);
+            }
+             else if (token == '??') {
+              _handleNag(4);
+            }
+             else if (token == '!?') {
+              _handleNag(5);
+            }
+             else if (token == '?!') {
+              _handleNag(6);
+            }
+            else if (token == '1-0' || token == '0-1' || token == '1/2-1/2' || token == '*') {
+              if (_stack.length == 1 && token != '*') _game.headers['Result'] = token;
+            }
+            else if (token == '('){
+              _consumeBudget(100);
+              _stack.add(ParserFrame(parent: frame.parent, root: false));
+            }
+            else if (token == ')') {
+              var openIndex = match.end;
+              var beginIndex = line[openIndex] == ' ' ? openIndex + 1 : openIndex;
+              line = line.substring(beginIndex);
+              _state = ParserState.comment;
+              continue continuedLine;
+            }
+            else {
+              _consumeBudget(100);
+              if (token == 'Z0' || token == '0000' || token == '@@@@') {
+                token = '--';
+              }
+              else if (token.startsWith('0')) {
+              token = token.replaceAll(r'/0/', '0');
+
+              }
+
+              if (frame.node != null) frame.parent = frame.node!;
+              frame.node = Node(PgnNodeData(san: token, startingComments: frame.startingComments));
+              frame.startingComments = null;
+              frame.root = false;
+              frame.parent.children.add(frame.node!);
+            }
+
+          }
+          return;
+        }
+
+        case ParserState.comment: {
+          var closeIndex = line.indexOf('}');
+          if (closeIndex == -1) {
+            _commentBuf.add(line);
+            return;
+          }
+          else {
+            var endIndex = closeIndex > 0 && line[closeIndex - 1] == ' ' ? closeIndex - 1 : closeIndex;
+            _commentBuf.add(line.substring(0, endIndex));
+            _handleComment();
+            line = line.substring(closeIndex);
+            _state = ParserState.moves;
+            freshLine = false;
+          }
+        }
+      }
+    }
+  }
+
+  void _handleNag(int nag) {
+    _consumeBudget(50);
+    var frame = _stack[_stack.length - 1];
+    if (frame.node != null) {
+      frame.node!.data!.nags ??= [];
+      frame.node!.data!.nags!.add(nag);
+    }
+  }
+
+  void _handleComment() {
+    _consumeBudget(100);
+    var frame = _stack[_stack.length - 1];
+    var comment = _commentBuf.join('\n');
+    _commentBuf = [];
+    if (frame.node != null) {
+      frame.node!.data!.comments ??= [];
+      frame.node!.data!.comments!.add(comment);
+    }
+    else if (frame.root) {
+      _game.comments ??= [];
+      _game.comments!.add(comment);
+    }
+    else {
+      frame.startingComments ??= [];
+      frame.startingComments!.add(comment);
+    }
+  }
+
 }
