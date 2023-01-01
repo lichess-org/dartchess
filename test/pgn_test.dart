@@ -12,8 +12,8 @@ void main() {
     var e6 = Node<PgnNodeData>(PgnNodeData(san: 'e6'));
     e4.children.add(e5);
     e4.children.add(e6);
-    var nf3 = Node<PgnNodeData>(
-        PgnNodeData(san: 'Nf3', comments: ['a comment']));
+    var nf3 =
+        Node<PgnNodeData>(PgnNodeData(san: 'Nf3', comments: ['a comment']));
     e6.children.add(nf3);
     var c4 = Node<PgnNodeData>(PgnNodeData(san: 'c4'));
     e5.children.add(c4);

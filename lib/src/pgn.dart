@@ -17,7 +17,6 @@ class Node<T> {
   T? data;
   Node(this.data);
 
-
   Iterable<T> mainline() sync* {
     var node = this;
     while (node.children.isNotEmpty) {
@@ -200,8 +199,7 @@ String makePgn(Game<PgnNodeData> game) {
                 state: PgnState.pre,
                 ply: frame.ply,
                 node: frame.sidelines.current,
-                sidelines:
-                    <Node<PgnNodeData>>[].iterator, // empty iterator
+                sidelines: <Node<PgnNodeData>>[].iterator, // empty iterator
                 startsVariation: true,
                 inVariation: false));
             frame.inVariation = true;
@@ -254,13 +252,10 @@ class PgnParser {
   List<String> _commentBuf = [];
   int maxBudget;
 
-  final void Function(Game<PgnNodeData>, PgnError?) emitGame;
+  final void Function(Game<PgnNodeData>, [PgnError?]) emitGame;
   final Map<String, String> Function() initHeaders;
 
-  PgnParser(
-      {required this.maxBudget,
-      required this.emitGame,
-      required this.initHeaders}) {
+  PgnParser(this.emitGame, this.initHeaders, [this.maxBudget = 1000000]) {
     _budget = maxBudget;
     _game = defaultGame();
     _stack = [ParserFrame(parent: _game.moves, root: true)];
@@ -284,7 +279,7 @@ class PgnParser {
 
   void _emit(PgnError? err) {
     if (_state == ParserState.comment) {
-      // TODO: handle comment
+      _handleComment();
     }
     if (err != null) {
       return emitGame(_game, err);
@@ -357,100 +352,100 @@ class PgnParser {
             while (moreHeaders) {
               moreHeaders = false;
               // TODO: find function to solve this
-              line = line.replaceAllMapped(
-                  headerReg,
-                  (match) => '');
+              line = line.replaceFirstMapped(headerReg, (match) {
+                _consumeBudget(200);
+                _game.headers[match[0]!] =
+                    match[1]!.replaceAll(r'\\"', '"').replaceAll(r'\\\\', '\\');
+                return '';
+              });
             }
-            if (isWhitespace(line)) return ;
+            if (isWhitespace(line)) return;
             _state = ParserState.moves;
             continue;
           }
 
-        case ParserState.moves: {
-          if (freshLine) {
-            if (isCommentLine(line)) return;
-            if (isWhitespace(line)) return _emit(null);
-          }
-          final tokenRegex = RegExp(r'/(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/');
-          var matches = tokenRegex.allMatches(line);
+        case ParserState.moves:
+          {
+            if (freshLine) {
+              if (isCommentLine(line)) return;
+              if (isWhitespace(line)) return _emit(null);
+            }
+            final tokenRegex = RegExp(
+                r'/(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/');
+            var matches = tokenRegex.allMatches(line);
 
-          for (var match in matches) {
-            var frame = _stack[_stack.length - 1];
-            var token = match[0]!;
-            if (token == ';'){
-              return;
-            }
-            else if (token.startsWith('\$')){
-            _handleNag(int.parse(token.substring(1)));
-            }
-            else if (token == '!') {
-              _handleNag(1);
-            }
-             else if (token == '?') {
-              _handleNag(2);
-            }
-             else if (token == '!!') {
-              _handleNag(3);
-            }
-             else if (token == '??') {
-              _handleNag(4);
-            }
-             else if (token == '!?') {
-              _handleNag(5);
-            }
-             else if (token == '?!') {
-              _handleNag(6);
-            }
-            else if (token == '1-0' || token == '0-1' || token == '1/2-1/2' || token == '*') {
-              if (_stack.length == 1 && token != '*') _game.headers['Result'] = token;
-            }
-            else if (token == '('){
-              _consumeBudget(100);
-              _stack.add(ParserFrame(parent: frame.parent, root: false));
-            }
-            else if (token == ')') {
-              var openIndex = match.end;
-              var beginIndex = line[openIndex] == ' ' ? openIndex + 1 : openIndex;
-              line = line.substring(beginIndex);
-              _state = ParserState.comment;
-              continue continuedLine;
-            }
-            else {
-              _consumeBudget(100);
-              if (token == 'Z0' || token == '0000' || token == '@@@@') {
-                token = '--';
+            for (var match in matches) {
+              var frame = _stack[_stack.length - 1];
+              var token = match[0]!;
+              if (token == ';') {
+                return;
+              } else if (token.startsWith('\$')) {
+                _handleNag(int.parse(token.substring(1)));
+              } else if (token == '!') {
+                _handleNag(1);
+              } else if (token == '?') {
+                _handleNag(2);
+              } else if (token == '!!') {
+                _handleNag(3);
+              } else if (token == '??') {
+                _handleNag(4);
+              } else if (token == '!?') {
+                _handleNag(5);
+              } else if (token == '?!') {
+                _handleNag(6);
+              } else if (token == '1-0' ||
+                  token == '0-1' ||
+                  token == '1/2-1/2' ||
+                  token == '*') {
+                if (_stack.length == 1 && token != '*') {
+                  _game.headers['Result'] = token;
+                }
+              } else if (token == '(') {
+                _consumeBudget(100);
+                _stack.add(ParserFrame(parent: frame.parent, root: false));
+              } else if (token == ')') {
+                var openIndex = match.end;
+                var beginIndex =
+                    line[openIndex] == ' ' ? openIndex + 1 : openIndex;
+                line = line.substring(beginIndex);
+                _state = ParserState.comment;
+                continue continuedLine;
+              } else {
+                _consumeBudget(100);
+                if (token == 'Z0' || token == '0000' || token == '@@@@') {
+                  token = '--';
+                } else if (token.startsWith('0')) {
+                  token = token.replaceAll(r'/0/', '0');
+                }
+
+                if (frame.node != null) frame.parent = frame.node!;
+                frame.node = Node(PgnNodeData(
+                    san: token, startingComments: frame.startingComments));
+                frame.startingComments = null;
+                frame.root = false;
+                frame.parent.children.add(frame.node!);
               }
-              else if (token.startsWith('0')) {
-              token = token.replaceAll(r'/0/', '0');
-
-              }
-
-              if (frame.node != null) frame.parent = frame.node!;
-              frame.node = Node(PgnNodeData(san: token, startingComments: frame.startingComments));
-              frame.startingComments = null;
-              frame.root = false;
-              frame.parent.children.add(frame.node!);
             }
-
-          }
-          return;
-        }
-
-        case ParserState.comment: {
-          var closeIndex = line.indexOf('}');
-          if (closeIndex == -1) {
-            _commentBuf.add(line);
             return;
           }
-          else {
-            var endIndex = closeIndex > 0 && line[closeIndex - 1] == ' ' ? closeIndex - 1 : closeIndex;
-            _commentBuf.add(line.substring(0, endIndex));
-            _handleComment();
-            line = line.substring(closeIndex);
-            _state = ParserState.moves;
-            freshLine = false;
+
+        case ParserState.comment:
+          {
+            var closeIndex = line.indexOf('}');
+            if (closeIndex == -1) {
+              _commentBuf.add(line);
+              return;
+            } else {
+              var endIndex = closeIndex > 0 && line[closeIndex - 1] == ' '
+                  ? closeIndex - 1
+                  : closeIndex;
+              _commentBuf.add(line.substring(0, endIndex));
+              _handleComment();
+              line = line.substring(closeIndex);
+              _state = ParserState.moves;
+              freshLine = false;
+            }
           }
-        }
       }
     }
   }
@@ -472,15 +467,20 @@ class PgnParser {
     if (frame.node != null) {
       frame.node!.data!.comments ??= [];
       frame.node!.data!.comments!.add(comment);
-    }
-    else if (frame.root) {
+    } else if (frame.root) {
       _game.comments ??= [];
       _game.comments!.add(comment);
-    }
-    else {
+    } else {
       frame.startingComments ??= [];
       frame.startingComments!.add(comment);
     }
   }
-
 }
+
+var parsePgn = (String pgn,
+    [Map<String, String> Function() initHeaders = defaultHeaders]) {
+  List<Game<PgnNodeData>> games = [];
+  PgnParser((Game<PgnNodeData> game, [PgnError? err]) => games.add(game),
+          initHeaders)
+      .parse(pgn);
+};
