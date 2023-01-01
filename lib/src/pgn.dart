@@ -1,3 +1,5 @@
+import './setup.dart';
+import './models.dart';
 
 class PgnNodeData {
   final String san;
@@ -27,7 +29,7 @@ class ChildNode<T> extends Node<T> {
 
 class Game<T> {
   Map<String, String> headers;
-  List<String> comments = [];
+  List<String>? comments;
   Node<T> moves;
 
   Game(Map<String, String> header, Node<T> move)
@@ -52,7 +54,7 @@ class PgnFrame {
   PgnState state;
   int ply;
   ChildNode<PgnNodeData> node;
-  Iterable<ChildNode<PgnNodeData>> sidelines;
+  Iterator<ChildNode<PgnNodeData>> sidelines;
   bool startsVariation;
   bool inVariation;
 
@@ -69,3 +71,123 @@ Map<String, String> defaultHeaders() => {
       'Black': '?',
       'Result': '*'
     };
+
+Game<T> defaultGame<T>([initHeaders = defaultHeaders]) {
+  return Game<T>(initHeaders(), Node());
+}
+
+var escapeHeader = (String value) =>
+    value.replaceAll(RegExp(r'\\'), "\\\\").replaceAll(RegExp(r'"'), '\\"');
+var safeComment = (String value) => value.replaceAll(RegExp(r'\}'), '');
+
+int getPlyFromStup(String fen) {
+  try {
+    var setup = Setup.parseFen(fen);
+    return (setup.fullmoves - 1) * 2 + (setup.turn == Side.white ? 0 : 1);
+  } catch (e) {
+    return 0;
+  }
+}
+
+String makePgn(Game<PgnNodeData> game) {
+  const builder = [], token = [];
+
+  if (game.headers.isNotEmpty) {
+    game.headers.forEach((key, value) {
+      builder.add('[$key "${escapeHeader(value)}"]\n');
+    });
+    builder.add('\n');
+  }
+
+  if (game.comments != null) {
+    for (var comment in game.comments!) {
+      builder.add('{${safeComment(comment)}}');
+    }
+  }
+
+  var fen = game.headers['FEN'];
+  var initialPly = fen != null ? getPlyFromStup(fen) : 0;
+
+  List<PgnFrame> stack = [];
+
+  if (game.moves.children.isNotEmpty) {
+    var variations = game.moves.children.iterator;
+    variations.moveNext();
+    stack.add(PgnFrame(PgnState.pre, initialPly, variations.current, variations,
+        false, false));
+  }
+
+  var forceMoveNumber = true;
+  while (stack.isNotEmpty) {
+    var frame = stack[stack.length - 1];
+
+    if (frame.inVariation) {
+      token.add(')');
+      frame.inVariation = false;
+      forceMoveNumber = true;
+    }
+
+    switch (frame.state) {
+      case PgnState.pre:
+        {
+          if (frame.node.data.startingComments != null) {
+            for (var comment in frame.node.data.startingComments!) {
+              token.add('{${safeComment(comment)}}');
+            }
+            forceMoveNumber = true;
+          }
+          if (forceMoveNumber || frame.ply % 2 == 0) {
+            token.add(
+                '${(frame.ply / 2).floor() + 1}${frame.ply % 2 == 1 ? "..." : "."}');
+            forceMoveNumber = false;
+          }
+          token.add(frame.node.data.san);
+          if (frame.node.data.nags != null) {
+            for (var nag in frame.node.data.nags!) {
+              token.add('\$$nag');
+            }
+            forceMoveNumber = true;
+          }
+          if (frame.node.data.comments != null) {
+            for (var comment in frame.node.data.comments!) {
+              token.add('{${safeComment(comment)}}');
+            }
+          }
+          frame.state = PgnState.sidelines;
+          continue;
+        }
+
+      case PgnState.sidelines:
+        {
+          var child = frame.sidelines.moveNext();
+          if (child) {
+            token.add('(');
+            forceMoveNumber = true;
+            stack.add(PgnFrame(
+                PgnState.pre,
+                frame.ply,
+                frame.sidelines.current,
+                <ChildNode<PgnNodeData>>[].iterator,
+                true,
+                false));
+            frame.inVariation = true;
+          } else {
+            if (frame.node.children.isNotEmpty) {
+              var variations = frame.node.children.iterator;
+              variations.moveNext();
+              stack.add(PgnFrame(PgnState.pre, frame.ply + 1,
+                  variations.current, variations, false, false));
+            }
+          }
+          break;
+        }
+
+      case PgnState.end:
+        {
+          stack.removeLast();
+        }
+    }
+  }
+
+  return builder.join("");
+}
