@@ -7,7 +7,8 @@ class PgnNodeData {
   List<String>? startingComments;
   List<String>? comments;
   List<int>? nags;
-  PgnNodeData({required this.san, this.startingComments, this.comments, this.nags});
+  PgnNodeData(
+      {required this.san, this.startingComments, this.comments, this.nags});
 }
 
 class Node<T> {
@@ -33,9 +34,7 @@ class Game<T> {
   List<String>? comments;
   Node<T> moves;
 
-  Game(Map<String, String> header, Node<T> move)
-      : headers = header,
-        moves = move;
+  Game({required this.headers, required this.moves});
 }
 
 class ParserFrame {
@@ -44,7 +43,7 @@ class ParserFrame {
   ChildNode<PgnNodeData>? node;
   List<String>? startingComments;
 
-  ParserFrame(this.parent, this.root);
+  ParserFrame({required this.parent, required this.root});
 }
 
 enum ParserState { bom, pre, headers, moves, comment }
@@ -59,8 +58,13 @@ class PgnFrame {
   bool startsVariation;
   bool inVariation;
 
-  PgnFrame(this.state, this.ply, this.node, this.sidelines,
-      this.startsVariation, this.inVariation);
+  PgnFrame(
+      {required this.state,
+      required this.ply,
+      required this.node,
+      required this.sidelines,
+      required this.startsVariation,
+      required this.inVariation});
 }
 
 Map<String, String> defaultHeaders() => {
@@ -74,14 +78,14 @@ Map<String, String> defaultHeaders() => {
     };
 
 Game<T> defaultGame<T>([initHeaders = defaultHeaders]) {
-  return Game<T>(initHeaders(), Node());
+  return Game<T>(headers: initHeaders(), moves: Node());
 }
 
 var escapeHeader = (String value) =>
     value.replaceAll(RegExp(r'\\'), "\\\\").replaceAll(RegExp(r'"'), '\\"');
 var safeComment = (String value) => value.replaceAll(RegExp(r'\}'), '');
 
-int getPlyFromStup(String fen) {
+int getPlyFromSetup(String fen) {
   try {
     var setup = Setup.parseFen(fen);
     return (setup.fullmoves - 1) * 2 + (setup.turn == Side.white ? 0 : 1);
@@ -91,31 +95,25 @@ int getPlyFromStup(String fen) {
 }
 
 String makeOutcome(Outcome? outcome) {
-  if (outcome == null){
+  if (outcome == null) {
     return '*';
-  }
-  else if (outcome.winner == Side.white) {
+  } else if (outcome.winner == Side.white) {
     return '1-0';
-  }
-  else if (outcome.winner == Side.black) {
+  } else if (outcome.winner == Side.black) {
     return '0-1';
-  }
-  else {
+  } else {
     return '1/2-1/2';
   }
 }
 
-Outcome? parseOutcome(String? outcome){
+Outcome? parseOutcome(String? outcome) {
   if (outcome == '1/2-1/2') {
-    return Outcome();
-  }
-  else if (outcome == '1-0') {
+    return Outcome.draw;
+  } else if (outcome == '1-0') {
     return Outcome.whiteWins;
-  }
-  else if (outcome == '0-1'){
+  } else if (outcome == '0-1') {
     return Outcome.blackWins;
-  }
-  else {
+  } else {
     return null;
   }
 }
@@ -137,15 +135,20 @@ String makePgn(Game<PgnNodeData> game) {
   }
 
   var fen = game.headers['FEN'];
-  var initialPly = fen != null ? getPlyFromStup(fen) : 0;
+  var initialPly = fen != null ? getPlyFromSetup(fen) : 0;
 
   List<PgnFrame> stack = [];
 
   if (game.moves.children.isNotEmpty) {
     var variations = game.moves.children.iterator;
     variations.moveNext();
-    stack.add(PgnFrame(PgnState.pre, initialPly, variations.current, variations,
-        false, false));
+    stack.add(PgnFrame(
+        state: PgnState.pre,
+        ply: initialPly,
+        node: variations.current,
+        sidelines: variations,
+        startsVariation: false,
+        inVariation: false));
   }
 
   var forceMoveNumber = true;
@@ -194,15 +197,26 @@ String makePgn(Game<PgnNodeData> game) {
           if (child) {
             token.add('(');
             forceMoveNumber = true;
-            stack.add(PgnFrame(PgnState.pre, frame.ply, frame.sidelines.current,
-                <ChildNode<PgnNodeData>>[].iterator, true, false));
+            stack.add(PgnFrame(
+                state: PgnState.pre,
+                ply: frame.ply,
+                node: frame.sidelines.current,
+                sidelines:
+                    <ChildNode<PgnNodeData>>[].iterator, // empty iterator
+                startsVariation: true,
+                inVariation: false));
             frame.inVariation = true;
           } else {
             if (frame.node.children.isNotEmpty) {
               var variations = frame.node.children.iterator;
               variations.moveNext();
-              stack.add(PgnFrame(PgnState.pre, frame.ply + 1,
-                  variations.current, variations, false, false));
+              stack.add(PgnFrame(
+                  state: PgnState.pre,
+                  ply: frame.ply + 1,
+                  node: variations.current,
+                  sidelines: variations,
+                  startsVariation: false,
+                  inVariation: false));
             }
             frame.state = PgnState.end;
           }
@@ -216,6 +230,6 @@ String makePgn(Game<PgnNodeData> game) {
     }
   }
   token.add(makeOutcome(parseOutcome(game.headers['Result'])));
-  builder.add(token.join(' '));
+  builder.add('${token.join(" ")}\n');
   return builder.join('');
 }
