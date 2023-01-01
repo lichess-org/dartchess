@@ -12,3 +12,4 @@ export 'src/board.dart';
 export 'src/setup.dart';
 export 'src/position.dart';
 export 'src/debug.dart';
+export 'src/pgn.dart';

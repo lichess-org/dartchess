@@ -1,12 +1,13 @@
 import './setup.dart';
 import './models.dart';
+import './position.dart';
 
 class PgnNodeData {
   final String san;
   List<String>? startingComments;
   List<String>? comments;
   List<int>? nags;
-  PgnNodeData(this.san);
+  PgnNodeData({required this.san, this.startingComments, this.comments, this.nags});
 }
 
 class Node<T> {
@@ -89,8 +90,38 @@ int getPlyFromStup(String fen) {
   }
 }
 
+String makeOutcome(Outcome? outcome) {
+  if (outcome == null){
+    return '*';
+  }
+  else if (outcome.winner == Side.white) {
+    return '1-0';
+  }
+  else if (outcome.winner == Side.black) {
+    return '0-1';
+  }
+  else {
+    return '1/2-1/2';
+  }
+}
+
+Outcome? parseOutcome(String? outcome){
+  if (outcome == '1/2-1/2') {
+    return Outcome();
+  }
+  else if (outcome == '1-0') {
+    return Outcome.whiteWins;
+  }
+  else if (outcome == '0-1'){
+    return Outcome.blackWins;
+  }
+  else {
+    return null;
+  }
+}
+
 String makePgn(Game<PgnNodeData> game) {
-  const builder = [], token = [];
+  var builder = [], token = [];
 
   if (game.headers.isNotEmpty) {
     game.headers.forEach((key, value) {
@@ -101,7 +132,7 @@ String makePgn(Game<PgnNodeData> game) {
 
   if (game.comments != null) {
     for (var comment in game.comments!) {
-      builder.add('{${safeComment(comment)}}');
+      builder.add('{ ${safeComment(comment)} }');
     }
   }
 
@@ -132,7 +163,7 @@ String makePgn(Game<PgnNodeData> game) {
         {
           if (frame.node.data.startingComments != null) {
             for (var comment in frame.node.data.startingComments!) {
-              token.add('{${safeComment(comment)}}');
+              token.add('{ ${safeComment(comment)} }');
             }
             forceMoveNumber = true;
           }
@@ -150,7 +181,7 @@ String makePgn(Game<PgnNodeData> game) {
           }
           if (frame.node.data.comments != null) {
             for (var comment in frame.node.data.comments!) {
-              token.add('{${safeComment(comment)}}');
+              token.add('{ ${safeComment(comment)} }');
             }
           }
           frame.state = PgnState.sidelines;
@@ -163,13 +194,8 @@ String makePgn(Game<PgnNodeData> game) {
           if (child) {
             token.add('(');
             forceMoveNumber = true;
-            stack.add(PgnFrame(
-                PgnState.pre,
-                frame.ply,
-                frame.sidelines.current,
-                <ChildNode<PgnNodeData>>[].iterator,
-                true,
-                false));
+            stack.add(PgnFrame(PgnState.pre, frame.ply, frame.sidelines.current,
+                <ChildNode<PgnNodeData>>[].iterator, true, false));
             frame.inVariation = true;
           } else {
             if (frame.node.children.isNotEmpty) {
@@ -178,6 +204,7 @@ String makePgn(Game<PgnNodeData> game) {
               stack.add(PgnFrame(PgnState.pre, frame.ply + 1,
                   variations.current, variations, false, false));
             }
+            frame.state = PgnState.end;
           }
           break;
         }
@@ -188,6 +215,7 @@ String makePgn(Game<PgnNodeData> game) {
         }
     }
   }
-
-  return builder.join("");
+  token.add(makeOutcome(parseOutcome(game.headers['Result'])));
+  builder.add(token.join(' '));
+  return builder.join('');
 }
