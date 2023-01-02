@@ -3,9 +3,8 @@ import './setup.dart';
 import './models.dart';
 import './position.dart';
 
-
-
 typedef Headers = Map<String, String>;
+
 /// A Node containing PGN data for a move
 class PgnNodeData {
   /// SAN representation of the move
@@ -519,15 +518,13 @@ class PgnParser {
 }
 
 /// Default function to parse a PGN
-var parsePgn = (String pgn,
-    [Headers Function() initHeaders = defaultHeaders]) {
+var parsePgn = (String pgn, [Headers Function() initHeaders = defaultHeaders]) {
   List<Game<PgnNodeData>> games = [];
   PgnParser((Game<PgnNodeData> game, [Error? err]) => games.add(game),
           initHeaders, null)
       .parse(pgn);
   return games;
 };
-
 
 const List<String> rules = [
   'chess',
@@ -540,41 +537,7 @@ const List<String> rules = [
   'crazyhouse'
 ];
 
-
-
-enum Rules {
-  chess,
-  antichess,
-  kingofthehill,
-  check3,
-  atomic,
-  horde,
-  racingKings,
-  cracyhouse;
-
-  String? get string {
-    switch(this){
-      case Rules.chess:
-      return null;
-      case Rules.antichess:
-      return 'antichess';
-      case Rules.kingofthehill:
-      return 'King of the Hill';
-      case Rules.check3:
-      return '3check';
-      case Rules.atomic:
-      return 'Atomic';
-      case Rules.horde:
-      return 'Horde';
-      case Rules.racingKings:
-      return 'Racing Kings';
-      case Rules.cracyhouse:
-      return 'Crazyhouse';
-    }
-  }
-}
-
-Rules? parseVariant(String variant) {
+Variant? parseVariant(String variant) {
   switch ((variant).toLowerCase()) {
     case 'chess':
     case 'chess960':
@@ -596,16 +559,16 @@ Rules? parseVariant(String variant) {
     case 'wild/7':
     case 'wild/8':
     case 'wild/8a':
-      return Rules.chess;
+      return Variant.chess;
     case 'crazyhouse':
     case 'crazy house':
     case 'house':
     case 'zh':
-      return Rules.cracyhouse;
+      return Variant.crazyhouse;
     case 'king of the hill':
     case 'koth':
     case 'kingofthehill':
-      return Rules.kingofthehill;
+      return Variant.kingofthehill;
     case 'three-check':
     case 'three check':
     case 'threecheck':
@@ -613,46 +576,46 @@ Rules? parseVariant(String variant) {
     case '3-check':
     case '3 check':
     case '3check':
-      return Rules.check3;
+      return Variant.threecheck;
     case 'antichess':
     case 'anti chess':
     case 'anti':
-      return Rules.antichess;
+      return Variant.antichess;
     case 'atomic':
     case 'atom':
     case 'atomic chess':
-      return Rules.atomic;
+      return Variant.atomic;
     case 'horde':
     case 'horde chess':
-      return Rules.horde;
+      return Variant.horde;
     case 'racing kings':
     case 'racingkings':
     case 'racing':
     case 'race':
-      return Rules.racingKings;
+      return Variant.racingKings;
     default:
       return null;
   }
 }
 
-
-// missing horde, 3check, racingkings. Returns Chess for those variants
-Position setupPosition (Rules rules, Setup setup, bool ignoreCheck ) {
+// missing horde, racingkings. Returns Chess for those variants
+Position setupPosition(Variant rules, Setup setup, bool ignoreCheck) {
   switch (rules) {
-    case Rules.chess:
-    return Chess.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
-    case Rules.antichess:
-    return Antichess.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
-    case Rules.atomic:
-    return Atomic.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
-    case Rules.kingofthehill:
-    return KingOfTheHill.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
-    case Rules.cracyhouse:
-    return Crazyhouse.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+    case Variant.chess:
+      return Chess.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+    case Variant.antichess:
+      return Antichess.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+    case Variant.atomic:
+      return Atomic.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+    case Variant.kingofthehill:
+      return KingOfTheHill.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+    case Variant.crazyhouse:
+      return Crazyhouse.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+    case Variant.threecheck:
+      return ThreeCheck.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
     default:
-    return Chess.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+      return Chess.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
   }
-
 }
 
 Position startingPosition(Headers headers, bool ignoreCheck) {
@@ -663,7 +626,44 @@ Position startingPosition(Headers headers, bool ignoreCheck) {
   final fen = headers['FEN']!;
   try {
     return setupPosition(rules, Setup.parseFen(fen), ignoreCheck);
-  } catch(err) {
+  } catch (err) {
     rethrow;
+  }
+}
+
+Position defualtPosition(Variant variant) {
+  switch (variant) {
+    case Variant.chess:
+      return Chess.initial;
+    case Variant.antichess:
+      return Antichess.initial;
+    case Variant.atomic:
+      return Atomic.initial;
+    case Variant.kingofthehill:
+      return KingOfTheHill.initial;
+    case Variant.threecheck:
+      return ThreeCheck.initial;
+    case Variant.crazyhouse:
+      return Crazyhouse.initial;
+    case Variant.horde:
+      return Chess.initial;
+    default:
+      return Chess.initial;
+  }
+}
+
+void setStartingPosition(Headers headers, Position pos) {
+  final variant = pos.variant;
+  if (variant != Variant.chess) {
+    headers['Variant'] = variant.string!;
+  } else {
+    headers.remove('Variant');
+  }
+
+  final defaultFen = defualtPosition(pos.variant).fen;
+  if (pos.fen != defaultFen) {
+    headers['FEN'] = pos.fen;
+  } else {
+    headers.remove('FEN');
   }
 }
