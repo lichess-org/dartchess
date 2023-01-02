@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import 'dart:math' as math;
 import './constants.dart';
 import './square_set.dart';
@@ -10,6 +11,7 @@ import './utils.dart';
 /// A base class for playable chess or chess variant positions.
 ///
 /// See [Chess] for a concrete implementation of standard rules.
+@immutable
 abstract class Position<T extends Position<T>> {
   const Position({
     required this.board,
@@ -665,6 +667,7 @@ abstract class Position<T extends Position<T>> {
 }
 
 /// A standard chess position.
+@immutable
 class Chess extends Position<Chess> {
   const Chess({
     required super.board,
@@ -722,6 +725,7 @@ class Chess extends Position<Chess> {
 }
 
 /// A variant of chess where you lose all your pieces or get stalemated to win.
+@immutable
 class Antichess extends Position<Antichess> {
   const Antichess({
     required super.board,
@@ -855,6 +859,7 @@ class Antichess extends Position<Antichess> {
 }
 
 /// A variant of chess where captures cause an explosion to the surrounding pieces.
+@immutable
 class Atomic extends Position<Atomic> {
   const Atomic({
     required super.board,
@@ -1069,6 +1074,7 @@ class Atomic extends Position<Atomic> {
 }
 
 /// A variant where captured pieces can be dropped back on the board instead of moving a piece.
+@immutable
 class Crazyhouse extends Position<Crazyhouse> {
   const Crazyhouse({
     required super.board,
@@ -1191,6 +1197,7 @@ class Crazyhouse extends Position<Crazyhouse> {
 
 /// A variant similar to standard chess, where you win by putting your king on the center
 /// of the board.
+@immutable
 class KingOfTheHill extends Position<KingOfTheHill> {
   const KingOfTheHill({
     required super.board,
@@ -1259,6 +1266,7 @@ class KingOfTheHill extends Position<KingOfTheHill> {
 
 /// A variant similar to standard chess, where you can win if you put your opponent king
 /// into the third check.
+@immutable
 class ThreeCheck extends Position<ThreeCheck> {
   const ThreeCheck({
     required super.board,
@@ -1378,6 +1386,7 @@ class ThreeCheck extends Position<ThreeCheck> {
 }
 
 /// The outcome of a [Position]. No `winner` means a draw.
+@immutable
 class Outcome {
   const Outcome({this.winner});
 
@@ -1423,6 +1432,7 @@ enum IllegalSetup {
   variant,
 }
 
+@immutable
 class PlayError implements Exception {
   final String message;
   const PlayError(this.message);
@@ -1432,6 +1442,7 @@ class PlayError implements Exception {
 }
 
 /// Error when trying to create a [Position] from an illegal [Setup].
+@immutable
 class PositionError implements Exception {
   final IllegalSetup cause;
   const PositionError(this.cause);
@@ -1452,6 +1463,7 @@ enum CastlingSide {
   king;
 }
 
+@immutable
 class Castles {
   final SquareSet unmovedRooks;
 
@@ -1610,6 +1622,7 @@ class Castles {
       rook[Side.black], path[Side.white], path[Side.black]);
 }
 
+@immutable
 class _Context {
   const _Context({
     required this.isVariantEnd,

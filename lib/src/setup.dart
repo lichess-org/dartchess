@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import 'dart:math' as math;
 import './square_set.dart';
 import './models.dart';
@@ -6,6 +7,7 @@ import './utils.dart';
 import './constants.dart';
 
 /// A not necessarily legal position.
+@immutable
 class Setup {
   /// Piece positions on the board.
   final Board board;
@@ -204,6 +206,7 @@ class Setup {
 }
 
 /// Pockets (captured pieces) in chess variants like [Crazyhouse].
+@immutable
 class Pockets {
   const Pockets({
     required this.value,
@@ -308,14 +311,14 @@ class Pockets {
 
 Pockets _parsePockets(String pocketPart) {
   if (pocketPart.length > 64) {
-    throw FenError('ERR_POCKETS');
+    throw const FenError('ERR_POCKETS');
   }
   Pockets pockets = Pockets.empty;
   for (int i = 0; i < pocketPart.length; i++) {
     final c = pocketPart[i];
     final piece = Piece.fromChar(c);
     if (piece == null) {
-      throw FenError('ERR_POCKETS');
+      throw const FenError('ERR_POCKETS');
     }
     pockets = pockets.increment(piece.color, piece.role);
   }
@@ -328,18 +331,18 @@ Tuple2<int, int> _parseRemainingChecks(String part) {
     final white = _parseSmallUint(parts[1]);
     final black = _parseSmallUint(parts[2]);
     if (white == null || white > 3 || black == null || black > 3) {
-      throw FenError('ERR_REMAINING_CHECKS');
+      throw const FenError('ERR_REMAINING_CHECKS');
     }
     return Tuple2(3 - white, 3 - black);
   } else if (parts.length == 2) {
     final white = _parseSmallUint(parts[0]);
     final black = _parseSmallUint(parts[1]);
     if (white == null || white > 3 || black == null || black > 3) {
-      throw FenError('ERR_REMAINING_CHECKS');
+      throw const FenError('ERR_REMAINING_CHECKS');
     }
     return Tuple2(white, black);
   } else {
-    throw FenError('ERR_REMAINING_CHECKS');
+    throw const FenError('ERR_REMAINING_CHECKS');
   }
 }
 
@@ -366,7 +369,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
                   backrank)
               .squares;
     } else {
-      throw FenError('ERR_CASTLING');
+      throw const FenError('ERR_CASTLING');
     }
     for (final square in candidates) {
       if (board.kings.has(square)) break;
@@ -378,7 +381,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
   }
   if ((const SquareSet.fromRank(0) & unmovedRooks).size > 2 ||
       (const SquareSet.fromRank(7) & unmovedRooks).size > 2) {
-    throw FenError('ERR_CASTLING');
+    throw const FenError('ERR_CASTLING');
   }
   return unmovedRooks;
 }

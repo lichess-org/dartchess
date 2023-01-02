@@ -1,9 +1,11 @@
+import 'package:meta/meta.dart';
 import './square_set.dart';
 import './models.dart';
 import './attacks.dart';
 import './utils.dart';
 
 /// A board represented by several square sets for each piece.
+@immutable
 class Board {
   const Board({
     required this.occupied,

@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import './models.dart';
 
 /// A set of squares represented by a 64 bit integer mask, using little endian
@@ -15,6 +16,7 @@ import './models.dart';
 ///    -------------------------
 ///      a  b  c  d  e  f  g  h
 /// ```
+@immutable
 class SquareSet {
   /// Creates a [SquareSet] with the provided 64bit integer value.
   const SquareSet(this.value);
