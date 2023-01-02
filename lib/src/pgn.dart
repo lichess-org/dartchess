@@ -231,7 +231,11 @@ String makePgn(Game<PgnNodeData> game) {
   return builder.join('');
 }
 
-const BOM = '\ufeff';
+const bom = '\ufeff';
+
+Map<String, String> emptyHeaders() {
+  return <String, String>{};
+}
 
 var isWhitespace = (String line) => RegExp(r'^\s*$').hasMatch(line);
 
@@ -320,14 +324,13 @@ class PgnParser {
     var freshLine = true;
     var line = _lineBuf.join('');
     _lineBuf = [];
-
     continuedLine:
     for (;;) {
       switch (_state) {
         case ParserState.bom:
           {
-            if (line.startsWith(BOM)) {
-              line = line.substring(BOM.length);
+            if (line.startsWith(bom)) {
+              line = line.substring(bom.length);
             }
             _state = ParserState.pre;
             continue;
@@ -345,7 +348,7 @@ class PgnParser {
           {
             if (isCommentLine(line)) return;
             var moreHeaders = true;
-            var headerReg = RegExp(
+            final headerReg = RegExp(
                 r'^\s*\[([A-Za-z0-9][A-Za-z0-9_+#=:-]*)\s+"((?:[^"\\]|\\"|\\\\)*)"\]');
             while (moreHeaders) {
               moreHeaders = false;
@@ -371,10 +374,9 @@ class PgnParser {
             }
             final tokenRegex = RegExp(
                 r'(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/');
-            var matches = tokenRegex.allMatches(line);
-
+            final matches = tokenRegex.allMatches(line);
             for (var match in matches) {
-              var frame = _stack[_stack.length - 1];
+              final frame = _stack[_stack.length - 1];
               var token = match[0]!;
               if (token == ';') {
                 return;
@@ -405,8 +407,8 @@ class PgnParser {
               } else if (token == ')') {
                 if (_stack.length > 1) _stack.removeLast();
               } else if (token == '{') {
-                var openIndex = match.end;
-                var beginIndex =
+                final openIndex = match.end;
+                final beginIndex =
                     line[openIndex] == ' ' ? openIndex + 1 : openIndex;
                 line = line.substring(beginIndex);
                 _state = ParserState.comment;
@@ -418,7 +420,9 @@ class PgnParser {
                 } else if (token.startsWith('0')) {
                   token = token.replaceAll(r'0', 'O');
                 }
-                if (frame.node != null) frame.parent = frame.node!;
+                if (frame.node != null) {
+                  frame.parent = frame.node!;
+                }
                 frame.node = Node(PgnNodeData(
                     san: token, startingComments: frame.startingComments));
                 frame.startingComments = null;
@@ -431,12 +435,12 @@ class PgnParser {
 
         case ParserState.comment:
           {
-            var closeIndex = line.indexOf('}');
+            final closeIndex = line.indexOf('}');
             if (closeIndex == -1) {
               _commentBuf.add(line);
               return;
             } else {
-              var endIndex = closeIndex > 0 && line[closeIndex - 1] == ' '
+              final endIndex = closeIndex > 0 && line[closeIndex - 1] == ' '
                   ? closeIndex - 1
                   : closeIndex;
               _commentBuf.add(line.substring(0, endIndex));
@@ -452,7 +456,7 @@ class PgnParser {
 
   void _handleNag(int nag) {
     _consumeBudget(50);
-    var frame = _stack[_stack.length - 1];
+    final frame = _stack[_stack.length - 1];
     if (frame.node != null) {
       frame.node!.data!.nags ??= [];
       frame.node!.data!.nags!.add(nag);
@@ -461,8 +465,8 @@ class PgnParser {
 
   void _handleComment() {
     _consumeBudget(100);
-    var frame = _stack[_stack.length - 1];
-    var comment = _commentBuf.join('\n');
+    final frame = _stack[_stack.length - 1];
+    final comment = _commentBuf.join('\n');
     _commentBuf = [];
     if (frame.node != null) {
       frame.node!.data!.comments ??= [];

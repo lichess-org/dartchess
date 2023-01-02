@@ -1,9 +1,6 @@
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
-
-
-
 void main() {
   test('make pgn', () {
     var root = Node<PgnNodeData>(null);
@@ -46,8 +43,19 @@ void main() {
   });
 
   test('parse pgn', () {
+    // Look at creating mock function.
+    // One way is to use package mockito but it only supports mocking classes
+    void callback(Game<PgnNodeData> game, [Error? error]) {
+      expect(makePgn(game),
+          '[Result "1-0"]\n\n1. e4 e5 2. Nf3 { foo\n  bar baz } 1-0\n');
+    }
 
-      final game = parsePgn('1. a4 ( 1. b4 b5 -- ) 1... a5')[0];
-      //print(game.moves.children[0].children[0].data!.san);
+    final parser = PgnParser(callback, emptyHeaders);
+    parser.parse('1. e4 \ne5', true);
+    parser.parse('\nNf3 {foo\n', true);
+    parser.parse('  bar baz } 1-', true);
+    parser.parse('', true);
+    parser.parse('0', true);
+    parser.parse('');
   });
 }
