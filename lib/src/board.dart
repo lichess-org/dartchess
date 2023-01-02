@@ -35,7 +35,7 @@ class Board {
         Role.pawn: SquareSet(0x00ff00000000ff00),
         Role.knight: SquareSet(0x4200000000000042),
         Role.bishop: SquareSet(0x2400000000000024),
-        Role.rook: SquareSet(0x8100000000000081),
+        Role.rook: SquareSet.corners,
         Role.queen: SquareSet(0x0800000000000008),
         Role.king: SquareSet(0x1000000000000010),
       });
@@ -58,7 +58,8 @@ class Board {
   /// Throws a [FenError] if the provided FEN string is not valid.
   factory Board.parseFen(String boardFen) {
     Board board = Board.empty;
-    int rank = 7, file = 0;
+    int rank = 7;
+    int file = 0;
     for (int i = 0; i < boardFen.length; i++) {
       final c = boardFen[i];
       if (c == '/' && file == 8) {
@@ -113,7 +114,7 @@ class Board {
 
   /// Board part of the Forsyth-Edwards-Notation.
   String get fen {
-    String fen = '';
+    final buffer = StringBuffer();
     int empty = 0;
     for (int rank = 7; rank >= 0; rank--) {
       for (int file = 0; file < 8; file++) {
@@ -123,22 +124,22 @@ class Board {
           empty++;
         } else {
           if (empty > 0) {
-            fen += empty.toString();
+            buffer.write(empty.toString());
             empty = 0;
           }
-          fen += piece.fenChar;
+          buffer.write(piece.fenChar);
         }
 
         if (file == 7) {
           if (empty > 0) {
-            fen += empty.toString();
+            buffer.write(empty.toString());
             empty = 0;
           }
-          if (rank != 0) fen += '/';
+          if (rank != 0) buffer.write('/');
         }
       }
     }
-    return fen;
+    return buffer.toString();
   }
 
   /// An iterable of each [Piece] associated to its [Square].
@@ -265,7 +266,7 @@ class Board {
   }
 
   @override
-  toString() => fen;
+  String toString() => fen;
 
   @override
   bool operator ==(Object other) {

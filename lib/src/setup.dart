@@ -175,10 +175,8 @@ class Setup {
         board.fen + (pockets != null ? _makePockets(pockets!) : ''),
         turnLetter,
         _makeCastlingFen(board, unmovedRooks),
-        epSquare != null ? toAlgebraic(epSquare!) : '-',
-        ...(remainingChecks != null
-            ? [_makeRemainingChecks(remainingChecks!)]
-            : []),
+        if (epSquare != null) toAlgebraic(epSquare!) else '-',
+        if (remainingChecks != null) _makeRemainingChecks(remainingChecks!),
         math.max(0, math.min(halfmoves, 9999)),
         math.max(1, math.min(fullmoves, 9999)),
       ].join(' ');
@@ -378,8 +376,8 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
       }
     }
   }
-  if ((SquareSet.fromRank(0) & unmovedRooks).size > 2 ||
-      (SquareSet.fromRank(7) & unmovedRooks).size > 2) {
+  if ((const SquareSet.fromRank(0) & unmovedRooks).size > 2 ||
+      (const SquareSet.fromRank(7) & unmovedRooks).size > 2) {
     throw FenError('ERR_CASTLING');
   }
   return unmovedRooks;
@@ -389,16 +387,16 @@ String _makePockets(Pockets pockets) {
   final wPart = [
     for (final r in Role.values)
       ...List.filled(pockets.of(Side.white, r), r.char)
-  ].join('');
+  ].join();
   final bPart = [
     for (final r in Role.values)
       ...List.filled(pockets.of(Side.black, r), r.char)
-  ].join('');
+  ].join();
   return '[${wPart.toUpperCase()}$bPart]';
 }
 
 String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
-  String fen = '';
+  final buffer = StringBuffer();
   for (final color in Side.values) {
     final backrank = SquareSet.backrankOf(color);
     final king = board.kingOf(color);
@@ -406,15 +404,16 @@ String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
         board.byPiece(Piece(color: color, role: Role.rook)) & backrank;
     for (final rook in (unmovedRooks & candidates).squaresReversed) {
       if (rook == candidates.first && king != null && rook < king) {
-        fen += color == Side.white ? 'Q' : 'q';
+        buffer.write(color == Side.white ? 'Q' : 'q');
       } else if (rook == candidates.last && king != null && king < rook) {
-        fen += color == Side.white ? 'K' : 'k';
+        buffer.write(color == Side.white ? 'K' : 'k');
       } else {
         final file = kFileNames[squareFile(rook)];
-        fen += color == Side.white ? file.toUpperCase() : file;
+        buffer.write(color == Side.white ? file.toUpperCase() : file);
       }
     }
   }
+  final fen = buffer.toString();
   return fen != '' ? fen : '-';
 }
 
@@ -424,8 +423,9 @@ String _makeRemainingChecks(Tuple2<int, int> checks) =>
 int? _parseSmallUint(String str) =>
     RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;
 
-int _nthIndexOf(String haystack, String needle, int n) {
+int _nthIndexOf(String haystack, String needle, int nth) {
   int index = haystack.indexOf(needle);
+  int n = nth;
   while (n-- > 0) {
     if (index == -1) break;
     index = haystack.indexOf(needle, index + needle.length);

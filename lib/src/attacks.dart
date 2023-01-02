@@ -41,7 +41,7 @@ SquareSet queenAttacks(Square square, SquareSet occupied) =>
 
 /// Gets squares attacked or defended by a `piece` on `square`, given
 /// `occupied` squares.
-attacks(Piece piece, Square square, SquareSet occupied) {
+SquareSet attacks(Piece piece, Square square, SquareSet occupied) {
   switch (piece.role) {
     case Role.pawn:
       return pawnAttacks(piece.color, square);

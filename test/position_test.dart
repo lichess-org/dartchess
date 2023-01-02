@@ -25,16 +25,24 @@ void main() {
 
     test('discard rook', () {
       expect(Castles.standard.discardRookAt(24), Castles.standard);
-      expect(
-          Castles.standard.discardRookAt(7).rook[Side.white], Tuple2(0, null));
+      expect(Castles.standard.discardRookAt(7).rook[Side.white],
+          const Tuple2(0, null));
     });
 
     test('discard side', () {
-      expect(Castles.standard.discardSide(Side.white).rook,
-          equals({Side.white: Tuple2(null, null), Side.black: Tuple2(56, 63)}));
+      expect(
+          Castles.standard.discardSide(Side.white).rook,
+          equals({
+            Side.white: const Tuple2(null, null),
+            Side.black: const Tuple2(56, 63)
+          }));
 
-      expect(Castles.standard.discardSide(Side.black).rook,
-          equals({Side.white: Tuple2(0, 7), Side.black: Tuple2(null, null)}));
+      expect(
+          Castles.standard.discardSide(Side.black).rook,
+          equals({
+            Side.white: const Tuple2(0, 7),
+            Side.black: const Tuple2(null, null)
+          }));
     });
   });
 
@@ -114,7 +122,7 @@ void main() {
           NormalMove(from: 21, to: 53),
         ];
         final sans = moves.fold<Tuple2<Position<Chess>, List<String>>>(
-            Tuple2(Chess.initial, []), (acc, e) {
+            const Tuple2(Chess.initial, []), (acc, e) {
           final ret = acc.item1.playToSan(e);
           return Tuple2(ret.item1, [...acc.item2, ret.item2]);
         });
@@ -159,21 +167,21 @@ void main() {
     test('standard position legal moves', () {
       final moves = {
         0: SquareSet.empty,
-        1: SquareSet.fromSquare(16).withSquare(18),
+        1: const SquareSet.fromSquare(16).withSquare(18),
         2: SquareSet.empty,
         3: SquareSet.empty,
         4: SquareSet.empty,
         5: SquareSet.empty,
-        6: SquareSet.fromSquare(21).withSquare(23),
+        6: const SquareSet.fromSquare(21).withSquare(23),
         7: SquareSet.empty,
-        8: SquareSet.fromSquare(16).withSquare(24),
-        9: SquareSet.fromSquare(17).withSquare(25),
-        10: SquareSet.fromSquare(18).withSquare(26),
-        11: SquareSet.fromSquare(19).withSquare(27),
-        12: SquareSet.fromSquare(20).withSquare(28),
-        13: SquareSet.fromSquare(21).withSquare(29),
-        14: SquareSet.fromSquare(22).withSquare(30),
-        15: SquareSet.fromSquare(23).withSquare(31),
+        8: const SquareSet.fromSquare(16).withSquare(24),
+        9: const SquareSet.fromSquare(17).withSquare(25),
+        10: const SquareSet.fromSquare(18).withSquare(26),
+        11: const SquareSet.fromSquare(19).withSquare(27),
+        12: const SquareSet.fromSquare(20).withSquare(28),
+        13: const SquareSet.fromSquare(21).withSquare(29),
+        14: const SquareSet.fromSquare(22).withSquare(30),
+        15: const SquareSet.fromSquare(23).withSquare(31),
       };
       expect(Chess.initial.legalMoves, equals(moves));
     });
@@ -191,7 +199,7 @@ void main() {
     test('castling legal moves', () {
       final pos = Chess.fromSetup(Setup.parseFen(
           'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
-      expect(pos.legalMovesOf(4), SquareSet(0x00000000000000A9));
+      expect(pos.legalMovesOf(4), const SquareSet(0x00000000000000A9));
     });
 
     test('isCheck', () {
@@ -243,38 +251,42 @@ void main() {
         ['8/8/8/8/6k1/2N5/2K5/8 w - - 0 1', Outcome.draw],
       ];
       for (final test in fenTests) {
-        final pos = Chess.fromSetup(Setup.parseFen(test[0] as String));
+        final pos = Chess.fromSetup(Setup.parseFen(test[0]! as String));
         expect(pos.outcome, test[1]);
       }
     });
 
     test('isLegal', () {
-      expect(Chess.initial.isLegal(NormalMove(from: 12, to: 28)), true);
-      expect(Chess.initial.isLegal(NormalMove(from: 12, to: 29)), false);
+      expect(Chess.initial.isLegal(const NormalMove(from: 12, to: 28)), true);
+      expect(Chess.initial.isLegal(const NormalMove(from: 12, to: 29)), false);
       final promPos = Chess.fromSetup(
           Setup.parseFen('8/5P2/2RK2P1/8/4k3/8/8/7r w - - 0 1'));
       expect(
-          promPos.isLegal(NormalMove(from: 53, to: 61, promotion: Role.king)),
+          promPos.isLegal(
+              const NormalMove(from: 53, to: 61, promotion: Role.king)),
           false);
       expect(
-          promPos.isLegal(NormalMove(from: 42, to: 58, promotion: Role.queen)),
+          promPos.isLegal(
+              const NormalMove(from: 42, to: 58, promotion: Role.queen)),
           false);
       expect(
-          promPos.isLegal(NormalMove(from: 46, to: 54, promotion: Role.queen)),
+          promPos.isLegal(
+              const NormalMove(from: 46, to: 54, promotion: Role.queen)),
           false);
       expect(
-          promPos.isLegal(NormalMove(from: 53, to: 61, promotion: Role.queen)),
+          promPos.isLegal(
+              const NormalMove(from: 53, to: 61, promotion: Role.queen)),
           true);
     });
 
     group('play', () {
       test('a move not valid', () {
-        expect(() => Chess.initial.play(NormalMove(from: 12, to: 44)),
-            throwsA(TypeMatcher<PlayError>()));
+        expect(() => Chess.initial.play(const NormalMove(from: 12, to: 44)),
+            throwsA(const TypeMatcher<PlayError>()));
       });
 
       test('e2 e4 on standard position', () {
-        final pos = Chess.initial.play(NormalMove(from: 12, to: 28));
+        final pos = Chess.initial.play(const NormalMove(from: 12, to: 28));
         expect(pos.board.pieceAt(28), Piece.whitePawn);
         expect(pos.board.pieceAt(12), null);
         expect(pos.turn, Side.black);
@@ -282,13 +294,13 @@ void main() {
 
       test('scholar mate', () {
         final pos = Chess.initial
-            .play(NormalMove(from: 12, to: 28))
-            .play(NormalMove(from: 52, to: 36))
-            .play(NormalMove(from: 5, to: 26))
-            .play(NormalMove(from: 57, to: 42))
-            .play(NormalMove(from: 3, to: 21))
-            .play(NormalMove(from: 51, to: 43))
-            .play(NormalMove(from: 21, to: 53));
+            .play(const NormalMove(from: 12, to: 28))
+            .play(const NormalMove(from: 52, to: 36))
+            .play(const NormalMove(from: 5, to: 26))
+            .play(const NormalMove(from: 57, to: 42))
+            .play(const NormalMove(from: 3, to: 21))
+            .play(const NormalMove(from: 51, to: 43))
+            .play(const NormalMove(from: 21, to: 53));
 
         expect(pos.isCheckmate, true);
         expect(pos.turn, Side.black);
@@ -300,36 +312,37 @@ void main() {
 
       test('halfmoves increment', () {
         // pawn move
-        expect(Chess.initial.play(NormalMove(from: 12, to: 28)).halfmoves, 0);
+        expect(Chess.initial.play(const NormalMove(from: 12, to: 28)).halfmoves,
+            0);
 
         // piece move
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r2qr2k/5Qpp/2R1nn2/3p4/3P4/1B3P2/PB4PP/4R1K1 b - - 0 29'))
-            .play(NormalMove(from: 44, to: 38));
+            .play(const NormalMove(from: 44, to: 38));
         expect(pos.halfmoves, 1);
 
         // capture move
         final pos2 = Chess.fromSetup(Setup.parseFen(
                 'r2qr2k/5Qpp/2R2n2/3p2n1/3P4/1B3P2/PB4PP/4R1K1 w - - 1 30'))
-            .play(NormalMove(from: 17, to: 35));
+            .play(const NormalMove(from: 17, to: 35));
         expect(pos2.halfmoves, 0);
       });
 
       test('fullmoves increment', () {
-        final pos = Chess.initial.play(NormalMove(from: 12, to: 28));
+        final pos = Chess.initial.play(const NormalMove(from: 12, to: 28));
         expect(pos.fullmoves, 1);
-        expect(pos.play(NormalMove(from: 52, to: 36)).fullmoves, 2);
+        expect(pos.play(const NormalMove(from: 52, to: 36)).fullmoves, 2);
       });
 
       test('epSquare is correctly set after a double push move', () {
-        final pos = Chess.initial.play(NormalMove(from: 12, to: 28));
+        final pos = Chess.initial.play(const NormalMove(from: 12, to: 28));
         expect(pos.epSquare, 20);
       });
 
       test('en passant capture', () {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'))
-            .play(NormalMove(from: 36, to: 45));
+            .play(const NormalMove(from: 36, to: 45));
         expect(pos.board.pieceAt(45), Piece.whitePawn);
         expect(pos.board.pieceAt(37), null);
         expect(pos.epSquare, null);
@@ -338,23 +351,23 @@ void main() {
       test('rook move removes castling right', () {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
-            .play(NormalMove(from: 7, to: 5));
-        expect(pos.castles.rook[Side.white], equals(Tuple2(0, null)));
+            .play(const NormalMove(from: 7, to: 5));
+        expect(pos.castles.rook[Side.white], equals(const Tuple2(0, null)));
         expect(pos.castles.unmovedRooks.has(7), false);
       });
 
       test('capturing a rook removes castling right', () {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqk1nr/pppp1pbp/2n1p1p1/8/2B1P3/1P3N2/P1PP1PPP/RNBQK2R b KQkq - 4 4'))
-            .play(NormalMove(from: 54, to: 0));
-        expect(pos.castles.rook[Side.white], equals(Tuple2(null, 7)));
+            .play(const NormalMove(from: 54, to: 0));
+        expect(pos.castles.rook[Side.white], equals(const Tuple2(null, 7)));
         expect(pos.castles.unmovedRooks.has(0), false);
       });
 
       test('king captures unmoved rook', () {
         final pos = Chess.fromSetup(
             Setup.parseFen('8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K - 0 1'));
-        final move = NormalMove(from: 14, to: 7);
+        const move = NormalMove(from: 14, to: 7);
         expect(pos.isLegal(move), true);
         final pos2 = pos.play(move);
         expect(pos2.fen, '8/8/8/B2p3Q/2qPp1P1/b7/2P2P1P/4K2k w - - 0 2');
@@ -369,30 +382,31 @@ void main() {
                 e is PositionError &&
                 e.cause == IllegalSetup.impossibleCheck)));
         final pos = Chess.fromSetup(setup, ignoreImpossibleCheck: true);
-        final enPassant = NormalMove(from: 35, to: 42);
+        const enPassant = NormalMove(from: 35, to: 42);
         expect(pos.isLegal(enPassant), false);
       });
 
       test('castling move', () {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
-            .play(NormalMove(from: 4, to: 6));
+            .play(const NormalMove(from: 4, to: 6));
         expect(pos.board.pieceAt(6), Piece.whiteKing);
         expect(pos.board.pieceAt(5), Piece.whiteRook);
-        expect(pos.castles.unmovedRooks.isIntersected(SquareSet.fromRank(0)),
+        expect(
+            pos.castles.unmovedRooks.isIntersected(const SquareSet.fromRank(0)),
             false);
-        expect(pos.castles.rook[Side.white], equals(Tuple2(null, null)));
+        expect(pos.castles.rook[Side.white], equals(const Tuple2(null, null)));
       });
 
       test('castling moves', () {
         final pos =
             Chess.fromSetup(Setup.parseFen('2r5/8/8/8/8/8/6PP/k2KR3 w K -'));
-        final move = NormalMove(from: 3, to: 4);
+        const move = NormalMove(from: 3, to: 4);
         expect(pos.play(move).fen, '2r5/8/8/8/8/8/6PP/k4RK1 b - - 1 1');
 
         final pos2 = Chess.fromSetup(Setup.parseFen(
             'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
-        final move2 = NormalMove(from: 4, to: 0);
+        const move2 = NormalMove(from: 4, to: 0);
         expect(pos2.play(move2).fen,
             'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/2KR3R b kq - 1 1');
 
@@ -820,7 +834,7 @@ void main() {
         ],
         ['zh-promoted', '4k3/1Q~6/8/8/4b3/8/Kpp5/8/ b - -', 20, 360, 5445],
       ]) {
-        final pos = Crazyhouse.fromSetup(Setup.parseFen(t[1] as String));
+        final pos = Crazyhouse.fromSetup(Setup.parseFen(t[1]! as String));
         expect(perft(pos, 1), t[2]);
         expect(perft(pos, 2), t[3]);
         if (t[4] != null) {

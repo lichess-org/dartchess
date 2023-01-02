@@ -100,7 +100,7 @@ class Piece {
   }
 
   @override
-  toString() {
+  String toString() {
     return '${color.name}${role.name}';
   }
 
