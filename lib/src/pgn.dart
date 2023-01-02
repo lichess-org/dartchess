@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import './setup.dart';
 import './models.dart';
 import './position.dart';
@@ -38,12 +39,13 @@ class ChildNode<T> extends Node<T> {
 }
 
 /// A game represented by headers and moves derived from a PGN
+@immutable
 class Game<T> {
-  Map<String, String> headers;
-  List<String>? comments;
-  Node<T> moves;
+  final Map<String, String> headers;
+  final List<String> comments;
+  final Node<T> moves;
 
-  Game({required this.headers, required this.moves});
+  Game({required this.headers, required this.moves, required this.comments});
 }
 
 /// A frame used for parsing a line
@@ -88,11 +90,6 @@ Map<String, String> defaultHeaders() => {
       'Black': '?',
       'Result': '*'
     };
-
-/// Creates an empty game with default headers
-Game<T> defaultGame<T>([initHeaders = defaultHeaders]) {
-  return Game<T>(headers: initHeaders(), moves: Node());
-}
 
 String escapeHeader(String value) =>
     value.replaceAll(RegExp(r'\\'), "\\\\").replaceAll(RegExp(r'"'), '\\"');
@@ -144,10 +141,8 @@ String makePgn(Game<PgnNodeData> game) {
     builder.add('\n');
   }
 
-  if (game.comments != null) {
-    for (var comment in game.comments!) {
-      builder.add('{ ${safeComment(comment)} }');
-    }
+  for (var comment in game.comments) {
+    builder.add('{ ${safeComment(comment)} }');
   }
 
   final fen = game.headers['FEN'];
@@ -274,9 +269,11 @@ class PgnParser {
   int? _budget;
   late bool _found;
   late ParserState _state = ParserState.pre;
-  late Game<PgnNodeData> _game;
+  late Map<String, String> _gameHeaders;
+  late List<String> _gameComments;
+  late Node<PgnNodeData> _gameMoves;
   late List<ParserFrame> _stack;
-  late List<String> _commentBuf = [];
+  late List<String> _commentBuf;
   int? maxBudget;
 
   final void Function(Game<PgnNodeData>, [Error?]) emitGame;
@@ -291,9 +288,11 @@ class PgnParser {
     _budget = maxBudget;
     _found = false;
     _state = ParserState.pre;
-    _game = defaultGame(initHeaders);
-    _stack = [ParserFrame(parent: _game.moves, root: true)];
+    _gameHeaders = initHeaders();
+    _gameMoves = Node();
+    _gameComments = [];
     _commentBuf = [];
+    _stack = [ParserFrame(parent: _gameMoves, root: true)];
   }
 
   void _consumeBudget(int cost) {
@@ -309,10 +308,20 @@ class PgnParser {
       _handleComment();
     }
     if (err != null) {
-      return emitGame(_game, err);
+      return emitGame(
+          Game(
+              headers: _gameHeaders,
+              moves: _gameMoves,
+              comments: _gameComments),
+          err);
     }
     if (_found) {
-      emitGame(_game, null);
+      emitGame(
+          Game(
+              headers: _gameHeaders,
+              moves: _gameMoves,
+              comments: _gameComments),
+          null);
     }
     resetGame();
   }
@@ -380,7 +389,7 @@ class PgnParser {
               moreHeaders = false;
               line = line.replaceFirstMapped(headerReg, (match) {
                 _consumeBudget(200);
-                _game.headers[match[1]!] =
+                _gameHeaders[match[1]!] =
                     match[2]!.replaceAll(r'\\"', '"').replaceAll(r'\\\\', '\\');
                 moreHeaders = true;
                 freshLine = false;
@@ -425,7 +434,7 @@ class PgnParser {
                   token == '1/2-1/2' ||
                   token == '*') {
                 if (_stack.length == 1 && token != '*') {
-                  _game.headers['Result'] = token;
+                  _gameHeaders['Result'] = token;
                 }
               } else if (token == '(') {
                 _consumeBudget(100);
@@ -498,8 +507,7 @@ class PgnParser {
       frame.node!.data.comments ??= [];
       frame.node!.data.comments!.add(comment);
     } else if (frame.root) {
-      _game.comments ??= [];
-      _game.comments!.add(comment);
+      _gameComments.add(comment);
     } else {
       frame.startingComments ??= [];
       frame.startingComments!.add(comment);

@@ -1,5 +1,31 @@
+import 'dart:convert';
+
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
+import 'dart:io';
+
+typedef GameCallBack = void Function(Game<PgnNodeData>, [Error]);
+
+void testPgnFile(String filename, int numGames, bool allValid) {
+  test('pgn file - $filename', () async {
+    final file = File('./data/$filename.pgn');
+    Stream<String> lines = file.openRead().transform(utf8.decoder);
+
+    void gameCallBack(Game<PgnNodeData> game, [Error? err]) {
+      if (allValid) expect(err, null);
+    }
+
+    final parser = PgnParser(gameCallBack, emptyHeaders);
+    try {
+      await for (var line in lines) {
+        parser.parse(line, true);
+      }
+      parser.parse('');
+    } catch (e) {
+      print('Error $e');
+    }
+  });
+}
 
 void main() {
   test('make pgn', () {
@@ -18,7 +44,7 @@ void main() {
     var c4 = ChildNode<PgnNodeData>(PgnNodeData(san: 'c4'));
     e5.children.add(c4);
 
-    expect(makePgn(Game(headers: {}, moves: root)),
+    expect(makePgn(Game(headers: {}, moves: root, comments: [])),
         "1. e4 \$7 ( 1. e3 ) 1... e5 ( 1... e6 2. Nf3 { a comment } ) 2. c4 *\n");
   });
 
@@ -58,4 +84,14 @@ void main() {
     parser.parse('0', true);
     parser.parse('');
   });
+
+  test('tricky tokens', () {
+    final steps = parsePgn('O-O-O !! 0-0-0# ??')[0].moves.mainline().toList();
+    expect(steps[0].san, 'O-O-O');
+    expect(steps[0].nags, [3]);
+    expect(steps[1].san, 'O-O-O#');
+    expect(steps[1].nags, [4]);
+  });
+
+  testPgnFile('kasparov-deep-blue-1997', 6, true);
 }
