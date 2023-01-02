@@ -12,9 +12,9 @@ void main() {
   });
 
   test('setPieceAt', () {
-    final piece = Piece(color: Side.white, role: Role.king);
+    const piece = Piece.whiteKing;
     final board = Board.empty.setPieceAt(0, piece);
-    expect(board.occupied, SquareSet(0x0000000000000001));
+    expect(board.occupied, const SquareSet(0x0000000000000001));
     expect(board.pieces.length, 1);
     expect(board.pieceAt(0), piece);
 
@@ -23,24 +23,23 @@ void main() {
     expect(
         board2.sides,
         equals({
-          Side.white: SquareSet(0x100000000000FFFF),
-          Side.black: SquareSet(0xEFFF000000000000)
+          Side.white: const SquareSet(0x100000000000FFFF),
+          Side.black: const SquareSet(0xEFFF000000000000)
         }));
     expect(
         board2.roles,
         equals({
-          Role.pawn: SquareSet(0x00FF00000000FF00),
-          Role.knight: SquareSet(0x4200000000000042),
-          Role.bishop: SquareSet(0x2400000000000024),
-          Role.rook: SquareSet(0x8100000000000081),
-          Role.queen: SquareSet(0x0800000000000008),
-          Role.king: SquareSet(0x1000000000000010)
+          Role.pawn: const SquareSet(0x00FF00000000FF00),
+          Role.knight: const SquareSet(0x4200000000000042),
+          Role.bishop: const SquareSet(0x2400000000000024),
+          Role.rook: SquareSet.corners,
+          Role.queen: const SquareSet(0x0800000000000008),
+          Role.king: const SquareSet(0x1000000000000010)
         }));
   });
 
   test('removePieceAt', () {
-    final piece = Piece(color: Side.white, role: Role.king);
-    final board = Board.empty.setPieceAt(10, piece);
+    final board = Board.empty.setPieceAt(10, Piece.whiteKing);
     expect(board.removePieceAt(10), Board.empty);
   });
 
@@ -59,7 +58,7 @@ void main() {
     expect(() => Board.parseFen('4k2r/8/8/8/8/RR2K2R'),
         throwsA(predicate((e) => e is FenError && e.message == 'ERR_BOARD')));
 
-    expect(() => Board.parseFen('lol'), throwsA(TypeMatcher<FenError>()));
+    expect(() => Board.parseFen('lol'), throwsA(const TypeMatcher<FenError>()));
   });
 
   test('make board fen', () {

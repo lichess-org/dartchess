@@ -11,9 +11,9 @@ void main() {
     expect(SquareSet.antidiagonal.toString(), 'SquareSet(0x0102040810204080)');
     expect(SquareSet.corners.toString(), 'SquareSet(0x8100000000000081)');
     expect(SquareSet.backranks.toString(), 'SquareSet(0xFF000000000000FF)');
-    expect(SquareSet(0x0000000000000001).toString(),
+    expect(const SquareSet(0x0000000000000001).toString(),
         'SquareSet(0x0000000000000001)');
-    expect(SquareSet(0xf).toString(), 'SquareSet(0x000000000000000F)');
+    expect(const SquareSet(0xf).toString(), 'SquareSet(0x000000000000000F)');
   });
 
   test('full set has all', () {
@@ -31,24 +31,24 @@ void main() {
   });
 
   test('shr', () {
-    final r = SquareSet(0xe0a12221e222212);
+    const r = SquareSet(0xe0a12221e222212);
     expect(r.shr(0), r);
-    expect(r.shr(1), SquareSet(0x70509110f111109));
-    expect(r.shr(3), SquareSet(0x1c1424443c44442));
-    expect(r.shr(48), SquareSet(0xe0a));
-    expect(r.shr(62), SquareSet(0x0));
+    expect(r.shr(1), const SquareSet(0x70509110f111109));
+    expect(r.shr(3), const SquareSet(0x1c1424443c44442));
+    expect(r.shr(48), const SquareSet(0xe0a));
+    expect(r.shr(62), SquareSet.empty);
   });
 
   test('shl', () {
-    final r = SquareSet(0xe0a12221e222212);
+    const r = SquareSet(0xe0a12221e222212);
     expect(r.shl(0), r);
-    expect(r.shl(1), SquareSet(0x1c1424443c444424));
-    expect(r.shl(3), SquareSet(0x70509110f1111090));
-    expect(r.shl(10), SquareSet(0x2848887888884800));
-    expect(r.shl(32), SquareSet(0x1e22221200000000));
-    expect(r.shl(48), SquareSet(0x2212000000000000));
-    expect(r.shl(62), SquareSet(0x8000000000000000));
-    expect(r.shl(63), SquareSet(0x0));
+    expect(r.shl(1), const SquareSet(0x1c1424443c444424));
+    expect(r.shl(3), const SquareSet(0x70509110f1111090));
+    expect(r.shl(10), const SquareSet(0x2848887888884800));
+    expect(r.shl(32), const SquareSet(0x1e22221200000000));
+    expect(r.shl(48), const SquareSet(0x2212000000000000));
+    expect(r.shl(62), const SquareSet(0x8000000000000000));
+    expect(r.shl(63), SquareSet.empty);
   });
 
   test('first', () {
@@ -76,25 +76,25 @@ void main() {
   test('more that one', () {
     expect(SquareSet.empty.moreThanOne, false);
     expect(SquareSet.full.moreThanOne, true);
-    expect(SquareSet.fromSquare(4).moreThanOne, false);
-    expect(SquareSet.fromSquare(4).withSquare(5).moreThanOne, true);
+    expect(const SquareSet.fromSquare(4).moreThanOne, false);
+    expect(const SquareSet.fromSquare(4).withSquare(5).moreThanOne, true);
   });
 
   test('singleSquare', () {
     expect(SquareSet.empty.singleSquare, null);
     expect(SquareSet.full.singleSquare, null);
-    expect(SquareSet.fromSquare(4).singleSquare, 4);
-    expect(SquareSet.fromSquare(4).withSquare(5).singleSquare, null);
+    expect(const SquareSet.fromSquare(4).singleSquare, 4);
+    expect(const SquareSet.fromSquare(4).withSquare(5).singleSquare, null);
   });
 
   test('squares', () {
-    expect(SquareSet.empty.squares.toList(), []);
+    expect(SquareSet.empty.squares.toList(), List<Square>.empty());
     expect(SquareSet.full.squares.toList(), [for (int i = 0; i < 64; i++) i]);
     expect(SquareSet.diagonal.squares, equals([0, 9, 18, 27, 36, 45, 54, 63]));
   });
 
   test('squaresReversed', () {
-    expect(SquareSet.empty.squaresReversed.toList(), []);
+    expect(SquareSet.empty.squaresReversed.toList(), List<Square>.empty());
     expect(SquareSet.full.squaresReversed.toList(),
         [for (int i = 63; i >= 0; i--) i]);
     expect(SquareSet.diagonal.squaresReversed,
@@ -102,17 +102,17 @@ void main() {
   });
 
   test('from file', () {
-    expect(SquareSet.fromFile(0), SquareSet(0x0101010101010101));
-    expect(SquareSet.fromFile(7), SquareSet(0x8080808080808080));
+    expect(const SquareSet.fromFile(0), const SquareSet(0x0101010101010101));
+    expect(const SquareSet.fromFile(7), const SquareSet(0x8080808080808080));
   });
 
   test('from rank', () {
-    expect(SquareSet.fromRank(0), SquareSet(0x00000000000000FF));
-    expect(SquareSet.fromRank(7), SquareSet(0xFF00000000000000));
+    expect(const SquareSet.fromRank(0), const SquareSet(0x00000000000000FF));
+    expect(const SquareSet.fromRank(7), const SquareSet(0xFF00000000000000));
   });
 
   test('from square', () {
-    expect(SquareSet.fromSquare(42), makeSquareSet('''
+    expect(const SquareSet.fromSquare(42), makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . 1 . . . . .

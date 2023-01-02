@@ -11,13 +11,20 @@
 # (the recommended set includes the core lints).
 # The core lints are also what is used by pub.dev for scoring packages.
 
-include: package:lints/recommended.yaml
+include: package:lint/package.yaml
 
-# Uncomment the following section to specify additional rules.
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
 
-# linter:
-#   rules:
-#     - camel_case_types
+linter:
+  rules:
+    require_trailing_commas: false
+    avoid_print: false
+    directives_ordering: false
+    always_use_package_imports: false
 
 # analyzer:
 #   exclude:

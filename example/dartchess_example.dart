@@ -11,7 +11,7 @@ void main() {
   assert(legal.length == 20);
 
   // Play moves
-  final pos2 = pos.play(NormalMove(from: 12, to: 28));
+  final pos2 = pos.play(const NormalMove(from: 12, to: 28));
 
   // Detect game end conditions
   assert(pos2.isGameOver == false);

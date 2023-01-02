@@ -1,7 +1,7 @@
-import './square_set.dart';
 import './board.dart';
 import './models.dart';
 import './position.dart';
+import './square_set.dart';
 import './utils.dart';
 
 /// Takes a string and returns a SquareSet. Useful for debugging/testing purposes.
@@ -43,30 +43,30 @@ SquareSet makeSquareSet(String rep) {
 
 /// Prints the square set as a human readable string format
 String printSquareSet(SquareSet sq) {
-  String r = '';
+  final buffer = StringBuffer();
   for (int y = 7; y >= 0; y--) {
     for (int x = 0; x < 8; x++) {
       final square = x + y * 8;
-      r += (sq.has(square) ? '1' : '.');
-      r += (x < 7 ? ' ' : '\n');
+      buffer.write(sq.has(square) ? '1' : '.');
+      buffer.write(x < 7 ? ' ' : '\n');
     }
   }
-  return r;
+  return buffer.toString();
 }
 
 /// Prints the board as a human readable string format
 String printBoard(Board board) {
-  String r = '';
+  final buffer = StringBuffer();
   for (int y = 7; y >= 0; y--) {
     for (int x = 0; x < 8; x++) {
       final square = x + y * 8;
       final p = board.pieceAt(square);
       final col = p != null ? p.fenChar : '.';
-      r += col;
-      r += (x < 7 ? (col.length < 2 ? ' ' : '') : '\n');
+      buffer.write(col);
+      buffer.write(x < 7 ? (col.length < 2 ? ' ' : '') : '\n');
     }
   }
-  return r;
+  return buffer.toString();
 }
 
 final _promotionRoles = [Role.queen, Role.rook, Role.knight, Role.bishop];
@@ -75,7 +75,7 @@ final _promotionRoles = [Role.queen, Role.rook, Role.knight, Role.bishop];
 ///
 /// Computing perft numbers is useful for comparing, testing and debugging move
 /// generation correctness and performance.
-int perft(Position pos, int depth, {shouldLog = false}) {
+int perft(Position pos, int depth, {bool shouldLog = false}) {
   if (depth < 1) return 1;
 
   final promotionRoles =

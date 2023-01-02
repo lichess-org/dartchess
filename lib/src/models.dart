@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import './utils.dart';
 
 enum Side {
@@ -60,6 +61,7 @@ typedef Square = int;
 typedef BySide<T> = Map<Side, T>;
 typedef ByRole<T> = Map<Role, T>;
 
+@immutable
 class Piece {
   const Piece({
     required this.color,
@@ -100,7 +102,7 @@ class Piece {
   }
 
   @override
-  toString() {
+  String toString() {
     return '${color.name}${role.name}';
   }
 
@@ -134,6 +136,7 @@ class Piece {
 /// Base class for a chess move.
 ///
 /// A move can be either a [NormalMove] or a [DropMove].
+@immutable
 abstract class Move {
   const Move({
     required this.to,
@@ -172,6 +175,7 @@ abstract class Move {
 }
 
 /// Represents a chess move, possibly a promotion.
+@immutable
 class NormalMove extends Move {
   const NormalMove({
     required this.from,
@@ -202,6 +206,7 @@ class NormalMove extends Move {
 }
 
 /// Represents a drop move.
+@immutable
 class DropMove extends Move {
   const DropMove({
     required super.to,
@@ -224,6 +229,7 @@ class DropMove extends Move {
 }
 
 /// Represents a 2-tuple, or pair.
+@immutable
 class Tuple2<T1, T2> {
   /// First item of the tuple.
   final T1 item1;
@@ -251,9 +257,10 @@ class Tuple2<T1, T2> {
   int get hashCode => Object.hash(item1, item2);
 }
 
+@immutable
 class FenError implements Exception {
   final String message;
-  FenError(this.message);
+  const FenError(this.message);
 }
 
 /// Represents the variants of chess

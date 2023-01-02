@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import 'dart:math' as math;
 import './constants.dart';
 import './square_set.dart';
@@ -10,6 +11,7 @@ import './utils.dart';
 /// A base class for playable chess or chess variant positions.
 ///
 /// See [Chess] for a concrete implementation of standard rules.
+@immutable
 abstract class Position<T extends Position<T>> {
   const Position({
     required this.board,
@@ -120,7 +122,7 @@ abstract class Position<T extends Position<T>> {
     } else if (isCheckmate) {
       return Outcome(winner: opposite(turn));
     } else if (isInsufficientMaterial || isStalemate) {
-      return Outcome(winner: null);
+      return Outcome.draw;
     } else {
       return null;
     }
@@ -169,12 +171,12 @@ abstract class Position<T extends Position<T>> {
       return false;
     }
     if (board.bySide(side).isIntersected(board.knights)) {
-      return (board.bySide(side).size <= 2 &&
+      return board.bySide(side).size <= 2 &&
           board
               .bySide(opposite(side))
               .diff(board.kings)
               .diff(board.queens)
-              .isEmpty);
+              .isEmpty;
     }
     if (board.bySide(side).isIntersected(board.bishops)) {
       final sameColor = !board.bishops.isIntersected(SquareSet.darkSquares) ||
@@ -236,7 +238,7 @@ abstract class Position<T extends Position<T>> {
               : san;
       return Tuple2(newPos, suffixed);
     } else {
-      throw PlayError('Invalid move');
+      throw const PlayError('Invalid move');
     }
   }
 
@@ -247,7 +249,7 @@ abstract class Position<T extends Position<T>> {
     if (isLegal(move)) {
       return playUnchecked(move);
     } else {
-      throw PlayError('Invalid move');
+      throw const PlayError('Invalid move');
     }
   }
 
@@ -293,7 +295,7 @@ abstract class Position<T extends Position<T>> {
 
       if (castlingSide == null) {
         final newPiece = move.promotion != null
-            ? piece.copyWith(role: move.promotion!, promoted: pockets != null)
+            ? piece.copyWith(role: move.promotion, promoted: pockets != null)
             : piece;
         newBoard = newBoard.setPieceAt(move.to, newPiece);
       }
@@ -349,24 +351,24 @@ abstract class Position<T extends Position<T>> {
   /// Throws a [PositionError] if it does not meet basic validity requirements.
   void validate({bool? ignoreImpossibleCheck}) {
     if (board.occupied.isEmpty) {
-      throw PositionError(IllegalSetup.empty);
+      throw PositionError.empty;
     }
     if (board.kings.size != 2) {
-      throw PositionError(IllegalSetup.kings);
+      throw PositionError.kings;
     }
     final ourKing = board.kingOf(turn);
     if (ourKing == null) {
-      throw PositionError(IllegalSetup.kings);
+      throw PositionError.kings;
     }
     final otherKing = board.kingOf(opposite(turn));
     if (otherKing == null) {
-      throw PositionError(IllegalSetup.kings);
+      throw PositionError.kings;
     }
     if (kingAttackers(otherKing, turn).isNotEmpty) {
-      throw PositionError(IllegalSetup.oppositeCheck);
+      throw PositionError.oppositeCheck;
     }
     if (SquareSet.backranks.isIntersected(board.pawns)) {
-      throw PositionError(IllegalSetup.pawnsOnBackrank);
+      throw PositionError.pawnsOnBackrank;
     }
     final skipImpossibleCheck = ignoreImpossibleCheck ?? false;
     if (!skipImpossibleCheck) {
@@ -394,14 +396,14 @@ abstract class Position<T extends Position<T>> {
                             .withoutSquare(pushedTo)
                             .withSquare(pushedFrom))
                     .isNotEmpty)) {
-          throw PositionError(IllegalSetup.impossibleCheck);
+          throw PositionError.impossibleCheck;
         }
       } else {
         // Multiple sliding checkers aligned with king.
         if (checkers.size > 2 ||
             (checkers.size == 2 &&
                 ray(checkers.first!, checkers.last!).has(ourKing))) {
-          throw PositionError(IllegalSetup.impossibleCheck);
+          throw PositionError.impossibleCheck;
         }
       }
     }
@@ -470,8 +472,9 @@ abstract class Position<T extends Position<T>> {
 
         if (capture) san += 'x';
         san += toAlgebraic(move.to);
-        if (move.promotion != null)
+        if (move.promotion != null) {
           san += '=${move.promotion!.char.toUpperCase()}';
+        }
       }
     } else {
       move as DropMove;
@@ -666,6 +669,7 @@ abstract class Position<T extends Position<T>> {
 }
 
 /// A standard chess position.
+@immutable
 class Chess extends Position<Chess> {
   const Chess({
     required super.board,
@@ -677,7 +681,7 @@ class Chess extends Position<Chess> {
     required super.fullmoves,
   });
 
-  Chess._fromSetupUnchecked(Setup setup) : super._fromSetupUnchecked(setup);
+  Chess._fromSetupUnchecked(super.setup) : super._fromSetupUnchecked();
   const Chess._initial() : super._initial();
 
   static const initial = Chess._initial();
@@ -723,6 +727,7 @@ class Chess extends Position<Chess> {
 }
 
 /// A variant of chess where you lose all your pieces or get stalemated to win.
+@immutable
 class Antichess extends Position<Antichess> {
   const Antichess({
     required super.board,
@@ -734,7 +739,7 @@ class Antichess extends Position<Antichess> {
     required super.fullmoves,
   });
 
-  Antichess._fromSetupUnchecked(Setup setup) : super._fromSetupUnchecked(setup);
+  Antichess._fromSetupUnchecked(super.setup) : super._fromSetupUnchecked();
 
   const Antichess._initial() : super._initial();
 
@@ -770,10 +775,10 @@ class Antichess extends Position<Antichess> {
   @override
   void validate({bool? ignoreImpossibleCheck}) {
     if (board.occupied.isEmpty) {
-      throw PositionError(IllegalSetup.empty);
+      throw PositionError.empty;
     }
     if (SquareSet.backranks.isIntersected(board.pawns)) {
-      throw PositionError(IllegalSetup.pawnsOnBackrank);
+      throw PositionError.pawnsOnBackrank;
     }
   }
 
@@ -829,9 +834,9 @@ class Antichess extends Position<Antichess> {
           (weSomeOnDark && theyAllOnLight);
     }
     if (board.occupied == board.knights && board.occupied.size == 2) {
-      return ((board.white.isIntersected(SquareSet.lightSquares) !=
+      return (board.white.isIntersected(SquareSet.lightSquares) !=
               board.black.isIntersected(SquareSet.darkSquares)) !=
-          (turn == side));
+          (turn == side);
     }
     return false;
   }
@@ -859,6 +864,7 @@ class Antichess extends Position<Antichess> {
 }
 
 /// A variant of chess where captures cause an explosion to the surrounding pieces.
+@immutable
 class Atomic extends Position<Atomic> {
   const Atomic({
     required super.board,
@@ -870,7 +876,7 @@ class Atomic extends Position<Atomic> {
     required super.fullmoves,
   });
 
-  Atomic._fromSetupUnchecked(Setup setup) : super._fromSetupUnchecked(setup);
+  Atomic._fromSetupUnchecked(super.setup) : super._fromSetupUnchecked();
   const Atomic._initial() : super._initial();
 
   static const initial = Atomic._initial();
@@ -934,10 +940,10 @@ class Atomic extends Position<Atomic> {
       throw PositionError.kings;
     }
     if (kingAttackers(otherKing, turn).isNotEmpty) {
-      throw PositionError(IllegalSetup.oppositeCheck);
+      throw PositionError.oppositeCheck;
     }
     if (SquareSet.backranks.isIntersected(board.pawns)) {
-      throw PositionError(IllegalSetup.pawnsOnBackrank);
+      throw PositionError.pawnsOnBackrank;
     }
     final skipImpossibleCheck = ignoreImpossibleCheck ?? false;
     final ourKing = board.kingOf(turn);
@@ -1076,6 +1082,7 @@ class Atomic extends Position<Atomic> {
 }
 
 /// A variant where captured pieces can be dropped back on the board instead of moving a piece.
+@immutable
 class Crazyhouse extends Position<Crazyhouse> {
   const Crazyhouse({
     required super.board,
@@ -1087,15 +1094,13 @@ class Crazyhouse extends Position<Crazyhouse> {
     required super.fullmoves,
   });
 
-  Crazyhouse._fromSetupUnchecked(Setup setup)
-      : super._fromSetupUnchecked(setup);
+  Crazyhouse._fromSetupUnchecked(super.setup) : super._fromSetupUnchecked();
 
   static const initial = Crazyhouse(
     board: Board.standard,
     pockets: Pockets.empty,
     turn: Side.white,
     castles: Castles.standard,
-    epSquare: null,
     halfmoves: 0,
     fullmoves: 1,
   );
@@ -1131,13 +1136,13 @@ class Crazyhouse extends Position<Crazyhouse> {
   void validate({bool? ignoreImpossibleCheck}) {
     super.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
     if (pockets == null) {
-      throw PositionError(IllegalSetup.variant);
+      throw PositionError.variant;
     } else {
       if (pockets!.count(Role.king) > 0) {
-        throw PositionError(IllegalSetup.kings);
+        throw PositionError.kings;
       }
       if (pockets!.size + board.occupied.size > 64) {
-        throw PositionError(IllegalSetup.variant);
+        throw PositionError.variant;
       }
     }
   }
@@ -1203,6 +1208,7 @@ class Crazyhouse extends Position<Crazyhouse> {
 
 /// A variant similar to standard chess, where you win by putting your king on the center
 /// of the board.
+@immutable
 class KingOfTheHill extends Position<KingOfTheHill> {
   const KingOfTheHill({
     required super.board,
@@ -1214,8 +1220,7 @@ class KingOfTheHill extends Position<KingOfTheHill> {
     required super.fullmoves,
   });
 
-  KingOfTheHill._fromSetupUnchecked(Setup setup)
-      : super._fromSetupUnchecked(setup);
+  KingOfTheHill._fromSetupUnchecked(super.setup) : super._fromSetupUnchecked();
   const KingOfTheHill._initial() : super._initial();
 
   static const initial = KingOfTheHill._initial();
@@ -1275,6 +1280,7 @@ class KingOfTheHill extends Position<KingOfTheHill> {
 
 /// A variant similar to standard chess, where you can win if you put your opponent king
 /// into the third check.
+@immutable
 class ThreeCheck extends Position<ThreeCheck> {
   const ThreeCheck({
     required super.board,
@@ -1324,7 +1330,7 @@ class ThreeCheck extends Position<ThreeCheck> {
   /// requirement.
   factory ThreeCheck.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     if (setup.remainingChecks == null) {
-      throw PositionError(IllegalSetup.variant);
+      throw PositionError.variant;
     } else {
       final pos = ThreeCheck(
         board: setup.board,
@@ -1397,6 +1403,7 @@ class ThreeCheck extends Position<ThreeCheck> {
 }
 
 /// The outcome of a [Position]. No `winner` means a draw.
+@immutable
 class Outcome {
   const Outcome({this.winner});
 
@@ -1407,7 +1414,7 @@ class Outcome {
   static const draw = Outcome();
 
   @override
-  toString() {
+  String toString() {
     return 'winner: $winner';
   }
 
@@ -1442,15 +1449,17 @@ enum IllegalSetup {
   variant,
 }
 
+@immutable
 class PlayError implements Exception {
   final String message;
   const PlayError(this.message);
 
   @override
-  toString() => 'PlayError($message)';
+  String toString() => 'PlayError($message)';
 }
 
 /// Error when trying to create a [Position] from an illegal [Setup].
+@immutable
 class PositionError implements Exception {
   final IllegalSetup cause;
   const PositionError(this.cause);
@@ -1463,7 +1472,7 @@ class PositionError implements Exception {
   static const variant = PositionError(IllegalSetup.variant);
 
   @override
-  toString() => 'PositionError(${cause.name})';
+  String toString() => 'PositionError(${cause.name})';
 }
 
 enum CastlingSide {
@@ -1471,6 +1480,7 @@ enum CastlingSide {
   king;
 }
 
+@immutable
 class Castles {
   final SquareSet unmovedRooks;
 
@@ -1569,7 +1579,7 @@ class Castles {
     return _copyWith(
       unmovedRooks: unmovedRooks.diff(SquareSet.backrankOf(side)),
       rook: {
-        side: Tuple2(null, null),
+        side: const Tuple2(null, null),
       },
     );
   }
@@ -1612,7 +1622,7 @@ class Castles {
   }
 
   @override
-  toString() =>
+  String toString() =>
       'Castles(unmovedRooks: $unmovedRooks, rook: $rook, path: $path)';
 
   @override
@@ -1629,6 +1639,7 @@ class Castles {
       rook[Side.black], path[Side.white], path[Side.black]);
 }
 
+@immutable
 class _Context {
   const _Context({
     required this.isVariantEnd,

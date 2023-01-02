@@ -1,3 +1,4 @@
+import 'package:meta/meta.dart';
 import './models.dart';
 
 /// A set of squares represented by a 64 bit integer mask, using little endian
@@ -15,6 +16,7 @@ import './models.dart';
 ///    -------------------------
 ///      a  b  c  d  e  f  g  h
 /// ```
+@immutable
 class SquareSet {
   /// Creates a [SquareSet] with the provided 64bit integer value.
   const SquareSet(this.value);
@@ -152,11 +154,12 @@ class SquareSet {
   int get hashCode => value.hashCode;
 
   @override
-  toString() {
-    String b = '';
+  String toString() {
+    final buffer = StringBuffer();
     for (Square square = 63; square >= 0; square--) {
-      b += (has(square) ? '1' : '0');
+      buffer.write(has(square) ? '1' : '0');
     }
+    final b = buffer.toString();
     final first = int.parse(b.substring(0, 32), radix: 2)
         .toRadixString(16)
         .toUpperCase()
@@ -206,13 +209,14 @@ int _popcnt64(int n) {
 }
 
 int _nlz64(int x) {
-  x |= (x >>> 1);
-  x |= (x >>> 2);
-  x |= (x >>> 4);
-  x |= (x >>> 8);
-  x |= (x >>> 16);
-  x |= (x >>> 32);
-  return 64 - _popcnt64(x);
+  int r = x;
+  r |= r >>> 1;
+  r |= r >>> 2;
+  r |= r >>> 4;
+  r |= r >>> 8;
+  r |= r >>> 16;
+  r |= r >>> 32;
+  return 64 - _popcnt64(r);
 }
 
 // from https://gist.github.com/jtmcdole/297434f327077dbfe5fb19da3b4ef5be
