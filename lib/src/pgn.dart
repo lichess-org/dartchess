@@ -10,20 +10,28 @@ class PgnNodeData {
   /// SAN representation of the move
   final String san;
 
+  /// Starting comments of the node
   List<String>? startingComments;
+
+  /// Comments about the node
   List<String>? comments;
 
   /// Numeric Annotation Glyphs for the move
   List<int>? nags;
+
+  /// Constructor for the class
   PgnNodeData(
       {required this.san, this.startingComments, this.comments, this.nags});
 }
 
-/// Parent Node containing list of child nodes (Does not have any data)
+/// Parent Node containing list of child nodes (Does not contain any data)
 class Node<T> {
   List<ChildNode<T>> children = [];
   Node();
 
+  /// Implements a Iterable for the node and its children
+  ///
+  /// Used for only steping throw the main line
   Iterable<T> mainline() sync* {
     var node = this;
     while (node.children.isNotEmpty) {
@@ -43,22 +51,30 @@ class ChildNode<T> extends Node<T> {
 /// A game represented by headers and moves derived from a PGN
 @immutable
 class Game<T> {
+  /// Headers of the game
   final Headers headers;
+
+  /// Inital comments of the game
   final List<String> comments;
+
+  /// Parant node containing the game
   final Node<T> moves;
 
+  /// Constant contructor of the class.
+  ///
+  /// Returns a new immutable Game
   const Game(
       {required this.headers, required this.moves, required this.comments});
 }
 
 /// A frame used for parsing a line
-class ParserFrame {
+class _ParserFrame {
   Node<PgnNodeData> parent;
   bool root;
   ChildNode<PgnNodeData>? node;
   List<String>? startingComments;
 
-  ParserFrame({required this.parent, required this.root});
+  _ParserFrame({required this.parent, required this.root});
 }
 
 enum ParserState { bom, pre, headers, moves, comment }
@@ -66,7 +82,7 @@ enum ParserState { bom, pre, headers, moves, comment }
 enum PgnState { pre, sidelines, end }
 
 /// A frame used for creating PGN
-class PgnFrame {
+class _PgnFrame {
   PgnState state;
   int ply;
   ChildNode<PgnNodeData> node;
@@ -74,7 +90,7 @@ class PgnFrame {
   bool startsVariation;
   bool inVariation;
 
-  PgnFrame(
+  _PgnFrame(
       {required this.state,
       required this.ply,
       required this.node,
@@ -152,12 +168,12 @@ String makePgn(Game<PgnNodeData> game) {
   final fen = game.headers['FEN'];
   final initialPly = fen != null ? getPlyFromSetup(fen) : 0;
 
-  final List<PgnFrame> stack = [];
+  final List<_PgnFrame> stack = [];
 
   if (game.moves.children.isNotEmpty) {
     final variations = game.moves.children.iterator;
     variations.moveNext();
-    stack.add(PgnFrame(
+    stack.add(_PgnFrame(
         state: PgnState.pre,
         ply: initialPly,
         node: variations.current,
@@ -212,7 +228,7 @@ String makePgn(Game<PgnNodeData> game) {
           if (child) {
             token.add('(');
             forceMoveNumber = true;
-            stack.add(PgnFrame(
+            stack.add(_PgnFrame(
                 state: PgnState.pre,
                 ply: frame.ply,
                 node: frame.sidelines.current,
@@ -225,7 +241,7 @@ String makePgn(Game<PgnNodeData> game) {
             if (frame.node.children.isNotEmpty) {
               final variations = frame.node.children.iterator;
               variations.moveNext();
-              stack.add(PgnFrame(
+              stack.add(_PgnFrame(
                   state: PgnState.pre,
                   ply: frame.ply + 1,
                   node: variations.current,
@@ -276,7 +292,7 @@ class PgnParser {
   late Headers _gameHeaders;
   late List<String> _gameComments;
   late Node<PgnNodeData> _gameMoves;
-  late List<ParserFrame> _stack;
+  late List<_ParserFrame> _stack;
   late List<String> _commentBuf;
   int? maxBudget;
 
@@ -296,7 +312,7 @@ class PgnParser {
     _gameMoves = Node();
     _gameComments = [];
     _commentBuf = [];
-    _stack = [ParserFrame(parent: _gameMoves, root: true)];
+    _stack = [_ParserFrame(parent: _gameMoves, root: true)];
   }
 
   void _consumeBudget(int cost) {
@@ -442,7 +458,7 @@ class PgnParser {
                 }
               } else if (token == '(') {
                 _consumeBudget(100);
-                _stack.add(ParserFrame(parent: frame.parent, root: false));
+                _stack.add(_ParserFrame(parent: frame.parent, root: false));
               } else if (token == ')') {
                 if (_stack.length > 1) _stack.removeLast();
               } else if (token == '{') {
@@ -457,7 +473,7 @@ class PgnParser {
                 if (token == 'Z0' || token == '0000' || token == '@@@@') {
                   token = '--';
                 } else if (token.startsWith('0')) {
-                  token = token.replaceAll(r'0', 'O');
+                  token = token.replaceAll('0', 'O');
                 }
                 if (frame.node != null) {
                   frame.parent = frame.node!;
@@ -520,25 +536,16 @@ class PgnParser {
 }
 
 /// Default function to parse a PGN
+///
+/// Creates a list of games if multiple games found
 List<Game<PgnNodeData>> parsePgn(String pgn,
     [Headers Function() initHeaders = defaultHeaders]) {
-  List<Game<PgnNodeData>> games = [];
+  final List<Game<PgnNodeData>> games = [];
   PgnParser((Game<PgnNodeData> game, [Error? err]) => games.add(game),
           initHeaders, null)
       .parse(pgn);
   return games;
 }
-
-const List<String> rules = [
-  'chess',
-  'antichess',
-  'kingofthehill',
-  '3check',
-  'atomic',
-  'horde',
-  'racingkings',
-  'crazyhouse'
-];
 
 Variant? parseVariant(String variant) {
   switch (variant.toLowerCase()) {
@@ -601,8 +608,9 @@ Variant? parseVariant(String variant) {
   }
 }
 
-// missing horde, racingkings. Returns Chess for those variants
+/// Create a [Position] from setup and variants
 Position setupPosition(Variant rules, Setup setup, bool ignoreCheck) {
+// missing horde, racingkings. Returns Chess for those variants
   switch (rules) {
     case Variant.chess:
       return Chess.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
@@ -621,6 +629,9 @@ Position setupPosition(Variant rules, Setup setup, bool ignoreCheck) {
   }
 }
 
+/// Create a [Position] for a Variant from the headers
+///
+/// Headers must include a 'Variant' and 'Fen' key
 Position startingPosition(Headers headers, bool ignoreCheck) {
   if (!headers.containsKey('Variant')) throw PgnError('ERR_HEADER_NO_VARIANT');
   final rules = parseVariant(headers['Variant']!);
@@ -634,6 +645,7 @@ Position startingPosition(Headers headers, bool ignoreCheck) {
   }
 }
 
+/// Returns the defualt [Position] for the [Variant]
 Position defualtPosition(Variant variant) {
   switch (variant) {
     case Variant.chess:
@@ -655,6 +667,7 @@ Position defualtPosition(Variant variant) {
   }
 }
 
+/// Set the [Variant] and the 'Fen' for the headers
 void setStartingPosition(Headers headers, Position pos) {
   final variant = pos.variant;
   if (variant != Variant.chess) {

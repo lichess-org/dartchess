@@ -9,7 +9,7 @@ typedef GameCallBack = void Function(Game<PgnNodeData>, [Error]);
 void testPgnFile(String filename, int numGames, bool allValid) {
   test('pgn file - $filename', () async {
     final file = File('./data/$filename.pgn');
-    Stream<String> lines = file.openRead().transform(utf8.decoder);
+    final Stream<String> lines = file.openRead().transform(utf8.decoder);
 
     void gameCallBack(Game<PgnNodeData> game, [Error? err]) {
       if (allValid) expect(err, null);
