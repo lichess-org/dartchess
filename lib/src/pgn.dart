@@ -27,7 +27,7 @@ class Node<T> {
   Iterable<T> mainline() sync* {
     var node = this;
     while (node.children.isNotEmpty) {
-      var child = node.children[0];
+      final child = node.children[0];
       yield child.data;
       node = child;
     }
@@ -47,7 +47,8 @@ class Game<T> {
   final List<String> comments;
   final Node<T> moves;
 
-  Game({required this.headers, required this.moves, required this.comments});
+  const Game(
+      {required this.headers, required this.moves, required this.comments});
 }
 
 /// A frame used for parsing a line
@@ -94,7 +95,7 @@ Headers defaultHeaders() => {
     };
 
 String escapeHeader(String value) =>
-    value.replaceAll(RegExp(r'\\'), "\\\\").replaceAll(RegExp(r'"'), '\\"');
+    value.replaceAll(RegExp(r'\\'), "\\\\").replaceAll(RegExp('"'), '\\"');
 String safeComment(String value) => value.replaceAll(RegExp(r'\}'), '');
 
 int getPlyFromSetup(String fen) {
@@ -134,7 +135,8 @@ Outcome? parseOutcome(String? outcome) {
 
 /// Create a PGN String from [Game]
 String makePgn(Game<PgnNodeData> game) {
-  var builder = [], token = [];
+  final List<String> builder = [];
+  final List<String> token = [];
 
   if (game.headers.isNotEmpty) {
     game.headers.forEach((key, value) {
@@ -143,14 +145,14 @@ String makePgn(Game<PgnNodeData> game) {
     builder.add('\n');
   }
 
-  for (var comment in game.comments) {
+  for (final comment in game.comments) {
     builder.add('{ ${safeComment(comment)} }');
   }
 
   final fen = game.headers['FEN'];
   final initialPly = fen != null ? getPlyFromSetup(fen) : 0;
 
-  List<PgnFrame> stack = [];
+  final List<PgnFrame> stack = [];
 
   if (game.moves.children.isNotEmpty) {
     final variations = game.moves.children.iterator;
@@ -166,7 +168,7 @@ String makePgn(Game<PgnNodeData> game) {
 
   var forceMoveNumber = true;
   while (stack.isNotEmpty) {
-    var frame = stack[stack.length - 1];
+    final frame = stack[stack.length - 1];
 
     if (frame.inVariation) {
       token.add(')');
@@ -178,25 +180,25 @@ String makePgn(Game<PgnNodeData> game) {
       case PgnState.pre:
         {
           if (frame.node.data.startingComments != null) {
-            for (var comment in frame.node.data.startingComments!) {
+            for (final comment in frame.node.data.startingComments!) {
               token.add('{ ${safeComment(comment)} }');
             }
             forceMoveNumber = true;
           }
-          if (forceMoveNumber || frame.ply % 2 == 0) {
+          if (forceMoveNumber || frame.ply.isEven) {
             token.add(
-                '${(frame.ply / 2).floor() + 1}${frame.ply % 2 == 1 ? "..." : "."}');
+                '${(frame.ply / 2).floor() + 1}${frame.ply.isOdd ? "..." : "."}');
             forceMoveNumber = false;
           }
           token.add(frame.node.data.san);
           if (frame.node.data.nags != null) {
-            for (var nag in frame.node.data.nags!) {
+            for (final nag in frame.node.data.nags!) {
               token.add('\$$nag');
             }
             forceMoveNumber = true;
           }
           if (frame.node.data.comments != null) {
-            for (var comment in frame.node.data.comments!) {
+            for (final comment in frame.node.data.comments!) {
               token.add('{ ${safeComment(comment)} }');
             }
           }
@@ -221,7 +223,7 @@ String makePgn(Game<PgnNodeData> game) {
             frame.inVariation = true;
           } else {
             if (frame.node.children.isNotEmpty) {
-              var variations = frame.node.children.iterator;
+              final variations = frame.node.children.iterator;
               variations.moveNext();
               stack.add(PgnFrame(
                   state: PgnState.pre,
@@ -244,7 +246,7 @@ String makePgn(Game<PgnNodeData> game) {
   }
   token.add(makeOutcome(parseOutcome(game.headers['Result'])));
   builder.add('${token.join(" ")}\n');
-  return builder.join('');
+  return builder.join();
 }
 
 const bom = '\ufeff';
@@ -253,9 +255,9 @@ Headers emptyHeaders() {
   return <String, String>{};
 }
 
-var isWhitespace = (String line) => RegExp(r'^\s*$').hasMatch(line);
+bool isWhitespace(String line) => RegExp(r'^\s*$').hasMatch(line);
 
-var isCommentLine = (String line) => line.startsWith('%');
+bool isCommentLine(String line) => line.startsWith('%');
 
 class PgnError implements Exception {
   final String message;
@@ -329,7 +331,7 @@ class PgnParser {
   }
 
   /// Parse the PGN string
-  void parse(String data, [bool? stream]) {
+  void parse(String data, {bool? stream}) {
     if (_budget != null && _budget! < 0) return;
     try {
       var idx = 0;
@@ -359,7 +361,7 @@ class PgnParser {
 
   void _handleLine() {
     var freshLine = true;
-    var line = _lineBuf.join('');
+    var line = _lineBuf.join();
     _lineBuf = [];
     continuedLine:
     for (;;) {
@@ -412,7 +414,7 @@ class PgnParser {
             final tokenRegex = RegExp(
                 r'(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/');
             final matches = tokenRegex.allMatches(line);
-            for (var match in matches) {
+            for (final match in matches) {
               final frame = _stack[_stack.length - 1];
               var token = match[0]!;
               if (token == ';') {
@@ -518,13 +520,14 @@ class PgnParser {
 }
 
 /// Default function to parse a PGN
-var parsePgn = (String pgn, [Headers Function() initHeaders = defaultHeaders]) {
+List<Game<PgnNodeData>> parsePgn(String pgn,
+    [Headers Function() initHeaders = defaultHeaders]) {
   List<Game<PgnNodeData>> games = [];
   PgnParser((Game<PgnNodeData> game, [Error? err]) => games.add(game),
           initHeaders, null)
       .parse(pgn);
   return games;
-};
+}
 
 const List<String> rules = [
   'chess',
@@ -538,7 +541,7 @@ const List<String> rules = [
 ];
 
 Variant? parseVariant(String variant) {
-  switch ((variant).toLowerCase()) {
+  switch (variant.toLowerCase()) {
     case 'chess':
     case 'chess960':
     case 'chess 960':

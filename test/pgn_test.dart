@@ -17,8 +17,8 @@ void testPgnFile(String filename, int numGames, bool allValid) {
 
     final parser = PgnParser(gameCallBack, emptyHeaders);
     try {
-      await for (var line in lines) {
-        parser.parse(line, true);
+      await for (final line in lines) {
+        parser.parse(line, stream: true);
       }
       parser.parse('');
     } catch (e) {
@@ -29,27 +29,27 @@ void testPgnFile(String filename, int numGames, bool allValid) {
 
 void main() {
   test('make pgn', () {
-    var root = Node<PgnNodeData>();
-    var e4 = ChildNode<PgnNodeData>(PgnNodeData(san: 'e4', nags: [7]));
-    var e3 = ChildNode<PgnNodeData>(PgnNodeData(san: 'e3'));
+    final root = Node<PgnNodeData>();
+    final e4 = ChildNode<PgnNodeData>(PgnNodeData(san: 'e4', nags: [7]));
+    final e3 = ChildNode<PgnNodeData>(PgnNodeData(san: 'e3'));
     root.children.add(e4);
     root.children.add(e3);
-    var e5 = ChildNode<PgnNodeData>(PgnNodeData(san: 'e5'));
-    var e6 = ChildNode<PgnNodeData>(PgnNodeData(san: 'e6'));
+    final e5 = ChildNode<PgnNodeData>(PgnNodeData(san: 'e5'));
+    final e6 = ChildNode<PgnNodeData>(PgnNodeData(san: 'e6'));
     e4.children.add(e5);
     e4.children.add(e6);
-    var nf3 = ChildNode<PgnNodeData>(
+    final nf3 = ChildNode<PgnNodeData>(
         PgnNodeData(san: 'Nf3', comments: ['a comment']));
     e6.children.add(nf3);
-    var c4 = ChildNode<PgnNodeData>(PgnNodeData(san: 'c4'));
+    final c4 = ChildNode<PgnNodeData>(PgnNodeData(san: 'c4'));
     e5.children.add(c4);
 
-    expect(makePgn(Game(headers: {}, moves: root, comments: [])),
+    expect(makePgn(Game(headers: const {}, moves: root, comments: const [])),
         "1. e4 \$7 ( 1. e3 ) 1... e5 ( 1... e6 2. Nf3 { a comment } ) 2. c4 *\n");
   });
 
   test('parse headers', () {
-    var games = parsePgn([
+    final games = parsePgn([
       '[Black "black player"]',
       '[White " white  player   "]',
       '[Escaped "quote: \\", backslashes: \\\\\\\\, trailing text"]',
@@ -77,11 +77,11 @@ void main() {
     }
 
     final parser = PgnParser(callback, emptyHeaders);
-    parser.parse('1. e4 \ne5', true);
-    parser.parse('\nNf3 {foo\n', true);
-    parser.parse('  bar baz } 1-', true);
-    parser.parse('', true);
-    parser.parse('0', true);
+    parser.parse('1. e4 \ne5', stream: true);
+    parser.parse('\nNf3 {foo\n', stream: true);
+    parser.parse('  bar baz } 1-', stream: true);
+    parser.parse('', stream: true);
+    parser.parse('0', stream: true);
     parser.parse('');
   });
 
