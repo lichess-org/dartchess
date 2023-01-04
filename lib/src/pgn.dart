@@ -74,6 +74,66 @@ class Game<T> {
       {required this.headers, required this.moves, required this.comments});
 }
 
+abstract class Cloneable<T> {
+  T clone();
+}
+
+class TransformStack<T, U, C extends Cloneable<T>> {
+  final Node<T> before;
+  final Node<U> after;
+  final C ctx;
+
+  TransformStack(this.before, this.after, this.ctx);
+}
+
+class WalkStack<T, C> {
+  final Node<T> node;
+  final C ctx;
+  WalkStack(this.node, this.ctx);
+}
+
+Node<U> transform<T, U, C extends Cloneable<T>>(
+    Node<T> node, C ctx, U? Function(C, T, int) f) {
+  final root = Node<U>();
+  final stack = [TransformStack(node, root, ctx)];
+
+  while (stack.isNotEmpty) {
+    final frame = stack.removeLast();
+    for (var childIdx = 0;
+        childIdx < frame.before.children.length;
+        childIdx++) {
+      final C ctx = childIdx < frame.before.children.length - 1
+          ? frame.ctx.clone() as C
+          : frame.ctx;
+      final childBefore = frame.before.children[childIdx];
+      final data = f(ctx, childBefore.data, childIdx);
+      if (data != null) {
+        final childAfter = ChildNode(data);
+        frame.after.children.add(childAfter);
+        stack.add(TransformStack(childBefore, childAfter, ctx));
+      }
+    }
+  }
+  return root;
+}
+
+void walk<T, C extends Cloneable<T>>(
+    Node<T> node, C ctx, bool? Function(C, T, int) f) {
+  final stack = [WalkStack(node, ctx)];
+  while (stack.isNotEmpty) {
+    final frame = stack.removeLast();
+    for (var childIdx = 0; childIdx < frame.node.children.length; childIdx++) {
+      final ctx = childIdx < frame.node.children.length - 1
+          ? frame.ctx.clone() as C
+          : frame.ctx;
+      final child = frame.node.children[childIdx];
+      if (f(ctx, child.data, childIdx) != false) {
+        stack.add(WalkStack(child, ctx));
+      }
+    }
+  }
+}
+
 /// A frame used for parsing a line
 class _ParserFrame {
   Node<PgnNodeData> parent;
