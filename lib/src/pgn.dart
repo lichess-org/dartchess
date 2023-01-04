@@ -74,10 +74,6 @@ class Game<T> {
       {required this.headers, required this.moves, required this.comments});
 }
 
-abstract class Cloneable<T> {
-  T clone();
-}
-
 class TransformStack<T, U, C extends Cloneable<T>> {
   final Node<T> before;
   final Node<U> after;
