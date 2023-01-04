@@ -94,4 +94,86 @@ void main() {
   });
 
   testPgnFile('kasparov-deep-blue-1997', 6, true);
+
+  test('parse comment', () {
+    expect(
+        parseComment('[%eval -0.42] suffix'),
+        Comment(
+            text: 'suffix',
+            eval: const Evaluation.pawns(pawns: -0.42),
+            shapes: []));
+
+    expect(
+        parseComment('prefix [%emt 1:02:03.4]'),
+        Comment(
+          text: 'prefix',
+          emt: 3723.4,
+        ));
+
+    expect(
+        parseComment('[%csl Ya1][%cal Ra1a1,Be1e2]commentary [%csl Gh8]'),
+        Comment(text: 'commentary', shapes: [
+          CommentShape(color: CommentShapeColor.yellow, from: 0, to: 0),
+          CommentShape(color: CommentShapeColor.red, from: 0, to: 0),
+          CommentShape(color: CommentShapeColor.blue, from: 4, to: 12),
+          CommentShape(color: CommentShapeColor.green, from: 63, to: 63)
+        ]));
+
+    expect(
+        parseComment('prefix [%eval .99,23]'),
+        Comment(
+          text: 'prefix',
+          eval: Evaluation.pawns(pawns: 0.99, depth: 23),
+        ));
+
+    expect(
+        parseComment('[%eval #-3] suffix'),
+        Comment(
+          text: 'suffix',
+          eval: Evaluation.mate(mate: -3),
+        ));
+
+    expect(
+        parseComment('[%csl Ga1]foo'),
+        Comment(text: 'foo', shapes: [
+          CommentShape(color: CommentShapeColor.green, from: 0, to: 0)
+        ]));
+
+    expect(
+        parseComment('foo [%bar] [%csl Ga1] [%cal Ra1h1,Gb1b8] [%clk 3:25:45]')
+            .text,
+        'foo [%bar]');
+  });
+
+  test('make comment', () {
+    expect(
+        makeComment(Comment(
+            text: 'text',
+            emt: 3723.4,
+            eval: Evaluation.pawns(pawns: 10),
+            clock: 1,
+            shapes: const [
+              CommentShape(color: CommentShapeColor.yellow, from: 0, to: 0),
+              CommentShape(color: CommentShapeColor.red, from: 0, to: 1),
+              CommentShape(color: CommentShapeColor.red, from: 0, to: 2)
+            ])),
+        'text [%csl Ya1] [%cal Ra1b1,Ra1c1] [%eval 10.00] [%emt 1:02:03.4] [%clk 0:00:01]');
+
+    expect(makeComment(Comment(eval: Evaluation.mate(mate: -4, depth: 5))),
+        '[%eval #-4,5]');
+  });
+
+  test('roundtrip comment', () {
+    final comments = [
+      '[%csl[%eval 0.2] Ga1]',
+      '[%c[%csl [%csl Ga1[%csl Ga1][%[%csl Ga1][%cal[%csl Ga1]Ra1]',
+      '[%csl Ga1][%cal Ra1h1,Gb1b8] foo [%clk 3:ê5: [%eval 450752] [%evaÿTæ<92>ÿÿ^?,7]',
+    ];
+
+    for (final str in comments) {
+      final comment = parseComment(str);
+      final roundTripped = parseComment(makeComment(comment));
+      expect(comment, roundTripped);
+    }
+  });
 }
