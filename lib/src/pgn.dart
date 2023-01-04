@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'dart:math';
 
-import 'package:dartchess/dartchess.dart';
 import 'package:meta/meta.dart';
 import './setup.dart';
 import './models.dart';
@@ -12,6 +10,8 @@ typedef Headers = Map<String, String>;
 
 /// A Node containing PGN data for a move
 class PgnNodeData {
+// TODO: make this class immutable
+
   /// SAN representation of the move
   final String san;
 
@@ -30,13 +30,14 @@ class PgnNodeData {
 }
 
 /// Parent Node containing list of child nodes (Does not contain any data)
+@immutable
 class Node<T> {
-  List<ChildNode<T>> children = [];
+  final List<ChildNode<T>> children = [];
   Node();
 
   /// Implements a Iterable for the node and its children
   ///
-  /// Used for only steping throw the main line
+  /// Used for only iterating the mainline
   Iterable<T> mainline() sync* {
     var node = this;
     while (node.children.isNotEmpty) {
@@ -47,9 +48,10 @@ class Node<T> {
   }
 }
 
-/// Child Node which contains data
+/// Child Node contains data
+@immutable
 class ChildNode<T> extends Node<T> {
-  T data;
+  final T data;
   ChildNode(this.data);
 }
 
@@ -104,7 +106,7 @@ class _PgnFrame {
       required this.inVariation});
 }
 
-/// Defualt headers of a PGN
+/// Default function headers of a PGN
 Headers defaultHeaders() => {
       'Event': '?',
       'Site': '?',
@@ -114,6 +116,11 @@ Headers defaultHeaders() => {
       'Black': '?',
       'Result': '*'
     };
+
+/// Create empty headers of a PGN
+Headers emptyHeaders() {
+  return <String, String>{};
+}
 
 String escapeHeader(String value) =>
     value.replaceAll(RegExp(r'\\'), "\\\\").replaceAll(RegExp('"'), '\\"');
@@ -272,10 +279,6 @@ String makePgn(Game<PgnNodeData> game) {
 
 const bom = '\ufeff';
 
-Headers emptyHeaders() {
-  return <String, String>{};
-}
-
 bool isWhitespace(String line) => RegExp(r'^\s*$').hasMatch(line);
 
 bool isCommentLine(String line) => line.startsWith('%');
@@ -287,7 +290,7 @@ class PgnError implements Exception {
 
 /// A class to read a string and create a [Game]
 ///
-/// Also supports parsing via a stream configured with a budget and yields games when completed
+/// Supports parsing via a stream configured with a budget and yields games when completed
 /// Set budget to null when not streaming
 class PgnParser {
   List<String> _lineBuf = [];
@@ -614,37 +617,46 @@ Variant? parseVariant(String variant) {
 }
 
 /// Create a [Position] from setup and variants
-Position setupPosition(Variant rules, Setup setup, bool ignoreCheck) {
+Position setupPosition(Variant rules, Setup setup,
+    {bool? ignoreImpossibleCheck}) {
 // missing horde, racingkings. Returns Chess for those variants
   switch (rules) {
     case Variant.chess:
-      return Chess.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+      return Chess.fromSetup(setup,
+          ignoreImpossibleCheck: ignoreImpossibleCheck);
     case Variant.antichess:
-      return Antichess.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+      return Antichess.fromSetup(setup,
+          ignoreImpossibleCheck: ignoreImpossibleCheck);
     case Variant.atomic:
-      return Atomic.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+      return Atomic.fromSetup(setup,
+          ignoreImpossibleCheck: ignoreImpossibleCheck);
     case Variant.kingofthehill:
-      return KingOfTheHill.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+      return KingOfTheHill.fromSetup(setup,
+          ignoreImpossibleCheck: ignoreImpossibleCheck);
     case Variant.crazyhouse:
-      return Crazyhouse.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+      return Crazyhouse.fromSetup(setup,
+          ignoreImpossibleCheck: ignoreImpossibleCheck);
     case Variant.threecheck:
-      return ThreeCheck.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+      return ThreeCheck.fromSetup(setup,
+          ignoreImpossibleCheck: ignoreImpossibleCheck);
     default:
-      return Chess.fromSetup(setup, ignoreImpossibleCheck: ignoreCheck);
+      return Chess.fromSetup(setup,
+          ignoreImpossibleCheck: ignoreImpossibleCheck);
   }
 }
 
 /// Create a [Position] for a Variant from the headers
 ///
 /// Headers must include a 'Variant' and 'Fen' key
-Position startingPosition(Headers headers, bool ignoreCheck) {
+Position startingPosition(Headers headers, {bool? ignoreImpossibleCheck}) {
   if (!headers.containsKey('Variant')) throw PgnError('ERR_HEADER_NO_VARIANT');
   final rules = parseVariant(headers['Variant']!);
   if (rules == null) throw PgnError('ERR_HEADER_INVALID_VARIANT');
   if (!headers.containsKey('FEN')) throw PgnError('ERR_HEADER_NO_FEN');
   final fen = headers['FEN']!;
   try {
-    return setupPosition(rules, Setup.parseFen(fen), ignoreCheck);
+    return setupPosition(rules, Setup.parseFen(fen),
+        ignoreImpossibleCheck: ignoreImpossibleCheck);
   } catch (err) {
     rethrow;
   }
@@ -801,6 +813,7 @@ class Comment {
     return other is Comment &&
         text == other.text &&
         // shapes == other.shapes &&  List == operator doesnt compare each component of list
+        // TODO: fix this
         clock == other.clock &&
         emt == other.emt &&
         eval == other.eval;
