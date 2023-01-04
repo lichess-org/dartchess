@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:meta/meta.dart';
 import './setup.dart';
 import './models.dart';
 import './position.dart';
+import './utils.dart';
 
 typedef Headers = Map<String, String>;
 
@@ -682,4 +685,187 @@ void setStartingPosition(Headers headers, Position pos) {
   } else {
     headers.remove('FEN');
   }
+}
+
+enum CommentShapeColor {
+  green,
+  red,
+  yellow,
+  blue;
+
+  String get string {
+    switch (this) {
+      case CommentShapeColor.green:
+        return 'green';
+      case CommentShapeColor.red:
+        return 'red';
+      case CommentShapeColor.yellow:
+        return 'yellow';
+      case CommentShapeColor.blue:
+        return 'blue';
+    }
+  }
+
+  static CommentShapeColor? parseShapeColor(String str) {
+    switch (str) {
+      case 'G':
+        return CommentShapeColor.green;
+      case 'R':
+        return CommentShapeColor.red;
+      case 'Y':
+        return CommentShapeColor.yellow;
+      case 'B':
+        return CommentShapeColor.blue;
+      default:
+        return null;
+    }
+  }
+}
+
+class CommentShape {
+  CommentShapeColor color;
+  Square from;
+  Square to;
+
+  CommentShape({required this.color, required this.from, required this.to});
+}
+
+enum EvalType { pawns, mate }
+
+/// A class containing an evaluation
+/// A Evaluation object can be created used .pawns or .mate contructor
+@immutable
+class Evaluation {
+  final double? pawns;
+  final int? mate;
+  final int? depth;
+  final EvalType evalType;
+
+  const Evaluation.pawns(
+      {required this.pawns,
+      this.evalType = EvalType.pawns,
+      this.depth,
+      this.mate});
+  const Evaluation.mate(
+      {required this.mate,
+      this.evalType = EvalType.mate,
+      this.depth,
+      this.pawns});
+
+  bool isPawns() => evalType == EvalType.pawns;
+}
+
+@immutable
+class Comment {
+  final String? text;
+  final List<CommentShape>? shapes;
+  final double? clock;
+  final double? emt;
+  final Evaluation? eval;
+
+  const Comment({this.text, this.shapes, this.clock, this.emt, this.eval});
+}
+
+String makeClk(double seconds) {
+  var maxSec = max(0, seconds);
+  final hours = (maxSec / 3600).floor();
+  final minutes = ((maxSec % 3600) / 60).floor();
+  maxSec = (maxSec % 3600) % 60;
+  return '$hours:${minutes.toString().padLeft(2, "0")}:${seconds.toStringAsFixed(3).padLeft(5, "0")}';
+}
+
+String makeCommentShape(CommentShape shape) => shape.to == shape.from
+    ? '${shape.color.string[0]}${toAlgebraic(shape.to)}'
+    : '${shape.color.string[0]}${toAlgebraic(shape.from)}${toAlgebraic(shape.to)}';
+
+CommentShape? parseCommentShape(String str) {
+  final color = CommentShapeColor.parseShapeColor(str.substring(0, 1));
+  final from = parseSquare(str.substring(1, 3));
+  final to = parseSquare(str.substring(3, 5));
+  if (color == null || from == null) return null;
+  if (str.length == 3) return CommentShape(color: color, from: from, to: from);
+  if (str.length == 5 && to != null) {
+    return CommentShape(color: color, from: from, to: to);
+  }
+  return null;
+}
+
+String makeEval(Evaluation ev) {
+  var str = '';
+  if (ev.isPawns()) {
+    str = ev.pawns!.toStringAsFixed(2);
+  } else {
+    str = '${ev.mate}';
+  }
+  if (ev.depth != null) str = '$str,${ev.depth}';
+  return str;
+}
+
+String makeComment(Comment comment) {
+  final List<String> builder = [];
+  if (comment.text != null) builder.add(comment.text!);
+  if (comment.shapes != null) {
+    final circles = comment.shapes!
+        .where((shape) => shape.to == shape.from)
+        .map(makeCommentShape);
+    if (circles.isNotEmpty) builder.add('[%csl ${circles.join(",")}]');
+    final arrows = comment.shapes!
+        .where((shape) => shape.to != shape.from)
+        .map(makeCommentShape);
+    if (arrows.isNotEmpty) builder.add('[%cal ${arrows.join(",")}]');
+  }
+  if (comment.eval != null) builder.add('[%eval ${makeEval(comment.eval!)}]');
+  if (comment.emt != null) builder.add('[%emt ${makeClk(comment.emt!)}]');
+  if (comment.clock != null) builder.add('[%emt ${makeClk(comment.clock!)}]');
+  return builder.join(' ');
+}
+
+Comment parseComment(String comment) {
+  double? emt;
+  double? clock;
+  final List<CommentShape> shapes = [];
+  Evaluation? eval;
+  var text = comment.replaceAllMapped(
+      RegExp(
+          r'\s?\[%(emt|clk)\s(\d{1,5}):(\d{1,2}):(\d{1,2}(?:\.\d{0,3})?)\]\s?'),
+      (match) {
+    final annotation = match.group(1);
+    final hours = match.group(2);
+    final minutes = match.group(3);
+    final seconds = match.group(4);
+    final value = int.parse(hours!) * 3600 +
+        int.parse(minutes!) * 60 +
+        double.parse(seconds!);
+    if (annotation == 'emt') {
+      emt = value;
+    } else if (annotation == 'clk') {
+      clock = value;
+    }
+    return ' ';
+  }).replaceAllMapped(
+      RegExp(
+          r'\s?\[%(?:csl|cal)\s([RGYB][a-h][1-8](?:[a-h][1-8])?(?:,[RGYB][a-h][1-8](?:[a-h][1-8])?)*)\]\s?'),
+      (match) {
+    final arrows = match.group(1);
+    for (final arrow in arrows!.split(',')) {
+      var shape = parseCommentShape(arrow);
+      if (shape != null) shapes.add(shape);
+    }
+    return '  ';
+  }).replaceAllMapped(
+      RegExp(
+          r'\s?\[%eval\s(?:#([+-]?\d{1,5})|([+-]?(?:\d{1,5}|\d{0,5}\.\d{1,2})))(?:,(\d{1,5}))?\]\s?'),
+      (match) {
+    final mate = match.group(1);
+    final pawns = match.group(2);
+    final d = match.group(3);
+    final depth = d != null ? int.parse(d) : null;
+    eval = mate != null
+        ? Evaluation.mate(mate: int.parse(mate))
+        : Evaluation.pawns(pawns: double.parse(pawns!), depth: depth);
+    return '  ';
+  }).trim();
+
+  return Comment(
+      text: text, shapes: shapes, emt: emt, clock: clock, eval: eval);
 }
