@@ -352,7 +352,10 @@ class PgnParser {
   late List<String> _commentBuf;
   int? maxBudget;
 
-  final void Function(Game<PgnNodeData>, [Error?]) emitGame;
+  /// Function to which the parse game is passed to
+  final void Function(Game<PgnNodeData>, [Exception?]) emitGame;
+
+  /// Function to create the headers
   final Headers Function() initHeaders;
 
   PgnParser(this.emitGame, this.initHeaders, [this.maxBudget = 1000000]) {
@@ -379,7 +382,7 @@ class PgnParser {
     }
   }
 
-  void _emit(Error? err) {
+  void _emit(Exception? err) {
     if (_state == ParserState.comment) {
       _handleComment();
     }
@@ -403,7 +406,7 @@ class PgnParser {
   }
 
   /// Parse the PGN string
-  void parse(String data, {bool? stream}) {
+  void parse(String data, {bool stream = false}) {
     if (_budget != null && _budget! < 0) return;
     try {
       var idx = 0;
@@ -422,12 +425,12 @@ class PgnParser {
       _consumeBudget(data.length - idx);
       _lineBuf.add(data.substring(idx));
 
-      if (stream == null) {
+      if (stream == false) {
         _handleLine();
         _emit(null);
       }
     } catch (err) {
-      _emit(err as Error);
+      _emit(err as Exception);
     }
   }
 
@@ -597,7 +600,7 @@ class PgnParser {
 List<Game<PgnNodeData>> parsePgn(String pgn,
     [Headers Function() initHeaders = defaultHeaders]) {
   final List<Game<PgnNodeData>> games = [];
-  PgnParser((Game<PgnNodeData> game, [Error? err]) => games.add(game),
+  PgnParser((Game<PgnNodeData> game, [Exception? err]) => games.add(game),
           initHeaders, null)
       .parse(pgn);
   return games;
@@ -904,6 +907,7 @@ CommentShape? parseCommentShape(String str) {
   return null;
 }
 
+/// Create a evaluation string
 String makeEval(Evaluation ev) {
   var str = '';
   if (ev.isPawns()) {
