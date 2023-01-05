@@ -74,7 +74,7 @@ class Game<T> {
       {required this.headers, required this.moves, required this.comments});
 }
 
-class TransformStack<T, U, C extends Cloneable<T>> {
+class TransformStack<T, U, C extends Cloneable<C>> {
   final Node<T> before;
   final Node<U> after;
   final C ctx;
@@ -88,7 +88,7 @@ class WalkStack<T, C> {
   WalkStack(this.node, this.ctx);
 }
 
-Node<U> transform<T, U, C extends Cloneable<T>>(
+Node<U> transform<T, U, C extends Cloneable<C>>(
     Node<T> node, C ctx, U? Function(C, T, int) f) {
   final root = Node<U>();
   final stack = [TransformStack(node, root, ctx)];
@@ -99,7 +99,7 @@ Node<U> transform<T, U, C extends Cloneable<T>>(
         childIdx < frame.before.children.length;
         childIdx++) {
       final C ctx = childIdx < frame.before.children.length - 1
-          ? frame.ctx.clone() as C
+          ? frame.ctx.clone()
           : frame.ctx;
       final childBefore = frame.before.children[childIdx];
       final data = f(ctx, childBefore.data, childIdx);
@@ -113,14 +113,14 @@ Node<U> transform<T, U, C extends Cloneable<T>>(
   return root;
 }
 
-void walk<T, C extends Cloneable<T>>(
+void walk<T, C extends Cloneable<C>>(
     Node<T> node, C ctx, bool? Function(C, T, int) f) {
   final stack = [WalkStack(node, ctx)];
   while (stack.isNotEmpty) {
     final frame = stack.removeLast();
     for (var childIdx = 0; childIdx < frame.node.children.length; childIdx++) {
       final ctx = childIdx < frame.node.children.length - 1
-          ? frame.ctx.clone() as C
+          ? frame.ctx.clone()
           : frame.ctx;
       final child = frame.node.children[childIdx];
       if (f(ctx, child.data, childIdx) != false) {
@@ -708,7 +708,9 @@ Position startingPosition(Headers headers, {bool? ignoreImpossibleCheck}) {
   if (!headers.containsKey('Variant')) throw PgnError('ERR_HEADER_NO_VARIANT');
   final rules = parseVariant(headers['Variant']!);
   if (rules == null) throw PgnError('ERR_HEADER_INVALID_VARIANT');
-  if (!headers.containsKey('FEN')) throw PgnError('ERR_HEADER_NO_FEN');
+  if (!headers.containsKey('FEN')) {
+    return defualtPosition(rules);
+  }
   final fen = headers['FEN']!;
   try {
     return setupPosition(rules, Setup.parseFen(fen),
