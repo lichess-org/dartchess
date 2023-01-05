@@ -207,7 +207,7 @@ class Setup {
 
 /// Pockets (captured pieces) in chess variants like [Crazyhouse].
 @immutable
-class Pockets extends Cloneable<Pockets> {
+class Pockets {
   const Pockets({
     required this.value,
   });
@@ -233,11 +233,6 @@ class Pockets extends Cloneable<Pockets> {
       Role.king: 0,
     },
   });
-
-  @override
-  Pockets clone() {
-    return Pockets(value: Map.from(value));
-  }
 
   /// Gets the total number of pieces in the pocket.
   int get size => value.values

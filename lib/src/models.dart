@@ -263,14 +263,6 @@ class FenError implements Exception {
   const FenError(this.message);
 }
 
-/// Abstract class which contant clone function
-///
-/// Used in transfrom and walk and any type needs to implement this
-abstract class Cloneable<T> {
-  const Cloneable();
-  T clone();
-}
-
 /// Represents the variants of chess
 enum Variant {
   chess,

@@ -12,7 +12,7 @@ import './utils.dart';
 ///
 /// See [Chess] for a concrete implementation of standard rules.
 @immutable
-abstract class Position<T extends Position<T>> extends Cloneable<Position> {
+abstract class Position<T extends Position<T>> {
   const Position({
     required this.board,
     this.pockets,
@@ -72,18 +72,6 @@ abstract class Position<T extends Position<T>> extends Cloneable<Position> {
     int? halfmoves,
     int? fullmoves,
   });
-
-  @override
-  Position<T> clone() {
-    return _copyWith(
-        board: board.clone(),
-        pockets: pockets != null ? pockets!.clone() : null,
-        turn: turn,
-        castles: castles.clone(),
-        epSquare: epSquare,
-        halfmoves: halfmoves,
-        fullmoves: fullmoves);
-  }
 
   Variant get variant => Variant.chess;
 
@@ -699,16 +687,6 @@ class Chess extends Position<Chess> {
   static const initial = Chess._initial();
 
   @override
-  Chess clone() => Chess(
-      board: board.clone(),
-      pockets: pockets != null ? pockets!.clone() : null,
-      turn: turn,
-      castles: castles.clone(),
-      epSquare: epSquare,
-      halfmoves: halfmoves,
-      fullmoves: fullmoves);
-
-  @override
   bool get isVariantEnd => false;
 
   @override
@@ -766,16 +744,6 @@ class Antichess extends Position<Antichess> {
   const Antichess._initial() : super._initial();
 
   static const initial = Antichess._initial();
-
-  @override
-  Antichess clone() => Antichess(
-      board: board.clone(),
-      pockets: pockets != null ? pockets!.clone() : null,
-      turn: turn,
-      castles: castles.clone(),
-      epSquare: epSquare,
-      halfmoves: halfmoves,
-      fullmoves: fullmoves);
 
   @override
   Variant get variant => Variant.antichess;
@@ -912,16 +880,6 @@ class Atomic extends Position<Atomic> {
   const Atomic._initial() : super._initial();
 
   static const initial = Atomic._initial();
-
-  @override
-  Atomic clone() => Atomic(
-      board: board.clone(),
-      pockets: pockets != null ? pockets!.clone() : null,
-      turn: turn,
-      castles: castles.clone(),
-      epSquare: epSquare,
-      halfmoves: halfmoves,
-      fullmoves: fullmoves);
 
   @override
   Variant get variant => Variant.atomic;
@@ -1148,16 +1106,6 @@ class Crazyhouse extends Position<Crazyhouse> {
   );
 
   @override
-  Crazyhouse clone() => Crazyhouse(
-      board: board.clone(),
-      pockets: pockets != null ? pockets!.clone() : null,
-      turn: turn,
-      castles: castles.clone(),
-      epSquare: epSquare,
-      halfmoves: halfmoves,
-      fullmoves: fullmoves);
-
-  @override
   Variant get variant => Variant.crazyhouse;
 
   @override
@@ -1278,16 +1226,6 @@ class KingOfTheHill extends Position<KingOfTheHill> {
   static const initial = KingOfTheHill._initial();
 
   @override
-  KingOfTheHill clone() => KingOfTheHill(
-      board: board.clone(),
-      pockets: pockets != null ? pockets!.clone() : null,
-      turn: turn,
-      castles: castles.clone(),
-      epSquare: epSquare,
-      halfmoves: halfmoves,
-      fullmoves: fullmoves);
-
-  @override
   Variant get variant => Variant.kingofthehill;
 
   @override
@@ -1365,17 +1303,6 @@ class ThreeCheck extends Position<ThreeCheck> {
   static const initial = ThreeCheck._initial();
 
   static const _defaultRemainingChecks = Tuple2(3, 3);
-
-  @override
-  ThreeCheck clone() => ThreeCheck(
-      board: board.clone(),
-      pockets: pockets != null ? pockets!.clone() : null,
-      turn: turn,
-      castles: castles.clone(),
-      epSquare: epSquare,
-      halfmoves: halfmoves,
-      remainingChecks: Tuple2(remainingChecks.item1, remainingChecks.item2),
-      fullmoves: fullmoves);
 
   @override
   Variant get variant => Variant.threecheck;
@@ -1554,7 +1481,7 @@ enum CastlingSide {
 }
 
 @immutable
-class Castles extends Cloneable<Castles> {
+class Castles {
   final SquareSet unmovedRooks;
 
   /// Rooks positions pair.
@@ -1611,14 +1538,6 @@ class Castles extends Cloneable<Castles> {
       }
     }
     return castles;
-  }
-
-  @override
-  Castles clone() {
-    return Castles(
-        unmovedRooks: SquareSet(unmovedRooks.value),
-        rook: Map.from(rook),
-        path: Map.from(path));
   }
 
   /// Gets the rook [Square] by side and castling side.

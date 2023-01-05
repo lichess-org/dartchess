@@ -6,7 +6,7 @@ import './utils.dart';
 
 /// A board represented by several square sets for each piece.
 @immutable
-class Board extends Cloneable<Board> {
+class Board {
   const Board({
     required this.occupied,
     required this.promoted,
@@ -85,15 +85,6 @@ class Board extends Cloneable<Board> {
     }
     if (rank != 0 || file != 8) throw FenError('ERR_BOARD');
     return board;
-  }
-
-  @override
-  Board clone() {
-    return Board(
-        occupied: SquareSet(occupied.value),
-        promoted: SquareSet(promoted.value),
-        sides: Map.from(sides),
-        roles: Map.from(roles));
   }
 
   /// All squares occupied by white pieces.

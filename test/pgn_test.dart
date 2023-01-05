@@ -179,3 +179,9 @@ void main() {
     }
   });
 }
+
+class TransformResult extends PgnNodeData {
+  final String fen;
+
+  TransformResult({required this.fen, required super.san});
+}

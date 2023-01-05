@@ -74,7 +74,7 @@ class Game<T> {
       {required this.headers, required this.moves, required this.comments});
 }
 
-class TransformStack<T, U, C extends Cloneable<C>> {
+class TransformStack<T, U, C> {
   final Node<T> before;
   final Node<U> after;
   final C ctx;
@@ -88,8 +88,7 @@ class WalkStack<T, C> {
   WalkStack(this.node, this.ctx);
 }
 
-Node<U> transform<T, U, C extends Cloneable<C>>(
-    Node<T> node, C ctx, U? Function(C, T, int) f) {
+Node<U> transform<T, U, C>(Node<T> node, C ctx, U? Function(C, T, int) f) {
   final root = Node<U>();
   final stack = [TransformStack(node, root, ctx)];
 
@@ -98,9 +97,6 @@ Node<U> transform<T, U, C extends Cloneable<C>>(
     for (var childIdx = 0;
         childIdx < frame.before.children.length;
         childIdx++) {
-      final C ctx = childIdx < frame.before.children.length - 1
-          ? frame.ctx.clone()
-          : frame.ctx;
       final childBefore = frame.before.children[childIdx];
       final data = f(ctx, childBefore.data, childIdx);
       if (data != null) {
@@ -113,15 +109,11 @@ Node<U> transform<T, U, C extends Cloneable<C>>(
   return root;
 }
 
-void walk<T, C extends Cloneable<C>>(
-    Node<T> node, C ctx, bool? Function(C, T, int) f) {
+void walk<T, C>(Node<T> node, C ctx, bool? Function(C, T, int) f) {
   final stack = [WalkStack(node, ctx)];
   while (stack.isNotEmpty) {
     final frame = stack.removeLast();
     for (var childIdx = 0; childIdx < frame.node.children.length; childIdx++) {
-      final ctx = childIdx < frame.node.children.length - 1
-          ? frame.ctx.clone()
-          : frame.ctx;
       final child = frame.node.children[childIdx];
       if (f(ctx, child.data, childIdx) != false) {
         stack.add(WalkStack(child, ctx));
