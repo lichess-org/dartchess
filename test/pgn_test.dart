@@ -6,29 +6,6 @@ import 'dart:io';
 
 typedef GameCallBack = void Function(Game<PgnNodeData>, [Exception]);
 
-void testPgnFile(String filename, int numGames) {
-  test('pgn file - $filename', () async {
-    final file = File('./data/$filename.pgn');
-    final Stream<String> lines = file.openRead().transform(utf8.decoder);
-    final List<Game<PgnNodeData>> games = [];
-    void gameCallBack(Game<PgnNodeData> game, [Exception? err]) {
-      expect(err, null);
-      games.add(game);
-    }
-
-    final parser = PgnParser(gameCallBack, emptyHeaders);
-    try {
-      await for (final line in lines) {
-        parser.parse(line, stream: true);
-      }
-      parser.parse('');
-      expect(games.length, numGames);
-    } catch (e) {
-      print('Exception $e');
-    }
-  });
-}
-
 void main() {
   test('make pgn', () {
     final root = Node<PgnNodeData>();
@@ -95,10 +72,45 @@ void main() {
     expect(steps[1].nags, [4]);
   });
 
-  testPgnFile('kasparov-deep-blue-1997', 6);
-  testPgnFile('leading-whitespace', 4);
-  testPgnFile('headers-and-moves-on-the-same-line', 3);
-  testPgnFile('pathological-headers', 1);
+  test('pgn file - kasparov-deep-blue-1997', () {
+    final String data =
+        File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();
+    final List<Game<PgnNodeData>> games = parsePgn(data);
+    expect(games.length, 6);
+  });
+
+  test('pgn file - leading-whitespace', () {
+    final String data =
+        File('./data/leading-whitespace.pgn').readAsStringSync();
+    final List<Game<PgnNodeData>> games = parsePgn(data);
+    expect(games[0].moves.mainline().map((move) => move.san).toList(),
+        ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5']);
+    expect(games.length, 4);
+  });
+
+  test('pgn file - headers-and-moves-on-the-same-line', () {
+    final String data = File('./data/headers-and-moves-on-the-same-line.pgn')
+        .readAsStringSync();
+    final List<Game<PgnNodeData>> games = parsePgn(data);
+    expect(games[0].headers['Variant'], 'Antichess');
+    expect(games[1].moves.mainline().map((move) => move.san).toList(),
+        ['e3', 'e6', 'b4', 'Bxb4', 'Qg4']);
+    expect(games.length, 3);
+  });
+
+  test('pgn file - pathological-headers', () {
+    final String data =
+        File('./data/pathological-headers.pgn').readAsStringSync();
+    final List<Game<PgnNodeData>> games = parsePgn(data);
+    expect(games[0].headers['A'], 'b"');
+    expect(games[0].headers['B'], 'b"');
+    expect(games[0].headers['C'], 'A]]');
+    expect(games[0].headers['D'], 'A]][');
+    expect(games[0].headers['E'], '"A]]["');
+    expect(games[0].headers['F'], '"A]]["\\');
+    expect(games[0].headers['G'], '"]');
+    expect(games.length, 1);
+  });
 
   test('parse comment', () {
     expect(

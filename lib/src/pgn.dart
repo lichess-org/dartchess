@@ -32,7 +32,8 @@ class PgnNodeData {
 /// Parent Node containing list of child nodes (Does not contain any data)
 @immutable
 class Node<T> {
-  final List<ChildNode<T>> children = [];
+  final List<ChildNode<T>> children =
+      []; // this list is still growable so not immutable
   Node();
 
   /// Implements a Iterable for the node and its children
@@ -469,7 +470,7 @@ class PgnParser {
               line = line.replaceFirstMapped(headerReg, (match) {
                 _consumeBudget(200);
                 _gameHeaders[match[1]!] =
-                    match[2]!.replaceAll(r'\\"', '"').replaceAll(r'\\\\', '\\');
+                    match[2]!.replaceAll('\\"', '"').replaceAll('\\\\', '\\');
                 moreHeaders = true;
                 freshLine = false;
                 return '';
