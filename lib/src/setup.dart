@@ -67,7 +67,7 @@ class Setup {
   /// Throws a [FenError] if the provided FEN is not valid.
   factory Setup.parseFen(String fen) {
     final parts = fen.split(RegExp(r'[\s_]+'));
-    if (parts.isEmpty) throw FenError('ERR_FEN');
+    if (parts.isEmpty) throw const FenError('ERR_FEN');
 
     // board and pockets
     final boardPart = parts.removeAt(0);
@@ -76,7 +76,7 @@ class Setup {
     if (boardPart.endsWith(']')) {
       final pocketStart = boardPart.indexOf('[');
       if (pocketStart == -1) {
-        throw FenError('ERR_FEN');
+        throw const FenError('ERR_FEN');
       }
       board = Board.parseFen(boardPart.substring(0, pocketStart));
       pockets = _parsePockets(
@@ -102,7 +102,7 @@ class Setup {
       } else if (turnPart == 'b') {
         turn = Side.black;
       } else {
-        throw FenError('ERR_TURN');
+        throw const FenError('ERR_TURN');
       }
     }
 
@@ -121,7 +121,7 @@ class Setup {
       final epPart = parts.removeAt(0);
       if (epPart != '-') {
         epSquare = parseSquare(epPart);
-        if (epSquare == null) throw FenError('ERR_EP_SQUARE');
+        if (epSquare == null) throw const FenError('ERR_EP_SQUARE');
       }
     }
 
@@ -134,21 +134,21 @@ class Setup {
     }
     final halfmoves = halfmovePart != null ? _parseSmallUint(halfmovePart) : 0;
     if (halfmoves == null) {
-      throw FenError('ERR_HALFMOVES');
+      throw const FenError('ERR_HALFMOVES');
     }
 
     final fullmovesPart = parts.isNotEmpty ? parts.removeAt(0) : null;
     final fullmoves =
         fullmovesPart != null ? _parseSmallUint(fullmovesPart) : 1;
     if (fullmoves == null) {
-      throw FenError('ERR_FULLMOVES');
+      throw const FenError('ERR_FULLMOVES');
     }
 
     final remainingChecksPart = parts.isNotEmpty ? parts.removeAt(0) : null;
     Tuple2<int, int>? remainingChecks;
     if (remainingChecksPart != null) {
       if (earlyRemainingChecks != null) {
-        throw FenError('ERR_REMAINING_CHECKS');
+        throw const FenError('ERR_REMAINING_CHECKS');
       }
       remainingChecks = _parseRemainingChecks(remainingChecksPart);
     } else if (earlyRemainingChecks != null) {
@@ -156,7 +156,7 @@ class Setup {
     }
 
     if (parts.isNotEmpty) {
-      throw FenError('ERR_FEN');
+      throw const FenError('ERR_FEN');
     }
 
     return Setup(

@@ -72,18 +72,18 @@ class Board {
         if (code < 57) {
           file += code - 48;
         } else {
-          if (file >= 8 || rank < 0) throw FenError('ERR_BOARD');
+          if (file >= 8 || rank < 0) throw const FenError('ERR_BOARD');
           final square = file + rank * 8;
           final promoted = i + 1 < boardFen.length && boardFen[i + 1] == '~';
           final piece = _charToPiece(c, promoted);
-          if (piece == null) throw FenError('ERR_BOARD');
+          if (piece == null) throw const FenError('ERR_BOARD');
           if (promoted) i++;
           board = board.setPieceAt(square, piece);
           file++;
         }
       }
     }
-    if (rank != 0 || file != 8) throw FenError('ERR_BOARD');
+    if (rank != 0 || file != 8) throw const FenError('ERR_BOARD');
     return board;
   }
 
