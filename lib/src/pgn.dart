@@ -56,7 +56,9 @@ class ChildNode<T> extends Node<T> {
   ChildNode(this.data);
 }
 
-/// A game represented by headers and moves derived from a PGN
+/// A game represented by headers and moves
+///
+/// Used to convert into a PGN
 @immutable
 class Game<T> {
   /// Headers of the game
@@ -75,23 +77,24 @@ class Game<T> {
       {required this.headers, required this.moves, required this.comments});
 }
 
-class TransformStack<T, U, C> {
+class _TransformStack<T, U, C> {
   final Node<T> before;
   final Node<U> after;
   final C ctx;
 
-  TransformStack(this.before, this.after, this.ctx);
+  _TransformStack(this.before, this.after, this.ctx);
 }
 
-class WalkStack<T, C> {
+class _WalkStack<T, C> {
   final Node<T> node;
   final C ctx;
-  WalkStack(this.node, this.ctx);
+  _WalkStack(this.node, this.ctx);
 }
 
+/// Function to walk thorugh each node and transform Node<T> tree into Node<U> tree
 Node<U> transform<T, U, C>(Node<T> node, C ctx, U? Function(C, T, int) f) {
   final root = Node<U>();
-  final stack = [TransformStack(node, root, ctx)];
+  final stack = [_TransformStack(node, root, ctx)];
 
   while (stack.isNotEmpty) {
     final frame = stack.removeLast();
@@ -103,21 +106,22 @@ Node<U> transform<T, U, C>(Node<T> node, C ctx, U? Function(C, T, int) f) {
       if (data != null) {
         final childAfter = ChildNode(data);
         frame.after.children.add(childAfter);
-        stack.add(TransformStack(childBefore, childAfter, ctx));
+        stack.add(_TransformStack(childBefore, childAfter, ctx));
       }
     }
   }
   return root;
 }
 
+/// Create side effects for node tree
 void walk<T, C>(Node<T> node, C ctx, bool? Function(C, T, int) f) {
-  final stack = [WalkStack(node, ctx)];
+  final stack = [_WalkStack(node, ctx)];
   while (stack.isNotEmpty) {
     final frame = stack.removeLast();
     for (var childIdx = 0; childIdx < frame.node.children.length; childIdx++) {
       final child = frame.node.children[childIdx];
       if (f(ctx, child.data, childIdx) != false) {
-        stack.add(WalkStack(child, ctx));
+        stack.add(_WalkStack(child, ctx));
       }
     }
   }
@@ -171,10 +175,14 @@ Headers emptyHeaders() {
   return <String, String>{};
 }
 
+/// Remove escape sequence from the string
 String escapeHeader(String value) =>
     value.replaceAll(RegExp(r'\\'), "\\\\").replaceAll(RegExp('"'), '\\"');
+
+/// Remove '}' from the comment string
 String safeComment(String value) => value.replaceAll(RegExp(r'\}'), '');
 
+/// Return ply from a fen if fen is valid else return 0
 int getPlyFromSetup(String fen) {
   try {
     final setup = Setup.parseFen(fen);
@@ -468,11 +476,13 @@ class PgnParser {
             while (moreHeaders) {
               moreHeaders = false;
               line = line.replaceFirstMapped(headerReg, (match) {
-                _consumeBudget(200);
-                _gameHeaders[match[1]!] =
-                    match[2]!.replaceAll('\\"', '"').replaceAll('\\\\', '\\');
-                moreHeaders = true;
-                freshLine = false;
+                if (match[1] != null && match[2] != null) {
+                  _consumeBudget(200);
+                  _gameHeaders[match[1]!] =
+                      match[2]!.replaceAll('\\"', '"').replaceAll('\\\\', '\\');
+                  moreHeaders = true;
+                  freshLine = false;
+                }
                 return '';
               });
             }
@@ -492,57 +502,59 @@ class PgnParser {
             final matches = tokenRegex.allMatches(line);
             for (final match in matches) {
               final frame = _stack[_stack.length - 1];
-              var token = match[0]!;
-              if (token == ';') {
-                return;
-              } else if (token.startsWith('\$')) {
-                _handleNag(int.parse(token.substring(1)));
-              } else if (token == '!') {
-                _handleNag(1);
-              } else if (token == '?') {
-                _handleNag(2);
-              } else if (token == '!!') {
-                _handleNag(3);
-              } else if (token == '??') {
-                _handleNag(4);
-              } else if (token == '!?') {
-                _handleNag(5);
-              } else if (token == '?!') {
-                _handleNag(6);
-              } else if (token == '1-0' ||
-                  token == '0-1' ||
-                  token == '1/2-1/2' ||
-                  token == '*') {
-                if (_stack.length == 1 && token != '*') {
-                  _gameHeaders['Result'] = token;
+              var token = match[0];
+              if (token != null) {
+                if (token == ';') {
+                  return;
+                } else if (token.startsWith('\$')) {
+                  _handleNag(int.parse(token.substring(1)));
+                } else if (token == '!') {
+                  _handleNag(1);
+                } else if (token == '?') {
+                  _handleNag(2);
+                } else if (token == '!!') {
+                  _handleNag(3);
+                } else if (token == '??') {
+                  _handleNag(4);
+                } else if (token == '!?') {
+                  _handleNag(5);
+                } else if (token == '?!') {
+                  _handleNag(6);
+                } else if (token == '1-0' ||
+                    token == '0-1' ||
+                    token == '1/2-1/2' ||
+                    token == '*') {
+                  if (_stack.length == 1 && token != '*') {
+                    _gameHeaders['Result'] = token;
+                  }
+                } else if (token == '(') {
+                  _consumeBudget(100);
+                  _stack.add(_ParserFrame(parent: frame.parent, root: false));
+                } else if (token == ')') {
+                  if (_stack.length > 1) _stack.removeLast();
+                } else if (token == '{') {
+                  final openIndex = match.end;
+                  final beginIndex =
+                      line[openIndex] == ' ' ? openIndex + 1 : openIndex;
+                  line = line.substring(beginIndex);
+                  _state = ParserState.comment;
+                  continue continuedLine;
+                } else {
+                  _consumeBudget(100);
+                  if (token == 'Z0' || token == '0000' || token == '@@@@') {
+                    token = '--';
+                  } else if (token.startsWith('0')) {
+                    token = token.replaceAll('0', 'O');
+                  }
+                  if (frame.node != null) {
+                    frame.parent = frame.node!;
+                  }
+                  frame.node = ChildNode(PgnNodeData(
+                      san: token, startingComments: frame.startingComments));
+                  frame.startingComments = null;
+                  frame.root = false;
+                  frame.parent.children.add(frame.node!);
                 }
-              } else if (token == '(') {
-                _consumeBudget(100);
-                _stack.add(_ParserFrame(parent: frame.parent, root: false));
-              } else if (token == ')') {
-                if (_stack.length > 1) _stack.removeLast();
-              } else if (token == '{') {
-                final openIndex = match.end;
-                final beginIndex =
-                    line[openIndex] == ' ' ? openIndex + 1 : openIndex;
-                line = line.substring(beginIndex);
-                _state = ParserState.comment;
-                continue continuedLine;
-              } else {
-                _consumeBudget(100);
-                if (token == 'Z0' || token == '0000' || token == '@@@@') {
-                  token = '--';
-                } else if (token.startsWith('0')) {
-                  token = token.replaceAll('0', 'O');
-                }
-                if (frame.node != null) {
-                  frame.parent = frame.node!;
-                }
-                frame.node = ChildNode(PgnNodeData(
-                    san: token, startingComments: frame.startingComments));
-                frame.startingComments = null;
-                frame.root = false;
-                frame.parent.children.add(frame.node!);
               }
             }
             return;
@@ -607,6 +619,7 @@ List<Game<PgnNodeData>> parsePgn(String pgn,
   return games;
 }
 
+/// Parse a string for a variant if exist or return null
 Variant? parseVariant(String variant) {
   switch (variant.toLowerCase()) {
     case 'chess':
@@ -738,7 +751,7 @@ Position defualtPosition(Variant variant) {
   }
 }
 
-/// Set the [Variant] and the 'Fen' for the headers
+/// Set the [Variant] and the 'FEN' for the headers
 void setStartingPosition(Headers headers, Position pos) {
   final variant = pos.variant;
   if (variant != Variant.chess) {
@@ -821,11 +834,14 @@ class Evaluation {
   final int? depth;
   final EvalType evalType;
 
+  /// Constructor to create Evaluation of type pawns
   const Evaluation.pawns(
       {required this.pawns,
       this.depth,
       this.mate,
       this.evalType = EvalType.pawns});
+
+  /// Constructor to cretet Evaluation of type mate
   const Evaluation.mate(
       {required this.mate,
       this.depth,
@@ -868,6 +884,7 @@ class Comment {
         text == other.text &&
         // shapes == other.shapes &&  List == operator doesnt compare each component of list
         // TODO: fix this
+        // This function is only needed for testing.
         clock == other.clock &&
         emt == other.emt &&
         eval == other.eval;
@@ -888,10 +905,8 @@ String makeClk(double seconds) {
       .toStringAsFixed(3)
       .replaceAll(RegExp(r'\.?0+$'), "")
       .substring(1);
-  final dec = maxSec
-      .toInt()
-      .toString()
-      .padLeft(2, "0"); // get the decimal part of seconds
+  final dec =
+      intVal.toString().padLeft(2, "0"); // get the decimal part of seconds
   return '$hours:${minutes.toString().padLeft(2, "0")}:$dec$frac';
 }
 
