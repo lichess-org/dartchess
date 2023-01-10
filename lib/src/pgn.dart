@@ -16,24 +16,49 @@ class PgnNodeData {
   final String san;
 
   /// Starting comments of the node
-  List<String>? startingComments;
+  final List<String>? startingComments;
 
   /// Comments about the node
-  List<String>? comments;
+  final List<String>? comments;
 
   /// Numeric Annotation Glyphs for the move
-  List<int>? nags;
+  final List<int>? nags;
 
   /// Constructor for the class
   PgnNodeData(
       {required this.san, this.startingComments, this.comments, this.nags});
+
+  PgnNodeData copyWith({String? comment, int? nag}) {
+    List<String> newComments = [];
+    List<int> newNags = [];
+    if (comment != null) {
+      if (comments != null) {
+        comments!.add(comment);
+        newComments = comments!.toList();
+      } else {
+        newComments.add(comment);
+      }
+    }
+    if (nag != null) {
+      if (nags != null) {
+        nags!.add(nag);
+        newNags = nags!.toList();
+      } else {
+        newNags.add(nag);
+      }
+    }
+    return PgnNodeData(
+        san: san,
+        startingComments: startingComments ?? const [],
+        comments: comment == null ? null : newComments,
+        nags: nag == null ? null : newNags);
+  }
 }
 
 /// Parent Node containing list of child nodes (Does not contain any data)
-@immutable
 class Node<T> {
   final List<ChildNode<T>> children =
-      []; // this list is still growable so not immutable
+      []; // this list is still growable so not completely immutable, and immutability is needed for parsing
   Node();
 
   /// Implements a Iterable for the node and its children
@@ -50,9 +75,8 @@ class Node<T> {
 }
 
 /// Child Node contains data
-@immutable
 class ChildNode<T> extends Node<T> {
-  final T data;
+  T data;
   ChildNode(this.data);
 }
 
@@ -346,12 +370,8 @@ class PgnError implements Exception {
 }
 
 /// A class to read a string and create a [Game]
-///
-/// Supports parsing via a stream configured with a budget and yields games when completed
-/// Set budget to null when not streaming
 class PgnParser {
   List<String> _lineBuf = [];
-  int? _budget;
   late bool _found;
   late ParserState _state = ParserState.pre;
   late Headers _gameHeaders;
@@ -359,7 +379,6 @@ class PgnParser {
   late Node<PgnNodeData> _gameMoves;
   late List<_ParserFrame> _stack;
   late List<String> _commentBuf;
-  int? maxBudget;
 
   /// Function to which the parse game is passed to
   final void Function(Game<PgnNodeData>, [Exception?]) emitGame;
@@ -367,13 +386,12 @@ class PgnParser {
   /// Function to create the headers
   final Headers Function() initHeaders;
 
-  PgnParser(this.emitGame, this.initHeaders, [this.maxBudget = 1000000]) {
-    resetGame();
+  PgnParser(this.emitGame, this.initHeaders) {
+    _resetGame();
     _state = ParserState.bom;
   }
 
-  void resetGame() {
-    _budget = maxBudget;
+  void _resetGame() {
     _found = false;
     _state = ParserState.pre;
     _gameHeaders = initHeaders();
@@ -381,14 +399,6 @@ class PgnParser {
     _gameComments = [];
     _commentBuf = [];
     _stack = [_ParserFrame(parent: _gameMoves, root: true)];
-  }
-
-  void _consumeBudget(int cost) {
-    if (_budget == null) return;
-    _budget = _budget! - cost;
-    if (_budget! < 0) {
-      throw PgnError('ERR_PGN_BUDGET');
-    }
   }
 
   void _emit(Exception? err) {
@@ -411,12 +421,11 @@ class PgnParser {
               comments: _gameComments),
           null);
     }
-    resetGame();
+    _resetGame();
   }
 
   /// Parse the PGN string
-  void parse(String data, {bool stream = false}) {
-    if (_budget != null && _budget! < 0) return;
+  void parse(String data) {
     try {
       var idx = 0;
       for (;;) {
@@ -426,18 +435,14 @@ class PgnParser {
         }
         final crIdx =
             nlIdx > idx && data[nlIdx - 1] == '\r' ? nlIdx - 1 : nlIdx;
-        _consumeBudget(nlIdx - idx);
         _lineBuf.add(data.substring(idx, crIdx));
         idx = nlIdx + 1;
         _handleLine();
       }
-      _consumeBudget(data.length - idx);
       _lineBuf.add(data.substring(idx));
 
-      if (stream == false) {
-        _handleLine();
-        _emit(null);
-      }
+      _handleLine();
+      _emit(null);
     } catch (err) {
       _emit(err as Exception);
     }
@@ -477,7 +482,6 @@ class PgnParser {
               moreHeaders = false;
               line = line.replaceFirstMapped(headerReg, (match) {
                 if (match[1] != null && match[2] != null) {
-                  _consumeBudget(200);
                   _gameHeaders[match[1]!] =
                       match[2]!.replaceAll('\\"', '"').replaceAll('\\\\', '\\');
                   moreHeaders = true;
@@ -528,7 +532,6 @@ class PgnParser {
                     _gameHeaders['Result'] = token;
                   }
                 } else if (token == '(') {
-                  _consumeBudget(100);
                   _stack.add(_ParserFrame(parent: frame.parent, root: false));
                 } else if (token == ')') {
                   if (_stack.length > 1) _stack.removeLast();
@@ -540,7 +543,6 @@ class PgnParser {
                   _state = ParserState.comment;
                   continue continuedLine;
                 } else {
-                  _consumeBudget(100);
                   if (token == 'Z0' || token == '0000' || token == '@@@@') {
                     token = '--';
                   } else if (token.startsWith('0')) {
@@ -582,22 +584,18 @@ class PgnParser {
   }
 
   void _handleNag(int nag) {
-    _consumeBudget(50);
     final frame = _stack[_stack.length - 1];
     if (frame.node != null) {
-      frame.node!.data.nags ??= [];
-      frame.node!.data.nags!.add(nag);
+      frame.node!.data = frame.node!.data.copyWith(nag: nag);
     }
   }
 
   void _handleComment() {
-    _consumeBudget(100);
     final frame = _stack[_stack.length - 1];
     final comment = _commentBuf.join('\n');
     _commentBuf = [];
     if (frame.node != null) {
-      frame.node!.data.comments ??= [];
-      frame.node!.data.comments!.add(comment);
+      frame.node!.data = frame.node!.data.copyWith(comment: comment);
     } else if (frame.root) {
       _gameComments.add(comment);
     } else {
@@ -610,11 +608,12 @@ class PgnParser {
 /// Default function to parse a PGN
 ///
 /// Creates a list of games if multiple games found
+/// Provide a optional function [initHeaders] to create different headers other than the default
 List<Game<PgnNodeData>> parsePgn(String pgn,
     [Headers Function() initHeaders = defaultHeaders]) {
   final List<Game<PgnNodeData>> games = [];
   PgnParser((Game<PgnNodeData> game, [Exception? err]) => games.add(game),
-          initHeaders, null)
+          initHeaders)
       .parse(pgn);
   return games;
 }
@@ -684,7 +683,7 @@ Variant? parseVariant(String variant) {
 /// Create a [Position] from setup and variants
 Position setupPosition(Variant rules, Setup setup,
     {bool? ignoreImpossibleCheck}) {
-// missing horde, racingkings. Returns Chess for those variants
+// TODO:missing horde, racingkings. Returns Chess for those variants
   switch (rules) {
     case Variant.chess:
       return Chess.fromSetup(setup,

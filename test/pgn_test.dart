@@ -2,8 +2,6 @@ import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 import 'dart:io';
 
-typedef GameCallBack = void Function(Game<PgnNodeData>, [Exception]);
-
 void main() {
   test('make pgn', () {
     final root = Node<PgnNodeData>();
@@ -45,21 +43,16 @@ void main() {
     expect(games[0].headers['Event'], '?');
   });
 
-  test('parse pgn', () {
-    // Look at creating mock function.
-    // One way is to use package mockito but it only supports mocking classes
+  test('parse pgn roundtrip', () {
+    const pgn = '1. e4 \ne5\nNf3 {foo\n  bar baz } 1-0';
+    final List<Game<PgnNodeData>> games = [];
     void callback(Game<PgnNodeData> game, [Exception? error]) {
-      expect(makePgn(game),
-          '[Result "1-0"]\n\n1. e4 e5 2. Nf3 { foo\n  bar baz } 1-0\n');
+      games.add(game);
     }
 
-    final parser = PgnParser(callback, emptyHeaders);
-    parser.parse('1. e4 \ne5', stream: true);
-    parser.parse('\nNf3 {foo\n', stream: true);
-    parser.parse('  bar baz } 1-', stream: true);
-    parser.parse('', stream: true);
-    parser.parse('0', stream: true);
-    parser.parse('');
+    PgnParser(callback, emptyHeaders).parse(pgn);
+    expect(makePgn(games[0]),
+        '[Result "1-0"]\n\n1. e4 e5 2. Nf3 { foo\n  bar baz } 1-0\n');
   });
 
   test('tricky tokens', () {
