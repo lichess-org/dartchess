@@ -9,9 +9,8 @@ import './utils.dart';
 typedef Headers = Map<String, String>;
 
 /// A Node containing PGN data for a move
+@immutable
 class PgnNodeData {
-// TODO: make this class immutable
-
   /// SAN representation of the move
   final String san;
 
@@ -25,7 +24,7 @@ class PgnNodeData {
   final List<int>? nags;
 
   /// Constructor for the class
-  PgnNodeData(
+  const PgnNodeData(
       {required this.san, this.startingComments, this.comments, this.nags});
 
   PgnNodeData copyWith({String? comment, int? nag}) {
