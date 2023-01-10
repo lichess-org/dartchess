@@ -9,7 +9,7 @@ void main() {
     final e3 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e3'));
     root.children.add(e4);
     root.children.add(e3);
-    final e5 = ChildNode<PgnNodeData>(PgnNodeData(san: 'e5'));
+    final e5 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e5'));
     final e6 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e6'));
     e4.children.add(e5);
     e4.children.add(e6);
