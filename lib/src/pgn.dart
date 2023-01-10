@@ -841,7 +841,7 @@ class Evaluation {
       this.mate,
       this.evalType = EvalType.pawns});
 
-  /// Constructor to cretet Evaluation of type mate
+  /// Constructor to create Evaluation of type mate
   const Evaluation.mate(
       {required this.mate,
       this.depth,
