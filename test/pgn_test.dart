@@ -5,18 +5,18 @@ import 'dart:io';
 void main() {
   test('make pgn', () {
     final root = Node<PgnNodeData>();
-    final e4 = ChildNode<PgnNodeData>(PgnNodeData(san: 'e4', nags: [7]));
-    final e3 = ChildNode<PgnNodeData>(PgnNodeData(san: 'e3'));
+    final e4 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e4', nags: [7]));
+    final e3 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e3'));
     root.children.add(e4);
     root.children.add(e3);
     final e5 = ChildNode<PgnNodeData>(PgnNodeData(san: 'e5'));
-    final e6 = ChildNode<PgnNodeData>(PgnNodeData(san: 'e6'));
+    final e6 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e6'));
     e4.children.add(e5);
     e4.children.add(e6);
     final nf3 = ChildNode<PgnNodeData>(
-        PgnNodeData(san: 'Nf3', comments: ['a comment']));
+        const PgnNodeData(san: 'Nf3', comments: ['a comment']));
     e6.children.add(nf3);
-    final c4 = ChildNode<PgnNodeData>(PgnNodeData(san: 'c4'));
+    final c4 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'c4'));
     e5.children.add(c4);
 
     expect(makePgn(Game(headers: const {}, moves: root, comments: const [])),
