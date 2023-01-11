@@ -55,6 +55,7 @@ class PgnNodeData {
 }
 
 /// Parent Node containing list of child nodes (Does not contain any data)
+@immutable
 class Node<T> {
   final List<ChildNode<T>> children =
       []; // this list is still growable so not completely immutable, and immutability is needed for parsing
@@ -74,8 +75,9 @@ class Node<T> {
 }
 
 /// Child Node contains data
+@immutable
 class ChildNode<T> extends Node<T> {
-  T data;
+  final T data;
   ChildNode(this.data);
 }
 
@@ -585,7 +587,7 @@ class PgnParser {
   void _handleNag(int nag) {
     final frame = _stack[_stack.length - 1];
     if (frame.node != null) {
-      frame.node!.data = frame.node!.data.copyWith(nag: nag);
+      frame.node = ChildNode(frame.node!.data.copyWith(nag: nag));
     }
   }
 
@@ -594,7 +596,7 @@ class PgnParser {
     final comment = _commentBuf.join('\n');
     _commentBuf = [];
     if (frame.node != null) {
-      frame.node!.data = frame.node!.data.copyWith(comment: comment);
+      frame.node = ChildNode(frame.node!.data.copyWith(comment: comment));
     } else if (frame.root) {
       _gameComments.add(comment);
     } else {
