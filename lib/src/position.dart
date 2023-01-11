@@ -73,6 +73,8 @@ abstract class Position<T extends Position<T>> {
     int? fullmoves,
   });
 
+  Variant get variant => Variant.chess;
+
   /// Checks if the game is over due to a special variant end condition.
   bool get isVariantEnd;
 
@@ -744,6 +746,9 @@ class Antichess extends Position<Antichess> {
   static const initial = Antichess._initial();
 
   @override
+  Variant get variant => Variant.antichess;
+
+  @override
   bool get isVariantEnd => board.bySide(turn).isEmpty;
 
   @override
@@ -875,6 +880,9 @@ class Atomic extends Position<Atomic> {
   const Atomic._initial() : super._initial();
 
   static const initial = Atomic._initial();
+
+  @override
+  Variant get variant => Variant.atomic;
 
   @override
   bool get isVariantEnd => variantOutcome != null;
@@ -1098,6 +1106,9 @@ class Crazyhouse extends Position<Crazyhouse> {
   );
 
   @override
+  Variant get variant => Variant.crazyhouse;
+
+  @override
   bool get isVariantEnd => false;
 
   @override
@@ -1215,6 +1226,9 @@ class KingOfTheHill extends Position<KingOfTheHill> {
   static const initial = KingOfTheHill._initial();
 
   @override
+  Variant get variant => Variant.kingofthehill;
+
+  @override
   bool get isVariantEnd => board.kings.isIntersected(SquareSet.center);
 
   @override
@@ -1289,6 +1303,9 @@ class ThreeCheck extends Position<ThreeCheck> {
   static const initial = ThreeCheck._initial();
 
   static const _defaultRemainingChecks = Tuple2(3, 3);
+
+  @override
+  Variant get variant => Variant.threecheck;
 
   @override
   bool get isVariantEnd =>

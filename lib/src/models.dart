@@ -262,3 +262,36 @@ class FenError implements Exception {
   final String message;
   const FenError(this.message);
 }
+
+/// Represents the variants of chess
+enum Variant {
+  chess,
+  antichess,
+  kingofthehill,
+  threecheck,
+  atomic,
+  horde,
+  racingKings,
+  crazyhouse;
+
+  String? get string {
+    switch (this) {
+      case Variant.chess:
+        return null;
+      case Variant.antichess:
+        return 'antichess';
+      case Variant.kingofthehill:
+        return 'King of the Hill';
+      case Variant.threecheck:
+        return '3check';
+      case Variant.atomic:
+        return 'Atomic';
+      case Variant.horde:
+        return 'Horde';
+      case Variant.racingKings:
+        return 'Racing Kings';
+      case Variant.crazyhouse:
+        return 'Crazyhouse';
+    }
+  }
+}
