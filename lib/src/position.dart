@@ -376,6 +376,79 @@ abstract class Position<T extends Position<T>> {
     }
   }
 
+  /// Create a [Position] from setup and variants
+  static Position setupPosition(Variant rules, Setup setup,
+      {bool? ignoreImpossibleCheck}) {
+// TODO:missing horde, racingkings. Returns Chess for those variants
+    switch (rules) {
+      case Variant.chess:
+        return Chess.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.antichess:
+        return Antichess.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.atomic:
+        return Atomic.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.kingofthehill:
+        return KingOfTheHill.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.crazyhouse:
+        return Crazyhouse.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.threecheck:
+        return ThreeCheck.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      default:
+        return Chess.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+    }
+  }
+
+  /// Create a [Position] for a Variant from the headers
+  ///
+  /// Headers must include a 'Variant' and 'Fen' key
+  static Position startingPosition(Map<String, String> headers,
+      {bool? ignoreImpossibleCheck}) {
+    if (!headers.containsKey('Variant')) {
+      throw const FenError('ERR_HEADER_NO_VARIANT');
+    }
+    final rules = Variant.fromPgn(headers['Variant']!);
+    if (rules == null) throw const FenError('ERR_HEADER_INVALID_VARIANT');
+    if (!headers.containsKey('FEN')) {
+      return defualtPosition(rules);
+    }
+    final fen = headers['FEN']!;
+    try {
+      return setupPosition(rules, Setup.parseFen(fen),
+          ignoreImpossibleCheck: ignoreImpossibleCheck);
+    } catch (err) {
+      rethrow;
+    }
+  }
+
+  /// Returns the default [Position] for the [Variant]
+  static Position defualtPosition(Variant variant) {
+    switch (variant) {
+      case Variant.chess:
+        return Chess.initial;
+      case Variant.antichess:
+        return Antichess.initial;
+      case Variant.atomic:
+        return Atomic.initial;
+      case Variant.kingofthehill:
+        return KingOfTheHill.initial;
+      case Variant.threecheck:
+        return ThreeCheck.initial;
+      case Variant.crazyhouse:
+        return Crazyhouse.initial;
+      case Variant.horde:
+        return Chess.initial;
+      default:
+        return Chess.initial;
+    }
+  }
+
   /// Checks if checkers are legal in this position.
   ///
   /// Throws a [PositionError.impossibleCheck] if it does not meet validity

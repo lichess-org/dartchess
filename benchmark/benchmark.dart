@@ -53,6 +53,6 @@ void main() {
 
   final game = PgnGame.parsePgn(pgn);
   benchmark('makePgn', () {
-    final str = game.makePgn();
+    game.makePgn();
   }, iterations: 1);
 }

@@ -27,6 +27,7 @@ class PgnNodeData {
   const PgnNodeData(
       {required this.san, this.startingComments, this.comments, this.nags});
 
+  /// Create a clone object and adding a [comment] or a [nag]
   PgnNodeData copyWith({String? comment, int? nag}) {
     List<String> newComments = [];
     List<int> newNags = [];
@@ -54,10 +55,18 @@ class PgnNodeData {
   }
 }
 
+class _TransformStack<T, U, C> {
+  final PgnNode<T> before;
+  final PgnNode<U> after;
+  final C ctx;
+
+  _TransformStack(this.before, this.after, this.ctx);
+}
+
 /// Parent Node containing list of child nodes (Does not contain any data)
 class PgnNode<T> {
-  final List<PgnChildNode<T>> children =
-      []; // this list is still growable so not completely immutable, and immutability is needed for parsing
+  /// Child nodes with PGN data
+  final List<PgnChildNode<T>> children = [];
   PgnNode();
 
   /// Implements a Iterable for the node and its children
@@ -71,17 +80,41 @@ class PgnNode<T> {
       node = child;
     }
   }
+
+  /// Function to walk thorugh each node and transform Node<T> tree into Node<U> tree
+  PgnNode<U> transform<V, U, C>(
+      PgnNode<V> node, C ctx, U? Function(C, V, int) f) {
+    final root = PgnNode<U>();
+    final stack = [_TransformStack(node, root, ctx)];
+
+    while (stack.isNotEmpty) {
+      final frame = stack.removeLast();
+      for (var childIdx = 0;
+          childIdx < frame.before.children.length;
+          childIdx++) {
+        final childBefore = frame.before.children[childIdx];
+        final data = f(ctx, childBefore.data, childIdx);
+        if (data != null) {
+          final childAfter = PgnChildNode(data);
+          frame.after.children.add(childAfter);
+          stack.add(_TransformStack(childBefore, childAfter, ctx));
+        }
+      }
+    }
+    return root;
+  }
 }
 
-/// Child Node contains data
+/// Child Node with PGN data
 class PgnChildNode<T> extends PgnNode<T> {
+  /// PGN Data
   T data;
   PgnChildNode(this.data);
 }
 
 /// A game represented by headers and moves
 ///
-/// Used to convert into a PGN
+/// Used to convert a chess game from or to a PGN
 @immutable
 class PgnGame<T> {
   /// Headers of the game
@@ -111,9 +144,7 @@ class PgnGame<T> {
       };
 
   /// Create empty headers of a PGN
-  static Headers emptyHeaders() {
-    return <String, String>{};
-  }
+  static Headers emptyHeaders() => <String, String>{};
 
   /// Parse a pgn and return a [PgnGame]
   ///
@@ -245,37 +276,6 @@ class PgnGame<T> {
   }
 }
 
-class _TransformStack<T, U, C> {
-  final PgnNode<T> before;
-  final PgnNode<U> after;
-  final C ctx;
-
-  _TransformStack(this.before, this.after, this.ctx);
-}
-
-/// Function to walk thorugh each node and transform Node<T> tree into Node<U> tree
-PgnNode<U> transform<T, U, C>(
-    PgnNode<T> node, C ctx, U? Function(C, T, int) f) {
-  final root = PgnNode<U>();
-  final stack = [_TransformStack(node, root, ctx)];
-
-  while (stack.isNotEmpty) {
-    final frame = stack.removeLast();
-    for (var childIdx = 0;
-        childIdx < frame.before.children.length;
-        childIdx++) {
-      final childBefore = frame.before.children[childIdx];
-      final data = f(ctx, childBefore.data, childIdx);
-      if (data != null) {
-        final childAfter = PgnChildNode(data);
-        frame.after.children.add(childAfter);
-        stack.add(_TransformStack(childBefore, childAfter, ctx));
-      }
-    }
-  }
-  return root;
-}
-
 /// A frame used for parsing a line
 class _ParserFrame {
   PgnNode<PgnNodeData> parent;
@@ -325,12 +325,13 @@ int _getPlyFromSetup(String fen) {
   }
 }
 
-const bom = '\ufeff';
+const _bom = '\ufeff';
 
-bool isWhitespace(String line) => RegExp(r'^\s*$').hasMatch(line);
+bool _isWhitespace(String line) => RegExp(r'^\s*$').hasMatch(line);
 
-bool isCommentLine(String line) => line.startsWith('%');
+bool _isCommentLine(String line) => line.startsWith('%');
 
+/// Exception when parsing a PGN
 class PgnError implements Exception {
   final String message;
   PgnError(this.message);
@@ -347,7 +348,7 @@ class PgnParser {
   late List<_ParserFrame> _stack;
   late List<String> _commentBuf;
 
-  /// Function to which the parse game is passed to
+  /// Function to which the parsed game is passed to
   final void Function(PgnGame<PgnNodeData>, [Exception?]) emitGame;
 
   /// Function to create the headers
@@ -424,8 +425,8 @@ class PgnParser {
       switch (_state) {
         case _ParserState.bom:
           {
-            if (line.startsWith(bom)) {
-              line = line.substring(bom.length);
+            if (line.startsWith(_bom)) {
+              line = line.substring(_bom.length);
             }
             _state = _ParserState.pre;
             continue;
@@ -433,7 +434,7 @@ class PgnParser {
 
         case _ParserState.pre:
           {
-            if (isWhitespace(line) || isCommentLine(line)) return;
+            if (_isWhitespace(line) || _isCommentLine(line)) return;
             _found = true;
             _state = _ParserState.headers;
             continue;
@@ -441,7 +442,7 @@ class PgnParser {
 
         case _ParserState.headers:
           {
-            if (isCommentLine(line)) return;
+            if (_isCommentLine(line)) return;
             var moreHeaders = true;
             final headerReg = RegExp(
                 r'^\s*\[([A-Za-z0-9][A-Za-z0-9_+#=:-]*)\s+"((?:[^"\\]|\\"|\\\\)*)"\]');
@@ -457,7 +458,7 @@ class PgnParser {
                 return '';
               });
             }
-            if (isWhitespace(line)) return;
+            if (_isWhitespace(line)) return;
             _state = _ParserState.moves;
             continue;
           }
@@ -465,8 +466,8 @@ class PgnParser {
         case _ParserState.moves:
           {
             if (freshLine) {
-              if (isCommentLine(line)) return;
-              if (isWhitespace(line)) return _emit(null);
+              if (_isCommentLine(line)) return;
+              if (_isWhitespace(line)) return _emit(null);
             }
             final tokenRegex = RegExp(
                 r'(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/');
@@ -585,93 +586,6 @@ List<PgnGame<PgnNodeData>> parseMultiGamePgn(String pgn,
   return games;
 }
 
-/// Create a [Position] from setup and variants
-Position setupPosition(Variant rules, Setup setup,
-    {bool? ignoreImpossibleCheck}) {
-// TODO:missing horde, racingkings. Returns Chess for those variants
-  switch (rules) {
-    case Variant.chess:
-      return Chess.fromSetup(setup,
-          ignoreImpossibleCheck: ignoreImpossibleCheck);
-    case Variant.antichess:
-      return Antichess.fromSetup(setup,
-          ignoreImpossibleCheck: ignoreImpossibleCheck);
-    case Variant.atomic:
-      return Atomic.fromSetup(setup,
-          ignoreImpossibleCheck: ignoreImpossibleCheck);
-    case Variant.kingofthehill:
-      return KingOfTheHill.fromSetup(setup,
-          ignoreImpossibleCheck: ignoreImpossibleCheck);
-    case Variant.crazyhouse:
-      return Crazyhouse.fromSetup(setup,
-          ignoreImpossibleCheck: ignoreImpossibleCheck);
-    case Variant.threecheck:
-      return ThreeCheck.fromSetup(setup,
-          ignoreImpossibleCheck: ignoreImpossibleCheck);
-    default:
-      return Chess.fromSetup(setup,
-          ignoreImpossibleCheck: ignoreImpossibleCheck);
-  }
-}
-
-/// Create a [Position] for a Variant from the headers
-///
-/// Headers must include a 'Variant' and 'Fen' key
-Position startingPosition(Headers headers, {bool? ignoreImpossibleCheck}) {
-  if (!headers.containsKey('Variant')) throw PgnError('ERR_HEADER_NO_VARIANT');
-  final rules = Variant.fromPgn(headers['Variant']!);
-  if (rules == null) throw PgnError('ERR_HEADER_INVALID_VARIANT');
-  if (!headers.containsKey('FEN')) {
-    return defualtPosition(rules);
-  }
-  final fen = headers['FEN']!;
-  try {
-    return setupPosition(rules, Setup.parseFen(fen),
-        ignoreImpossibleCheck: ignoreImpossibleCheck);
-  } catch (err) {
-    rethrow;
-  }
-}
-
-/// Returns the defualt [Position] for the [Variant]
-Position defualtPosition(Variant variant) {
-  switch (variant) {
-    case Variant.chess:
-      return Chess.initial;
-    case Variant.antichess:
-      return Antichess.initial;
-    case Variant.atomic:
-      return Atomic.initial;
-    case Variant.kingofthehill:
-      return KingOfTheHill.initial;
-    case Variant.threecheck:
-      return ThreeCheck.initial;
-    case Variant.crazyhouse:
-      return Crazyhouse.initial;
-    case Variant.horde:
-      return Chess.initial;
-    default:
-      return Chess.initial;
-  }
-}
-
-/// Set the [Variant] and the 'FEN' for the headers
-void setStartingPosition(Headers headers, Position pos) {
-  final variant = pos.variant;
-  if (variant != Variant.chess) {
-    headers['Variant'] = variant.string!;
-  } else {
-    headers.remove('Variant');
-  }
-
-  final defaultFen = defualtPosition(pos.variant).fen;
-  if (pos.fen != defaultFen) {
-    headers['FEN'] = pos.fen;
-  } else {
-    headers.remove('FEN');
-  }
-}
-
 /// Represents the color of a comment
 ///
 /// Can be green, red, yellow, and blue
@@ -712,7 +626,7 @@ enum CommentShapeColor {
 
 /// A comment shape
 ///
-/// Example of a comment shape "[%cal Ra1b2]" with color: Red from:a1 to:b2
+/// Example of a comment shape "%cal Ra1b2" with color: Red from:a1 to:b2
 @immutable
 class PgnCommentShape {
   final CommentShapeColor color;
@@ -727,6 +641,21 @@ class PgnCommentShape {
     return to == from
         ? '${color.string[0]}${toAlgebraic(to)}'
         : '${color.string[0]}${toAlgebraic(from)}${toAlgebraic(to)}';
+  }
+
+  /// Parse the str for any comment or return null
+  static PgnCommentShape? fromPgn(String str) {
+    final color = CommentShapeColor.parseShapeColor(str.substring(0, 1));
+    final from = parseSquare(str.substring(1, 3));
+    if (color == null || from == null) return null;
+    if (str.length == 3) {
+      return PgnCommentShape(color: color, from: from, to: from);
+    }
+    final to = parseSquare(str.substring(3, 5));
+    if (str.length == 5 && to != null) {
+      return PgnCommentShape(color: color, from: from, to: to);
+    }
+    return null;
   }
 }
 
@@ -812,7 +741,7 @@ class PgnComment {
   @override
   int get hashCode => Object.hash(text, shapes, clock, emt, eval);
 
-  /// Create a string from a comment
+  /// Create a PGN string from a comment
   String makeComment() {
     final List<String> builder = [];
     if (text != null) builder.add(text!);
@@ -860,7 +789,7 @@ class PgnComment {
       final arrows = match.group(1);
       if (arrows != null) {
         for (final arrow in arrows.split(',')) {
-          final shape = _parseCommentShape(arrow);
+          final shape = PgnCommentShape.fromPgn(arrow);
           if (shape != null) shapes.add(shape);
         }
       }
@@ -899,18 +828,4 @@ String _makeClk(double seconds) {
   final dec =
       intVal.toString().padLeft(2, "0"); // get the decimal part of seconds
   return '$hours:${minutes.toString().padLeft(2, "0")}:$dec$frac';
-}
-
-/// Parse the str for any comment or return null
-PgnCommentShape? _parseCommentShape(String str) {
-  final color = CommentShapeColor.parseShapeColor(str.substring(0, 1));
-  final from = parseSquare(str.substring(1, 3));
-  if (color == null || from == null) return null;
-  if (str.length == 3)
-    return PgnCommentShape(color: color, from: from, to: from);
-  final to = parseSquare(str.substring(3, 5));
-  if (str.length == 5 && to != null) {
-    return PgnCommentShape(color: color, from: from, to: to);
-  }
-  return null;
 }
