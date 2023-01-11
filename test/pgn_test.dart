@@ -103,68 +103,70 @@ void main() {
 
   test('parse comment', () {
     expect(
-        parseComment('[%eval -0.42] suffix'),
-        const Comment(
+        PgnComment.fromPgn('[%eval -0.42] suffix'),
+        const PgnComment(
           text: 'suffix',
-          eval: Evaluation.pawns(pawns: -0.42),
+          eval: PgnEvaluation.pawns(pawns: -0.42),
         ));
 
     expect(
-        parseComment('prefix [%emt 1:02:03.4]'),
-        const Comment(
+        PgnComment.fromPgn('prefix [%emt 1:02:03.4]'),
+        const PgnComment(
           text: 'prefix',
           emt: 3723.4,
         ));
 
     expect(
-        parseComment('[%csl Ya1][%cal Ra1a1,Be1e2]commentary [%csl Gh8]'),
-        const Comment(text: 'commentary', shapes: [
-          CommentShape(color: CommentShapeColor.yellow, from: 0, to: 0),
-          CommentShape(color: CommentShapeColor.red, from: 0, to: 0),
-          CommentShape(color: CommentShapeColor.blue, from: 4, to: 12),
-          CommentShape(color: CommentShapeColor.green, from: 63, to: 63)
+        PgnComment.fromPgn('[%csl Ya1][%cal Ra1a1,Be1e2]commentary [%csl Gh8]'),
+        const PgnComment(text: 'commentary', shapes: [
+          PgnCommentShape(color: CommentShapeColor.yellow, from: 0, to: 0),
+          PgnCommentShape(color: CommentShapeColor.red, from: 0, to: 0),
+          PgnCommentShape(color: CommentShapeColor.blue, from: 4, to: 12),
+          PgnCommentShape(color: CommentShapeColor.green, from: 63, to: 63)
         ]));
 
     expect(
-        parseComment('prefix [%eval .99,23]'),
-        const Comment(
-            text: 'prefix', eval: Evaluation.pawns(pawns: 0.99, depth: 23)));
+        PgnComment.fromPgn('prefix [%eval .99,23]'),
+        const PgnComment(
+            text: 'prefix', eval: PgnEvaluation.pawns(pawns: 0.99, depth: 23)));
 
     expect(
-        parseComment('[%eval #-3] suffix'),
-        const Comment(
+        PgnComment.fromPgn('[%eval #-3] suffix'),
+        const PgnComment(
           text: 'suffix',
-          eval: Evaluation.mate(mate: -3),
+          eval: PgnEvaluation.mate(mate: -3),
         ));
 
     expect(
-        parseComment('[%csl Ga1]foo'),
-        const Comment(text: 'foo', shapes: [
-          CommentShape(color: CommentShapeColor.green, from: 0, to: 0)
+        PgnComment.fromPgn('[%csl Ga1]foo'),
+        const PgnComment(text: 'foo', shapes: [
+          PgnCommentShape(color: CommentShapeColor.green, from: 0, to: 0)
         ]));
 
     expect(
-        parseComment('foo [%bar] [%csl Ga1] [%cal Ra1h1,Gb1b8] [%clk 3:25:45]')
+        PgnComment.fromPgn(
+                'foo [%bar] [%csl Ga1] [%cal Ra1h1,Gb1b8] [%clk 3:25:45]')
             .text,
         'foo [%bar]');
   });
 
   test('make comment', () {
     expect(
-        makeComment(const Comment(
+        const PgnComment(
             text: 'text',
             emt: 3723.4,
-            eval: Evaluation.pawns(pawns: 10),
+            eval: PgnEvaluation.pawns(pawns: 10),
             clock: 1,
             shapes: [
-              CommentShape(color: CommentShapeColor.yellow, from: 0, to: 0),
-              CommentShape(color: CommentShapeColor.red, from: 0, to: 1),
-              CommentShape(color: CommentShapeColor.red, from: 0, to: 2)
-            ])),
+              PgnCommentShape(color: CommentShapeColor.yellow, from: 0, to: 0),
+              PgnCommentShape(color: CommentShapeColor.red, from: 0, to: 1),
+              PgnCommentShape(color: CommentShapeColor.red, from: 0, to: 2)
+            ]).makeComment(),
         'text [%csl Ya1] [%cal Ra1b1,Ra1c1] [%eval 10.00] [%emt 1:02:03.4] [%clk 0:00:01]');
 
     expect(
-        makeComment(const Comment(eval: Evaluation.mate(mate: -4, depth: 5))),
+        const PgnComment(eval: PgnEvaluation.mate(mate: -4, depth: 5))
+            .makeComment(),
         '[%eval #-4,5]');
   });
 
@@ -176,8 +178,8 @@ void main() {
     ];
 
     for (final str in comments) {
-      final comment = parseComment(str);
-      final roundTripped = parseComment(makeComment(comment));
+      final comment = PgnComment.fromPgn(str);
+      final roundTripped = PgnComment.fromPgn(comment.makeComment());
       expect(comment, roundTripped);
     }
   });

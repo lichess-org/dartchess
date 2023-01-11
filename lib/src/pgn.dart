@@ -672,6 +672,9 @@ void setStartingPosition(Headers headers, Position pos) {
   }
 }
 
+/// Represents the color of a comment
+///
+/// Can be green, red, yellow, and blue
 enum CommentShapeColor {
   green,
   red,
@@ -711,12 +714,12 @@ enum CommentShapeColor {
 ///
 /// Example of a comment shape "[%cal Ra1b2]" with color: Red from:a1 to:b2
 @immutable
-class CommentShape {
+class PgnCommentShape {
   final CommentShapeColor color;
   final Square from;
   final Square to;
 
-  const CommentShape(
+  const PgnCommentShape(
       {required this.color, required this.from, required this.to});
 
   @override
@@ -727,26 +730,29 @@ class CommentShape {
   }
 }
 
+/// Represents the type of [PgnEvaluation]
+///
+/// Can of of type pawns or mate
 enum EvalType { pawns, mate }
 
 /// A class containing an evaluation
 /// A Evaluation object can be created used .pawns or .mate contructor
 @immutable
-class Evaluation {
+class PgnEvaluation {
   final double? pawns;
   final int? mate;
   final int? depth;
   final EvalType evalType;
 
   /// Constructor to create Evaluation of type pawns
-  const Evaluation.pawns(
+  const PgnEvaluation.pawns(
       {required this.pawns,
       this.depth,
       this.mate,
       this.evalType = EvalType.pawns});
 
   /// Constructor to create Evaluation of type mate
-  const Evaluation.mate(
+  const PgnEvaluation.mate(
       {required this.mate,
       this.depth,
       this.pawns,
@@ -754,7 +760,7 @@ class Evaluation {
 
   @override
   bool operator ==(Object other) =>
-      other is Evaluation &&
+      other is PgnEvaluation &&
       pawns == other.pawns &&
       depth == other.depth &&
       mate == other.mate;
@@ -765,30 +771,39 @@ class Evaluation {
       : Object.hash(mate, depth);
 
   bool isPawns() => evalType == EvalType.pawns;
+
+  /// Create a PGN evaluation string
+  String toPgn() {
+    var str = '';
+    if (isPawns()) {
+      str = pawns!.toStringAsFixed(2);
+    } else {
+      str = '#$mate';
+    }
+    if (depth != null) str = '$str,$depth';
+    return str;
+  }
 }
 
 /// A comment class
 @immutable
-class Comment {
+class PgnComment {
   /// Comment string
   final String? text;
 
   /// List of comment shapes
-  final List<CommentShape> shapes;
+  final List<PgnCommentShape> shapes;
   final double? clock;
   final double? emt;
-  final Evaluation? eval;
+  final PgnEvaluation? eval;
 
-  const Comment(
+  const PgnComment(
       {this.text, this.shapes = const [], this.clock, this.emt, this.eval});
 
   @override
   bool operator ==(Object other) {
-    return other is Comment &&
+    return other is PgnComment &&
         text == other.text &&
-        // shapes == other.shapes &&  List == operator doesnt compare each component of list
-        // TODO: fix this
-        // This function is only needed for testing.
         clock == other.clock &&
         emt == other.emt &&
         eval == other.eval;
@@ -796,10 +811,82 @@ class Comment {
 
   @override
   int get hashCode => Object.hash(text, shapes, clock, emt, eval);
+
+  /// Create a string from a comment
+  String makeComment() {
+    final List<String> builder = [];
+    if (text != null) builder.add(text!);
+    final circles = shapes
+        .where((shape) => shape.to == shape.from)
+        .map((shape) => shape.toString());
+    if (circles.isNotEmpty) builder.add('[%csl ${circles.join(",")}]');
+    final arrows = shapes
+        .where((shape) => shape.to != shape.from)
+        .map((shape) => shape.toString());
+    if (arrows.isNotEmpty) builder.add('[%cal ${arrows.join(",")}]');
+    if (eval != null) builder.add('[%eval ${eval!.toPgn()}]');
+    if (emt != null) builder.add('[%emt ${_makeClk(emt!)}]');
+    if (clock != null) builder.add('[%clk ${_makeClk(clock!)}]');
+    return builder.join(' ');
+  }
+
+  /// Parse the comment from a string
+  factory PgnComment.fromPgn(String comment) {
+    double? emt;
+    double? clock;
+    final List<PgnCommentShape> shapes = [];
+    PgnEvaluation? eval;
+    final text = comment.replaceAllMapped(
+        RegExp(
+            r'\s?\[%(emt|clk)\s(\d{1,5}):(\d{1,2}):(\d{1,2}(?:\.\d{0,3})?)\]\s?'),
+        (match) {
+      final annotation = match.group(1);
+      final hours = match.group(2);
+      final minutes = match.group(3);
+      final seconds = match.group(4);
+      final value = double.parse(hours!) * 3600 +
+          int.parse(minutes!) * 60 +
+          double.parse(seconds!);
+      if (annotation == 'emt') {
+        emt = value;
+      } else if (annotation == 'clk') {
+        clock = value;
+      }
+      return '  ';
+    }).replaceAllMapped(
+        RegExp(
+            r'\s?\[%(?:csl|cal)\s([RGYB][a-h][1-8](?:[a-h][1-8])?(?:,[RGYB][a-h][1-8](?:[a-h][1-8])?)*)\]\s?'),
+        (match) {
+      final arrows = match.group(1);
+      if (arrows != null) {
+        for (final arrow in arrows.split(',')) {
+          final shape = _parseCommentShape(arrow);
+          if (shape != null) shapes.add(shape);
+        }
+      }
+      return '  ';
+    }).replaceAllMapped(
+        RegExp(
+            r'\s?\[%eval\s(?:#([+-]?\d{1,5})|([+-]?(?:\d{1,5}|\d{0,5}\.\d{1,2})))(?:,(\d{1,5}))?\]\s?'),
+        (match) {
+      final mate = match.group(1);
+      final pawns = match.group(2);
+      final d = match.group(3);
+      final depth = d != null ? int.parse(d) : null;
+      eval = mate != null
+          ? PgnEvaluation.mate(mate: int.parse(mate), depth: depth)
+          : PgnEvaluation.pawns(
+              pawns: pawns != null ? double.parse(pawns) : null, depth: depth);
+      return '  ';
+    }).trim();
+
+    return PgnComment(
+        text: text, shapes: shapes, emt: emt, clock: clock, eval: eval);
+  }
 }
 
 /// Make the clock to string from seconds
-String makeClk(double seconds) {
+String _makeClk(double seconds) {
   var maxSec = max(0, seconds);
   final hours = (maxSec / 3600).floor();
   final minutes = ((maxSec % 3600) / 60).floor();
@@ -815,98 +902,15 @@ String makeClk(double seconds) {
 }
 
 /// Parse the str for any comment or return null
-CommentShape? parseCommentShape(String str) {
+PgnCommentShape? _parseCommentShape(String str) {
   final color = CommentShapeColor.parseShapeColor(str.substring(0, 1));
   final from = parseSquare(str.substring(1, 3));
   if (color == null || from == null) return null;
-  if (str.length == 3) return CommentShape(color: color, from: from, to: from);
+  if (str.length == 3)
+    return PgnCommentShape(color: color, from: from, to: from);
   final to = parseSquare(str.substring(3, 5));
   if (str.length == 5 && to != null) {
-    return CommentShape(color: color, from: from, to: to);
+    return PgnCommentShape(color: color, from: from, to: to);
   }
   return null;
-}
-
-/// Create a evaluation string
-String makeEval(Evaluation ev) {
-  var str = '';
-  if (ev.isPawns()) {
-    str = ev.pawns!.toStringAsFixed(2);
-  } else {
-    str = '#${ev.mate}';
-  }
-  if (ev.depth != null) str = '$str,${ev.depth}';
-  return str;
-}
-
-/// Create a string from a comment
-String makeComment(Comment comment) {
-  final List<String> builder = [];
-  if (comment.text != null) builder.add(comment.text!);
-  final circles = comment.shapes
-      .where((shape) => shape.to == shape.from)
-      .map((shape) => shape.toString());
-  if (circles.isNotEmpty) builder.add('[%csl ${circles.join(",")}]');
-  final arrows = comment.shapes
-      .where((shape) => shape.to != shape.from)
-      .map((shape) => shape.toString());
-  if (arrows.isNotEmpty) builder.add('[%cal ${arrows.join(",")}]');
-  if (comment.eval != null) builder.add('[%eval ${makeEval(comment.eval!)}]');
-  if (comment.emt != null) builder.add('[%emt ${makeClk(comment.emt!)}]');
-  if (comment.clock != null) builder.add('[%clk ${makeClk(comment.clock!)}]');
-  return builder.join(' ');
-}
-
-/// Parse the comment from a string
-Comment parseComment(String comment) {
-  double? emt;
-  double? clock;
-  final List<CommentShape> shapes = [];
-  Evaluation? eval;
-  final text = comment.replaceAllMapped(
-      RegExp(
-          r'\s?\[%(emt|clk)\s(\d{1,5}):(\d{1,2}):(\d{1,2}(?:\.\d{0,3})?)\]\s?'),
-      (match) {
-    final annotation = match.group(1);
-    final hours = match.group(2);
-    final minutes = match.group(3);
-    final seconds = match.group(4);
-    final value = double.parse(hours!) * 3600 +
-        int.parse(minutes!) * 60 +
-        double.parse(seconds!);
-    if (annotation == 'emt') {
-      emt = value;
-    } else if (annotation == 'clk') {
-      clock = value;
-    }
-    return '  ';
-  }).replaceAllMapped(
-      RegExp(
-          r'\s?\[%(?:csl|cal)\s([RGYB][a-h][1-8](?:[a-h][1-8])?(?:,[RGYB][a-h][1-8](?:[a-h][1-8])?)*)\]\s?'),
-      (match) {
-    final arrows = match.group(1);
-    if (arrows != null) {
-      for (final arrow in arrows.split(',')) {
-        final shape = parseCommentShape(arrow);
-        if (shape != null) shapes.add(shape);
-      }
-    }
-    return '  ';
-  }).replaceAllMapped(
-      RegExp(
-          r'\s?\[%eval\s(?:#([+-]?\d{1,5})|([+-]?(?:\d{1,5}|\d{0,5}\.\d{1,2})))(?:,(\d{1,5}))?\]\s?'),
-      (match) {
-    final mate = match.group(1);
-    final pawns = match.group(2);
-    final d = match.group(3);
-    final depth = d != null ? int.parse(d) : null;
-    eval = mate != null
-        ? Evaluation.mate(mate: int.parse(mate), depth: depth)
-        : Evaluation.pawns(
-            pawns: pawns != null ? double.parse(pawns) : null, depth: depth);
-    return '  ';
-  }).trim();
-
-  return Comment(
-      text: text, shapes: shapes, emt: emt, clock: clock, eval: eval);
 }
