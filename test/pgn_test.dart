@@ -4,27 +4,29 @@ import 'dart:io';
 
 void main() {
   test('make pgn', () {
-    final root = Node<PgnNodeData>();
-    final e4 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e4', nags: [7]));
-    final e3 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e3'));
+    final root = PgnNode<PgnNodeData>();
+    final e4 =
+        PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'e4', nags: [7]));
+    final e3 = PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'e3'));
     root.children.add(e4);
     root.children.add(e3);
-    final e5 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e5'));
-    final e6 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e6'));
+    final e5 = PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'e5'));
+    final e6 = PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'e6'));
     e4.children.add(e5);
     e4.children.add(e6);
-    final nf3 = ChildNode<PgnNodeData>(
+    final nf3 = PgnChildNode<PgnNodeData>(
         const PgnNodeData(san: 'Nf3', comments: ['a comment']));
     e6.children.add(nf3);
-    final c4 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'c4'));
+    final c4 = PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'c4'));
     e5.children.add(c4);
 
-    expect(makePgn(Game(headers: const {}, moves: root, comments: const [])),
+    expect(
+        PgnGame(headers: const {}, moves: root, comments: const []).makePgn(),
         "1. e4 \$7 ( 1. e3 ) 1... e5 ( 1... e6 2. Nf3 { a comment } ) 2. c4 *\n");
   });
 
   test('parse headers', () {
-    final games = parsePgn([
+    final game = PgnGame.parsePgn([
       '[Black "black player"]',
       '[White " white  player   "]',
       '[Escaped "quote: \\", backslashes: \\\\\\\\, trailing text"]',
@@ -32,31 +34,27 @@ void main() {
       '[Incomplete',
     ].join('\r\n'));
 
-    expect(games.length, 1);
-    expect(games[0].headers['Black'], 'black player');
-    expect(games[0].headers['White'], ' white  player   ');
-    expect(games[0].headers['Escaped'],
-        'quote: ", backslashes: \\\\, trailing text');
-    expect(games[0].headers['Multiple'], 'on');
-    expect(games[0].headers['the'], 'same line');
-    expect(games[0].headers['Result'], '*');
-    expect(games[0].headers['Event'], '?');
+    expect(game.headers['Black'], 'black player');
+    expect(game.headers['White'], ' white  player   ');
+    expect(
+        game.headers['Escaped'], 'quote: ", backslashes: \\\\, trailing text');
+    expect(game.headers['Multiple'], 'on');
+    expect(game.headers['the'], 'same line');
+    expect(game.headers['Result'], '*');
+    expect(game.headers['Event'], '?');
   });
 
   test('parse pgn roundtrip', () {
     const pgn = '1. e4 \ne5\nNf3 {foo\n  bar baz } 1-0';
-    final List<Game<PgnNodeData>> games = [];
-    void callback(Game<PgnNodeData> game, [Exception? error]) {
-      games.add(game);
-    }
+    final game = PgnGame.parsePgn(pgn, PgnGame.emptyHeaders);
 
-    PgnParser(callback, emptyHeaders).parse(pgn);
-    expect(makePgn(games[0]),
+    expect(game.makePgn(),
         '[Result "1-0"]\n\n1. e4 e5 2. Nf3 { foo\n  bar baz } 1-0\n');
   });
 
   test('tricky tokens', () {
-    final steps = parsePgn('O-O-O !! 0-0-0# ??')[0].moves.mainline().toList();
+    final steps =
+        PgnGame.parsePgn('O-O-O !! 0-0-0# ??').moves.mainline().toList();
     expect(steps[0].san, 'O-O-O');
     expect(steps[0].nags, [3]);
     expect(steps[1].san, 'O-O-O#');
@@ -66,14 +64,14 @@ void main() {
   test('pgn file - kasparov-deep-blue-1997', () {
     final String data =
         File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();
-    final List<Game<PgnNodeData>> games = parsePgn(data);
+    final List<PgnGame<PgnNodeData>> games = parseMultiGamePgn(data);
     expect(games.length, 6);
   });
 
   test('pgn file - leading-whitespace', () {
     final String data =
         File('./data/leading-whitespace.pgn').readAsStringSync();
-    final List<Game<PgnNodeData>> games = parsePgn(data);
+    final List<PgnGame<PgnNodeData>> games = parseMultiGamePgn(data);
     expect(games[0].moves.mainline().map((move) => move.san).toList(),
         ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5']);
     expect(games.length, 4);
@@ -82,7 +80,7 @@ void main() {
   test('pgn file - headers-and-moves-on-the-same-line', () {
     final String data = File('./data/headers-and-moves-on-the-same-line.pgn')
         .readAsStringSync();
-    final List<Game<PgnNodeData>> games = parsePgn(data);
+    final List<PgnGame<PgnNodeData>> games = parseMultiGamePgn(data);
     expect(games[0].headers['Variant'], 'Antichess');
     expect(games[1].moves.mainline().map((move) => move.san).toList(),
         ['e3', 'e6', 'b4', 'Bxb4', 'Qg4']);
@@ -92,7 +90,7 @@ void main() {
   test('pgn file - pathological-headers', () {
     final String data =
         File('./data/pathological-headers.pgn').readAsStringSync();
-    final List<Game<PgnNodeData>> games = parsePgn(data);
+    final List<PgnGame<PgnNodeData>> games = parseMultiGamePgn(data);
     expect(games[0].headers['A'], 'b"');
     expect(games[0].headers['B'], 'b"');
     expect(games[0].headers['C'], 'A]]');

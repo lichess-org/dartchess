@@ -1423,6 +1423,32 @@ class Outcome {
 
   @override
   int get hashCode => winner.hashCode;
+
+  /// Create [Outcome] from string
+  static Outcome? fromPgn(String? outcome) {
+    if (outcome == '1/2-1/2') {
+      return Outcome.draw;
+    } else if (outcome == '1-0') {
+      return Outcome.whiteWins;
+    } else if (outcome == '0-1') {
+      return Outcome.blackWins;
+    } else {
+      return null;
+    }
+  }
+
+  /// Create PGN String out of [Outcome]
+  static String toPgnString(Outcome? outcome) {
+    if (outcome == null) {
+      return '*';
+    } else if (outcome.winner == Side.white) {
+      return '1-0';
+    } else if (outcome.winner == Side.black) {
+      return '0-1';
+    } else {
+      return '1/2-1/2';
+    }
+  }
 }
 
 enum IllegalSetup {

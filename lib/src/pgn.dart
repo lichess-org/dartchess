@@ -55,10 +55,10 @@ class PgnNodeData {
 }
 
 /// Parent Node containing list of child nodes (Does not contain any data)
-class Node<T> {
-  final List<ChildNode<T>> children =
+class PgnNode<T> {
+  final List<PgnChildNode<T>> children =
       []; // this list is still growable so not completely immutable, and immutability is needed for parsing
-  Node();
+  PgnNode();
 
   /// Implements a Iterable for the node and its children
   ///
@@ -74,16 +74,16 @@ class Node<T> {
 }
 
 /// Child Node contains data
-class ChildNode<T> extends Node<T> {
+class PgnChildNode<T> extends PgnNode<T> {
   T data;
-  ChildNode(this.data);
+  PgnChildNode(this.data);
 }
 
 /// A game represented by headers and moves
 ///
 /// Used to convert into a PGN
 @immutable
-class Game<T> {
+class PgnGame<T> {
   /// Headers of the game
   final Headers headers;
 
@@ -91,32 +91,172 @@ class Game<T> {
   final List<String> comments;
 
   /// Parant node containing the game
-  final Node<T> moves;
+  final PgnNode<T> moves;
 
   /// Constant contructor of the class.
   ///
   /// Returns a new immutable Game
-  const Game(
+  const PgnGame(
       {required this.headers, required this.moves, required this.comments});
+
+  /// Default function headers of a PGN
+  static Headers defaultHeaders() => {
+        'Event': '?',
+        'Site': '?',
+        'Date': '????.??.??',
+        'Round': '?',
+        'White': '?',
+        'Black': '?',
+        'Result': '*'
+      };
+
+  /// Create empty headers of a PGN
+  static Headers emptyHeaders() {
+    return <String, String>{};
+  }
+
+  /// Parse a pgn and return a [PgnGame]
+  ///
+  /// Optinally provide a Function [initHeaders] to change the default headers
+  static PgnGame<PgnNodeData> parsePgn(String pgn,
+      [Headers Function() initHeaders = defaultHeaders]) {
+    final List<PgnGame<PgnNodeData>> games = [];
+    PgnParser((PgnGame<PgnNodeData> game, [Exception? err]) => games.add(game),
+            initHeaders)
+        .parse(pgn);
+    return games[0];
+  }
+
+  /// Create a PGN String from [PgnGame]
+  String makePgn() {
+    final List<String> builder = [];
+    final List<String> token = [];
+
+    if (headers.isNotEmpty) {
+      headers.forEach((key, value) {
+        builder.add('[$key "${_escapeHeader(value)}"]\n');
+      });
+      builder.add('\n');
+    }
+
+    for (final comment in comments) {
+      builder.add('{ ${_safeComment(comment)} }');
+    }
+
+    final fen = headers['FEN'];
+    final initialPly = fen != null ? _getPlyFromSetup(fen) : 0;
+
+    final List<_PgnFrame> stack = [];
+
+    if (moves.children.isNotEmpty) {
+      final variations =
+          moves.children.iterator as Iterator<PgnChildNode<PgnNodeData>>;
+      variations.moveNext();
+      stack.add(_PgnFrame(
+          state: _PgnState.pre,
+          ply: initialPly,
+          node: variations.current,
+          sidelines: variations,
+          startsVariation: false,
+          inVariation: false));
+    }
+
+    var forceMoveNumber = true;
+    while (stack.isNotEmpty) {
+      final frame = stack[stack.length - 1];
+
+      if (frame.inVariation) {
+        token.add(')');
+        frame.inVariation = false;
+        forceMoveNumber = true;
+      }
+
+      switch (frame.state) {
+        case _PgnState.pre:
+          {
+            if (frame.node.data.startingComments != null) {
+              for (final comment in frame.node.data.startingComments!) {
+                token.add('{ ${_safeComment(comment)} }');
+              }
+              forceMoveNumber = true;
+            }
+            if (forceMoveNumber || frame.ply.isEven) {
+              token.add(
+                  '${(frame.ply / 2).floor() + 1}${frame.ply.isOdd ? "..." : "."}');
+              forceMoveNumber = false;
+            }
+            token.add(frame.node.data.san);
+            if (frame.node.data.nags != null) {
+              for (final nag in frame.node.data.nags!) {
+                token.add('\$$nag');
+              }
+              forceMoveNumber = true;
+            }
+            if (frame.node.data.comments != null) {
+              for (final comment in frame.node.data.comments!) {
+                token.add('{ ${_safeComment(comment)} }');
+              }
+            }
+            frame.state = _PgnState.sidelines;
+            continue;
+          }
+
+        case _PgnState.sidelines:
+          {
+            final child = frame.sidelines.moveNext();
+            if (child) {
+              token.add('(');
+              forceMoveNumber = true;
+              stack.add(_PgnFrame(
+                  state: _PgnState.pre,
+                  ply: frame.ply,
+                  node: frame.sidelines.current,
+                  sidelines:
+                      <PgnChildNode<PgnNodeData>>[].iterator, // empty iterator
+                  startsVariation: true,
+                  inVariation: false));
+              frame.inVariation = true;
+            } else {
+              if (frame.node.children.isNotEmpty) {
+                final variations = frame.node.children.iterator;
+                variations.moveNext();
+                stack.add(_PgnFrame(
+                    state: _PgnState.pre,
+                    ply: frame.ply + 1,
+                    node: variations.current,
+                    sidelines: variations,
+                    startsVariation: false,
+                    inVariation: false));
+              }
+              frame.state = _PgnState.end;
+            }
+            break;
+          }
+
+        case _PgnState.end:
+          {
+            stack.removeLast();
+          }
+      }
+    }
+    token.add(Outcome.toPgnString(Outcome.fromPgn(headers['Result'])));
+    builder.add('${token.join(" ")}\n');
+    return builder.join();
+  }
 }
 
 class _TransformStack<T, U, C> {
-  final Node<T> before;
-  final Node<U> after;
+  final PgnNode<T> before;
+  final PgnNode<U> after;
   final C ctx;
 
   _TransformStack(this.before, this.after, this.ctx);
 }
 
-class _WalkStack<T, C> {
-  final Node<T> node;
-  final C ctx;
-  _WalkStack(this.node, this.ctx);
-}
-
 /// Function to walk thorugh each node and transform Node<T> tree into Node<U> tree
-Node<U> transform<T, U, C>(Node<T> node, C ctx, U? Function(C, T, int) f) {
-  final root = Node<U>();
+PgnNode<U> transform<T, U, C>(
+    PgnNode<T> node, C ctx, U? Function(C, T, int) f) {
+  final root = PgnNode<U>();
   final stack = [_TransformStack(node, root, ctx)];
 
   while (stack.isNotEmpty) {
@@ -127,7 +267,7 @@ Node<U> transform<T, U, C>(Node<T> node, C ctx, U? Function(C, T, int) f) {
       final childBefore = frame.before.children[childIdx];
       final data = f(ctx, childBefore.data, childIdx);
       if (data != null) {
-        final childAfter = ChildNode(data);
+        final childAfter = PgnChildNode(data);
         frame.after.children.add(childAfter);
         stack.add(_TransformStack(childBefore, childAfter, ctx));
       }
@@ -136,40 +276,26 @@ Node<U> transform<T, U, C>(Node<T> node, C ctx, U? Function(C, T, int) f) {
   return root;
 }
 
-/// Create side effects for node tree
-void walk<T, C>(Node<T> node, C ctx, bool? Function(C, T, int) f) {
-  final stack = [_WalkStack(node, ctx)];
-  while (stack.isNotEmpty) {
-    final frame = stack.removeLast();
-    for (var childIdx = 0; childIdx < frame.node.children.length; childIdx++) {
-      final child = frame.node.children[childIdx];
-      if (f(ctx, child.data, childIdx) != false) {
-        stack.add(_WalkStack(child, ctx));
-      }
-    }
-  }
-}
-
 /// A frame used for parsing a line
 class _ParserFrame {
-  Node<PgnNodeData> parent;
+  PgnNode<PgnNodeData> parent;
   bool root;
-  ChildNode<PgnNodeData>? node;
+  PgnChildNode<PgnNodeData>? node;
   List<String>? startingComments;
 
   _ParserFrame({required this.parent, required this.root});
 }
 
-enum ParserState { bom, pre, headers, moves, comment }
+enum _ParserState { bom, pre, headers, moves, comment }
 
-enum PgnState { pre, sidelines, end }
+enum _PgnState { pre, sidelines, end }
 
 /// A frame used for creating PGN
 class _PgnFrame {
-  PgnState state;
+  _PgnState state;
   int ply;
-  ChildNode<PgnNodeData> node;
-  Iterator<ChildNode<PgnNodeData>> sidelines;
+  PgnChildNode<PgnNodeData> node;
+  Iterator<PgnChildNode<PgnNodeData>> sidelines;
   bool startsVariation;
   bool inVariation;
 
@@ -182,179 +308,21 @@ class _PgnFrame {
       required this.inVariation});
 }
 
-/// Default function headers of a PGN
-Headers defaultHeaders() => {
-      'Event': '?',
-      'Site': '?',
-      'Date': '????.??.??',
-      'Round': '?',
-      'White': '?',
-      'Black': '?',
-      'Result': '*'
-    };
-
-/// Create empty headers of a PGN
-Headers emptyHeaders() {
-  return <String, String>{};
-}
-
 /// Remove escape sequence from the string
-String escapeHeader(String value) =>
+String _escapeHeader(String value) =>
     value.replaceAll(RegExp(r'\\'), "\\\\").replaceAll(RegExp('"'), '\\"');
 
 /// Remove '}' from the comment string
-String safeComment(String value) => value.replaceAll(RegExp(r'\}'), '');
+String _safeComment(String value) => value.replaceAll(RegExp(r'\}'), '');
 
 /// Return ply from a fen if fen is valid else return 0
-int getPlyFromSetup(String fen) {
+int _getPlyFromSetup(String fen) {
   try {
     final setup = Setup.parseFen(fen);
     return (setup.fullmoves - 1) * 2 + (setup.turn == Side.white ? 0 : 1);
   } catch (e) {
     return 0;
   }
-}
-
-/// Create String out of [Outcome]
-String makeOutcome(Outcome? outcome) {
-  if (outcome == null) {
-    return '*';
-  } else if (outcome.winner == Side.white) {
-    return '1-0';
-  } else if (outcome.winner == Side.black) {
-    return '0-1';
-  } else {
-    return '1/2-1/2';
-  }
-}
-
-/// Create [Outcome] from string
-Outcome? parseOutcome(String? outcome) {
-  if (outcome == '1/2-1/2') {
-    return Outcome.draw;
-  } else if (outcome == '1-0') {
-    return Outcome.whiteWins;
-  } else if (outcome == '0-1') {
-    return Outcome.blackWins;
-  } else {
-    return null;
-  }
-}
-
-/// Create a PGN String from [Game]
-String makePgn(Game<PgnNodeData> game) {
-  final List<String> builder = [];
-  final List<String> token = [];
-
-  if (game.headers.isNotEmpty) {
-    game.headers.forEach((key, value) {
-      builder.add('[$key "${escapeHeader(value)}"]\n');
-    });
-    builder.add('\n');
-  }
-
-  for (final comment in game.comments) {
-    builder.add('{ ${safeComment(comment)} }');
-  }
-
-  final fen = game.headers['FEN'];
-  final initialPly = fen != null ? getPlyFromSetup(fen) : 0;
-
-  final List<_PgnFrame> stack = [];
-
-  if (game.moves.children.isNotEmpty) {
-    final variations = game.moves.children.iterator;
-    variations.moveNext();
-    stack.add(_PgnFrame(
-        state: PgnState.pre,
-        ply: initialPly,
-        node: variations.current,
-        sidelines: variations,
-        startsVariation: false,
-        inVariation: false));
-  }
-
-  var forceMoveNumber = true;
-  while (stack.isNotEmpty) {
-    final frame = stack[stack.length - 1];
-
-    if (frame.inVariation) {
-      token.add(')');
-      frame.inVariation = false;
-      forceMoveNumber = true;
-    }
-
-    switch (frame.state) {
-      case PgnState.pre:
-        {
-          if (frame.node.data.startingComments != null) {
-            for (final comment in frame.node.data.startingComments!) {
-              token.add('{ ${safeComment(comment)} }');
-            }
-            forceMoveNumber = true;
-          }
-          if (forceMoveNumber || frame.ply.isEven) {
-            token.add(
-                '${(frame.ply / 2).floor() + 1}${frame.ply.isOdd ? "..." : "."}');
-            forceMoveNumber = false;
-          }
-          token.add(frame.node.data.san);
-          if (frame.node.data.nags != null) {
-            for (final nag in frame.node.data.nags!) {
-              token.add('\$$nag');
-            }
-            forceMoveNumber = true;
-          }
-          if (frame.node.data.comments != null) {
-            for (final comment in frame.node.data.comments!) {
-              token.add('{ ${safeComment(comment)} }');
-            }
-          }
-          frame.state = PgnState.sidelines;
-          continue;
-        }
-
-      case PgnState.sidelines:
-        {
-          final child = frame.sidelines.moveNext();
-          if (child) {
-            token.add('(');
-            forceMoveNumber = true;
-            stack.add(_PgnFrame(
-                state: PgnState.pre,
-                ply: frame.ply,
-                node: frame.sidelines.current,
-                sidelines:
-                    <ChildNode<PgnNodeData>>[].iterator, // empty iterator
-                startsVariation: true,
-                inVariation: false));
-            frame.inVariation = true;
-          } else {
-            if (frame.node.children.isNotEmpty) {
-              final variations = frame.node.children.iterator;
-              variations.moveNext();
-              stack.add(_PgnFrame(
-                  state: PgnState.pre,
-                  ply: frame.ply + 1,
-                  node: variations.current,
-                  sidelines: variations,
-                  startsVariation: false,
-                  inVariation: false));
-            }
-            frame.state = PgnState.end;
-          }
-          break;
-        }
-
-      case PgnState.end:
-        {
-          stack.removeLast();
-        }
-    }
-  }
-  token.add(makeOutcome(parseOutcome(game.headers['Result'])));
-  builder.add('${token.join(" ")}\n');
-  return builder.join();
 }
 
 const bom = '\ufeff';
@@ -368,45 +336,45 @@ class PgnError implements Exception {
   PgnError(this.message);
 }
 
-/// A class to read a string and create a [Game]
+/// A class to read a string and create a [PgnGame]
 class PgnParser {
   List<String> _lineBuf = [];
   late bool _found;
-  late ParserState _state = ParserState.pre;
+  late _ParserState _state = _ParserState.pre;
   late Headers _gameHeaders;
   late List<String> _gameComments;
-  late Node<PgnNodeData> _gameMoves;
+  late PgnNode<PgnNodeData> _gameMoves;
   late List<_ParserFrame> _stack;
   late List<String> _commentBuf;
 
   /// Function to which the parse game is passed to
-  final void Function(Game<PgnNodeData>, [Exception?]) emitGame;
+  final void Function(PgnGame<PgnNodeData>, [Exception?]) emitGame;
 
   /// Function to create the headers
   final Headers Function() initHeaders;
 
   PgnParser(this.emitGame, this.initHeaders) {
     _resetGame();
-    _state = ParserState.bom;
+    _state = _ParserState.bom;
   }
 
   void _resetGame() {
     _found = false;
-    _state = ParserState.pre;
+    _state = _ParserState.pre;
     _gameHeaders = initHeaders();
-    _gameMoves = Node();
+    _gameMoves = PgnNode();
     _gameComments = [];
     _commentBuf = [];
     _stack = [_ParserFrame(parent: _gameMoves, root: true)];
   }
 
   void _emit(Exception? err) {
-    if (_state == ParserState.comment) {
+    if (_state == _ParserState.comment) {
       _handleComment();
     }
     if (err != null) {
       return emitGame(
-          Game(
+          PgnGame(
               headers: _gameHeaders,
               moves: _gameMoves,
               comments: _gameComments),
@@ -414,7 +382,7 @@ class PgnParser {
     }
     if (_found) {
       emitGame(
-          Game(
+          PgnGame(
               headers: _gameHeaders,
               moves: _gameMoves,
               comments: _gameComments),
@@ -454,24 +422,24 @@ class PgnParser {
     continuedLine:
     for (;;) {
       switch (_state) {
-        case ParserState.bom:
+        case _ParserState.bom:
           {
             if (line.startsWith(bom)) {
               line = line.substring(bom.length);
             }
-            _state = ParserState.pre;
+            _state = _ParserState.pre;
             continue;
           }
 
-        case ParserState.pre:
+        case _ParserState.pre:
           {
             if (isWhitespace(line) || isCommentLine(line)) return;
             _found = true;
-            _state = ParserState.headers;
+            _state = _ParserState.headers;
             continue;
           }
 
-        case ParserState.headers:
+        case _ParserState.headers:
           {
             if (isCommentLine(line)) return;
             var moreHeaders = true;
@@ -490,11 +458,11 @@ class PgnParser {
               });
             }
             if (isWhitespace(line)) return;
-            _state = ParserState.moves;
+            _state = _ParserState.moves;
             continue;
           }
 
-        case ParserState.moves:
+        case _ParserState.moves:
           {
             if (freshLine) {
               if (isCommentLine(line)) return;
@@ -539,7 +507,7 @@ class PgnParser {
                   final beginIndex =
                       line[openIndex] == ' ' ? openIndex + 1 : openIndex;
                   line = line.substring(beginIndex);
-                  _state = ParserState.comment;
+                  _state = _ParserState.comment;
                   continue continuedLine;
                 } else {
                   if (token == 'Z0' || token == '0000' || token == '@@@@') {
@@ -550,7 +518,7 @@ class PgnParser {
                   if (frame.node != null) {
                     frame.parent = frame.node!;
                   }
-                  frame.node = ChildNode(PgnNodeData(
+                  frame.node = PgnChildNode(PgnNodeData(
                       san: token, startingComments: frame.startingComments));
                   frame.startingComments = null;
                   frame.root = false;
@@ -561,7 +529,7 @@ class PgnParser {
             return;
           }
 
-        case ParserState.comment:
+        case _ParserState.comment:
           {
             final closeIndex = line.indexOf('}');
             if (closeIndex == -1) {
@@ -574,7 +542,7 @@ class PgnParser {
               _commentBuf.add(line.substring(0, endIndex));
               _handleComment();
               line = line.substring(closeIndex);
-              _state = ParserState.moves;
+              _state = _ParserState.moves;
               freshLine = false;
             }
           }
@@ -604,79 +572,17 @@ class PgnParser {
   }
 }
 
-/// Default function to parse a PGN
+/// Default function to parse a multi game PGN
 ///
-/// Creates a list of games if multiple games found
+/// Returns a list of games if multiple games found
 /// Provide a optional function [initHeaders] to create different headers other than the default
-List<Game<PgnNodeData>> parsePgn(String pgn,
-    [Headers Function() initHeaders = defaultHeaders]) {
-  final List<Game<PgnNodeData>> games = [];
-  PgnParser((Game<PgnNodeData> game, [Exception? err]) => games.add(game),
+List<PgnGame<PgnNodeData>> parseMultiGamePgn(String pgn,
+    [Headers Function() initHeaders = PgnGame.defaultHeaders]) {
+  final List<PgnGame<PgnNodeData>> games = [];
+  PgnParser((PgnGame<PgnNodeData> game, [Exception? err]) => games.add(game),
           initHeaders)
       .parse(pgn);
   return games;
-}
-
-/// Parse a string for a variant if exist or return null
-Variant? parseVariant(String variant) {
-  switch (variant.toLowerCase()) {
-    case 'chess':
-    case 'chess960':
-    case 'chess 960':
-    case 'standard':
-    case 'from position':
-    case 'classical':
-    case 'normal':
-    case 'fischerandom': // Cute Chess
-    case 'fischerrandom':
-    case 'fischer random':
-    case 'wild/0':
-    case 'wild/1':
-    case 'wild/2':
-    case 'wild/3':
-    case 'wild/4':
-    case 'wild/5':
-    case 'wild/6':
-    case 'wild/7':
-    case 'wild/8':
-    case 'wild/8a':
-      return Variant.chess;
-    case 'crazyhouse':
-    case 'crazy house':
-    case 'house':
-    case 'zh':
-      return Variant.crazyhouse;
-    case 'king of the hill':
-    case 'koth':
-    case 'kingofthehill':
-      return Variant.kingofthehill;
-    case 'three-check':
-    case 'three check':
-    case 'threecheck':
-    case 'three check chess':
-    case '3-check':
-    case '3 check':
-    case '3check':
-      return Variant.threecheck;
-    case 'antichess':
-    case 'anti chess':
-    case 'anti':
-      return Variant.antichess;
-    case 'atomic':
-    case 'atom':
-    case 'atomic chess':
-      return Variant.atomic;
-    case 'horde':
-    case 'horde chess':
-      return Variant.horde;
-    case 'racing kings':
-    case 'racingkings':
-    case 'racing':
-    case 'race':
-      return Variant.racingKings;
-    default:
-      return null;
-  }
 }
 
 /// Create a [Position] from setup and variants
@@ -713,7 +619,7 @@ Position setupPosition(Variant rules, Setup setup,
 /// Headers must include a 'Variant' and 'Fen' key
 Position startingPosition(Headers headers, {bool? ignoreImpossibleCheck}) {
   if (!headers.containsKey('Variant')) throw PgnError('ERR_HEADER_NO_VARIANT');
-  final rules = parseVariant(headers['Variant']!);
+  final rules = Variant.fromPgn(headers['Variant']!);
   if (rules == null) throw PgnError('ERR_HEADER_INVALID_VARIANT');
   if (!headers.containsKey('FEN')) {
     return defualtPosition(rules);

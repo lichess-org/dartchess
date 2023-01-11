@@ -294,4 +294,66 @@ enum Variant {
         return 'Crazyhouse';
     }
   }
+
+  /// Parse a string for a variant if exist or return null
+  static Variant? fromPgn(String variant) {
+    switch (variant.toLowerCase()) {
+      case 'chess':
+      case 'chess960':
+      case 'chess 960':
+      case 'standard':
+      case 'from position':
+      case 'classical':
+      case 'normal':
+      case 'fischerandom': // Cute Chess
+      case 'fischerrandom':
+      case 'fischer random':
+      case 'wild/0':
+      case 'wild/1':
+      case 'wild/2':
+      case 'wild/3':
+      case 'wild/4':
+      case 'wild/5':
+      case 'wild/6':
+      case 'wild/7':
+      case 'wild/8':
+      case 'wild/8a':
+        return Variant.chess;
+      case 'crazyhouse':
+      case 'crazy house':
+      case 'house':
+      case 'zh':
+        return Variant.crazyhouse;
+      case 'king of the hill':
+      case 'koth':
+      case 'kingofthehill':
+        return Variant.kingofthehill;
+      case 'three-check':
+      case 'three check':
+      case 'threecheck':
+      case 'three check chess':
+      case '3-check':
+      case '3 check':
+      case '3check':
+        return Variant.threecheck;
+      case 'antichess':
+      case 'anti chess':
+      case 'anti':
+        return Variant.antichess;
+      case 'atomic':
+      case 'atom':
+      case 'atomic chess':
+        return Variant.atomic;
+      case 'horde':
+      case 'horde chess':
+        return Variant.horde;
+      case 'racing kings':
+      case 'racingkings':
+      case 'racing':
+      case 'race':
+        return Variant.racingKings;
+      default:
+        return null;
+    }
+  }
 }
