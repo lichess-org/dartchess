@@ -416,7 +416,7 @@ abstract class Position<T extends Position<T>> {
     final rules = Variant.fromPgn(headers['Variant']!);
     if (rules == null) throw const FenError('ERR_HEADER_INVALID_VARIANT');
     if (!headers.containsKey('FEN')) {
-      return defualtPosition(rules);
+      return defaultPosition(rules);
     }
     final fen = headers['FEN']!;
     try {
@@ -428,7 +428,7 @@ abstract class Position<T extends Position<T>> {
   }
 
   /// Returns the default [Position] for the [Variant]
-  static Position defualtPosition(Variant variant) {
+  static Position defaultPosition(Variant variant) {
     switch (variant) {
       case Variant.chess:
         return Chess.initial;

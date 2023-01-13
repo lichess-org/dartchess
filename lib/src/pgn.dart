@@ -27,47 +27,53 @@ class PgnNodeData {
   const PgnNodeData(
       {required this.san, this.startingComments, this.comments, this.nags});
 
-  /// Create a clone object and adding a [comment] or a [nag]
-  PgnNodeData copyWith({String? comment, int? nag}) {
-    List<String> newComments = [];
-    List<int> newNags = [];
-    if (comment != null) {
-      if (comments != null) {
-        comments!.add(comment);
-        newComments = comments!.toList();
-      } else {
-        newComments.add(comment);
-      }
-    }
-    if (nag != null) {
-      if (nags != null) {
-        nags!.add(nag);
-        newNags = nags!.toList();
-      } else {
-        newNags.add(nag);
-      }
-    }
+  @override
+  bool operator ==(Object other) =>
+      other is PgnNodeData &&
+      san == other.san &&
+      startingComments == other.startingComments &&
+      comments == other.comments &&
+      nags == other.nags;
+
+  @override
+  int get hashCode => Object.hash(san, startingComments, comments, nags);
+
+  /// Return a new PgnNodeData by adding a [comment] to the current object
+  PgnNodeData copyWithComment(String comment) {
+    final List<String> newComment = [];
+    if (comments != null) newComment.addAll(comments!);
+    newComment.add(comment);
     return PgnNodeData(
         san: san,
-        startingComments: startingComments ?? const [],
-        comments: comment == null ? null : newComments,
-        nags: nag == null ? null : newNags);
+        startingComments: startingComments,
+        comments: newComment,
+        nags: nags);
+  }
+
+  /// Return a new PgnNodeData by adding a [nag] to the current object
+  PgnNodeData copyWithNags(int nag) {
+    final List<int> newNags = [];
+    if (comments != null) newNags.addAll(nags!);
+    newNags.add(nag);
+    return PgnNodeData(
+        san: san,
+        startingComments: startingComments,
+        comments: comments,
+        nags: newNags);
   }
 }
 
-class _TransformStack<T, U, C> {
+class _TransformFrame<T, U, C> {
   final PgnNode<T> before;
   final PgnNode<U> after;
   final C ctx;
 
-  _TransformStack(this.before, this.after, this.ctx);
+  _TransformFrame(this.before, this.after, this.ctx);
 }
 
 /// Parent Node containing list of child nodes (Does not contain any data)
 class PgnNode<T> {
-  /// Child nodes with PGN data
   final List<PgnChildNode<T>> children = [];
-  PgnNode();
 
   /// Implements a Iterable for the node and its children
   ///
@@ -81,11 +87,11 @@ class PgnNode<T> {
     }
   }
 
-  /// Function to walk thorugh each node and transform Node<T> tree into Node<U> tree
+  /// Function to walk through each node and transform Node<T> tree into Node<U> tree
   PgnNode<U> transform<V, U, C>(
       PgnNode<V> node, C ctx, U? Function(C, V, int) f) {
     final root = PgnNode<U>();
-    final stack = [_TransformStack(node, root, ctx)];
+    final stack = [_TransformFrame(node, root, ctx)];
 
     while (stack.isNotEmpty) {
       final frame = stack.removeLast();
@@ -97,7 +103,7 @@ class PgnNode<T> {
         if (data != null) {
           final childAfter = PgnChildNode(data);
           frame.after.children.add(childAfter);
-          stack.add(_TransformStack(childBefore, childAfter, ctx));
+          stack.add(_TransformFrame(childBefore, childAfter, ctx));
         }
       }
     }
@@ -149,29 +155,32 @@ class PgnGame<T> {
   /// Parse a pgn and return a [PgnGame]
   ///
   /// Optinally provide a Function [initHeaders] to change the default headers
+  /// Throws [PgnError] if String cannot be parsed
   static PgnGame<PgnNodeData> parsePgn(String pgn,
-      [Headers Function() initHeaders = defaultHeaders]) {
+      {Headers Function() initHeaders = defaultHeaders}) {
     final List<PgnGame<PgnNodeData>> games = [];
-    PgnParser((PgnGame<PgnNodeData> game, [Exception? err]) => games.add(game),
-            initHeaders)
+    _PgnParser((PgnGame<PgnNodeData> game, {PgnError? error}) {
+      if (error != null) throw error;
+      games.add(game);
+    }, initHeaders)
         .parse(pgn);
     return games[0];
   }
 
   /// Create a PGN String from [PgnGame]
   String makePgn() {
-    final List<String> builder = [];
-    final List<String> token = [];
+    final builder = StringBuffer();
+    final token = StringBuffer();
 
     if (headers.isNotEmpty) {
       headers.forEach((key, value) {
-        builder.add('[$key "${_escapeHeader(value)}"]\n');
+        builder.writeln('[$key "${_escapeHeader(value)}"]');
       });
-      builder.add('\n');
+      builder.write('\n');
     }
 
     for (final comment in comments) {
-      builder.add('{ ${_safeComment(comment)} }');
+      builder.writeln('{ ${_safeComment(comment)} }');
     }
 
     final fen = headers['FEN'];
@@ -197,7 +206,7 @@ class PgnGame<T> {
       final frame = stack[stack.length - 1];
 
       if (frame.inVariation) {
-        token.add(')');
+        token.write(') ');
         frame.inVariation = false;
         forceMoveNumber = true;
       }
@@ -207,25 +216,25 @@ class PgnGame<T> {
           {
             if (frame.node.data.startingComments != null) {
               for (final comment in frame.node.data.startingComments!) {
-                token.add('{ ${_safeComment(comment)} }');
+                token.write('{ ${_safeComment(comment)} } ');
               }
               forceMoveNumber = true;
             }
             if (forceMoveNumber || frame.ply.isEven) {
-              token.add(
-                  '${(frame.ply / 2).floor() + 1}${frame.ply.isOdd ? "..." : "."}');
+              token.write(
+                  '${(frame.ply / 2).floor() + 1}${frame.ply.isOdd ? "..." : "."} ');
               forceMoveNumber = false;
             }
-            token.add(frame.node.data.san);
+            token.write('${frame.node.data.san} ');
             if (frame.node.data.nags != null) {
               for (final nag in frame.node.data.nags!) {
-                token.add('\$$nag');
+                token.write('\$$nag ');
               }
               forceMoveNumber = true;
             }
             if (frame.node.data.comments != null) {
               for (final comment in frame.node.data.comments!) {
-                token.add('{ ${_safeComment(comment)} }');
+                token.write('{ ${_safeComment(comment)} } ');
               }
             }
             frame.state = _PgnState.sidelines;
@@ -236,7 +245,7 @@ class PgnGame<T> {
           {
             final child = frame.sidelines.moveNext();
             if (child) {
-              token.add('(');
+              token.write('( ');
               forceMoveNumber = true;
               stack.add(_PgnFrame(
                   state: _PgnState.pre,
@@ -270,9 +279,9 @@ class PgnGame<T> {
           }
       }
     }
-    token.add(Outcome.toPgnString(Outcome.fromPgn(headers['Result'])));
-    builder.add('${token.join(" ")}\n');
-    return builder.join();
+    token.write(Outcome.toPgnString(Outcome.fromPgn(headers["Result"])));
+    builder.writeln(token.toString());
+    return builder.toString();
   }
 }
 
@@ -338,7 +347,7 @@ class PgnError implements Exception {
 }
 
 /// A class to read a string and create a [PgnGame]
-class PgnParser {
+class _PgnParser {
   List<String> _lineBuf = [];
   late bool _found;
   late _ParserState _state = _ParserState.pre;
@@ -349,12 +358,12 @@ class PgnParser {
   late List<String> _commentBuf;
 
   /// Function to which the parsed game is passed to
-  final void Function(PgnGame<PgnNodeData>, [Exception?]) emitGame;
+  final void Function(PgnGame<PgnNodeData>, {PgnError? error}) emitGame;
 
   /// Function to create the headers
   final Headers Function() initHeaders;
 
-  PgnParser(this.emitGame, this.initHeaders) {
+  _PgnParser(this.emitGame, this.initHeaders) {
     _resetGame();
     _state = _ParserState.bom;
   }
@@ -369,7 +378,7 @@ class PgnParser {
     _stack = [_ParserFrame(parent: _gameMoves, root: true)];
   }
 
-  void _emit(Exception? err) {
+  void _emit(PgnError? err) {
     if (_state == _ParserState.comment) {
       _handleComment();
     }
@@ -379,15 +388,13 @@ class PgnParser {
               headers: _gameHeaders,
               moves: _gameMoves,
               comments: _gameComments),
-          err);
+          error: err);
     }
     if (_found) {
       emitGame(
-          PgnGame(
-              headers: _gameHeaders,
-              moves: _gameMoves,
-              comments: _gameComments),
-          null);
+        PgnGame(
+            headers: _gameHeaders, moves: _gameMoves, comments: _gameComments),
+      );
     }
     _resetGame();
   }
@@ -412,7 +419,7 @@ class PgnParser {
       _handleLine();
       _emit(null);
     } catch (err) {
-      _emit(err as Exception);
+      _emit(err as PgnError);
     }
   }
 
@@ -554,7 +561,7 @@ class PgnParser {
   void _handleNag(int nag) {
     final frame = _stack[_stack.length - 1];
     if (frame.node != null) {
-      frame.node!.data = frame.node!.data.copyWith(nag: nag);
+      frame.node!.data = frame.node!.data.copyWithNags(nag);
     }
   }
 
@@ -563,7 +570,7 @@ class PgnParser {
     final comment = _commentBuf.join('\n');
     _commentBuf = [];
     if (frame.node != null) {
-      frame.node!.data = frame.node!.data.copyWith(comment: comment);
+      frame.node!.data = frame.node!.data.copyWithComment(comment);
     } else if (frame.root) {
       _gameComments.add(comment);
     } else {
@@ -573,15 +580,18 @@ class PgnParser {
   }
 }
 
-/// Default function to parse a multi game PGN
+/// Function to parse a multi game PGN
 ///
 /// Returns a list of games if multiple games found
 /// Provide a optional function [initHeaders] to create different headers other than the default
+/// Throws a [PgnError] if couldn't parse the pgn
 List<PgnGame<PgnNodeData>> parseMultiGamePgn(String pgn,
     [Headers Function() initHeaders = PgnGame.defaultHeaders]) {
   final List<PgnGame<PgnNodeData>> games = [];
-  PgnParser((PgnGame<PgnNodeData> game, [Exception? err]) => games.add(game),
-          initHeaders)
+  _PgnParser((PgnGame<PgnNodeData> game, {PgnError? error}) {
+    if (error != null) throw error;
+    games.add(game);
+  }, initHeaders)
       .parse(pgn);
   return games;
 }
@@ -692,12 +702,11 @@ class PgnEvaluation {
       other is PgnEvaluation &&
       pawns == other.pawns &&
       depth == other.depth &&
-      mate == other.mate;
+      mate == other.mate &&
+      evalType == other.evalType;
 
   @override
-  int get hashCode => evalType == EvalType.pawns
-      ? Object.hash(pawns, depth)
-      : Object.hash(mate, depth);
+  int get hashCode => Object.hash(pawns, depth, mate, evalType);
 
   bool isPawns() => evalType == EvalType.pawns;
 

@@ -46,7 +46,7 @@ void main() {
 
   test('parse pgn roundtrip', () {
     const pgn = '1. e4 \ne5\nNf3 {foo\n  bar baz } 1-0';
-    final game = PgnGame.parsePgn(pgn, PgnGame.emptyHeaders);
+    final game = PgnGame.parsePgn(pgn, initHeaders: PgnGame.emptyHeaders);
 
     expect(game.makePgn(),
         '[Result "1-0"]\n\n1. e4 e5 2. Nf3 { foo\n  bar baz } 1-0\n');
