@@ -40,26 +40,20 @@ class PgnNodeData {
 
   /// Return a new PgnNodeData by adding a [comment] to the current object
   PgnNodeData copyWithComment(String comment) {
-    final List<String> newComment = [];
-    if (comments != null) newComment.addAll(comments!);
-    newComment.add(comment);
     return PgnNodeData(
         san: san,
         startingComments: startingComments,
-        comments: newComment,
+        comments: [...comments ?? [], comment],
         nags: nags);
   }
 
   /// Return a new PgnNodeData by adding a [nag] to the current object
-  PgnNodeData copyWithNags(int nag) {
-    final List<int> newNags = [];
-    if (comments != null) newNags.addAll(nags!);
-    newNags.add(nag);
+  PgnNodeData copyWithNag(int nag) {
     return PgnNodeData(
         san: san,
         startingComments: startingComments,
         comments: comments,
-        nags: newNags);
+        nags: [...nags ?? [], nag]);
   }
 }
 
@@ -560,7 +554,7 @@ class _PgnParser {
   void _handleNag(int nag) {
     final frame = _stack[_stack.length - 1];
     if (frame.node != null) {
-      frame.node!.data = frame.node!.data.copyWithNags(nag);
+      frame.node!.data = frame.node!.data.copyWithNag(nag);
     }
   }
 
