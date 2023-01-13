@@ -87,11 +87,10 @@ class PgnNode<T> {
     }
   }
 
-  /// Function to walk through each node and transform Node<T> tree into Node<U> tree
-  PgnNode<U> transform<V, U, C>(
-      PgnNode<V> node, C ctx, U? Function(C, V, int) f) {
+  /// Function to walk through each node and transform Node<V> tree into Node<U> tree
+  PgnNode<U> transform<U, C>(C ctx, U? Function(C, T, int) f) {
     final root = PgnNode<U>();
-    final stack = [_TransformFrame(node, root, ctx)];
+    final stack = [_TransformFrame<T, U, C>(this, root, ctx)];
 
     while (stack.isNotEmpty) {
       final frame = stack.removeLast();

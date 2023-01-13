@@ -183,4 +183,27 @@ void main() {
       expect(comment, roundTripped);
     }
   });
+
+  test('transform pgn', () {
+    final game = PgnGame.parsePgn('1. a4 ( 1. b4 b5 -- ) 1... a5');
+    final res = game.moves.transform<TransformResult, Position>(
+      Chess.initial,
+      // update test and use parseSan to update position.
+      (pos, data, idx) => TransformResult(fen: pos.fen, san: data.san),
+    );
+
+    expect(res.children[0].data.fen,
+        'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    expect(res.children[0].children[0].data.fen,
+        'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    expect(res.children[1].data.fen,
+        'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+    expect(res.children[1].children[0].data.fen,
+        'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+  });
+}
+
+class TransformResult extends PgnNodeData {
+  final String fen;
+  const TransformResult({required this.fen, required super.san});
 }
