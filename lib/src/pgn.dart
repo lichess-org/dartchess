@@ -378,7 +378,7 @@ class _PgnParser {
     _stack = [_ParserFrame(parent: _gameMoves, root: true)];
   }
 
-  void _emit(PgnError? err) {
+  void _emit(Object? err) {
     if (_state == _ParserState.comment) {
       _handleComment();
     }
@@ -388,7 +388,7 @@ class _PgnParser {
               headers: _gameHeaders,
               moves: _gameMoves,
               comments: _gameComments),
-          error: err);
+          error: err as PgnError);
     }
     if (_found) {
       emitGame(
@@ -419,7 +419,7 @@ class _PgnParser {
       _handleLine();
       _emit(null);
     } catch (err) {
-      _emit(err as PgnError);
+      _emit(err);
     }
   }
 
