@@ -184,6 +184,20 @@ void main() {
     }
   });
 
+  group('Invalid Pgns', () {
+    test('Pgn with only correct first move', () {
+      final game = PgnGame.parsePgn('1. e4 ads');
+      expect(game.moves.children.length, 1);
+    });
+
+    test('Wrong move in Sideline, Should Ignore it', () {
+      final game = PgnGame.parsePgn(
+          '1. e4 c5 (1... adsd 2. Nc3) (1... d5 2. d3) 2. Nf3 d5');
+      expect(game.moves.children[0].children.length, 3);
+      expect(game.moves.children[0].children[1].data.san, 'Nc3');
+    });
+  });
+
   test('transform pgn', () {
     final game = PgnGame.parsePgn('1. a4 ( 1. b4 b5 -- ) 1... a5');
     final res = game.moves.transform<TransformResult, Position>(
