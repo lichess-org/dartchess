@@ -267,7 +267,7 @@ abstract class Position<T extends Position<T>> {
       Role? promotionRole;
 
       // We can look at the first character of any pawn move
-      // in order to determin which file the pawn will be moving
+      // in order to determine which file the pawn will be moving
       // from
       final sourceFileCharacter = san.codeUnits[0];
       if (sourceFileCharacter < aIndex || sourceFileCharacter > hIndex) {
