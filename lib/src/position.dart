@@ -288,17 +288,6 @@ abstract class Position<T extends Position<T>> {
         san = san.substring(2);
       }
 
-      // There may be many pawns in the corresponding file
-      // The corect choice will always be the pawn further down the board
-      final furthestPiece = (turn == Side.white) ? filter.first : filter.last;
-
-      // There are no valid candidates for the move
-      if (furthestPiece == null) {
-        return null;
-      }
-
-      final source = furthestPiece;
-
       if (isPromotion) {
         // Invalid SAN
         if (san[san.length - 2] != "=") {
@@ -321,6 +310,23 @@ abstract class Position<T extends Position<T>> {
 
       final destination = parseSquare(san);
       if (destination == null) {
+        return null;
+      }
+
+      // There may be many pawns in the corresponding file
+      // The corect choice will always be the pawn behind the destination square that is furthest down the board
+      for (int rank = 0; rank < 8; rank++) {
+        final rankFilter = SquareSet.fromRank(rank).complement();
+        // If the square is behind or on this rank, the rank it will not contain the source pawn
+        if (turn == Side.white && rank >= squareRank(destination) ||
+            turn == Side.black && rank <= squareRank(destination)) {
+          filter = filter.intersect(rankFilter);
+        }
+      }
+      final source = (turn == Side.white) ? filter.last : filter.first;
+
+      // There are no valid candidates for the move
+      if (source == null) {
         return null;
       }
 
