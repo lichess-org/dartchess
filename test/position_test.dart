@@ -130,7 +130,7 @@ void main() {
             equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));
       });
 
-      test("pawn moves", () {
+      test("opening pawn moves", () {
         const legalSans = [
           "a3",
           "a4",
@@ -148,10 +148,6 @@ void main() {
           "g4",
           "h3",
           "h4",
-          "Na3",
-          "Nc3",
-          "Nf3",
-          "Nh3",
         ];
 
         const illegalSans = [
@@ -179,7 +175,6 @@ void main() {
           "h1",
           "h5",
           "h?1",
-          "Bb2",
         ];
         final position = Chess.initial;
         for (final san in legalSans) {
@@ -187,7 +182,35 @@ void main() {
         }
 
         for (final san in illegalSans) {
-            expect(position.parseSan(san) == null, true);
+          expect(position.parseSan(san) == null, true);
+        }
+      });
+
+      test("opening knight moves", () {
+        const legalSans = [
+          "Na3",
+          "Nc3",
+          "Nf3",
+          "Nh3",
+        ];
+
+        const illegalSans = [
+          "Ba3",
+          "Bc3",
+          "Bf3",
+          "Bh3",
+          "Ne4",
+          "Nb1",
+          "Ng1",
+        ];
+
+        final position = Chess.initial;
+        for (final san in legalSans) {
+          expect(position.parseSan(san) != null, true);
+        }
+
+        for (final san in illegalSans) {
+          expect(position.parseSan(san) == null, true);
         }
       });
     });
