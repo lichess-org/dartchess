@@ -147,13 +147,14 @@ class PgnGame<T> {
 
   /// Parse a pgn and return a [PgnGame]
   ///
-  /// Optinally provide a Function [initHeaders] to change the default headers
-  /// Throws [PgnError] if String cannot be parsed
+  /// Provide a optional function [initHeaders] to create different headers other than the default
+  /// The parser will take any string as input and return a tree of
+  /// synttatically valid nodes but not necessary legal moves. It will
+  /// skip invalid token
   static PgnGame<PgnNodeData> parsePgn(String pgn,
       {Headers Function() initHeaders = defaultHeaders}) {
     final List<PgnGame<PgnNodeData>> games = [];
-    _PgnParser((PgnGame<PgnNodeData> game, {PgnError? error}) {
-      if (error != null) throw error;
+    _PgnParser((PgnGame<PgnNodeData> game) {
       games.add(game);
     }, initHeaders)
         .parse(pgn);
@@ -351,7 +352,7 @@ class _PgnParser {
   late List<String> _commentBuf;
 
   /// Function to which the parsed game is passed to
-  final void Function(PgnGame<PgnNodeData>, {PgnError? error}) emitGame;
+  final void Function(PgnGame<PgnNodeData>) emitGame;
 
   /// Function to create the headers
   final Headers Function() initHeaders;
@@ -371,17 +372,9 @@ class _PgnParser {
     _stack = [_ParserFrame(parent: _gameMoves, root: true)];
   }
 
-  void _emit(Object? err) {
+  void _emit() {
     if (_state == _ParserState.comment) {
       _handleComment();
-    }
-    if (err != null) {
-      return emitGame(
-          PgnGame(
-              headers: _gameHeaders,
-              moves: _gameMoves,
-              comments: _gameComments),
-          error: err as PgnError);
     }
     if (_found) {
       emitGame(
@@ -394,26 +387,21 @@ class _PgnParser {
 
   /// Parse the PGN string
   void parse(String data) {
-    try {
-      var idx = 0;
-      for (;;) {
-        final nlIdx = data.indexOf('\n', idx);
-        if (nlIdx == -1) {
-          break;
-        }
-        final crIdx =
-            nlIdx > idx && data[nlIdx - 1] == '\r' ? nlIdx - 1 : nlIdx;
-        _lineBuf.add(data.substring(idx, crIdx));
-        idx = nlIdx + 1;
-        _handleLine();
+    var idx = 0;
+    for (;;) {
+      final nlIdx = data.indexOf('\n', idx);
+      if (nlIdx == -1) {
+        break;
       }
-      _lineBuf.add(data.substring(idx));
-
+      final crIdx = nlIdx > idx && data[nlIdx - 1] == '\r' ? nlIdx - 1 : nlIdx;
+      _lineBuf.add(data.substring(idx, crIdx));
+      idx = nlIdx + 1;
       _handleLine();
-      _emit(null);
-    } catch (err) {
-      _emit(err);
     }
+    _lineBuf.add(data.substring(idx));
+
+    _handleLine();
+    _emit();
   }
 
   void _handleLine() {
@@ -467,7 +455,7 @@ class _PgnParser {
           {
             if (freshLine) {
               if (_isCommentLine(line)) return;
-              if (_isWhitespace(line)) return _emit(null);
+              if (_isWhitespace(line)) return _emit();
             }
             final tokenRegex = RegExp(
                 r'(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/');
@@ -577,12 +565,13 @@ class _PgnParser {
 ///
 /// Returns a list of games if multiple games found
 /// Provide a optional function [initHeaders] to create different headers other than the default
-/// Throws a [PgnError] if couldn't parse the pgn
+/// The parser will take any string as input and return a tree of
+/// synttatically valid nodes but not necessary legal moves. It will
+/// skip invalid token
 List<PgnGame<PgnNodeData>> parseMultiGamePgn(String pgn,
     [Headers Function() initHeaders = PgnGame.defaultHeaders]) {
   final List<PgnGame<PgnNodeData>> games = [];
-  _PgnParser((PgnGame<PgnNodeData> game, {PgnError? error}) {
-    if (error != null) throw error;
+  _PgnParser((PgnGame<PgnNodeData> game) {
     games.add(game);
   }, initHeaders)
       .parse(pgn);
