@@ -129,6 +129,67 @@ void main() {
         expect(sans.item2,
             equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));
       });
+
+      test("pawn moves", () {
+        const legalSans = [
+          "a3",
+          "a4",
+          "b3",
+          "b4",
+          "c3",
+          "c4",
+          "d3",
+          "d4",
+          "e3",
+          "e4",
+          "f3",
+          "f4",
+          "g3",
+          "g4",
+          "h3",
+          "h4",
+          "Na3",
+          "Nc3",
+          "Nf3",
+          "Nh3",
+        ];
+
+        const illegalSans = [
+          "a1",
+          "a5",
+          "axd6",
+          "b1",
+          "b5",
+          "bxd9",
+          "c1",
+          "c5",
+          "c8",
+          "d1",
+          "d5",
+          "c0",
+          "e1",
+          "e5",
+          "e6",
+          "f1",
+          "f5",
+          "fxd3",
+          "g1",
+          "g5",
+          "fxh7",
+          "h1",
+          "h5",
+          "h?1",
+          "Bb2",
+        ];
+        final position = Chess.initial;
+        for (final san in legalSans) {
+          expect(position.parseSan(san) != null, true);
+        }
+
+        for (final san in illegalSans) {
+            expect(position.parseSan(san) == null, true);
+        }
+      });
     });
 
     test('hasInsufficientMaterial', () {
