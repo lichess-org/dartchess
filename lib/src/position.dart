@@ -213,6 +213,123 @@ abstract class Position<T extends Position<T>> {
     return _legalMovesOf(square);
   }
 
+  Move? parseSan(String san) {
+    final aIndex = 'a'.codeUnits[0];
+    final hIndex = 'h'.codeUnits[0];
+    final oneIndex = '1'.codeUnits[0];
+    final eightIndex = '8'.codeUnits[0];
+
+    final firstAnnotationIndex = san.indexOf(RegExp(r'[!?#+]'));
+    if (firstAnnotationIndex != -1) {
+      san = san.substring(0, firstAnnotationIndex);
+    }
+
+    if (san == "O-O") {
+
+    }
+    if (san == "O-O-O") {
+
+    }
+
+    final isPromotion = san.contains("=");
+    final isCapturing = san.contains("x");
+    final isPawnMove = aIndex <= san.codeUnits[0] && san.codeUnits[0] <= hIndex;
+
+    if (isPawnMove) {
+      // Every pawn move has a destination (e.g. d4)
+      // Optionally, pawn moves have a promotion
+      // If the move is a capture then it will include the source file
+
+      final colorFilter = board.bySide(turn);
+      final pawnFilter = board.byRole(Role.pawn);
+      SquareSet filter = colorFilter.intersect(pawnFilter);
+      Role? promotionRole = null;
+
+      // We can look at the first character of any pawn move
+      // in order to determin which file the pawn will be moving
+      // from
+      int sourceFileCharacter = san.codeUnits[0];
+      if (sourceFileCharacter < aIndex || sourceFileCharacter > hIndex) {
+        return null;
+      }
+
+      final sourceFile = sourceFileCharacter - aIndex;
+      final sourceFileFilter = SquareSet.fromFile(sourceFile);
+      filter = filter.intersect(sourceFileFilter);
+
+      if (isCapturing) {
+        // Invalid SAN
+        if (san[1] != 'x') {
+          return null;
+        }
+
+        // Remove the source file character and the capture marker
+        san = san.substring(2);
+      }
+
+      // There may be many pawns in the corresponding file
+      // The corect choice will always be the pawn further down the board
+      final furthestPiece = (turn == Side.white) ? filter.first : filter.last;
+
+      // There are no valid candidates for the move
+      if (furthestPiece == null) {
+        return null;
+      }
+
+      final source = furthestPiece!;
+
+      if (isPromotion) {
+        // Invalid SAN
+        if (san[san.length - 2] != "=") {
+          return null;
+        }
+
+        final promotionCharacter = san[san.length - 1];
+        promotionRole = Role.fromChar(promotionCharacter);
+
+        // Remove the promotion string
+        san = san.substring(0, san.length - 2);
+      }
+
+      // After handling captures and promotions, the
+      // remaining destination square should contain
+      // two characters.
+      if (san.length != 2) {
+        return null;
+      }
+
+      final destination = parseSquare(san);
+      if (destination == null) {
+        return null;
+      }
+
+      final move =
+          NormalMove(from: source, to: destination!, promotion: promotionRole);
+      if (!isLegal(move)) {
+        return null;
+      }
+      return move;
+    }
+
+    // The final two moves define the destination
+    final destination = parseSquare(san.substring(san.length - 2));
+    if (destination == null) {
+        return null;
+    }
+
+    san = san.substring(0, san.length - 2);
+    if (isCapturing) {
+        // Invalid SAN
+        if(san[san.length - 1] != "x") {
+            return null;
+        }
+        san = san.substring(0, san.length - 1);
+    }
+
+    // Not yet implemented
+      return null;
+  }
+
   /// Returns the Standard Algebraic Notation of this [Move] from the current [Position].
   String toSan(Move move) {
     final san = _makeSanWithoutSuffix(move);
