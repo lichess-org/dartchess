@@ -176,7 +176,7 @@ void main() {
           "h5",
           "h?1",
         ];
-        final position = Chess.initial;
+        const position = Chess.initial;
         for (final san in legalSans) {
           expect(position.parseSan(san) != null, true);
         }
@@ -204,7 +204,7 @@ void main() {
           "Ng1",
         ];
 
-        final position = Chess.initial;
+        const position = Chess.initial;
         for (final san in legalSans) {
           expect(position.parseSan(san) != null, true);
         }

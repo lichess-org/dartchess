@@ -213,19 +213,44 @@ abstract class Position<T extends Position<T>> {
     return _legalMovesOf(square);
   }
 
-  Move? parseSan(String san) {
+  Move? parseSan(String sanString) {
     final aIndex = 'a'.codeUnits[0];
     final hIndex = 'h'.codeUnits[0];
     final oneIndex = '1'.codeUnits[0];
     final eightIndex = '8'.codeUnits[0];
+    String san = sanString;
 
-    final firstAnnotationIndex = san.indexOf(RegExp(r'[!?#+]'));
+    final firstAnnotationIndex = san.indexOf(RegExp('[!?#+]'));
     if (firstAnnotationIndex != -1) {
       san = san.substring(0, firstAnnotationIndex);
     }
 
-    if (san == "O-O") {}
-    if (san == "O-O-O") {}
+    if (san == "O-O") {
+      Move? move;
+      if (turn == Side.white) {
+        move = NormalMove(from: parseSquare("e1")!, to: parseSquare("g1")!);
+      }
+      if (turn == Side.black) {
+        move = NormalMove(from: parseSquare("e8")!, to: parseSquare("g8")!);
+      }
+      if (!isLegal(move!)) {
+        return null;
+      }
+      return move;
+    }
+    if (san == "O-O-O") {
+      Move? move;
+      if (turn == Side.white) {
+        move = NormalMove(from: parseSquare("e1")!, to: parseSquare("c1")!);
+      }
+      if (turn == Side.black) {
+        move = NormalMove(from: parseSquare("e8")!, to: parseSquare("c8")!);
+      }
+      if (!isLegal(move!)) {
+        return null;
+      }
+      return move;
+    }
 
     final isPromotion = san.contains("=");
     final isCapturing = san.contains("x");
@@ -239,12 +264,12 @@ abstract class Position<T extends Position<T>> {
       final colorFilter = board.bySide(turn);
       final pawnFilter = board.byRole(Role.pawn);
       SquareSet filter = colorFilter.intersect(pawnFilter);
-      Role? promotionRole = null;
+      Role? promotionRole;
 
       // We can look at the first character of any pawn move
       // in order to determin which file the pawn will be moving
       // from
-      int sourceFileCharacter = san.codeUnits[0];
+      final sourceFileCharacter = san.codeUnits[0];
       if (sourceFileCharacter < aIndex || sourceFileCharacter > hIndex) {
         return null;
       }
@@ -272,7 +297,7 @@ abstract class Position<T extends Position<T>> {
         return null;
       }
 
-      final source = furthestPiece!;
+      final source = furthestPiece;
 
       if (isPromotion) {
         // Invalid SAN
@@ -300,7 +325,7 @@ abstract class Position<T extends Position<T>> {
       }
 
       final move =
-          NormalMove(from: source, to: destination!, promotion: promotionRole);
+          NormalMove(from: source, to: destination, promotion: promotionRole);
       if (!isLegal(move)) {
         return null;
       }
@@ -365,7 +390,7 @@ abstract class Position<T extends Position<T>> {
 
     Move? move;
     for (final square in filter.squares) {
-      Move candidateMove = NormalMove(from: square, to: destination);
+      final candidateMove = NormalMove(from: square, to: destination);
       if (!isLegal(candidateMove)) {
         continue;
       }
