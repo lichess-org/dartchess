@@ -224,12 +224,8 @@ abstract class Position<T extends Position<T>> {
       san = san.substring(0, firstAnnotationIndex);
     }
 
-    if (san == "O-O") {
-
-    }
-    if (san == "O-O-O") {
-
-    }
+    if (san == "O-O") {}
+    if (san == "O-O-O") {}
 
     final isPromotion = san.contains("=");
     final isCapturing = san.contains("x");
@@ -314,20 +310,78 @@ abstract class Position<T extends Position<T>> {
     // The final two moves define the destination
     final destination = parseSquare(san.substring(san.length - 2));
     if (destination == null) {
-        return null;
+      return null;
     }
 
     san = san.substring(0, san.length - 2);
     if (isCapturing) {
-        // Invalid SAN
-        if(san[san.length - 1] != "x") {
-            return null;
-        }
-        san = san.substring(0, san.length - 1);
+      // Invalid SAN
+      if (san[san.length - 1] != "x") {
+        return null;
+      }
+      san = san.substring(0, san.length - 1);
     }
 
-    // Not yet implemented
+    // For non-pawn moves, the first character describes a role
+    final role = Role.fromChar(san[0]);
+    if (role == null) {
       return null;
+    }
+    if (role == Role.pawn) {
+      return null;
+    }
+    san = san.substring(1);
+
+    final colorFilter = board.bySide(turn);
+    final roleFilter = board.byRole(role);
+    SquareSet filter = colorFilter.intersect(roleFilter);
+
+    // The remaining characters disambiguate the moves
+    if (san.length > 2) {
+      return null;
+    }
+    if (san.length == 2) {
+      final sourceSquare = parseSquare(san);
+      if (sourceSquare == null) {
+        return null;
+      }
+      final squareFilter = SquareSet.fromSquare(sourceSquare);
+      filter = filter.intersect(squareFilter);
+    }
+    if (san.length == 1) {
+      final sourceCharacter = san.codeUnits[0];
+      if (oneIndex <= sourceCharacter && sourceCharacter <= eightIndex) {
+        final rank = sourceCharacter - oneIndex;
+        final rankFilter = SquareSet.fromRank(rank);
+        filter = filter.intersect(rankFilter);
+      } else if (aIndex <= sourceCharacter && sourceCharacter <= hIndex) {
+        final file = sourceCharacter - aIndex;
+        final fileFilter = SquareSet.fromFile(file);
+        filter = filter.intersect(fileFilter);
+      } else {
+        return null;
+      }
+    }
+
+    Move? move;
+    for (final square in filter.squares) {
+      Move candidateMove = NormalMove(from: square, to: destination);
+      if (!isLegal(candidateMove)) {
+        continue;
+      }
+      if (move == null) {
+        move = candidateMove;
+      } else {
+        // Ambiguous notation
+        return null;
+      }
+    }
+
+    if (move == null) {
+      return null;
+    }
+
+    return move;
   }
 
   /// Returns the Standard Algebraic Notation of this [Move] from the current [Position].
