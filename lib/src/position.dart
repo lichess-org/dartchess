@@ -241,10 +241,12 @@ abstract class Position<T extends Position<T>> {
     if (san == 'O-O') {
       Move? move;
       if (turn == Side.white) {
-        move = NormalMove(from: parseSquare('e1')!, to: parseSquare('g1')!);
+        // Castle the king from e1 to g1
+        move = const NormalMove(from: 4, to: 6);
       }
       if (turn == Side.black) {
-        move = NormalMove(from: parseSquare('e8')!, to: parseSquare('g8')!);
+        // Castle the king from e8 to g8
+        move = const NormalMove(from: 60, to: 62);
       }
       if (!isLegal(move!)) {
         return null;
@@ -254,10 +256,12 @@ abstract class Position<T extends Position<T>> {
     if (san == 'O-O-O') {
       Move? move;
       if (turn == Side.white) {
-        move = NormalMove(from: parseSquare('e1')!, to: parseSquare('c1')!);
+        // Castle the king from e1 to c1
+        move = const NormalMove(from: 4, to: 2);
       }
       if (turn == Side.black) {
-        move = NormalMove(from: parseSquare('e8')!, to: parseSquare('c8')!);
+        // Castle the king from e8 to c8
+        move = const NormalMove(from: 60, to: 58);
       }
       if (!isLegal(move!)) {
         return null;
