@@ -227,15 +227,33 @@ abstract class Position<T extends Position<T>> {
 
     // Crazyhouse
     if (san.contains('@')) {
-      if (san.length != 4 || san[1] != '@') {
+      if (san.length == 3 && san[0] != '@') {
         return null;
       }
-      final role = Role.fromChar(san[0]);
-      final destination = parseSquare(san.substring(2));
-      if (role == null || destination == null) {
+      if (san.length == 4 && san[1] != '@') {
         return null;
       }
-      return DropMove(to: destination, role: role);
+      final Role role;
+      if (san.length == 3) {
+        role = Role.pawn;
+      } else if (san.length == 4) {
+        final parsedRole = Role.fromChar(san[0]);
+        if (parsedRole == null) {
+          return null;
+        }
+        role = parsedRole;
+      } else {
+        return null;
+      }
+      final destination = parseSquare(san.substring(san.length - 2));
+      if (destination == null) {
+        return null;
+      }
+      final move = DropMove(to: destination, role: role);
+      if (!isLegal(move)) {
+        return null;
+      }
+      return move;
     }
 
     if (san == 'O-O') {
