@@ -130,51 +130,51 @@ void main() {
             equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));
       });
 
-      test("opening pawn moves", () {
+      test('opening pawn moves', () {
         const legalSans = [
-          "a3",
-          "a4",
-          "b3",
-          "b4",
-          "c3",
-          "c4",
-          "d3",
-          "d4",
-          "e3",
-          "e4",
-          "f3",
-          "f4",
-          "g3",
-          "g4",
-          "h3",
-          "h4",
+          'a3',
+          'a4',
+          'b3',
+          'b4',
+          'c3',
+          'c4',
+          'd3',
+          'd4',
+          'e3',
+          'e4',
+          'f3',
+          'f4',
+          'g3',
+          'g4',
+          'h3',
+          'h4',
         ];
 
         const illegalSans = [
-          "a1",
-          "a5",
-          "axd6",
-          "b1",
-          "b5",
-          "bxd9",
-          "c1",
-          "c5",
-          "c8",
-          "d1",
-          "d5",
-          "c0",
-          "e1",
-          "e5",
-          "e6",
-          "f1",
-          "f5",
-          "fxd3",
-          "g1",
-          "g5",
-          "fxh7",
-          "h1",
-          "h5",
-          "h?1",
+          'a1',
+          'a5',
+          'axd6',
+          'b1',
+          'b5',
+          'bxd9',
+          'c1',
+          'c5',
+          'c8',
+          'd1',
+          'd5',
+          'c0',
+          'e1',
+          'e5',
+          'e6',
+          'f1',
+          'f5',
+          'fxd3',
+          'g1',
+          'g5',
+          'fxh7',
+          'h1',
+          'h5',
+          'h?1',
         ];
         const position = Chess.initial;
         for (final san in legalSans) {
@@ -186,22 +186,22 @@ void main() {
         }
       });
 
-      test("opening knight moves", () {
+      test('opening knight moves', () {
         const legalSans = [
-          "Na3",
-          "Nc3",
-          "Nf3",
-          "Nh3",
+          'Na3',
+          'Nc3',
+          'Nf3',
+          'Nh3',
         ];
 
         const illegalSans = [
-          "Ba3",
-          "Bc3",
-          "Bf3",
-          "Bh3",
-          "Ne4",
-          "Nb1",
-          "Ng1",
+          'Ba3',
+          'Bc3',
+          'Bf3',
+          'Bh3',
+          'Ne4',
+          'Nb1',
+          'Ng1',
         ];
 
         const position = Chess.initial;

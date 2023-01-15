@@ -225,26 +225,26 @@ abstract class Position<T extends Position<T>> {
       san = san.substring(0, firstAnnotationIndex);
     }
 
-    if (san == "O-O") {
+    if (san == 'O-O') {
       Move? move;
       if (turn == Side.white) {
-        move = NormalMove(from: parseSquare("e1")!, to: parseSquare("g1")!);
+        move = NormalMove(from: parseSquare('e1')!, to: parseSquare('g1')!);
       }
       if (turn == Side.black) {
-        move = NormalMove(from: parseSquare("e8")!, to: parseSquare("g8")!);
+        move = NormalMove(from: parseSquare('e8')!, to: parseSquare('g8')!);
       }
       if (!isLegal(move!)) {
         return null;
       }
       return move;
     }
-    if (san == "O-O-O") {
+    if (san == 'O-O-O') {
       Move? move;
       if (turn == Side.white) {
-        move = NormalMove(from: parseSquare("e1")!, to: parseSquare("c1")!);
+        move = NormalMove(from: parseSquare('e1')!, to: parseSquare('c1')!);
       }
       if (turn == Side.black) {
-        move = NormalMove(from: parseSquare("e8")!, to: parseSquare("c8")!);
+        move = NormalMove(from: parseSquare('e8')!, to: parseSquare('c8')!);
       }
       if (!isLegal(move!)) {
         return null;
@@ -252,8 +252,8 @@ abstract class Position<T extends Position<T>> {
       return move;
     }
 
-    final isPromotion = san.contains("=");
-    final isCapturing = san.contains("x");
+    final isPromotion = san.contains('=');
+    final isCapturing = san.contains('x');
     final isPawnMove = aIndex <= san.codeUnits[0] && san.codeUnits[0] <= hIndex;
 
     if (isPawnMove) {
@@ -290,7 +290,7 @@ abstract class Position<T extends Position<T>> {
 
       if (isPromotion) {
         // Invalid SAN
-        if (san[san.length - 2] != "=") {
+        if (san[san.length - 2] != '=') {
           return null;
         }
 
@@ -347,7 +347,7 @@ abstract class Position<T extends Position<T>> {
     san = san.substring(0, san.length - 2);
     if (isCapturing) {
       // Invalid SAN
-      if (san[san.length - 1] != "x") {
+      if (san[san.length - 1] != 'x') {
         return null;
       }
       san = san.substring(0, san.length - 1);
