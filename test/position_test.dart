@@ -1091,7 +1091,7 @@ void main() {
     });
   });
 
-  group('King in the hill', () {
+  group('King of the hill', () {
     test('insufficient material', () {
       for (final test in [
         ['8/5k2/8/8/8/8/3K4/8 w - -', false, false],
