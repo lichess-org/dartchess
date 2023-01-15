@@ -289,6 +289,11 @@ abstract class Position<T extends Position<T>> {
 
     final isPromotion = san.contains('=');
     final isCapturing = san.contains('x');
+    int? pawnRank;
+    if (oneIndex <= san.codeUnits[0] && san.codeUnits[0] <= eightIndex) {
+      pawnRank = san.codeUnits[0] - oneIndex;
+      san = san.substring(1);
+    }
     final isPawnMove = aIndex <= san.codeUnits[0] && san.codeUnits[0] <= hIndex;
 
     if (isPawnMove) {
@@ -358,6 +363,12 @@ abstract class Position<T extends Position<T>> {
           filter = filter.intersect(rankFilter);
         }
       }
+
+      // If the pawn rank has been overspecified, then verify the rank
+      if (pawnRank != null) {
+        filter = filter.intersect(SquareSet.fromRank(pawnRank));
+      }
+
       final source = (turn == Side.white) ? filter.last : filter.first;
 
       // There are no valid candidates for the move
