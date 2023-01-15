@@ -225,6 +225,19 @@ abstract class Position<T extends Position<T>> {
       san = san.substring(0, firstAnnotationIndex);
     }
 
+    // Crazyhouse
+    if (san.contains('@')) {
+      if (san.length != 4 || san[1] != '@') {
+        return null;
+      }
+      final role = Role.fromChar(san[0]);
+      final destination = parseSquare(san.substring(2));
+      if (role == null || destination == null) {
+        return null;
+      }
+      return DropMove(to: destination, role: role);
+    }
+
     if (san == 'O-O') {
       Move? move;
       if (turn == Side.white) {
