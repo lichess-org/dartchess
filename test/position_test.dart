@@ -130,6 +130,164 @@ void main() {
             equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));
       });
 
+      test('parse basic san', () {
+        const position = Chess.initial;
+        expect(position.parseSan('e4'),
+            equals(const NormalMove(from: 12, to: 28)));
+        expect(position.parseSan('Nf3'),
+            equals(const NormalMove(from: 6, to: 21)));
+      });
+
+      test('parse fools mate', () {
+        const moves = ['e4', 'e5', 'Qh5', 'Nf6', 'Bc4', 'Nc6', 'Qxf7#'];
+        Position position = Chess.initial;
+        for (final move in moves) {
+          position = position.play(position.parseSan(move)!);
+        }
+        expect(position.isCheckmate, equals(true));
+      });
+
+      test('parse crazyhouse', () {
+        Position position = Crazyhouse.initial;
+        final moves = [
+          'd4',
+          'd5',
+          'Nc3',
+          'Bf5',
+          'e3',
+          'e6',
+          'Bd3',
+          'Bg6',
+          'Nf3',
+          'Bd6',
+          'O-O',
+          'Ne7',
+          'g3',
+          'Nbc6',
+          'Re1',
+          'O-O',
+          'Ne2',
+          'e5',
+          'dxe5',
+          'Nxe5',
+          'Nxe5',
+          'Bxe5',
+          'f4',
+          'N@f3+',
+          'Kg2',
+          'Nxe1+',
+          'Qxe1',
+          'Bd6',
+          '@f3',
+          '@e4',
+          'fxe4',
+          'dxe4',
+          'Bc4',
+          '@f3+',
+          'Kf2',
+          'fxe2',
+          'Qxe2',
+          'N@h3+',
+          'Kg2',
+          'R@f2+',
+          'Qxf2',
+          'Nxf2',
+          'Kxf2',
+          'Q@f3+',
+          'Ke1',
+          'Bxf4',
+          'gxf4',
+          'Qdd1#',
+        ];
+        for (final move in moves) {
+          position = position.play(position.parseSan(move)!);
+        }
+        expect(
+            position.fen,
+            equals(
+                'r4rk1/ppp1nppp/6b1/8/2B1pP2/4Pq2/PPP4P/R1BqK3[PPNNNBRp] w - - 1 25'));
+      });
+
+      test('parse antichess', () {
+        Position position = Antichess.initial;
+        final moves = [
+          'g3',
+          'Nh6',
+          'g4',
+          'Nxg4',
+          'b3',
+          'Nxh2',
+          'Rxh2',
+          'g5',
+          'Rxh7',
+          'Rxh7',
+          'Bh3',
+          'Rxh3',
+          'Nxh3',
+          'Na6',
+          'Nxg5',
+          'Nb4',
+          'Nxf7',
+          'Nxc2',
+          'Qxc2',
+          'Kxf7',
+          'Qxc7',
+          'Qxc7',
+          'a4',
+          'Qxc1',
+          'Ra3',
+          'Qxa3',
+          'Nxa3',
+          'b5',
+          'Nxb5',
+          'Rb8',
+          'Nxa7',
+          'Rxb3',
+          'Nxc8',
+          'Rg3',
+          'Nxe7',
+          'Bxe7',
+          'fxg3',
+          'Bh4',
+          'gxh4',
+          'd5',
+          'e4',
+          'dxe4',
+          'd3',
+          'exd3',
+          'Kf1',
+          'd2',
+          'Kg1',
+          'Kf6',
+          'a5',
+          'Ke6',
+          'a6',
+          'Kd7',
+          'a7',
+          'Kc7',
+          'h5',
+          'd1=B',
+          'a8=B',
+          'Bxh5',
+          'Bf3',
+          'Bxf3',
+          'Kg2',
+          'Bxg2#',
+        ];
+        for (final move in moves) {
+          position = position.play(position.parseSan(move)!);
+        }
+        expect(position.fen, equals('8/2k5/8/8/8/8/6b1/8 w - - 0 32'));
+      });
+
+      test('parse drop moves', () {
+        const illegalMoves = ['Q@e3', 'N@d4'];
+        const position = Chess.initial;
+        for (final move in illegalMoves) {
+          expect(position.parseSan(move), equals(null));
+        }
+      });
+
       test('opening pawn moves', () {
         const legalSans = [
           'a3',
@@ -212,6 +370,11 @@ void main() {
         for (final san in illegalSans) {
           expect(position.parseSan(san) == null, true);
         }
+      });
+
+      test('lax pawn move', () {
+        const position = Chess.initial;
+        expect(position.parseSan('2e4'), equals(NormalMove(from: 12, to: 28)));
       });
     });
 
@@ -928,7 +1091,7 @@ void main() {
     });
   });
 
-  group('King of the hill', () {
+  group('King in the hill', () {
     test('insufficient material', () {
       for (final test in [
         ['8/5k2/8/8/8/8/3K4/8 w - -', false, false],
