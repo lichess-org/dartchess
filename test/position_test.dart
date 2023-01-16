@@ -208,6 +208,51 @@ void main() {
                 'r4rk1/ppp1nppp/6b1/8/2B1pP2/4Pq2/PPP4P/R1BqK3[PPNNNBRp] w - - 1 25'));
       });
 
+      test('castle checkmates', () {
+        Position position = Crazyhouse.initial;
+        final moves = [
+          'd4',
+          'f5',
+          'Nc3',
+          'Nf6',
+          'Nf3',
+          'e6',
+          'Bg5',
+          'Be7',
+          'Bxf6',
+          'Bxf6',
+          'e4',
+          'fxe4',
+          'Nxe4',
+          'b6',
+          'Ne5',
+          'O-O',
+          'Bd3',
+          'Bb7',
+          'Qh5',
+          'Qe7',
+          'Qxh7+',
+          'Kxh7',
+          'Nxf6+',
+          'Kh6',
+          'Neg4+',
+          'Kg5',
+          'h4+',
+          'Kf4',
+          'g3+',
+          'Kf3',
+          'Be2+',
+          'Kg2',
+          'Rh2+',
+          'Kg1',
+          'O-O-O#',
+        ];
+        for (final move in moves) {
+          position = position.play(position.parseSan(move)!);
+        }
+        expect(position.isCheckmate, equals(true));
+      });
+
       test('parse antichess', () {
         Position position = Antichess.initial;
         final moves = [
