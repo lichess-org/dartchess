@@ -1123,9 +1123,8 @@ void main() {
       final move = Move.fromUci('c4b3');
       expect(pos.isLegal(move), isTrue);
 
-      // TODO uncomment when parseSan is implemented
-      // final sanMove = pos.parseSan('cxb3');
-      // expect(move, equals(sanMove));
+      final sanMove = pos.parseSan('cxb3');
+      expect(move, equals(sanMove));
     });
   });
 
