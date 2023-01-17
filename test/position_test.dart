@@ -800,6 +800,18 @@ void main() {
         expect(perft(pos, 3), t[4]);
       }
     });
+
+    test('en passant', () {
+      final setup = Setup.parseFen(
+          'r1bqkbn1/p1ppp3/2n4p/6p1/1Pp5/4P3/P2P1PP1/R1B1K3 b - b3 0 11');
+      final pos = Antichess.fromSetup(setup);
+      final move = Move.fromUci('c4b3');
+      expect(pos.isLegal(move), isTrue);
+
+      // TODO uncomment when parseSan is implemented
+      // final sanMove = pos.parseSan('cxb3');
+      // expect(move, equals(sanMove));
+    });
   });
 
   group('Crazyhouse', () {

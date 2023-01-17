@@ -65,10 +65,10 @@ abstract class Position<T extends Position<T>> {
 
   Position<T> _copyWith({
     Board? board,
-    Pockets? pockets,
+    Box<Pockets?>? pockets,
     Side? turn,
     Castles? castles,
-    Square? epSquare,
+    Box<Square?>? epSquare,
     int? halfmoves,
     int? fullmoves,
   });
@@ -312,14 +312,14 @@ abstract class Position<T extends Position<T>> {
       return _copyWith(
         halfmoves: isCapture || piece.role == Role.pawn ? 0 : halfmoves + 1,
         fullmoves: turn == Side.black ? fullmoves + 1 : fullmoves,
-        pockets: capturedPiece != null
+        pockets: Box(capturedPiece != null
             ? pockets?.increment(opposite(capturedPiece.color),
                 capturedPiece.promoted ? Role.pawn : capturedPiece.role)
-            : pockets,
+            : pockets),
         board: newBoard,
         turn: opposite(turn),
         castles: newCastles,
-        epSquare: newEpSquare,
+        epSquare: Box(newEpSquare),
       );
     } else if (move is DropMove) {
       return _copyWith(
@@ -327,7 +327,7 @@ abstract class Position<T extends Position<T>> {
         fullmoves: turn == Side.black ? fullmoves + 1 : fullmoves,
         turn: opposite(turn),
         board: board.setPieceAt(move.to, Piece(color: turn, role: move.role)),
-        pockets: pockets?.decrement(turn, move.role),
+        pockets: Box(pockets?.decrement(turn, move.role)),
       );
     }
     return this;
@@ -705,19 +705,19 @@ class Chess extends Position<Chess> {
   @override
   Chess _copyWith({
     Board? board,
-    Pockets? pockets,
+    Box<Pockets?>? pockets,
     Side? turn,
     Castles? castles,
-    Square? epSquare,
+    Box<Square?>? epSquare,
     int? halfmoves,
     int? fullmoves,
   }) {
     return Chess(
       board: board ?? this.board,
-      pockets: pockets,
+      pockets: pockets != null ? pockets.value : this.pockets,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare,
+      epSquare: epSquare != null ? epSquare.value : this.epSquare,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
@@ -739,9 +739,13 @@ class Antichess extends Position<Antichess> {
 
   Antichess._fromSetupUnchecked(super.setup) : super._fromSetupUnchecked();
 
-  const Antichess._initial() : super._initial();
-
-  static const initial = Antichess._initial();
+  static const initial = Antichess(
+    board: Board.standard,
+    turn: Side.white,
+    castles: Castles.empty,
+    halfmoves: 0,
+    fullmoves: 1,
+  );
 
   @override
   bool get isVariantEnd => board.bySide(turn).isEmpty;
@@ -839,19 +843,19 @@ class Antichess extends Position<Antichess> {
   @override
   Antichess _copyWith({
     Board? board,
-    Pockets? pockets,
+    Box<Pockets?>? pockets,
     Side? turn,
     Castles? castles,
-    Square? epSquare,
+    Box<Square?>? epSquare,
     int? halfmoves,
     int? fullmoves,
   }) {
     return Antichess(
       board: board ?? this.board,
-      pockets: pockets,
+      pockets: pockets != null ? pockets.value : this.pockets,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare,
+      epSquare: epSquare != null ? epSquare.value : this.epSquare,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
@@ -1054,19 +1058,19 @@ class Atomic extends Position<Atomic> {
   @override
   Atomic _copyWith({
     Board? board,
-    Pockets? pockets,
+    Box<Pockets?>? pockets,
     Side? turn,
     Castles? castles,
-    Square? epSquare,
+    Box<Square?>? epSquare,
     int? halfmoves,
     int? fullmoves,
   }) {
     return Atomic(
       board: board ?? this.board,
-      pockets: pockets,
+      pockets: pockets != null ? pockets.value : this.pockets,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare,
+      epSquare: epSquare != null ? epSquare.value : this.epSquare,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
@@ -1111,7 +1115,7 @@ class Crazyhouse extends Position<Crazyhouse> {
   /// requirement.
   factory Crazyhouse.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     final pos = Crazyhouse._fromSetupUnchecked(setup)._copyWith(
-      pockets: setup.pockets ?? Pockets.empty,
+      pockets: Box(setup.pockets ?? Pockets.empty),
       board: setup.board.withPromoted(setup.board.promoted
           .intersect(setup.board.occupied)
           .diff(setup.board.kings)
@@ -1176,19 +1180,19 @@ class Crazyhouse extends Position<Crazyhouse> {
   @override
   Crazyhouse _copyWith({
     Board? board,
-    Pockets? pockets,
+    Box<Pockets?>? pockets,
     Side? turn,
     Castles? castles,
-    Square? epSquare,
+    Box<Square?>? epSquare,
     int? halfmoves,
     int? fullmoves,
   }) {
     return Crazyhouse(
       board: board ?? this.board,
-      pockets: pockets,
+      pockets: pockets != null ? pockets.value : this.pockets,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare,
+      epSquare: epSquare != null ? epSquare.value : this.epSquare,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
@@ -1245,19 +1249,19 @@ class KingOfTheHill extends Position<KingOfTheHill> {
   @override
   KingOfTheHill _copyWith({
     Board? board,
-    Pockets? pockets,
+    Box<Pockets?>? pockets,
     Side? turn,
     Castles? castles,
-    Square? epSquare,
+    Box<Square?>? epSquare,
     int? halfmoves,
     int? fullmoves,
   }) {
     return KingOfTheHill(
       board: board ?? this.board,
-      pockets: pockets,
+      pockets: pockets != null ? pockets.value : this.pockets,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare,
+      epSquare: epSquare != null ? epSquare.value : this.epSquare,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
@@ -1364,20 +1368,20 @@ class ThreeCheck extends Position<ThreeCheck> {
   @override
   ThreeCheck _copyWith({
     Board? board,
-    Pockets? pockets,
+    Box<Pockets?>? pockets,
     Side? turn,
     Castles? castles,
-    Square? epSquare,
+    Box<Square?>? epSquare,
     int? halfmoves,
     int? fullmoves,
     Tuple2<int, int>? remainingChecks,
   }) {
     return ThreeCheck(
       board: board ?? this.board,
-      pockets: pockets,
+      pockets: pockets != null ? pockets.value : this.pockets,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare,
+      epSquare: epSquare != null ? epSquare.value : this.epSquare,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
       remainingChecks: remainingChecks ?? this.remainingChecks,
