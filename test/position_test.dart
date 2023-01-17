@@ -325,6 +325,28 @@ void main() {
         expect(position.fen, equals('8/2k5/8/8/8/8/6b1/8 w - - 0 32'));
       });
 
+      test('antichess king promotion', () {
+        const moves = [
+          'e4',
+          'c6',
+          'h3',
+          'd5',
+          'exd5',
+          'Bxh3',
+          'dxc6',
+          'Bxg2',
+          'cxb7',
+          'Bxh1',
+          'bxa8=K'
+        ];
+        Position position = Antichess.initial;
+        for (final move in moves) {
+          position = position.play(position.parseSan(move)!);
+        }
+        expect(position.fen,
+            equals('Kn1qkbnr/p3pppp/8/8/8/8/PPPP1P2/RNBQKBNb b - - 0 6'));
+      });
+
       test('parse drop moves', () {
         const illegalMoves = ['Q@e3', 'N@d4'];
         const position = Chess.initial;
