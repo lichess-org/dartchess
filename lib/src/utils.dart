@@ -54,3 +54,9 @@ Map<String, Set<String>> algebraicLegalMoves(Position pos,
   }
   return Map.unmodifiable(result);
 }
+
+/// Utility for nullable fields in copyWith methods
+class Box<T> {
+  const Box(this.value);
+  final T value;
+}
