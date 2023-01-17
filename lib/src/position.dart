@@ -44,9 +44,6 @@ abstract class Position<T extends Position<T>> {
   /// Current move number.
   final int fullmoves;
 
-  /// Whether this is a position from an Antichess game
-  bool get isAntichess => false;
-
   /// Abstract const constructor to be used by subclasses.
   const Position._initial()
       : board = Board.standard,
@@ -192,7 +189,7 @@ abstract class Position<T extends Position<T>> {
     assert(move is NormalMove || move is DropMove);
     if (move is NormalMove) {
       if (move.promotion == Role.pawn) return false;
-      if (move.promotion == Role.king && !isAntichess) return false;
+      if (move.promotion == Role.king && this is! Antichess) return false;
       if (move.promotion != null &&
           (!board.pawns.has(move.from) || !SquareSet.backranks.has(move.to))) {
         return false;
@@ -993,9 +990,6 @@ class Antichess extends Position<Antichess> {
   const Antichess._initial() : super._initial();
 
   static const initial = Antichess._initial();
-
-  @override
-  bool get isAntichess => true;
 
   @override
   bool get isVariantEnd => board.bySide(turn).isEmpty;
