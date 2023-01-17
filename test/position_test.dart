@@ -441,7 +441,8 @@ void main() {
 
       test('lax pawn move', () {
         const position = Chess.initial;
-        expect(position.parseSan('2e4'), equals(NormalMove(from: 12, to: 28)));
+        expect(position.parseSan('2e4'),
+            equals(const NormalMove(from: 12, to: 28)));
       });
     });
 
