@@ -1,8 +1,9 @@
-Dart chess library for native platforms with an immutable API.
+Dart chess library for native platforms (does not support web).
 
 ## Features
 
 - Read and write FEN
+- Read and write SAN
 - Chess rules:
     - move making
     - legal moves generation
