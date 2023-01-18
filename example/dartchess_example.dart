@@ -1,5 +1,4 @@
 import 'package:dartchess/dartchess.dart';
-import 'package:collection/collection.dart';
 
 void main() {
   // Parse fen and create a valid chess position
@@ -7,14 +6,17 @@ void main() {
       'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
   final pos = Chess.fromSetup(setup);
 
-  // Generate legal moves
-  final legal = pos.legalMoves;
+  // Generate legal moves in algebraic notation
+  final legalMoves = algebraicLegalMoves(pos);
 
-  // The total number of legal moves from the starting position is 20
-  assert(legal.values.map((targets) => targets.size).sum == 20);
+  assert(legalMoves['e2']!.length == 2);
+
+  const move = NormalMove(from: 12, to: 28);
+
+  assert(pos.isLegal(move));
 
   // Play moves
-  final pos2 = pos.play(const NormalMove(from: 12, to: 28));
+  final pos2 = pos.play(move);
 
   // Detect game end conditions
   assert(pos2.isGameOver == false);
