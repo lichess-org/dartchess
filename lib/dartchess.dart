@@ -5,7 +5,7 @@ library dartchess;
 
 export 'src/constants.dart';
 export 'src/models.dart';
-export 'src/utils.dart';
+export 'src/utils.dart' hide Box;
 export 'src/square_set.dart';
 export 'src/attacks.dart';
 export 'src/board.dart';

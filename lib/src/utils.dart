@@ -22,8 +22,6 @@ Square? parseSquare(String str) {
 String toAlgebraic(Square square) =>
     kFileNames[squareFile(square)] + kRankNames[squareRank(square)];
 
-Side opposite(Side side) => side == Side.white ? Side.black : Side.white;
-
 /// Gets all the legal moves of this position in the algebraic coordinate notation.
 ///
 /// Includes both possible representations of castling moves (unless `chess960` is true).
@@ -53,4 +51,10 @@ Map<String, Set<String>> algebraicLegalMoves(Position pos,
     }
   }
   return Map.unmodifiable(result);
+}
+
+/// Utility for nullable fields in copyWith methods
+class Box<T> {
+  const Box(this.value);
+  final T value;
 }

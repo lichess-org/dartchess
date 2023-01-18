@@ -6,12 +6,17 @@ void main() {
       'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
   final pos = Chess.fromSetup(setup);
 
-  // Generate legal moves
-  final legal = pos.legalMoves;
-  assert(legal.length == 20);
+  // Generate legal moves in algebraic notation
+  final legalMoves = algebraicLegalMoves(pos);
+
+  assert(legalMoves['e2']!.length == 2);
+
+  const move = NormalMove(from: 12, to: 28);
+
+  assert(pos.isLegal(move));
 
   // Play moves
-  final pos2 = pos.play(const NormalMove(from: 12, to: 28));
+  final pos2 = pos.play(move);
 
   // Detect game end conditions
   assert(pos2.isGameOver == false);

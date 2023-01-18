@@ -150,8 +150,8 @@ abstract class Move {
 
   /// Constructs a [Move] from an UCI string.
   ///
-  /// Throws an [ArgumentError] if the argument is not a valid UCI string.
-  static Move fromUci(String str) {
+  /// Returns `null` if UCI string is not valid.
+  static Move? fromUci(String str) {
     if (str[1] == '@' && str.length == 4) {
       final role = Role.fromChar(str[0]);
       final to = parseSquare(str.substring(2));
@@ -163,14 +163,14 @@ abstract class Move {
       if (str.length == 5) {
         promotion = Role.fromChar(str[4]);
         if (promotion == null) {
-          throw ArgumentError('Invalid UCI string');
+          return null;
         }
       }
       if (from != null && to != null) {
         return NormalMove(from: from, to: to, promotion: promotion);
       }
     }
-    throw ArgumentError('Invalid UCI string');
+    return null;
   }
 }
 

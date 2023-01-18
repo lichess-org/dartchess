@@ -90,7 +90,7 @@ int perft(Position pos, int depth, {bool shouldLog = false}) {
       final to = entry.value;
       nodes += to.size;
       if (pos.board.pawns.has(from)) {
-        final backrank = SquareSet.backrankOf(opposite(pos.turn));
+        final backrank = SquareSet.backrankOf(pos.turn.opposite);
         nodes += to.intersect(backrank).size * (promotionRoles.length - 1);
       }
     }
