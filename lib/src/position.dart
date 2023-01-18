@@ -213,6 +213,9 @@ abstract class Position<T extends Position<T>> {
     return _legalMovesOf(square);
   }
 
+  /// Parses a move in Standard Algebraic Notation.
+  ///
+  /// Returns a legal [Move] of the [Position] or `null`.
   Move? parseSan(String sanString) {
     final aIndex = 'a'.codeUnits[0];
     final hIndex = 'h'.codeUnits[0];
