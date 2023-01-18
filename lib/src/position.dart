@@ -118,7 +118,7 @@ abstract class Position<T extends Position<T>> {
     if (variantOutcome != null) {
       return variantOutcome;
     } else if (isCheckmate) {
-      return Outcome(winner: opposite(turn));
+      return Outcome(winner: turn.opposite);
     } else if (isInsufficientMaterial || isStalemate) {
       return Outcome.draw;
     } else {
@@ -155,7 +155,7 @@ abstract class Position<T extends Position<T>> {
   /// SquareSet of pieces giving check.
   SquareSet get checkers {
     final king = board.kingOf(turn);
-    return king != null ? kingAttackers(king, opposite(turn)) : SquareSet.empty;
+    return king != null ? kingAttackers(king, turn.opposite) : SquareSet.empty;
   }
 
   /// Attacks that a king on `square` would have to deal with.
@@ -171,7 +171,7 @@ abstract class Position<T extends Position<T>> {
     if (board.bySide(side).isIntersected(board.knights)) {
       return board.bySide(side).size <= 2 &&
           board
-              .bySide(opposite(side))
+              .bySide(side.opposite)
               .diff(board.kings)
               .diff(board.queens)
               .isEmpty;
@@ -564,11 +564,11 @@ abstract class Position<T extends Position<T>> {
         halfmoves: isCapture || piece.role == Role.pawn ? 0 : halfmoves + 1,
         fullmoves: turn == Side.black ? fullmoves + 1 : fullmoves,
         pockets: Box(capturedPiece != null
-            ? pockets?.increment(opposite(capturedPiece.color),
+            ? pockets?.increment(capturedPiece.color.opposite,
                 capturedPiece.promoted ? Role.pawn : capturedPiece.role)
             : pockets),
         board: newBoard,
-        turn: opposite(turn),
+        turn: turn.opposite,
         castles: newCastles,
         epSquare: Box(newEpSquare),
       );
@@ -576,7 +576,7 @@ abstract class Position<T extends Position<T>> {
       return _copyWith(
         halfmoves: move.role == Role.pawn ? 0 : halfmoves + 1,
         fullmoves: turn == Side.black ? fullmoves + 1 : fullmoves,
-        turn: opposite(turn),
+        turn: turn.opposite,
         board: board.setPieceAt(move.to, Piece(color: turn, role: move.role)),
         pockets: Box(pockets?.decrement(turn, move.role)),
       );
@@ -609,7 +609,7 @@ abstract class Position<T extends Position<T>> {
     if (ourKing == null) {
       throw PositionError.kings;
     }
-    final otherKing = board.kingOf(opposite(turn));
+    final otherKing = board.kingOf(turn.opposite);
     if (otherKing == null) {
       throw PositionError.kings;
     }
@@ -630,7 +630,7 @@ abstract class Position<T extends Position<T>> {
   /// Throws a [PositionError.impossibleCheck] if it does not meet validity
   /// requirements.
   void _validateCheckers(Square ourKing) {
-    final checkers = kingAttackers(ourKing, opposite(turn));
+    final checkers = kingAttackers(ourKing, turn.opposite);
     if (checkers.isNotEmpty) {
       if (epSquare != null) {
         // The pushed pawn must be the only checker, or it has uncovered
@@ -640,7 +640,7 @@ abstract class Position<T extends Position<T>> {
         if (checkers.moreThanOne ||
             (checkers.first != pushedTo &&
                 board
-                    .attacksTo(ourKing, opposite(turn),
+                    .attacksTo(ourKing, turn.opposite,
                         occupied: board.occupied
                             .withoutSquare(pushedTo)
                             .withSquare(pushedFrom))
@@ -748,7 +748,7 @@ abstract class Position<T extends Position<T>> {
     SquareSet pseudo;
     SquareSet? legalEpSquare;
     if (piece.role == Role.pawn) {
-      pseudo = pawnAttacks(turn, square) & board.bySide(opposite(turn));
+      pseudo = pawnAttacks(turn, square) & board.bySide(turn.opposite);
       final delta = turn == Side.white ? 8 : -8;
       final step = square + delta;
       if (0 <= step && step < 64 && !board.occupied.has(step)) {
@@ -783,7 +783,7 @@ abstract class Position<T extends Position<T>> {
     if (piece.role == Role.king) {
       final occ = board.occupied.withoutSquare(square);
       for (final to in pseudo.squares) {
-        if (kingAttackers(to, opposite(turn), occupied: occ).isNotEmpty) {
+        if (kingAttackers(to, turn.opposite, occupied: occ).isNotEmpty) {
           pseudo = pseudo.withoutSquare(to);
         }
       }
@@ -833,7 +833,7 @@ abstract class Position<T extends Position<T>> {
         .intersect(board.rooksAndQueens)
         .union(bishopAttacks(king, SquareSet.empty)
             .intersect(board.bishopsAndQueens))
-        .intersect(board.bySide(opposite(turn)));
+        .intersect(board.bySide(turn.opposite));
     SquareSet blockers = SquareSet.empty;
     for (final sniper in snipers.squares) {
       final b = between(king, sniper) & board.occupied;
@@ -857,7 +857,7 @@ abstract class Position<T extends Position<T>> {
     final kingPath = between(king, kingTo);
     final occ = board.occupied.withoutSquare(king);
     for (final sq in kingPath.squares) {
-      if (kingAttackers(sq, opposite(turn), occupied: occ).isNotEmpty) {
+      if (kingAttackers(sq, turn.opposite, occupied: occ).isNotEmpty) {
         return SquareSet.empty;
       }
     }
@@ -866,7 +866,7 @@ abstract class Position<T extends Position<T>> {
         .toggleSquare(king)
         .toggleSquare(rook)
         .toggleSquare(rookTo);
-    if (kingAttackers(kingTo, opposite(turn), occupied: after).isNotEmpty) {
+    if (kingAttackers(kingTo, turn.opposite, occupied: after).isNotEmpty) {
       return SquareSet.empty;
     }
     return SquareSet.fromSquare(rook);
@@ -883,7 +883,7 @@ abstract class Position<T extends Position<T>> {
         .toggleSquare(epSquare!)
         .toggleSquare(captured);
     return !board
-        .attacksTo(king, opposite(turn), occupied: occupied)
+        .attacksTo(king, turn.opposite, occupied: occupied)
         .isIntersected(occupied);
   }
 
@@ -907,7 +907,7 @@ abstract class Position<T extends Position<T>> {
   Square? _legalEpSquare() {
     if (epSquare == null) return null;
     final ourPawns = board.piecesOf(turn, Role.pawn);
-    final candidates = ourPawns & pawnAttacks(opposite(turn), epSquare!);
+    final candidates = ourPawns & pawnAttacks(turn.opposite, epSquare!);
     for (final candidate in candidates.squares) {
       if (_legalMovesOf(candidate).has(epSquare!)) {
         return epSquare;
@@ -1041,11 +1041,11 @@ class Antichess extends Position<Antichess> {
   _Context _makeContext() {
     final ctx = super._makeContext();
     if (epSquare != null &&
-        pawnAttacks(opposite(turn), epSquare!)
+        pawnAttacks(turn.opposite, epSquare!)
             .isIntersected(board.piecesOf(turn, Role.pawn))) {
       return ctx.copyWith(mustCapture: true);
     }
-    final enemy = board.bySide(opposite(turn));
+    final enemy = board.bySide(turn.opposite);
     for (final from in board.bySide(turn).squares) {
       if (_pseudoLegalMoves(this, from, ctx).isIntersected(enemy)) {
         return ctx.copyWith(mustCapture: true);
@@ -1058,7 +1058,7 @@ class Antichess extends Position<Antichess> {
   SquareSet _legalMovesOf(Square square, {_Context? context}) {
     final ctx = context ?? _makeContext();
     final dests = _pseudoLegalMoves(this, square, ctx);
-    final enemy = board.bySide(opposite(turn));
+    final enemy = board.bySide(turn.opposite);
     return dests &
         (ctx.mustCapture
             ? epSquare != null && board.roleAt(square) == Role.pawn
@@ -1070,16 +1070,16 @@ class Antichess extends Position<Antichess> {
   @override
   bool hasInsufficientMaterial(Side side) {
     if (board.bySide(side).isEmpty) return false;
-    if (board.bySide(opposite(side)).isEmpty) return true;
+    if (board.bySide(side.opposite).isEmpty) return true;
     if (board.occupied == board.bishops) {
       final weSomeOnLight =
           board.bySide(side).isIntersected(SquareSet.lightSquares);
       final weSomeOnDark =
           board.bySide(side).isIntersected(SquareSet.darkSquares);
       final theyAllOnDark =
-          board.bySide(opposite(side)).isDisjoint(SquareSet.lightSquares);
+          board.bySide(side.opposite).isDisjoint(SquareSet.lightSquares);
       final theyAllOnLight =
-          board.bySide(opposite(side)).isDisjoint(SquareSet.darkSquares);
+          board.bySide(side.opposite).isDisjoint(SquareSet.darkSquares);
       return (weSomeOnLight && theyAllOnDark) ||
           (weSomeOnDark && theyAllOnLight);
     }
@@ -1138,7 +1138,7 @@ class Atomic extends Position<Atomic> {
   Outcome? get variantOutcome {
     for (final color in Side.values) {
       if (board.piecesOf(color, Role.king).isEmpty) {
-        return Outcome(winner: opposite(color));
+        return Outcome(winner: color.opposite);
       }
     }
     return null;
@@ -1182,7 +1182,7 @@ class Atomic extends Position<Atomic> {
     if (board.kings.size > 2) {
       throw PositionError.kings;
     }
-    final otherKing = board.kingOf(opposite(turn));
+    final otherKing = board.kingOf(turn.opposite);
     if (otherKing == null) {
       throw PositionError.kings;
     }
@@ -1250,14 +1250,14 @@ class Atomic extends Position<Atomic> {
   bool hasInsufficientMaterial(Side side) {
     // Remaining material does not matter if the enemy king is already
     // exploded.
-    if (board.piecesOf(opposite(side), Role.king).isEmpty) return false;
+    if (board.piecesOf(side.opposite, Role.king).isEmpty) return false;
 
     // Bare king cannot mate.
     if (board.bySide(side).diff(board.kings).isEmpty) return true;
 
     // As long as the enemy king is not alone, there is always a chance their
     // own pieces explode next to it.
-    if (board.bySide(opposite(side)).diff(board.kings).isNotEmpty) {
+    if (board.bySide(side.opposite).diff(board.kings).isNotEmpty) {
       // Unless there are only bishops that cannot explode each other.
       if (board.occupied == board.bishops | board.kings) {
         if (!(board.bishops & board.white)
@@ -1934,7 +1934,7 @@ Square? _validEpSquare(Setup setup) {
   if (setup.board.occupied.has(setup.epSquare! + forward)) return null;
   final pawn = setup.epSquare! - forward;
   if (!setup.board.pawns.has(pawn) ||
-      !setup.board.bySide(opposite(setup.turn)).has(pawn)) {
+      !setup.board.bySide(setup.turn.opposite).has(pawn)) {
     return null;
   }
   return setup.epSquare;
@@ -1947,7 +1947,7 @@ SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
 
   SquareSet pseudo = attacks(piece, square, pos.board.occupied);
   if (piece.role == Role.pawn) {
-    SquareSet captureTargets = pos.board.bySide(opposite(pos.turn));
+    SquareSet captureTargets = pos.board.bySide(pos.turn.opposite);
     if (pos.epSquare != null) {
       captureTargets = captureTargets.withSquare(pos.epSquare!);
     }

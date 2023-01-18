@@ -2,7 +2,6 @@ import 'package:meta/meta.dart';
 import './square_set.dart';
 import './models.dart';
 import './attacks.dart';
-import './utils.dart';
 
 /// A board represented by several square sets for each piece.
 @immutable
@@ -212,7 +211,7 @@ class Board {
               .intersect(bishopsAndQueens))
           .union(knightAttacks(square).intersect(knights))
           .union(kingAttacks(square).intersect(kings))
-          .union(pawnAttacks(opposite(attacker), square).intersect(pawns)));
+          .union(pawnAttacks(attacker.opposite, square).intersect(pawns)));
 
   /// Puts a [Piece] on a [Square] overriding the existing one, if any.
   Board setPieceAt(Square square, Piece piece) {
