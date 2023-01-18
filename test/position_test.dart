@@ -104,7 +104,7 @@ void main() {
     });
 
     group('san', () {
-      test('en passant', () {
+      test('toSan en passant', () {
         final setup = Setup.parseFen('6bk/7b/8/3pP3/8/8/8/Q3K3 w - d6 0 2');
         final pos = Chess.fromSetup(setup);
         final move = Move.fromUci('e5d6')!;
@@ -136,6 +136,29 @@ void main() {
             equals(const NormalMove(from: 12, to: 28)));
         expect(position.parseSan('Nf3'),
             equals(const NormalMove(from: 6, to: 21)));
+        expect(position.parseSan('Nf6'), null);
+        expect(position.parseSan('Ke2'), null);
+        expect(position.parseSan('O-O'), null);
+        expect(position.parseSan('O-O-O'), null);
+      });
+
+      test('parse pawn capture', () {
+        Position pos = Chess.initial;
+        const line = ['e4', 'd5', 'c4', 'Nf6', 'exd5'];
+        for (final san in line) {
+          pos = pos.play(pos.parseSan(san)!);
+        }
+        expect(pos.fen,
+            'rnbqkb1r/ppp1pppp/5n2/3P4/2P5/8/PP1P1PPP/RNBQKBNR b KQkq - 0 3');
+
+        final pos2 = Chess.fromSetup(
+            Setup.parseFen('r4br1/pp1Npkp1/2P4p/5P2/6P1/5KnP/PP6/R1B5 b - -'));
+        expect(
+            pos2.parseSan('bxc6'), equals(const NormalMove(from: 49, to: 42)));
+
+        final pos3 = Chess.fromSetup(Setup.parseFen(
+            '2rq1rk1/pb2bppp/1p2p3/n1ppPn2/2PP4/PP3N2/1B1NQPPP/RB3RK1 b - -'));
+        expect(pos3.parseSan('c4'), isNull);
       });
 
       test('parse fools mate', () {
@@ -147,207 +170,7 @@ void main() {
         expect(position.isCheckmate, equals(true));
       });
 
-      test('parse crazyhouse', () {
-        Position position = Crazyhouse.initial;
-        final moves = [
-          'd4',
-          'd5',
-          'Nc3',
-          'Bf5',
-          'e3',
-          'e6',
-          'Bd3',
-          'Bg6',
-          'Nf3',
-          'Bd6',
-          'O-O',
-          'Ne7',
-          'g3',
-          'Nbc6',
-          'Re1',
-          'O-O',
-          'Ne2',
-          'e5',
-          'dxe5',
-          'Nxe5',
-          'Nxe5',
-          'Bxe5',
-          'f4',
-          'N@f3+',
-          'Kg2',
-          'Nxe1+',
-          'Qxe1',
-          'Bd6',
-          '@f3',
-          '@e4',
-          'fxe4',
-          'dxe4',
-          'Bc4',
-          '@f3+',
-          'Kf2',
-          'fxe2',
-          'Qxe2',
-          'N@h3+',
-          'Kg2',
-          'R@f2+',
-          'Qxf2',
-          'Nxf2',
-          'Kxf2',
-          'Q@f3+',
-          'Ke1',
-          'Bxf4',
-          'gxf4',
-          'Qdd1#',
-        ];
-        for (final move in moves) {
-          position = position.play(position.parseSan(move)!);
-        }
-        expect(
-            position.fen,
-            equals(
-                'r4rk1/ppp1nppp/6b1/8/2B1pP2/4Pq2/PPP4P/R1BqK3[PPNNNBRp] w - - 1 25'));
-      });
-
-      test('castle checkmates', () {
-        Position position = Crazyhouse.initial;
-        final moves = [
-          'd4',
-          'f5',
-          'Nc3',
-          'Nf6',
-          'Nf3',
-          'e6',
-          'Bg5',
-          'Be7',
-          'Bxf6',
-          'Bxf6',
-          'e4',
-          'fxe4',
-          'Nxe4',
-          'b6',
-          'Ne5',
-          'O-O',
-          'Bd3',
-          'Bb7',
-          'Qh5',
-          'Qe7',
-          'Qxh7+',
-          'Kxh7',
-          'Nxf6+',
-          'Kh6',
-          'Neg4+',
-          'Kg5',
-          'h4+',
-          'Kf4',
-          'g3+',
-          'Kf3',
-          'Be2+',
-          'Kg2',
-          'Rh2+',
-          'Kg1',
-          'O-O-O#',
-        ];
-        for (final move in moves) {
-          position = position.play(position.parseSan(move)!);
-        }
-        expect(position.isCheckmate, equals(true));
-      });
-
-      test('parse antichess', () {
-        Position position = Antichess.initial;
-        final moves = [
-          'g3',
-          'Nh6',
-          'g4',
-          'Nxg4',
-          'b3',
-          'Nxh2',
-          'Rxh2',
-          'g5',
-          'Rxh7',
-          'Rxh7',
-          'Bh3',
-          'Rxh3',
-          'Nxh3',
-          'Na6',
-          'Nxg5',
-          'Nb4',
-          'Nxf7',
-          'Nxc2',
-          'Qxc2',
-          'Kxf7',
-          'Qxc7',
-          'Qxc7',
-          'a4',
-          'Qxc1',
-          'Ra3',
-          'Qxa3',
-          'Nxa3',
-          'b5',
-          'Nxb5',
-          'Rb8',
-          'Nxa7',
-          'Rxb3',
-          'Nxc8',
-          'Rg3',
-          'Nxe7',
-          'Bxe7',
-          'fxg3',
-          'Bh4',
-          'gxh4',
-          'd5',
-          'e4',
-          'dxe4',
-          'd3',
-          'exd3',
-          'Kf1',
-          'd2',
-          'Kg1',
-          'Kf6',
-          'a5',
-          'Ke6',
-          'a6',
-          'Kd7',
-          'a7',
-          'Kc7',
-          'h5',
-          'd1=B',
-          'a8=B',
-          'Bxh5',
-          'Bf3',
-          'Bxf3',
-          'Kg2',
-          'Bxg2#',
-        ];
-        for (final move in moves) {
-          position = position.play(position.parseSan(move)!);
-        }
-        expect(position.fen, equals('8/2k5/8/8/8/8/6b1/8 w - - 0 32'));
-      });
-
-      test('antichess king promotion', () {
-        const moves = [
-          'e4',
-          'c6',
-          'h3',
-          'd5',
-          'exd5',
-          'Bxh3',
-          'dxc6',
-          'Bxg2',
-          'cxb7',
-          'Bxh1',
-          'bxa8=K'
-        ];
-        Position position = Antichess.initial;
-        for (final move in moves) {
-          position = position.play(position.parseSan(move)!);
-        }
-        expect(position.fen,
-            equals('Kn1qkbnr/p3pppp/8/8/8/8/PPPP1P2/RNBQKBNb b - - 0 6'));
-      });
-
-      test('parse drop moves', () {
+      test('cannot parse drop moves in Chess', () {
         const illegalMoves = ['Q@e3', 'N@d4'];
         const position = Chess.initial;
         for (final move in illegalMoves) {
@@ -439,7 +262,7 @@ void main() {
         }
       });
 
-      test('lax pawn move', () {
+      test('overspecified pawn move', () {
         const position = Chess.initial;
         expect(position.parseSan('2e4'),
             equals(const NormalMove(from: 12, to: 28)));
@@ -1126,6 +949,100 @@ void main() {
       final sanMove = pos.parseSan('cxb3');
       expect(move, equals(sanMove));
     });
+
+    test('parse san', () {
+      Position position = Antichess.initial;
+      final moves = [
+        'g3',
+        'Nh6',
+        'g4',
+        'Nxg4',
+        'b3',
+        'Nxh2',
+        'Rxh2',
+        'g5',
+        'Rxh7',
+        'Rxh7',
+        'Bh3',
+        'Rxh3',
+        'Nxh3',
+        'Na6',
+        'Nxg5',
+        'Nb4',
+        'Nxf7',
+        'Nxc2',
+        'Qxc2',
+        'Kxf7',
+        'Qxc7',
+        'Qxc7',
+        'a4',
+        'Qxc1',
+        'Ra3',
+        'Qxa3',
+        'Nxa3',
+        'b5',
+        'Nxb5',
+        'Rb8',
+        'Nxa7',
+        'Rxb3',
+        'Nxc8',
+        'Rg3',
+        'Nxe7',
+        'Bxe7',
+        'fxg3',
+        'Bh4',
+        'gxh4',
+        'd5',
+        'e4',
+        'dxe4',
+        'd3',
+        'exd3',
+        'Kf1',
+        'd2',
+        'Kg1',
+        'Kf6',
+        'a5',
+        'Ke6',
+        'a6',
+        'Kd7',
+        'a7',
+        'Kc7',
+        'h5',
+        'd1=B',
+        'a8=B',
+        'Bxh5',
+        'Bf3',
+        'Bxf3',
+        'Kg2',
+        'Bxg2#',
+      ];
+      for (final move in moves) {
+        position = position.play(position.parseSan(move)!);
+      }
+      expect(position.fen, equals('8/2k5/8/8/8/8/6b1/8 w - - 0 32'));
+    });
+
+    test('parse san, king promotion', () {
+      const moves = [
+        'e4',
+        'c6',
+        'h3',
+        'd5',
+        'exd5',
+        'Bxh3',
+        'dxc6',
+        'Bxg2',
+        'cxb7',
+        'Bxh1',
+        'bxa8=K'
+      ];
+      Position position = Antichess.initial;
+      for (final move in moves) {
+        position = position.play(position.parseSan(move)!);
+      }
+      expect(position.fen,
+          equals('Kn1qkbnr/p3pppp/8/8/8/8/PPPP1P2/RNBQKBNb b - - 0 6'));
+    });
   });
 
   group('Crazyhouse', () {
@@ -1167,6 +1084,112 @@ void main() {
           expect(perft(pos, 3), t[4]);
         }
       }
+    });
+
+    test('parse san', () {
+      Position position = Crazyhouse.initial;
+      final moves = [
+        'd4',
+        'd5',
+        'Nc3',
+        'Bf5',
+        'e3',
+        'e6',
+        'Bd3',
+        'Bg6',
+        'Nf3',
+        'Bd6',
+        'O-O',
+        'Ne7',
+        'g3',
+        'Nbc6',
+        'Re1',
+        'O-O',
+        'Ne2',
+        'e5',
+        'dxe5',
+        'Nxe5',
+        'Nxe5',
+        'Bxe5',
+        'f4',
+        'N@f3+',
+        'Kg2',
+        'Nxe1+',
+        'Qxe1',
+        'Bd6',
+        '@f3',
+        '@e4',
+        'fxe4',
+        'dxe4',
+        'Bc4',
+        '@f3+',
+        'Kf2',
+        'fxe2',
+        'Qxe2',
+        'N@h3+',
+        'Kg2',
+        'R@f2+',
+        'Qxf2',
+        'Nxf2',
+        'Kxf2',
+        'Q@f3+',
+        'Ke1',
+        'Bxf4',
+        'gxf4',
+        'Qdd1#',
+      ];
+      for (final move in moves) {
+        position = position.play(position.parseSan(move)!);
+      }
+      expect(
+          position.fen,
+          equals(
+              'r4rk1/ppp1nppp/6b1/8/2B1pP2/4Pq2/PPP4P/R1BqK3[PPNNNBRp] w - - 1 25'));
+    });
+
+    test('castle checkmates', () {
+      Position position = Crazyhouse.initial;
+      final moves = [
+        'd4',
+        'f5',
+        'Nc3',
+        'Nf6',
+        'Nf3',
+        'e6',
+        'Bg5',
+        'Be7',
+        'Bxf6',
+        'Bxf6',
+        'e4',
+        'fxe4',
+        'Nxe4',
+        'b6',
+        'Ne5',
+        'O-O',
+        'Bd3',
+        'Bb7',
+        'Qh5',
+        'Qe7',
+        'Qxh7+',
+        'Kxh7',
+        'Nxf6+',
+        'Kh6',
+        'Neg4+',
+        'Kg5',
+        'h4+',
+        'Kf4',
+        'g3+',
+        'Kf3',
+        'Be2+',
+        'Kg2',
+        'Rh2+',
+        'Kg1',
+        'O-O-O#',
+      ];
+      for (final move in moves) {
+        position = position.play(position.parseSan(move)!);
+      }
+      expect(position.isCheckmate, equals(true));
     });
   });
 
