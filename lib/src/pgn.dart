@@ -161,6 +161,28 @@ class PgnGame<T> {
     return games[0];
   }
 
+  /// Create a [Position] for a Variant from the headers
+  ///
+  /// Headers must include a 'Variant' and an optional 'Fen' key
+  static Position startingPosition(Map<String, String> headers,
+      {bool? ignoreImpossibleCheck}) {
+    if (!headers.containsKey('Variant')) {
+      throw PositionError.variant;
+    }
+    final rules = Variant.fromPgn(headers['Variant']!);
+    if (rules == null) throw PositionError.variant;
+    if (!headers.containsKey('FEN')) {
+      return Position.defaultPosition(rules);
+    }
+    final fen = headers['FEN']!;
+    try {
+      return Position.setupPosition(rules, Setup.parseFen(fen),
+          ignoreImpossibleCheck: ignoreImpossibleCheck);
+    } catch (err) {
+      rethrow;
+    }
+  }
+
   /// Create a PGN String from [PgnGame]
   String makePgn() {
     final builder = StringBuffer();
@@ -273,7 +295,7 @@ class PgnGame<T> {
           }
       }
     }
-    token.write(Outcome.toPgnString(Outcome.fromPgn(headers["Result"])));
+    token.write(Outcome.toPgnString(Outcome.fromPgn(headers['Result'])));
     builder.writeln(token.toString());
     return builder.toString();
   }
@@ -313,7 +335,7 @@ class _PgnFrame {
 
 /// Remove escape sequence from the string
 String _escapeHeader(String value) =>
-    value.replaceAll(RegExp(r'\\'), "\\\\").replaceAll(RegExp('"'), '\\"');
+    value.replaceAll(RegExp(r'\\'), '\\\\').replaceAll(RegExp('"'), '\\"');
 
 /// Remove '}' from the comment string
 String _safeComment(String value) => value.replaceAll(RegExp(r'\}'), '');
@@ -814,9 +836,9 @@ String _makeClk(double seconds) {
   final intVal = maxSec.toInt();
   final frac = (maxSec - intVal) // get the fraction part of seconds
       .toStringAsFixed(3)
-      .replaceAll(RegExp(r'\.?0+$'), "")
+      .replaceAll(RegExp(r'\.?0+$'), '')
       .substring(1);
   final dec =
-      intVal.toString().padLeft(2, "0"); // get the decimal part of seconds
+      intVal.toString().padLeft(2, '0'); // get the decimal part of seconds
   return '$hours:${minutes.toString().padLeft(2, "0")}:$dec$frac';
 }

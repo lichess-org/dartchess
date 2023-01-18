@@ -73,8 +73,6 @@ abstract class Position<T extends Position<T>> {
     int? fullmoves,
   });
 
-  Variant get variant => Variant.chess;
-
   /// Checks if the game is over due to a special variant end condition.
   bool get isVariantEnd;
 
@@ -630,7 +628,6 @@ abstract class Position<T extends Position<T>> {
   /// Create a [Position] from setup and variants
   static Position setupPosition(Variant rules, Setup setup,
       {bool? ignoreImpossibleCheck}) {
-// TODO:missing horde, racingkings. Returns Chess for those variants
     switch (rules) {
       case Variant.chess:
         return Chess.fromSetup(setup,
@@ -650,31 +647,10 @@ abstract class Position<T extends Position<T>> {
       case Variant.threecheck:
         return ThreeCheck.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      default:
-        return Chess.fromSetup(setup,
-            ignoreImpossibleCheck: ignoreImpossibleCheck);
-    }
-  }
-
-  /// Create a [Position] for a Variant from the headers
-  ///
-  /// Headers must include a 'Variant' and 'Fen' key
-  static Position startingPosition(Map<String, String> headers,
-      {bool? ignoreImpossibleCheck}) {
-    if (!headers.containsKey('Variant')) {
-      throw const FenError('ERR_HEADER_NO_VARIANT');
-    }
-    final rules = Variant.fromPgn(headers['Variant']!);
-    if (rules == null) throw const FenError('ERR_HEADER_INVALID_VARIANT');
-    if (!headers.containsKey('FEN')) {
-      return defaultPosition(rules);
-    }
-    final fen = headers['FEN']!;
-    try {
-      return setupPosition(rules, Setup.parseFen(fen),
-          ignoreImpossibleCheck: ignoreImpossibleCheck);
-    } catch (err) {
-      rethrow;
+      case Variant.horde:
+        throw UnimplementedError('Missing Variant Horde');
+      case Variant.racingKings:
+        throw UnimplementedError('Missing Variant Racing Kings');
     }
   }
 
@@ -694,9 +670,9 @@ abstract class Position<T extends Position<T>> {
       case Variant.crazyhouse:
         return Crazyhouse.initial;
       case Variant.horde:
-        return Chess.initial;
-      default:
-        return Chess.initial;
+        throw UnimplementedError('Missing Variant Horde');
+      case Variant.racingKings:
+        throw UnimplementedError('Mising Variant Racing Kinds');
     }
   }
 
@@ -1074,9 +1050,6 @@ class Antichess extends Position<Antichess> {
   );
 
   @override
-  Variant get variant => Variant.antichess;
-
-  @override
   bool get isVariantEnd => board.bySide(turn).isEmpty;
 
   @override
@@ -1208,9 +1181,6 @@ class Atomic extends Position<Atomic> {
   const Atomic._initial() : super._initial();
 
   static const initial = Atomic._initial();
-
-  @override
-  Variant get variant => Variant.atomic;
 
   @override
   bool get isVariantEnd => variantOutcome != null;
@@ -1434,9 +1404,6 @@ class Crazyhouse extends Position<Crazyhouse> {
   );
 
   @override
-  Variant get variant => Variant.crazyhouse;
-
-  @override
   bool get isVariantEnd => false;
 
   @override
@@ -1554,9 +1521,6 @@ class KingOfTheHill extends Position<KingOfTheHill> {
   static const initial = KingOfTheHill._initial();
 
   @override
-  Variant get variant => Variant.kingofthehill;
-
-  @override
   bool get isVariantEnd => board.kings.isIntersected(SquareSet.center);
 
   @override
@@ -1631,9 +1595,6 @@ class ThreeCheck extends Position<ThreeCheck> {
   static const initial = ThreeCheck._initial();
 
   static const _defaultRemainingChecks = Tuple2(3, 3);
-
-  @override
-  Variant get variant => Variant.threecheck;
 
   @override
   bool get isVariantEnd =>
