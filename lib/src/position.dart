@@ -189,7 +189,7 @@ abstract class Position<T extends Position<T>> {
     assert(move is NormalMove || move is DropMove);
     if (move is NormalMove) {
       if (move.promotion == Role.pawn) return false;
-      if (move.promotion == Role.king) return false;
+      if (move.promotion == Role.king && this is! Antichess) return false;
       if (move.promotion != null &&
           (!board.pawns.has(move.from) || !SquareSet.backranks.has(move.to))) {
         return false;
@@ -211,6 +211,257 @@ abstract class Position<T extends Position<T>> {
   /// Gets the legal moves for that [Square].
   SquareSet legalMovesOf(Square square) {
     return _legalMovesOf(square);
+  }
+
+  /// Parses a move in Standard Algebraic Notation.
+  ///
+  /// Returns a legal [Move] of the [Position] or `null`.
+  Move? parseSan(String sanString) {
+    final aIndex = 'a'.codeUnits[0];
+    final hIndex = 'h'.codeUnits[0];
+    final oneIndex = '1'.codeUnits[0];
+    final eightIndex = '8'.codeUnits[0];
+    String san = sanString;
+
+    final firstAnnotationIndex = san.indexOf(RegExp('[!?#+]'));
+    if (firstAnnotationIndex != -1) {
+      san = san.substring(0, firstAnnotationIndex);
+    }
+
+    // Crazyhouse
+    if (san.contains('@')) {
+      if (san.length == 3 && san[0] != '@') {
+        return null;
+      }
+      if (san.length == 4 && san[1] != '@') {
+        return null;
+      }
+      final Role role;
+      if (san.length == 3) {
+        role = Role.pawn;
+      } else if (san.length == 4) {
+        final parsedRole = Role.fromChar(san[0]);
+        if (parsedRole == null) {
+          return null;
+        }
+        role = parsedRole;
+      } else {
+        return null;
+      }
+      final destination = parseSquare(san.substring(san.length - 2));
+      if (destination == null) {
+        return null;
+      }
+      final move = DropMove(to: destination, role: role);
+      if (!isLegal(move)) {
+        return null;
+      }
+      return move;
+    }
+
+    if (san == 'O-O') {
+      Move? move;
+      if (turn == Side.white) {
+        // Castle the king from e1 to g1
+        move = const NormalMove(from: 4, to: 6);
+      }
+      if (turn == Side.black) {
+        // Castle the king from e8 to g8
+        move = const NormalMove(from: 60, to: 62);
+      }
+      if (!isLegal(move!)) {
+        return null;
+      }
+      return move;
+    }
+    if (san == 'O-O-O') {
+      Move? move;
+      if (turn == Side.white) {
+        // Castle the king from e1 to c1
+        move = const NormalMove(from: 4, to: 2);
+      }
+      if (turn == Side.black) {
+        // Castle the king from e8 to c8
+        move = const NormalMove(from: 60, to: 58);
+      }
+      if (!isLegal(move!)) {
+        return null;
+      }
+      return move;
+    }
+
+    final isPromotion = san.contains('=');
+    final isCapturing = san.contains('x');
+    int? pawnRank;
+    if (oneIndex <= san.codeUnits[0] && san.codeUnits[0] <= eightIndex) {
+      pawnRank = san.codeUnits[0] - oneIndex;
+      san = san.substring(1);
+    }
+    final isPawnMove = aIndex <= san.codeUnits[0] && san.codeUnits[0] <= hIndex;
+
+    if (isPawnMove) {
+      // Every pawn move has a destination (e.g. d4)
+      // Optionally, pawn moves have a promotion
+      // If the move is a capture then it will include the source file
+
+      final colorFilter = board.bySide(turn);
+      final pawnFilter = board.byRole(Role.pawn);
+      SquareSet filter = colorFilter.intersect(pawnFilter);
+      Role? promotionRole;
+
+      // We can look at the first character of any pawn move
+      // in order to determine which file the pawn will be moving
+      // from
+      final sourceFileCharacter = san.codeUnits[0];
+      if (sourceFileCharacter < aIndex || sourceFileCharacter > hIndex) {
+        return null;
+      }
+
+      final sourceFile = sourceFileCharacter - aIndex;
+      final sourceFileFilter = SquareSet.fromFile(sourceFile);
+      filter = filter.intersect(sourceFileFilter);
+
+      if (isCapturing) {
+        // Invalid SAN
+        if (san[1] != 'x') {
+          return null;
+        }
+
+        // Remove the source file character and the capture marker
+        san = san.substring(2);
+      }
+
+      if (isPromotion) {
+        // Invalid SAN
+        if (san[san.length - 2] != '=') {
+          return null;
+        }
+
+        final promotionCharacter = san[san.length - 1];
+        promotionRole = Role.fromChar(promotionCharacter);
+
+        // Remove the promotion string
+        san = san.substring(0, san.length - 2);
+      }
+
+      // After handling captures and promotions, the
+      // remaining destination square should contain
+      // two characters.
+      if (san.length != 2) {
+        return null;
+      }
+
+      final destination = parseSquare(san);
+      if (destination == null) {
+        return null;
+      }
+
+      // There may be many pawns in the corresponding file
+      // The corect choice will always be the pawn behind the destination square that is furthest down the board
+      for (int rank = 0; rank < 8; rank++) {
+        final rankFilter = SquareSet.fromRank(rank).complement();
+        // If the square is behind or on this rank, the rank it will not contain the source pawn
+        if (turn == Side.white && rank >= squareRank(destination) ||
+            turn == Side.black && rank <= squareRank(destination)) {
+          filter = filter.intersect(rankFilter);
+        }
+      }
+
+      // If the pawn rank has been overspecified, then verify the rank
+      if (pawnRank != null) {
+        filter = filter.intersect(SquareSet.fromRank(pawnRank));
+      }
+
+      final source = (turn == Side.white) ? filter.last : filter.first;
+
+      // There are no valid candidates for the move
+      if (source == null) {
+        return null;
+      }
+
+      final move =
+          NormalMove(from: source, to: destination, promotion: promotionRole);
+      if (!isLegal(move)) {
+        return null;
+      }
+      return move;
+    }
+
+    // The final two moves define the destination
+    final destination = parseSquare(san.substring(san.length - 2));
+    if (destination == null) {
+      return null;
+    }
+
+    san = san.substring(0, san.length - 2);
+    if (isCapturing) {
+      // Invalid SAN
+      if (san[san.length - 1] != 'x') {
+        return null;
+      }
+      san = san.substring(0, san.length - 1);
+    }
+
+    // For non-pawn moves, the first character describes a role
+    final role = Role.fromChar(san[0]);
+    if (role == null) {
+      return null;
+    }
+    if (role == Role.pawn) {
+      return null;
+    }
+    san = san.substring(1);
+
+    final colorFilter = board.bySide(turn);
+    final roleFilter = board.byRole(role);
+    SquareSet filter = colorFilter.intersect(roleFilter);
+
+    // The remaining characters disambiguate the moves
+    if (san.length > 2) {
+      return null;
+    }
+    if (san.length == 2) {
+      final sourceSquare = parseSquare(san);
+      if (sourceSquare == null) {
+        return null;
+      }
+      final squareFilter = SquareSet.fromSquare(sourceSquare);
+      filter = filter.intersect(squareFilter);
+    }
+    if (san.length == 1) {
+      final sourceCharacter = san.codeUnits[0];
+      if (oneIndex <= sourceCharacter && sourceCharacter <= eightIndex) {
+        final rank = sourceCharacter - oneIndex;
+        final rankFilter = SquareSet.fromRank(rank);
+        filter = filter.intersect(rankFilter);
+      } else if (aIndex <= sourceCharacter && sourceCharacter <= hIndex) {
+        final file = sourceCharacter - aIndex;
+        final fileFilter = SquareSet.fromFile(file);
+        filter = filter.intersect(fileFilter);
+      } else {
+        return null;
+      }
+    }
+
+    Move? move;
+    for (final square in filter.squares) {
+      final candidateMove = NormalMove(from: square, to: destination);
+      if (!isLegal(candidateMove)) {
+        continue;
+      }
+      if (move == null) {
+        move = candidateMove;
+      } else {
+        // Ambiguous notation
+        return null;
+      }
+    }
+
+    if (move == null) {
+      return null;
+    }
+
+    return move;
   }
 
   /// Returns the Standard Algebraic Notation of this [Move] from the current [Position].
