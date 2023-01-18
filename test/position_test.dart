@@ -107,7 +107,7 @@ void main() {
       test('en passant', () {
         final setup = Setup.parseFen('6bk/7b/8/3pP3/8/8/8/Q3K3 w - d6 0 2');
         final pos = Chess.fromSetup(setup);
-        final move = Move.fromUci('e5d6');
+        final move = Move.fromUci('e5d6')!;
         expect(pos.toSan(move), 'exd6#');
       });
 
@@ -805,7 +805,7 @@ void main() {
       final setup = Setup.parseFen(
           'r1bqkbn1/p1ppp3/2n4p/6p1/1Pp5/4P3/P2P1PP1/R1B1K3 b - b3 0 11');
       final pos = Antichess.fromSetup(setup);
-      final move = Move.fromUci('c4b3');
+      final move = Move.fromUci('c4b3')!;
       expect(pos.isLegal(move), isTrue);
 
       // TODO uncomment when parseSan is implemented
@@ -899,7 +899,7 @@ void main() {
     test('remaining checks', () {
       final pos = ThreeCheck.fromSetup(Setup.parseFen(
           'rnbqkbnr/ppp1pppp/3p4/8/8/4P3/PPPP1PPP/RNBQKBNR w KQkq - 3+3 0 2'));
-      expect(pos.play(Move.fromUci('f1b5')).fen,
+      expect(pos.play(Move.fromUci('f1b5')!).fen,
           'rnbqkbnr/ppp1pppp/3p4/1B6/8/4P3/PPPP1PPP/RNBQK1NR b KQkq - 2+3 1 2');
     });
 
