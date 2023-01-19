@@ -271,10 +271,10 @@ class PgnNodeData {
   /// SAN representation of the move.
   final String san;
 
-  /// Starting comments of the node.
+  /// PGN comments before the move.
   final List<String>? startingComments;
 
-  /// Comments about the node.
+  /// PGN comments after the move.
   final List<String>? comments;
 
   /// Numeric Annotation Glyphs for the move.
