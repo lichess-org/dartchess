@@ -30,7 +30,7 @@ typedef Headers = Map<String, String>;
 ///
 /// ## Augmenting game tree
 ///
-/// You can use `transform` to augment all nodes in the game tree with user data.
+/// You can use [PgnNode.transform] to augment all nodes in the game tree with user data.
 ///
 /// It allows you to provide context. You update the context inside the
 /// callback, using the immutable [TransformResult] class. Context object itself
@@ -326,7 +326,7 @@ class PgnNode<T> {
   }
 
   /// Function to walk through each node and transform this node tree into
-  /// a Node<U> tree.
+  /// a [PgnNode<U>] tree.
   PgnNode<U> transform<U, C>(
       C ctx, TransformResult<C, U>? Function(C, T, int) f) {
     final root = PgnNode<U>();
