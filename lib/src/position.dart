@@ -73,7 +73,7 @@ abstract class Position<T extends Position<T>> {
     int? fullmoves,
   });
 
-  /// Create a [Position] from setup and variants
+  /// Create a [Position] from a [Setup] and [Variant].
   static Position setupPosition(Variant rules, Setup setup,
       {bool? ignoreImpossibleCheck}) {
     switch (rules) {
@@ -102,7 +102,7 @@ abstract class Position<T extends Position<T>> {
     }
   }
 
-  /// Returns the default [Position] for the [Variant]
+  /// Returns the default [Position] for the [Variant].
   static Position defaultPosition(Variant variant) {
     switch (variant) {
       case Variant.chess:
