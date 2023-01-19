@@ -2,6 +2,18 @@ import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('Position.toString()', () {
+    test('Chess.toString()', () {
+      expect(Chess.initial.toString(),
+          'Chess(board: $kInitialBoardFEN, turn: Side.white, castles: Castles(unmovedRooks: SquareSet(0x8100000000000081), rook: {Side.white: [0, 7], Side.black: [56, 63]}, path: {Side.white: [SquareSet(0x000000000000000E), SquareSet(0x0000000000000060)], Side.black: [SquareSet(0x0E00000000000000), SquareSet(0x6000000000000000)]}), halfmoves: 0, fullmoves: 1)');
+    });
+
+    test('Antichess.toString()', () {
+      expect(Antichess.initial.toString(),
+          'Antichess(board: $kInitialBoardFEN, turn: Side.white, castles: Castles(unmovedRooks: SquareSet(0), rook: {Side.white: [null, null], Side.black: [null, null]}, path: {Side.white: [SquareSet(0), SquareSet(0)], Side.black: [SquareSet(0), SquareSet(0)]}), halfmoves: 0, fullmoves: 1)');
+    });
+  });
+
   group('Castles', () {
     test('fromSetup', () {
       final castles = Castles.fromSetup(Setup.standard);

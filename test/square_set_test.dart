@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 
 void main() {
   test('toString', () {
-    expect(SquareSet.empty.toString(), 'SquareSet(0x0000000000000000)');
+    expect(SquareSet.empty.toString(), 'SquareSet(0)');
     expect(SquareSet.full.toString(), 'SquareSet(0xFFFFFFFFFFFFFFFF)');
     expect(SquareSet.lightSquares.toString(), 'SquareSet(0x55AA55AA55AA55AA)');
     expect(SquareSet.darkSquares.toString(), 'SquareSet(0xAA55AA55AA55AA55)');

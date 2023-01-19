@@ -676,6 +676,35 @@ abstract class Position<T extends Position<T>> {
     }
   }
 
+  @override
+  String toString() {
+    return '${T.toString()}(board: $board, turn: $turn, castles: $castles, halfmoves: $halfmoves, fullmoves: $fullmoves)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is Position &&
+            other.board == board &&
+            other.pockets == pockets &&
+            other.turn == turn &&
+            other.castles == castles &&
+            other.epSquare == epSquare &&
+            other.halfmoves == halfmoves &&
+            other.fullmoves == fullmoves;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        board,
+        pockets,
+        turn,
+        castles,
+        epSquare,
+        halfmoves,
+        fullmoves,
+      );
+
   /// Checks if checkers are legal in this position.
   ///
   /// Throws a [PositionError.impossibleCheck] if it does not meet validity

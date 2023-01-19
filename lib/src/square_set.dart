@@ -169,6 +169,10 @@ class SquareSet {
         .toRadixString(16)
         .toUpperCase()
         .padLeft(8, '0');
+    final stringVal = '$first$last';
+    if (stringVal == '0000000000000000') {
+      return 'SquareSet(0)';
+    }
     return 'SquareSet(0x$first$last)';
   }
 
