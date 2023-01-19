@@ -185,13 +185,14 @@ class Setup {
 
   @override
   bool operator ==(Object other) {
-    return other is Setup &&
-        other.board == board &&
-        other.turn == turn &&
-        other.unmovedRooks == unmovedRooks &&
-        other.epSquare == epSquare &&
-        other.halfmoves == halfmoves &&
-        other.fullmoves == fullmoves;
+    return identical(this, other) ||
+        other is Setup &&
+            other.board == board &&
+            other.turn == turn &&
+            other.unmovedRooks == unmovedRooks &&
+            other.epSquare == epSquare &&
+            other.halfmoves == halfmoves &&
+            other.fullmoves == fullmoves;
   }
 
   @override
@@ -289,6 +290,9 @@ class Pockets {
 
   @override
   bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
     if (other is Pockets) {
       bool sameVal = true;
       for (final c in Side.values) {

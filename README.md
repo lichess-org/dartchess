@@ -13,7 +13,6 @@ Dart chess library for native platforms (does not support web).
 - Chess960 support
 - Chess variants: Antichess, Atomic, Crazyhouse, KingOfTheHill, ThreeCheck
 - Attacks and rays using hyperbola quintessence
-- Immutability: all the classes are immutable.
 
 ## Example
 

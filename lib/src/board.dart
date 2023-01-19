@@ -271,17 +271,18 @@ class Board {
 
   @override
   bool operator ==(Object other) {
-    return other is Board &&
-        other.occupied == occupied &&
-        other.promoted == promoted &&
-        other.white == white &&
-        other.black == black &&
-        other.pawns == pawns &&
-        other.knights == knights &&
-        other.bishops == bishops &&
-        other.rooks == rooks &&
-        other.queens == queens &&
-        other.kings == kings;
+    return identical(this, other) ||
+        other is Board &&
+            other.occupied == occupied &&
+            other.promoted == promoted &&
+            other.white == white &&
+            other.black == black &&
+            other.pawns == pawns &&
+            other.knights == knights &&
+            other.bishops == bishops &&
+            other.rooks == rooks &&
+            other.queens == queens &&
+            other.kings == kings;
   }
 
   @override

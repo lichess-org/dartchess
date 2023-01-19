@@ -145,9 +145,10 @@ class SquareSet {
 
   @override
   bool operator ==(Object other) {
-    return other is SquareSet &&
-        other.runtimeType == runtimeType &&
-        other.value == value;
+    return identical(this, other) ||
+        other is SquareSet &&
+            other.runtimeType == runtimeType &&
+            other.value == value;
   }
 
   @override

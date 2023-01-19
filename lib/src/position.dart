@@ -73,6 +73,57 @@ abstract class Position<T extends Position<T>> {
     int? fullmoves,
   });
 
+  /// Create a [Position] from a [Setup] and [Variant].
+  static Position setupPosition(Variant rules, Setup setup,
+      {bool? ignoreImpossibleCheck}) {
+    switch (rules) {
+      case Variant.chess:
+        return Chess.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.antichess:
+        return Antichess.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.atomic:
+        return Atomic.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.kingofthehill:
+        return KingOfTheHill.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.crazyhouse:
+        return Crazyhouse.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.threecheck:
+        return ThreeCheck.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.horde:
+        throw UnimplementedError('Missing Variant Horde');
+      case Variant.racingKings:
+        throw UnimplementedError('Missing Variant Racing Kings');
+    }
+  }
+
+  /// Returns the default [Position] for the [Variant].
+  static Position defaultPosition(Variant variant) {
+    switch (variant) {
+      case Variant.chess:
+        return Chess.initial;
+      case Variant.antichess:
+        return Antichess.initial;
+      case Variant.atomic:
+        return Atomic.initial;
+      case Variant.kingofthehill:
+        return KingOfTheHill.initial;
+      case Variant.threecheck:
+        return ThreeCheck.initial;
+      case Variant.crazyhouse:
+        return Crazyhouse.initial;
+      case Variant.horde:
+        throw UnimplementedError('Missing Variant Horde');
+      case Variant.racingKings:
+        throw UnimplementedError('Mising Variant Racing Kinds');
+    }
+  }
+
   /// Checks if the game is over due to a special variant end condition.
   bool get isVariantEnd;
 
@@ -1657,10 +1708,37 @@ class Outcome {
   }
 
   @override
-  bool operator ==(Object other) => other is Outcome && winner == other.winner;
+  bool operator ==(Object other) =>
+      identical(this, other) || other is Outcome && winner == other.winner;
 
   @override
   int get hashCode => winner.hashCode;
+
+  /// Create [Outcome] from string
+  static Outcome? fromPgn(String? outcome) {
+    if (outcome == '1/2-1/2') {
+      return Outcome.draw;
+    } else if (outcome == '1-0') {
+      return Outcome.whiteWins;
+    } else if (outcome == '0-1') {
+      return Outcome.blackWins;
+    } else {
+      return null;
+    }
+  }
+
+  /// Create PGN String out of [Outcome]
+  static String toPgnString(Outcome? outcome) {
+    if (outcome == null) {
+      return '*';
+    } else if (outcome.winner == Side.white) {
+      return '1-0';
+    } else if (outcome.winner == Side.black) {
+      return '0-1';
+    } else {
+      return '1/2-1/2';
+    }
+  }
 }
 
 enum IllegalSetup {
@@ -1865,12 +1943,13 @@ class Castles {
 
   @override
   bool operator ==(Object other) =>
+      identical(this, other) ||
       other is Castles &&
-      other.unmovedRooks == unmovedRooks &&
-      other.rook[Side.white] == rook[Side.white] &&
-      other.rook[Side.black] == rook[Side.black] &&
-      other.path[Side.white] == path[Side.white] &&
-      other.path[Side.black] == path[Side.black];
+          other.unmovedRooks == unmovedRooks &&
+          other.rook[Side.white] == rook[Side.white] &&
+          other.rook[Side.black] == rook[Side.black] &&
+          other.path[Side.white] == path[Side.white] &&
+          other.path[Side.black] == path[Side.black];
 
   @override
   int get hashCode => Object.hash(unmovedRooks, rook[Side.white],

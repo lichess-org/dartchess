@@ -1,6 +1,6 @@
 /// Dart chess library for native platforms only.
 ///
-/// The API is entirely immutable.
+/// All classes are immutable except [PgnNode] and [PgnChildNode].
 library dartchess;
 
 export 'src/constants.dart';
@@ -12,3 +12,4 @@ export 'src/board.dart';
 export 'src/setup.dart';
 export 'src/position.dart';
 export 'src/debug.dart';
+export 'src/pgn.dart';
