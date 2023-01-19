@@ -129,10 +129,10 @@ class PgnGame<T> {
   /// Throws a [PositionError] if it does not meet basic validity requirements.
   static Position startingPosition(Headers headers,
       {bool? ignoreImpossibleCheck}) {
-    final rules = Variant.fromPgn(headers['Variant']);
+    final rules = Rules.fromPgn(headers['Variant']);
     if (rules == null) throw PositionError.variant;
     if (!headers.containsKey('FEN')) {
-      return Position.defaultPosition(rules);
+      return Position.initialPosition(rules);
     }
     final fen = headers['FEN']!;
     try {

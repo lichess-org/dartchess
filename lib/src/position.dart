@@ -73,54 +73,54 @@ abstract class Position<T extends Position<T>> {
     int? fullmoves,
   });
 
-  /// Create a [Position] from a [Setup] and [Variant].
-  static Position setupPosition(Variant rules, Setup setup,
+  /// Create a [Position] from a [Setup] and [Rules].
+  static Position setupPosition(Rules rules, Setup setup,
       {bool? ignoreImpossibleCheck}) {
     switch (rules) {
-      case Variant.chess:
+      case Rules.chess:
         return Chess.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Variant.antichess:
+      case Rules.antichess:
         return Antichess.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Variant.atomic:
+      case Rules.atomic:
         return Atomic.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Variant.kingofthehill:
+      case Rules.kingofthehill:
         return KingOfTheHill.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Variant.crazyhouse:
+      case Rules.crazyhouse:
         return Crazyhouse.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Variant.threecheck:
+      case Rules.threecheck:
         return ThreeCheck.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Variant.horde:
-        throw UnimplementedError('Missing Variant Horde');
-      case Variant.racingKings:
-        throw UnimplementedError('Missing Variant Racing Kings');
+      case Rules.horde:
+        throw UnimplementedError('Missing Rules Horde');
+      case Rules.racingKings:
+        throw UnimplementedError('Missing Rules Racing Kings');
     }
   }
 
-  /// Returns the default [Position] for the [Variant].
-  static Position defaultPosition(Variant variant) {
-    switch (variant) {
-      case Variant.chess:
+  /// Returns the initial [Position] for the corresponding [Rules].
+  static Position initialPosition(Rules rules) {
+    switch (rules) {
+      case Rules.chess:
         return Chess.initial;
-      case Variant.antichess:
+      case Rules.antichess:
         return Antichess.initial;
-      case Variant.atomic:
+      case Rules.atomic:
         return Atomic.initial;
-      case Variant.kingofthehill:
+      case Rules.kingofthehill:
         return KingOfTheHill.initial;
-      case Variant.threecheck:
+      case Rules.threecheck:
         return ThreeCheck.initial;
-      case Variant.crazyhouse:
+      case Rules.crazyhouse:
         return Crazyhouse.initial;
-      case Variant.horde:
-        throw UnimplementedError('Missing Variant Horde');
-      case Variant.racingKings:
-        throw UnimplementedError('Mising Variant Racing Kinds');
+      case Rules.horde:
+        throw UnimplementedError('Missing Rules Horde');
+      case Rules.racingKings:
+        throw UnimplementedError('Missing Rules Racing Kinds');
     }
   }
 
