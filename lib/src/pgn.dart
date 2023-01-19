@@ -65,6 +65,13 @@ class _TransformFrame<T, U, C> {
   _TransformFrame(this.before, this.after, this.ctx);
 }
 
+@immutable
+class TransformResult<C, T> {
+  final C ctx;
+  final T data;
+  const TransformResult(this.ctx, this.data);
+}
+
 /// Parent Node containing list of child nodes (Does not contain any data)
 class PgnNode<T> {
   final List<PgnChildNode<T>> children = [];
@@ -82,7 +89,8 @@ class PgnNode<T> {
   }
 
   /// Function to walk through each node and transform Node<V> tree into Node<U> tree
-  PgnNode<U> transform<U, C>(C ctx, U? Function(C, T, int) f) {
+  PgnNode<U> transform<U, C>(
+      C ctx, TransformResult<C, U>? Function(C, T, int) f) {
     final root = PgnNode<U>();
     final stack = [_TransformFrame<T, U, C>(this, root, ctx)];
 
@@ -91,10 +99,12 @@ class PgnNode<T> {
       for (var childIdx = 0;
           childIdx < frame.before.children.length;
           childIdx++) {
+        var ctx = frame.ctx;
         final childBefore = frame.before.children[childIdx];
-        final data = f(ctx, childBefore.data, childIdx);
-        if (data != null) {
-          final childAfter = PgnChildNode(data);
+        final transformData = f(ctx, childBefore.data, childIdx);
+        if (transformData != null) {
+          ctx = transformData.ctx;
+          final childAfter = PgnChildNode(transformData.data);
           frame.after.children.add(childAfter);
           stack.add(_TransformFrame(childBefore, childAfter, ctx));
         }

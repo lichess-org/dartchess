@@ -200,24 +200,32 @@ void main() {
 
   test('transform pgn', () {
     final game = PgnGame.parsePgn('1. a4 ( 1. b4 b5 -- ) 1... a5');
-    final res = game.moves.transform<TransformResult, Position>(
+    final res = game.moves.transform<PgnNodeWithFen, Position>(
       Chess.initial,
       // update test and use parseSan to update position.
-      (pos, data, idx) => TransformResult(fen: pos.fen, san: data.san),
+      (pos, data, idx) {
+        final move = pos.parseSan(data.san);
+        if (move != null) {
+          final pos2 = pos.play(move);
+          return TransformResult(
+              pos2, PgnNodeWithFen(fen: pos2.fen, san: data.san));
+        }
+        return null;
+      },
     );
 
     expect(res.children[0].data.fen,
-        'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+        'rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq - 0 1');
     expect(res.children[0].children[0].data.fen,
-        'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+        'rnbqkbnr/1ppppppp/8/p7/P7/8/1PPPPPPP/RNBQKBNR w KQkq - 0 2');
     expect(res.children[1].data.fen,
-        'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+        'rnbqkbnr/pppppppp/8/8/1P6/8/P1PPPPPP/RNBQKBNR b KQkq - 0 1');
     expect(res.children[1].children[0].data.fen,
-        'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+        'rnbqkbnr/p1pppppp/8/1p6/1P6/8/P1PPPPPP/RNBQKBNR w KQkq - 0 2');
   });
 }
 
-class TransformResult extends PgnNodeData {
+class PgnNodeWithFen extends PgnNodeData {
   final String fen;
-  const TransformResult({required this.fen, required super.san});
+  const PgnNodeWithFen({required this.fen, required super.san});
 }
