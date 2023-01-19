@@ -22,7 +22,7 @@ void main() {
 
     expect(
         PgnGame(headers: const {}, moves: root, comments: const []).makePgn(),
-        "1. e4 \$7 ( 1. e3 ) 1... e5 ( 1... e6 2. Nf3 { a comment } ) 2. c4 *\n");
+        '1. e4 \$7 ( 1. e3 ) 1... e5 ( 1... e6 2. Nf3 { a comment } ) 2. c4 *\n');
   });
 
   test('parse headers', () {
@@ -64,14 +64,14 @@ void main() {
   test('pgn file - kasparov-deep-blue-1997', () {
     final String data =
         File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();
-    final List<PgnGame<PgnNodeData>> games = parseMultiGamePgn(data);
+    final List<PgnGame<PgnNodeData>> games = PgnGame.parseMultiGamePgn(data);
     expect(games.length, 6);
   });
 
   test('pgn file - leading-whitespace', () {
     final String data =
         File('./data/leading-whitespace.pgn').readAsStringSync();
-    final List<PgnGame<PgnNodeData>> games = parseMultiGamePgn(data);
+    final List<PgnGame<PgnNodeData>> games = PgnGame.parseMultiGamePgn(data);
     expect(games[0].moves.mainline().map((move) => move.san).toList(),
         ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5']);
     expect(games.length, 4);
@@ -80,7 +80,7 @@ void main() {
   test('pgn file - headers-and-moves-on-the-same-line', () {
     final String data = File('./data/headers-and-moves-on-the-same-line.pgn')
         .readAsStringSync();
-    final List<PgnGame<PgnNodeData>> games = parseMultiGamePgn(data);
+    final List<PgnGame<PgnNodeData>> games = PgnGame.parseMultiGamePgn(data);
     expect(games[0].headers['Variant'], 'Antichess');
     expect(games[1].moves.mainline().map((move) => move.san).toList(),
         ['e3', 'e6', 'b4', 'Bxb4', 'Qg4']);
@@ -90,7 +90,7 @@ void main() {
   test('pgn file - pathological-headers', () {
     final String data =
         File('./data/pathological-headers.pgn').readAsStringSync();
-    final List<PgnGame<PgnNodeData>> games = parseMultiGamePgn(data);
+    final List<PgnGame<PgnNodeData>> games = PgnGame.parseMultiGamePgn(data);
     expect(games[0].headers['A'], 'b"');
     expect(games[0].headers['B'], 'b"');
     expect(games[0].headers['C'], 'A]]');
@@ -201,9 +201,8 @@ void main() {
   test('transform pgn', () {
     final game = PgnGame.parsePgn('1. a4 ( 1. b4 b5 -- ) 1... a5');
     final res = game.moves.transform<PgnNodeWithFen, Position>(
-      Chess.initial,
-      // update test and use parseSan to update position.
-      (pos, data, idx) {
+      PgnGame.startingPosition(game.headers),
+      (pos, data, _) {
         final move = pos.parseSan(data.san);
         if (move != null) {
           final pos2 = pos.play(move);

@@ -8,140 +8,25 @@ import './utils.dart';
 
 typedef Headers = Map<String, String>;
 
-/// A Node containing PGN data for a move
-@immutable
-class PgnNodeData {
-  /// SAN representation of the move
-  final String san;
-
-  /// Starting comments of the node
-  final List<String>? startingComments;
-
-  /// Comments about the node
-  final List<String>? comments;
-
-  /// Numeric Annotation Glyphs for the move
-  final List<int>? nags;
-
-  /// Constructor for the class
-  const PgnNodeData(
-      {required this.san, this.startingComments, this.comments, this.nags});
-
-  @override
-  bool operator ==(Object other) =>
-      other is PgnNodeData &&
-      san == other.san &&
-      startingComments == other.startingComments &&
-      comments == other.comments &&
-      nags == other.nags;
-
-  @override
-  int get hashCode => Object.hash(san, startingComments, comments, nags);
-
-  /// Return a new PgnNodeData by adding a [comment] to the current object
-  PgnNodeData copyWithComment(String comment) {
-    return PgnNodeData(
-        san: san,
-        startingComments: startingComments,
-        comments: [...comments ?? [], comment],
-        nags: nags);
-  }
-
-  /// Return a new PgnNodeData by adding a [nag] to the current object
-  PgnNodeData copyWithNag(int nag) {
-    return PgnNodeData(
-        san: san,
-        startingComments: startingComments,
-        comments: comments,
-        nags: [...nags ?? [], nag]);
-  }
-}
-
-class _TransformFrame<T, U, C> {
-  final PgnNode<T> before;
-  final PgnNode<U> after;
-  final C ctx;
-
-  _TransformFrame(this.before, this.after, this.ctx);
-}
-
-@immutable
-class TransformResult<C, T> {
-  final C ctx;
-  final T data;
-  const TransformResult(this.ctx, this.data);
-}
-
-/// Parent Node containing list of child nodes (Does not contain any data)
-class PgnNode<T> {
-  final List<PgnChildNode<T>> children = [];
-
-  /// Implements a Iterable for the node and its children
-  ///
-  /// Used for only iterating the mainline
-  Iterable<T> mainline() sync* {
-    var node = this;
-    while (node.children.isNotEmpty) {
-      final child = node.children[0];
-      yield child.data;
-      node = child;
-    }
-  }
-
-  /// Function to walk through each node and transform Node<V> tree into Node<U> tree
-  PgnNode<U> transform<U, C>(
-      C ctx, TransformResult<C, U>? Function(C, T, int) f) {
-    final root = PgnNode<U>();
-    final stack = [_TransformFrame<T, U, C>(this, root, ctx)];
-
-    while (stack.isNotEmpty) {
-      final frame = stack.removeLast();
-      for (var childIdx = 0;
-          childIdx < frame.before.children.length;
-          childIdx++) {
-        var ctx = frame.ctx;
-        final childBefore = frame.before.children[childIdx];
-        final transformData = f(ctx, childBefore.data, childIdx);
-        if (transformData != null) {
-          ctx = transformData.ctx;
-          final childAfter = PgnChildNode(transformData.data);
-          frame.after.children.add(childAfter);
-          stack.add(_TransformFrame(childBefore, childAfter, ctx));
-        }
-      }
-    }
-    return root;
-  }
-}
-
-/// Child Node with PGN data
-class PgnChildNode<T> extends PgnNode<T> {
-  /// PGN Data
-  T data;
-  PgnChildNode(this.data);
-}
-
-/// A game represented by headers and moves
+/// A Portable Game Notation (PNG) representation.
 ///
-/// Used to convert a chess game from or to a PGN
+/// Composed of [Headers] and moves represented by a [PgnNode] tree.
 @immutable
 class PgnGame<T> {
-  /// Headers of the game
-  final Headers headers;
-
-  /// Inital comments of the game
-  final List<String> comments;
-
-  /// Parant node containing the game
-  final PgnNode<T> moves;
-
-  /// Constant contructor of the class.
-  ///
-  /// Returns a new immutable Game
+  /// Constructs a new immutable [PgnGame].
   const PgnGame(
       {required this.headers, required this.moves, required this.comments});
 
-  /// Default function headers of a PGN
+  /// Headers of the game.
+  final Headers headers;
+
+  /// Initial comments of the game.
+  final List<String> comments;
+
+  /// Parent node containing the game.
+  final PgnNode<T> moves;
+
+  /// Create default headers of a PGN.
   static Headers defaultHeaders() => {
         'Event': '?',
         'Site': '?',
@@ -152,15 +37,15 @@ class PgnGame<T> {
         'Result': '*'
       };
 
-  /// Create empty headers of a PGN
+  /// Create empty headers of a PGN.
   static Headers emptyHeaders() => <String, String>{};
 
-  /// Parse a pgn and return a [PgnGame]
+  /// Parse a PGN string and return a [PgnGame].
   ///
-  /// Provide a optional function [initHeaders] to create different headers other than the default
+  /// Provide a optional function [initHeaders] to create different headers other than the default.
   /// The parser will take any string as input and return a tree of
-  /// synttatically valid nodes but not necessary legal moves. It will
-  /// skip invalid token
+  /// syntatically valid nodes but not necessary legal moves. It will
+  /// skip invalid token.
   static PgnGame<PgnNodeData> parsePgn(String pgn,
       {Headers Function() initHeaders = defaultHeaders}) {
     final List<PgnGame<PgnNodeData>> games = [];
@@ -171,15 +56,29 @@ class PgnGame<T> {
     return games[0];
   }
 
-  /// Create a [Position] for a Variant from the headers
+  /// Parse a multi game PGN string.
   ///
-  /// Headers must include a 'Variant' and an optional 'Fen' key
-  static Position startingPosition(Map<String, String> headers,
+  /// Returns a list of games if multiple games found
+  /// Provide a optional function [initHeaders] to create different headers other than the default
+  /// The parser will take any string as input and return a tree of
+  /// syntatically valid nodes but not necessary legal moves. It will
+  /// skip invalid token.
+  static List<PgnGame<PgnNodeData>> parseMultiGamePgn(String pgn,
+      [Headers Function() initHeaders = PgnGame.defaultHeaders]) {
+    final List<PgnGame<PgnNodeData>> games = [];
+    _PgnParser((PgnGame<PgnNodeData> game) {
+      games.add(game);
+    }, initHeaders)
+        .parse(pgn);
+    return games;
+  }
+
+  /// Create a [Position] for a Variant from the headers.
+  ///
+  /// Headers can include an optional 'Variant' and 'Fen' key.
+  static Position startingPosition(Headers headers,
       {bool? ignoreImpossibleCheck}) {
-    if (!headers.containsKey('Variant')) {
-      throw PositionError.variant;
-    }
-    final rules = Variant.fromPgn(headers['Variant']!);
+    final rules = Variant.fromPgn(headers['Variant']);
     if (rules == null) throw PositionError.variant;
     if (!headers.containsKey('FEN')) {
       return Position.defaultPosition(rules);
@@ -193,7 +92,7 @@ class PgnGame<T> {
     }
   }
 
-  /// Create a PGN String from [PgnGame]
+  /// Make a PGN String from [PgnGame].
   String makePgn() {
     final builder = StringBuffer();
     final token = StringBuffer();
@@ -311,6 +210,353 @@ class PgnGame<T> {
   }
 }
 
+/// PGN data for a [PgnNode].
+@immutable
+class PgnNodeData {
+  /// Constructs a new immutable [PgnNodeData].
+  const PgnNodeData(
+      {required this.san, this.startingComments, this.comments, this.nags});
+
+  /// SAN representation of the move.
+  final String san;
+
+  /// Starting comments of the node.
+  final List<String>? startingComments;
+
+  /// Comments about the node.
+  final List<String>? comments;
+
+  /// Numeric Annotation Glyphs for the move.
+  final List<int>? nags;
+
+  @override
+  bool operator ==(Object other) =>
+      other is PgnNodeData &&
+      san == other.san &&
+      startingComments == other.startingComments &&
+      comments == other.comments &&
+      nags == other.nags;
+
+  @override
+  int get hashCode => Object.hash(san, startingComments, comments, nags);
+
+  /// Return a new PgnNodeData by adding a [comment] to the current object
+  PgnNodeData copyWithComment(String comment) {
+    return PgnNodeData(
+        san: san,
+        startingComments: startingComments,
+        comments: [...comments ?? [], comment],
+        nags: nags);
+  }
+
+  /// Return a new PgnNodeData by adding a [nag] to the current object
+  PgnNodeData copyWithNag(int nag) {
+    return PgnNodeData(
+        san: san,
+        startingComments: startingComments,
+        comments: comments,
+        nags: [...nags ?? [], nag]);
+  }
+}
+
+/// Parent node containing a list of child nodes (does not contain any data itself).
+class PgnNode<T> {
+  final List<PgnChildNode<T>> children = [];
+
+  /// Implements an [Iterable] to iterate the mainline.
+  Iterable<T> mainline() sync* {
+    var node = this;
+    while (node.children.isNotEmpty) {
+      final child = node.children[0];
+      yield child.data;
+      node = child;
+    }
+  }
+
+  /// Function to walk through each node and transform a Node<T> tree into
+  /// a Node<U> tree.
+  PgnNode<U> transform<U, C>(
+      C ctx, TransformResult<C, U>? Function(C, T, int) f) {
+    final root = PgnNode<U>();
+    final stack = [_TransformFrame<T, U, C>(this, root, ctx)];
+
+    while (stack.isNotEmpty) {
+      final frame = stack.removeLast();
+      for (int childIdx = 0;
+          childIdx < frame.before.children.length;
+          childIdx++) {
+        C ctx = frame.ctx;
+        final childBefore = frame.before.children[childIdx];
+        final transformData = f(ctx, childBefore.data, childIdx);
+        if (transformData != null) {
+          ctx = transformData.ctx;
+          final childAfter = PgnChildNode(transformData.data);
+          frame.after.children.add(childAfter);
+          stack.add(_TransformFrame(childBefore, childAfter, ctx));
+        }
+      }
+    }
+    return root;
+  }
+}
+
+/// PGN child Node.
+///
+/// This class has a mutable `data` field.
+class PgnChildNode<T> extends PgnNode<T> {
+  PgnChildNode(this.data);
+
+  /// PGN Data.
+  T data;
+}
+
+@immutable
+class TransformResult<C, T> {
+  const TransformResult(this.ctx, this.data);
+  final C ctx;
+  final T data;
+}
+
+/// Represents the color of a PGN comment.
+///
+/// Can be green, red, yellow, and blue.
+enum CommentShapeColor {
+  green,
+  red,
+  yellow,
+  blue;
+
+  String get string {
+    switch (this) {
+      case CommentShapeColor.green:
+        return 'Green';
+      case CommentShapeColor.red:
+        return 'Red';
+      case CommentShapeColor.yellow:
+        return 'Yellow';
+      case CommentShapeColor.blue:
+        return 'Blue';
+    }
+  }
+
+  static CommentShapeColor? parseShapeColor(String str) {
+    switch (str) {
+      case 'G':
+        return CommentShapeColor.green;
+      case 'R':
+        return CommentShapeColor.red;
+      case 'Y':
+        return CommentShapeColor.yellow;
+      case 'B':
+        return CommentShapeColor.blue;
+      default:
+        return null;
+    }
+  }
+}
+
+/// A PGN comment shape.
+///
+/// Example of a comment shape "%cal Ra1b2" with color: Red from:a1 to:b2.
+@immutable
+class PgnCommentShape {
+  const PgnCommentShape(
+      {required this.color, required this.from, required this.to});
+
+  final CommentShapeColor color;
+  final Square from;
+  final Square to;
+
+  @override
+  String toString() {
+    return to == from
+        ? '${color.string[0]}${toAlgebraic(to)}'
+        : '${color.string[0]}${toAlgebraic(from)}${toAlgebraic(to)}';
+  }
+
+  /// Parse the PGN for any comment or return null.
+  static PgnCommentShape? fromPgn(String str) {
+    final color = CommentShapeColor.parseShapeColor(str.substring(0, 1));
+    final from = parseSquare(str.substring(1, 3));
+    if (color == null || from == null) return null;
+    if (str.length == 3) {
+      return PgnCommentShape(color: color, from: from, to: from);
+    }
+    final to = parseSquare(str.substring(3, 5));
+    if (str.length == 5 && to != null) {
+      return PgnCommentShape(color: color, from: from, to: to);
+    }
+    return null;
+  }
+}
+
+/// Represents the type of [PgnEvaluation].
+enum EvalType { pawns, mate }
+
+/// Pgn representation of a move evaluation.
+///
+/// A [PgnEvaluation] can be created used `.pawns` or `.mate` contructor.
+@immutable
+class PgnEvaluation {
+  /// Constructor to create a [PgnEvaluation] of type pawns.
+  const PgnEvaluation.pawns(
+      {required this.pawns,
+      this.depth,
+      this.mate,
+      this.evalType = EvalType.pawns});
+
+  /// Constructor to create a [PgnEvaluation] of type mate.
+  const PgnEvaluation.mate(
+      {required this.mate,
+      this.depth,
+      this.pawns,
+      this.evalType = EvalType.mate});
+
+  final double? pawns;
+  final int? mate;
+  final int? depth;
+  final EvalType evalType;
+
+  @override
+  bool operator ==(Object other) =>
+      other is PgnEvaluation &&
+      pawns == other.pawns &&
+      depth == other.depth &&
+      mate == other.mate &&
+      evalType == other.evalType;
+
+  @override
+  int get hashCode => Object.hash(pawns, depth, mate, evalType);
+
+  bool isPawns() => evalType == EvalType.pawns;
+
+  /// Create a PGN evaluation string
+  String toPgn() {
+    var str = '';
+    if (isPawns()) {
+      str = pawns!.toStringAsFixed(2);
+    } else {
+      str = '#$mate';
+    }
+    if (depth != null) str = '$str,$depth';
+    return str;
+  }
+}
+
+/// A PGN comment.
+@immutable
+class PgnComment {
+  const PgnComment(
+      {this.text, this.shapes = const [], this.clock, this.emt, this.eval});
+
+  /// Comment string.
+  final String? text;
+
+  /// List of comment shapes.
+  final List<PgnCommentShape> shapes;
+
+  /// Player's remaining time.
+  final double? clock;
+
+  /// Player's elapsed move time.
+  final double? emt;
+
+  /// Move evaluation.
+  final PgnEvaluation? eval;
+
+  @override
+  bool operator ==(Object other) {
+    return other is PgnComment &&
+        text == other.text &&
+        clock == other.clock &&
+        emt == other.emt &&
+        eval == other.eval;
+  }
+
+  @override
+  int get hashCode => Object.hash(text, shapes, clock, emt, eval);
+
+  /// Make a PGN string from this comment.
+  String makeComment() {
+    final List<String> builder = [];
+    if (text != null) builder.add(text!);
+    final circles = shapes
+        .where((shape) => shape.to == shape.from)
+        .map((shape) => shape.toString());
+    if (circles.isNotEmpty) builder.add('[%csl ${circles.join(",")}]');
+    final arrows = shapes
+        .where((shape) => shape.to != shape.from)
+        .map((shape) => shape.toString());
+    if (arrows.isNotEmpty) builder.add('[%cal ${arrows.join(",")}]');
+    if (eval != null) builder.add('[%eval ${eval!.toPgn()}]');
+    if (emt != null) builder.add('[%emt ${_makeClk(emt!)}]');
+    if (clock != null) builder.add('[%clk ${_makeClk(clock!)}]');
+    return builder.join(' ');
+  }
+
+  /// Parses a PGN comment string to a [PgnComment].
+  factory PgnComment.fromPgn(String comment) {
+    double? emt;
+    double? clock;
+    final List<PgnCommentShape> shapes = [];
+    PgnEvaluation? eval;
+    final text = comment.replaceAllMapped(
+        RegExp(
+            r'\s?\[%(emt|clk)\s(\d{1,5}):(\d{1,2}):(\d{1,2}(?:\.\d{0,3})?)\]\s?'),
+        (match) {
+      final annotation = match.group(1);
+      final hours = match.group(2);
+      final minutes = match.group(3);
+      final seconds = match.group(4);
+      final value = double.parse(hours!) * 3600 +
+          int.parse(minutes!) * 60 +
+          double.parse(seconds!);
+      if (annotation == 'emt') {
+        emt = value;
+      } else if (annotation == 'clk') {
+        clock = value;
+      }
+      return '  ';
+    }).replaceAllMapped(
+        RegExp(
+            r'\s?\[%(?:csl|cal)\s([RGYB][a-h][1-8](?:[a-h][1-8])?(?:,[RGYB][a-h][1-8](?:[a-h][1-8])?)*)\]\s?'),
+        (match) {
+      final arrows = match.group(1);
+      if (arrows != null) {
+        for (final arrow in arrows.split(',')) {
+          final shape = PgnCommentShape.fromPgn(arrow);
+          if (shape != null) shapes.add(shape);
+        }
+      }
+      return '  ';
+    }).replaceAllMapped(
+        RegExp(
+            r'\s?\[%eval\s(?:#([+-]?\d{1,5})|([+-]?(?:\d{1,5}|\d{0,5}\.\d{1,2})))(?:,(\d{1,5}))?\]\s?'),
+        (match) {
+      final mate = match.group(1);
+      final pawns = match.group(2);
+      final d = match.group(3);
+      final depth = d != null ? int.parse(d) : null;
+      eval = mate != null
+          ? PgnEvaluation.mate(mate: int.parse(mate), depth: depth)
+          : PgnEvaluation.pawns(
+              pawns: pawns != null ? double.parse(pawns) : null, depth: depth);
+      return '  ';
+    }).trim();
+
+    return PgnComment(
+        text: text, shapes: shapes, emt: emt, clock: clock, eval: eval);
+  }
+}
+
+class _TransformFrame<T, U, C> {
+  final PgnNode<T> before;
+  final PgnNode<U> after;
+  final C ctx;
+
+  _TransformFrame(this.before, this.after, this.ctx);
+}
+
 /// A frame used for parsing a line
 class _ParserFrame {
   PgnNode<PgnNodeData> parent;
@@ -365,12 +611,6 @@ const _bom = '\ufeff';
 bool _isWhitespace(String line) => RegExp(r'^\s*$').hasMatch(line);
 
 bool _isCommentLine(String line) => line.startsWith('%');
-
-/// Exception when parsing a PGN
-class PgnError implements Exception {
-  final String message;
-  PgnError(this.message);
-}
 
 /// A class to read a string and create a [PgnGame]
 class _PgnParser {
@@ -590,250 +830,6 @@ class _PgnParser {
       frame.startingComments ??= [];
       frame.startingComments!.add(comment);
     }
-  }
-}
-
-/// Function to parse a multi game PGN
-///
-/// Returns a list of games if multiple games found
-/// Provide a optional function [initHeaders] to create different headers other than the default
-/// The parser will take any string as input and return a tree of
-/// synttatically valid nodes but not necessary legal moves. It will
-/// skip invalid token
-List<PgnGame<PgnNodeData>> parseMultiGamePgn(String pgn,
-    [Headers Function() initHeaders = PgnGame.defaultHeaders]) {
-  final List<PgnGame<PgnNodeData>> games = [];
-  _PgnParser((PgnGame<PgnNodeData> game) {
-    games.add(game);
-  }, initHeaders)
-      .parse(pgn);
-  return games;
-}
-
-/// Represents the color of a comment
-///
-/// Can be green, red, yellow, and blue
-enum CommentShapeColor {
-  green,
-  red,
-  yellow,
-  blue;
-
-  String get string {
-    switch (this) {
-      case CommentShapeColor.green:
-        return 'Green';
-      case CommentShapeColor.red:
-        return 'Red';
-      case CommentShapeColor.yellow:
-        return 'Yellow';
-      case CommentShapeColor.blue:
-        return 'Blue';
-    }
-  }
-
-  static CommentShapeColor? parseShapeColor(String str) {
-    switch (str) {
-      case 'G':
-        return CommentShapeColor.green;
-      case 'R':
-        return CommentShapeColor.red;
-      case 'Y':
-        return CommentShapeColor.yellow;
-      case 'B':
-        return CommentShapeColor.blue;
-      default:
-        return null;
-    }
-  }
-}
-
-/// A comment shape
-///
-/// Example of a comment shape "%cal Ra1b2" with color: Red from:a1 to:b2
-@immutable
-class PgnCommentShape {
-  final CommentShapeColor color;
-  final Square from;
-  final Square to;
-
-  const PgnCommentShape(
-      {required this.color, required this.from, required this.to});
-
-  @override
-  String toString() {
-    return to == from
-        ? '${color.string[0]}${toAlgebraic(to)}'
-        : '${color.string[0]}${toAlgebraic(from)}${toAlgebraic(to)}';
-  }
-
-  /// Parse the str for any comment or return null
-  static PgnCommentShape? fromPgn(String str) {
-    final color = CommentShapeColor.parseShapeColor(str.substring(0, 1));
-    final from = parseSquare(str.substring(1, 3));
-    if (color == null || from == null) return null;
-    if (str.length == 3) {
-      return PgnCommentShape(color: color, from: from, to: from);
-    }
-    final to = parseSquare(str.substring(3, 5));
-    if (str.length == 5 && to != null) {
-      return PgnCommentShape(color: color, from: from, to: to);
-    }
-    return null;
-  }
-}
-
-/// Represents the type of [PgnEvaluation]
-///
-/// Can of of type pawns or mate
-enum EvalType { pawns, mate }
-
-/// A class containing an evaluation
-/// A Evaluation object can be created used .pawns or .mate contructor
-@immutable
-class PgnEvaluation {
-  final double? pawns;
-  final int? mate;
-  final int? depth;
-  final EvalType evalType;
-
-  /// Constructor to create Evaluation of type pawns
-  const PgnEvaluation.pawns(
-      {required this.pawns,
-      this.depth,
-      this.mate,
-      this.evalType = EvalType.pawns});
-
-  /// Constructor to create Evaluation of type mate
-  const PgnEvaluation.mate(
-      {required this.mate,
-      this.depth,
-      this.pawns,
-      this.evalType = EvalType.mate});
-
-  @override
-  bool operator ==(Object other) =>
-      other is PgnEvaluation &&
-      pawns == other.pawns &&
-      depth == other.depth &&
-      mate == other.mate &&
-      evalType == other.evalType;
-
-  @override
-  int get hashCode => Object.hash(pawns, depth, mate, evalType);
-
-  bool isPawns() => evalType == EvalType.pawns;
-
-  /// Create a PGN evaluation string
-  String toPgn() {
-    var str = '';
-    if (isPawns()) {
-      str = pawns!.toStringAsFixed(2);
-    } else {
-      str = '#$mate';
-    }
-    if (depth != null) str = '$str,$depth';
-    return str;
-  }
-}
-
-/// A comment class
-@immutable
-class PgnComment {
-  /// Comment string
-  final String? text;
-
-  /// List of comment shapes
-  final List<PgnCommentShape> shapes;
-  final double? clock;
-  final double? emt;
-  final PgnEvaluation? eval;
-
-  const PgnComment(
-      {this.text, this.shapes = const [], this.clock, this.emt, this.eval});
-
-  @override
-  bool operator ==(Object other) {
-    return other is PgnComment &&
-        text == other.text &&
-        clock == other.clock &&
-        emt == other.emt &&
-        eval == other.eval;
-  }
-
-  @override
-  int get hashCode => Object.hash(text, shapes, clock, emt, eval);
-
-  /// Create a PGN string from a comment
-  String makeComment() {
-    final List<String> builder = [];
-    if (text != null) builder.add(text!);
-    final circles = shapes
-        .where((shape) => shape.to == shape.from)
-        .map((shape) => shape.toString());
-    if (circles.isNotEmpty) builder.add('[%csl ${circles.join(",")}]');
-    final arrows = shapes
-        .where((shape) => shape.to != shape.from)
-        .map((shape) => shape.toString());
-    if (arrows.isNotEmpty) builder.add('[%cal ${arrows.join(",")}]');
-    if (eval != null) builder.add('[%eval ${eval!.toPgn()}]');
-    if (emt != null) builder.add('[%emt ${_makeClk(emt!)}]');
-    if (clock != null) builder.add('[%clk ${_makeClk(clock!)}]');
-    return builder.join(' ');
-  }
-
-  /// Parse the comment from a string
-  factory PgnComment.fromPgn(String comment) {
-    double? emt;
-    double? clock;
-    final List<PgnCommentShape> shapes = [];
-    PgnEvaluation? eval;
-    final text = comment.replaceAllMapped(
-        RegExp(
-            r'\s?\[%(emt|clk)\s(\d{1,5}):(\d{1,2}):(\d{1,2}(?:\.\d{0,3})?)\]\s?'),
-        (match) {
-      final annotation = match.group(1);
-      final hours = match.group(2);
-      final minutes = match.group(3);
-      final seconds = match.group(4);
-      final value = double.parse(hours!) * 3600 +
-          int.parse(minutes!) * 60 +
-          double.parse(seconds!);
-      if (annotation == 'emt') {
-        emt = value;
-      } else if (annotation == 'clk') {
-        clock = value;
-      }
-      return '  ';
-    }).replaceAllMapped(
-        RegExp(
-            r'\s?\[%(?:csl|cal)\s([RGYB][a-h][1-8](?:[a-h][1-8])?(?:,[RGYB][a-h][1-8](?:[a-h][1-8])?)*)\]\s?'),
-        (match) {
-      final arrows = match.group(1);
-      if (arrows != null) {
-        for (final arrow in arrows.split(',')) {
-          final shape = PgnCommentShape.fromPgn(arrow);
-          if (shape != null) shapes.add(shape);
-        }
-      }
-      return '  ';
-    }).replaceAllMapped(
-        RegExp(
-            r'\s?\[%eval\s(?:#([+-]?\d{1,5})|([+-]?(?:\d{1,5}|\d{0,5}\.\d{1,2})))(?:,(\d{1,5}))?\]\s?'),
-        (match) {
-      final mate = match.group(1);
-      final pawns = match.group(2);
-      final d = match.group(3);
-      final depth = d != null ? int.parse(d) : null;
-      eval = mate != null
-          ? PgnEvaluation.mate(mate: int.parse(mate), depth: depth)
-          : PgnEvaluation.pawns(
-              pawns: pawns != null ? double.parse(pawns) : null, depth: depth);
-      return '  ';
-    }).trim();
-
-    return PgnComment(
-        text: text, shapes: shapes, emt: emt, clock: clock, eval: eval);
   }
 }
 

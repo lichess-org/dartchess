@@ -274,30 +274,9 @@ enum Variant {
   racingKings,
   crazyhouse;
 
-  String? get string {
-    switch (this) {
-      case Variant.chess:
-        return null;
-      case Variant.antichess:
-        return 'antichess';
-      case Variant.kingofthehill:
-        return 'King of the Hill';
-      case Variant.threecheck:
-        return '3check';
-      case Variant.atomic:
-        return 'Atomic';
-      case Variant.horde:
-        return 'Horde';
-      case Variant.racingKings:
-        return 'Racing Kings';
-      case Variant.crazyhouse:
-        return 'Crazyhouse';
-    }
-  }
-
   /// Parse a string for a variant if exist or return null
-  static Variant? fromPgn(String variant) {
-    switch (variant.toLowerCase()) {
+  static Variant? fromPgn(String? variant) {
+    switch ((variant ?? 'chess').toLowerCase()) {
       case 'chess':
       case 'chess960':
       case 'chess 960':

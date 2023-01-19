@@ -73,6 +73,57 @@ abstract class Position<T extends Position<T>> {
     int? fullmoves,
   });
 
+  /// Create a [Position] from setup and variants
+  static Position setupPosition(Variant rules, Setup setup,
+      {bool? ignoreImpossibleCheck}) {
+    switch (rules) {
+      case Variant.chess:
+        return Chess.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.antichess:
+        return Antichess.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.atomic:
+        return Atomic.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.kingofthehill:
+        return KingOfTheHill.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.crazyhouse:
+        return Crazyhouse.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.threecheck:
+        return ThreeCheck.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
+      case Variant.horde:
+        throw UnimplementedError('Missing Variant Horde');
+      case Variant.racingKings:
+        throw UnimplementedError('Missing Variant Racing Kings');
+    }
+  }
+
+  /// Returns the default [Position] for the [Variant]
+  static Position defaultPosition(Variant variant) {
+    switch (variant) {
+      case Variant.chess:
+        return Chess.initial;
+      case Variant.antichess:
+        return Antichess.initial;
+      case Variant.atomic:
+        return Atomic.initial;
+      case Variant.kingofthehill:
+        return KingOfTheHill.initial;
+      case Variant.threecheck:
+        return ThreeCheck.initial;
+      case Variant.crazyhouse:
+        return Crazyhouse.initial;
+      case Variant.horde:
+        throw UnimplementedError('Missing Variant Horde');
+      case Variant.racingKings:
+        throw UnimplementedError('Mising Variant Racing Kinds');
+    }
+  }
+
   /// Checks if the game is over due to a special variant end condition.
   bool get isVariantEnd;
 
@@ -622,57 +673,6 @@ abstract class Position<T extends Position<T>> {
     final skipImpossibleCheck = ignoreImpossibleCheck ?? false;
     if (!skipImpossibleCheck) {
       _validateCheckers(ourKing);
-    }
-  }
-
-  /// Create a [Position] from setup and variants
-  static Position setupPosition(Variant rules, Setup setup,
-      {bool? ignoreImpossibleCheck}) {
-    switch (rules) {
-      case Variant.chess:
-        return Chess.fromSetup(setup,
-            ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Variant.antichess:
-        return Antichess.fromSetup(setup,
-            ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Variant.atomic:
-        return Atomic.fromSetup(setup,
-            ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Variant.kingofthehill:
-        return KingOfTheHill.fromSetup(setup,
-            ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Variant.crazyhouse:
-        return Crazyhouse.fromSetup(setup,
-            ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Variant.threecheck:
-        return ThreeCheck.fromSetup(setup,
-            ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Variant.horde:
-        throw UnimplementedError('Missing Variant Horde');
-      case Variant.racingKings:
-        throw UnimplementedError('Missing Variant Racing Kings');
-    }
-  }
-
-  /// Returns the default [Position] for the [Variant]
-  static Position defaultPosition(Variant variant) {
-    switch (variant) {
-      case Variant.chess:
-        return Chess.initial;
-      case Variant.antichess:
-        return Antichess.initial;
-      case Variant.atomic:
-        return Atomic.initial;
-      case Variant.kingofthehill:
-        return KingOfTheHill.initial;
-      case Variant.threecheck:
-        return ThreeCheck.initial;
-      case Variant.crazyhouse:
-        return Crazyhouse.initial;
-      case Variant.horde:
-        throw UnimplementedError('Missing Variant Horde');
-      case Variant.racingKings:
-        throw UnimplementedError('Mising Variant Racing Kinds');
     }
   }
 

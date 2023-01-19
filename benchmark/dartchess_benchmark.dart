@@ -7,7 +7,7 @@ void main() {
     final String data =
         File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();
 
-    parseMultiGamePgn(data);
+    PgnGame.parseMultiGamePgn(data);
   }, iterations: 1);
 
   benchmark('perft', () {
