@@ -108,11 +108,12 @@ class Piece {
 
   @override
   bool operator ==(Object other) {
-    return other is Piece &&
-        other.runtimeType == runtimeType &&
-        color == other.color &&
-        role == other.role &&
-        promoted == other.promoted;
+    return identical(this, other) ||
+        other is Piece &&
+            other.runtimeType == runtimeType &&
+            color == other.color &&
+            role == other.role &&
+            promoted == other.promoted;
   }
 
   @override
@@ -198,7 +199,8 @@ class NormalMove extends Move {
 
   @override
   bool operator ==(Object other) {
-    return other.runtimeType == runtimeType && hashCode == other.hashCode;
+    return identical(this, other) ||
+        other.runtimeType == runtimeType && hashCode == other.hashCode;
   }
 
   @override
@@ -221,7 +223,8 @@ class DropMove extends Move {
 
   @override
   bool operator ==(Object other) {
-    return other.runtimeType == runtimeType && hashCode == other.hashCode;
+    return identical(this, other) ||
+        other.runtimeType == runtimeType && hashCode == other.hashCode;
   }
 
   @override
@@ -251,6 +254,7 @@ class Tuple2<T1, T2> {
 
   @override
   bool operator ==(Object other) =>
+      identical(this, other) ||
       other is Tuple2 && item1 == other.item1 && item2 == other.item2;
 
   @override

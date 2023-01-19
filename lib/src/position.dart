@@ -1708,7 +1708,8 @@ class Outcome {
   }
 
   @override
-  bool operator ==(Object other) => other is Outcome && winner == other.winner;
+  bool operator ==(Object other) =>
+      identical(this, other) || other is Outcome && winner == other.winner;
 
   @override
   int get hashCode => winner.hashCode;
@@ -1942,12 +1943,13 @@ class Castles {
 
   @override
   bool operator ==(Object other) =>
+      identical(this, other) ||
       other is Castles &&
-      other.unmovedRooks == unmovedRooks &&
-      other.rook[Side.white] == rook[Side.white] &&
-      other.rook[Side.black] == rook[Side.black] &&
-      other.path[Side.white] == path[Side.white] &&
-      other.path[Side.black] == path[Side.black];
+          other.unmovedRooks == unmovedRooks &&
+          other.rook[Side.white] == rook[Side.white] &&
+          other.rook[Side.black] == rook[Side.black] &&
+          other.path[Side.white] == path[Side.white] &&
+          other.path[Side.black] == path[Side.black];
 
   @override
   int get hashCode => Object.hash(unmovedRooks, rook[Side.white],

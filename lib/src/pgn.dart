@@ -282,11 +282,12 @@ class PgnNodeData {
 
   @override
   bool operator ==(Object other) =>
+      identical(this, other) ||
       other is PgnNodeData &&
-      san == other.san &&
-      startingComments == other.startingComments &&
-      comments == other.comments &&
-      nags == other.nags;
+          san == other.san &&
+          startingComments == other.startingComments &&
+          comments == other.comments &&
+          nags == other.nags;
 
   @override
   int get hashCode => Object.hash(san, startingComments, comments, nags);
@@ -472,11 +473,12 @@ class PgnEvaluation {
 
   @override
   bool operator ==(Object other) =>
+      identical(this, other) ||
       other is PgnEvaluation &&
-      pawns == other.pawns &&
-      depth == other.depth &&
-      mate == other.mate &&
-      evalType == other.evalType;
+          pawns == other.pawns &&
+          depth == other.depth &&
+          mate == other.mate &&
+          evalType == other.evalType;
 
   @override
   int get hashCode => Object.hash(pawns, depth, mate, evalType);
@@ -519,11 +521,12 @@ class PgnComment {
 
   @override
   bool operator ==(Object other) {
-    return other is PgnComment &&
-        text == other.text &&
-        clock == other.clock &&
-        emt == other.emt &&
-        eval == other.eval;
+    return identical(this, other) ||
+        other is PgnComment &&
+            text == other.text &&
+            clock == other.clock &&
+            emt == other.emt &&
+            eval == other.eval;
   }
 
   @override
