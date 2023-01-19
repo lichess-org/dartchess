@@ -200,14 +200,15 @@ void main() {
 
   test('transform pgn', () {
     final game = PgnGame.parsePgn('1. a4 ( 1. b4 b5 -- ) 1... a5');
-    final res = game.moves.transform<PgnNodeWithFen, Position>(
+    final PgnNode<PgnNodeWithFen> res =
+        game.moves.transform<PgnNodeWithFen, Position>(
       PgnGame.startingPosition(game.headers),
       (pos, data, _) {
         final move = pos.parseSan(data.san);
         if (move != null) {
           final pos2 = pos.play(move);
           return TransformResult(
-              pos2, PgnNodeWithFen(fen: pos2.fen, san: data.san));
+              pos2, PgnNodeWithFen(fen: pos2.fen, data: data));
         }
         return null;
       },
@@ -224,7 +225,8 @@ void main() {
   });
 }
 
-class PgnNodeWithFen extends PgnNodeData {
+class PgnNodeWithFen {
   final String fen;
-  const PgnNodeWithFen({required this.fen, required super.san});
+  final PgnNodeData data;
+  const PgnNodeWithFen({required this.fen, required this.data});
 }

@@ -10,7 +10,54 @@ typedef Headers = Map<String, String>;
 
 /// A Portable Game Notation (PNG) representation.
 ///
-/// Composed of [Headers] and moves represented by a [PgnNode] tree.
+/// A PGN game is composed of [Headers] and moves represented by a [PgnNode] tree.
+///
+/// ## Parser
+///
+/// This class provide 2 parsers: `parsePgn` to create a single [PgnGame] and
+/// `parseMultiGamePgn` that can handle a string containing multiple games.
+///
+/// ```dart
+/// const pgn = '1. d4 d5 *';
+/// final game = PgnGame.parsePgn(pgn);
+/// Position position = PgnGame.startingPosition(game.headers);
+/// for (final node in game.moves.mainline()) {
+///   final move = position.parseSan(node.san);
+///   if (move == null) break; // Illegal move
+///   position = position.play(move);
+/// }
+/// ```
+///
+/// ## Augmenting game tree
+///
+/// You can use `transform` to augment all nodes in the game tree with user data.
+///
+/// It allows you to provide context. You update the context inside the
+/// callback, using the immutable [TransformResult] class. Context object itself
+/// should be immutable to prevent any unwanted mutation.
+/// In the example below, the current [Position] `pos` is provided as context.
+///
+/// ```dart
+/// class NodeWithFen {
+///   final String fen;
+///   final PgnNodeData data;
+///   const NodeWithFen({required this.fen, required this.data});
+/// }
+///
+/// final game = PgnGame.parsePgn('1. e4 e5 *');
+/// final pos = PgnGame.startingPosition(game.headers);
+/// final PgnNode<NodeWithFen> res = game.moves.transform<NodeWithFen, Position>(pos,
+///   (pos, data, _) {
+///     final move = pos.parseSan(data.san);
+///     if (move != null) {
+///       final newPos = pos.play(move);
+///       return TransformResult(
+///           newPos, NodeWithFen(fen: newPos.fen, data: data));
+///     }
+///     return null;
+///   },
+/// );
+/// ```
 @immutable
 class PgnGame<T> {
   /// Constructs a new immutable [PgnGame].
@@ -43,9 +90,10 @@ class PgnGame<T> {
   /// Parse a PGN string and return a [PgnGame].
   ///
   /// Provide a optional function [initHeaders] to create different headers other than the default.
-  /// The parser will take any string as input and return a tree of
-  /// syntatically valid nodes but not necessary legal moves. It will
-  /// skip invalid token.
+  ///
+  /// The parser will interpret any input as a PGN, creating a tree of
+  /// syntactically valid (but not necessarily legal) moves, skipping any invalid
+  /// tokens.
   static PgnGame<PgnNodeData> parsePgn(String pgn,
       {Headers Function() initHeaders = defaultHeaders}) {
     final List<PgnGame<PgnNodeData>> games = [];
@@ -58,11 +106,12 @@ class PgnGame<T> {
 
   /// Parse a multi game PGN string.
   ///
-  /// Returns a list of games if multiple games found
+  /// Returns a list of [PgnGame].
   /// Provide a optional function [initHeaders] to create different headers other than the default
-  /// The parser will take any string as input and return a tree of
-  /// syntatically valid nodes but not necessary legal moves. It will
-  /// skip invalid token.
+  ///
+  /// The parser will interpret any input as a PGN, creating a tree of
+  /// syntactically valid (but not necessarily legal) moves, skipping any invalid
+  /// tokens.
   static List<PgnGame<PgnNodeData>> parseMultiGamePgn(String pgn,
       [Headers Function() initHeaders = PgnGame.defaultHeaders]) {
     final List<PgnGame<PgnNodeData>> games = [];
@@ -76,6 +125,8 @@ class PgnGame<T> {
   /// Create a [Position] for a Variant from the headers.
   ///
   /// Headers can include an optional 'Variant' and 'Fen' key.
+  ///
+  /// Throws a [PositionError] if it does not meet basic validity requirements.
   static Position startingPosition(Headers headers,
       {bool? ignoreImpossibleCheck}) {
     final rules = Variant.fromPgn(headers['Variant']);
@@ -273,7 +324,7 @@ class PgnNode<T> {
     }
   }
 
-  /// Function to walk through each node and transform a Node<T> tree into
+  /// Function to walk through each node and transform this node tree into
   /// a Node<U> tree.
   PgnNode<U> transform<U, C>(
       C ctx, TransformResult<C, U>? Function(C, T, int) f) {
@@ -311,6 +362,8 @@ class PgnChildNode<T> extends PgnNode<T> {
 }
 
 @immutable
+
+/// Used to return result in the callback of [PgnNode.transform].
 class TransformResult<C, T> {
   const TransformResult(this.ctx, this.data);
   final C ctx;
