@@ -113,7 +113,7 @@ void main() {
         PgnComment.fromPgn('prefix [%emt 1:02:03.4]'),
         const PgnComment(
           text: 'prefix',
-          emt: 3723.4,
+          emt: Duration(hours: 1, minutes: 2, seconds: 3, milliseconds: 400),
         ));
 
     expect(
@@ -160,9 +160,9 @@ void main() {
     expect(
         const PgnComment(
             text: 'text',
-            emt: 3723.4,
+            emt: Duration(hours: 1, minutes: 2, seconds: 3, milliseconds: 400),
             eval: PgnEvaluation.pawns(pawns: 10),
-            clock: 1,
+            clock: Duration(seconds: 1),
             shapes: [
               PgnCommentShape(color: CommentShapeColor.yellow, from: 0, to: 0),
               PgnCommentShape(color: CommentShapeColor.red, from: 0, to: 1),

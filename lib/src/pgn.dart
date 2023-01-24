@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:meta/meta.dart';
 import './setup.dart';
@@ -511,49 +511,18 @@ class PgnComment {
   final List<PgnCommentShape> shapes;
 
   /// Player's remaining time.
-  final double? clock;
+  final Duration? clock;
 
   /// Player's elapsed move time.
-  final double? emt;
+  final Duration? emt;
 
   /// Move evaluation.
   final PgnEvaluation? eval;
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        other is PgnComment &&
-            text == other.text &&
-            clock == other.clock &&
-            emt == other.emt &&
-            eval == other.eval;
-  }
-
-  @override
-  int get hashCode => Object.hash(text, shapes, clock, emt, eval);
-
-  /// Make a PGN string from this comment.
-  String makeComment() {
-    final List<String> builder = [];
-    if (text != null) builder.add(text!);
-    final circles = shapes
-        .where((shape) => shape.to == shape.from)
-        .map((shape) => shape.toString());
-    if (circles.isNotEmpty) builder.add('[%csl ${circles.join(",")}]');
-    final arrows = shapes
-        .where((shape) => shape.to != shape.from)
-        .map((shape) => shape.toString());
-    if (arrows.isNotEmpty) builder.add('[%cal ${arrows.join(",")}]');
-    if (eval != null) builder.add('[%eval ${eval!.toPgn()}]');
-    if (emt != null) builder.add('[%emt ${_makeClk(emt!)}]');
-    if (clock != null) builder.add('[%clk ${_makeClk(clock!)}]');
-    return builder.join(' ');
-  }
-
   /// Parses a PGN comment string to a [PgnComment].
   factory PgnComment.fromPgn(String comment) {
-    double? emt;
-    double? clock;
+    Duration? emt;
+    Duration? clock;
     final List<PgnCommentShape> shapes = [];
     PgnEvaluation? eval;
     final text = comment.replaceAllMapped(
@@ -564,13 +533,17 @@ class PgnComment {
       final hours = match.group(2);
       final minutes = match.group(3);
       final seconds = match.group(4);
-      final value = double.parse(hours!) * 3600 +
-          int.parse(minutes!) * 60 +
-          double.parse(seconds!);
+      final secondsValue = double.parse(seconds!);
+      final duration = Duration(
+          hours: int.parse(hours!),
+          minutes: int.parse(minutes!),
+          seconds: secondsValue.truncate(),
+          milliseconds:
+              ((secondsValue - secondsValue.truncate()) * 1000).round());
       if (annotation == 'emt') {
-        emt = value;
+        emt = duration;
       } else if (annotation == 'clk') {
-        clock = value;
+        clock = duration;
       }
       return '  ';
     }).replaceAllMapped(
@@ -603,6 +576,41 @@ class PgnComment {
     return PgnComment(
         text: text, shapes: shapes, emt: emt, clock: clock, eval: eval);
   }
+
+  /// Make a PGN string from this comment.
+  String makeComment() {
+    final List<String> builder = [];
+    if (text != null) builder.add(text!);
+    final circles = shapes
+        .where((shape) => shape.to == shape.from)
+        .map((shape) => shape.toString());
+    if (circles.isNotEmpty) builder.add('[%csl ${circles.join(",")}]');
+    final arrows = shapes
+        .where((shape) => shape.to != shape.from)
+        .map((shape) => shape.toString());
+    if (arrows.isNotEmpty) builder.add('[%cal ${arrows.join(",")}]');
+    if (eval != null) builder.add('[%eval ${eval!.toPgn()}]');
+    if (emt != null) builder.add('[%emt ${_makeClk(emt!)}]');
+    if (clock != null) builder.add('[%clk ${_makeClk(clock!)}]');
+    return builder.join(' ');
+  }
+
+  @override
+  String toString() =>
+      'PgnComment(text: $text, shapes: $shapes, emt: $emt, clock: $clock, eval: $eval)';
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is PgnComment &&
+            text == other.text &&
+            clock == other.clock &&
+            emt == other.emt &&
+            eval == other.eval;
+  }
+
+  @override
+  int get hashCode => Object.hash(text, shapes, clock, emt, eval);
 }
 
 class _TransformFrame<T, U, C> {
@@ -890,11 +898,12 @@ class _PgnParser {
 }
 
 /// Make the clock to string from seconds
-String _makeClk(double seconds) {
-  var maxSec = max(0, seconds);
-  final hours = (maxSec / 3600).floor();
-  final minutes = ((maxSec % 3600) / 60).floor();
-  maxSec = (maxSec % 3600) % 60;
+String _makeClk(Duration duration) {
+  final seconds = duration.inMilliseconds / 1000;
+  final positiveSecs = math.max(0, seconds);
+  final hours = (positiveSecs / 3600).floor();
+  final minutes = ((positiveSecs % 3600) / 60).floor();
+  final maxSec = (positiveSecs % 3600) % 60;
   final intVal = maxSec.toInt();
   final frac = (maxSec - intVal) // get the fraction part of seconds
       .toStringAsFixed(3)
