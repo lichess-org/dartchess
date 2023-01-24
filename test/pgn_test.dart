@@ -126,6 +126,12 @@ void main() {
         ]));
 
     expect(
+        PgnComment.fromPgn('[%eval -0.42] suffix'),
+        const PgnComment(
+          text: 'suffix',
+          eval: PgnEvaluation.pawns(pawns: -0.42),
+        ));
+    expect(
         PgnComment.fromPgn('prefix [%eval .99,23]'),
         const PgnComment(
             text: 'prefix', eval: PgnEvaluation.pawns(pawns: 0.99, depth: 23)));
