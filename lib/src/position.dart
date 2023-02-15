@@ -1765,18 +1765,11 @@ class RacingKings extends Position<RacingKings> {
             .squares
             .where((square) => isLegal(NormalMove(from: blackKing, to: square)))
             .isEmpty;
-    final whiteCanReachGoal = whiteKing != null &&
-        !kingAttacks(blackKing ?? 0)
-            .intersect(goal)
-            .squares
-            .where((square) => isLegal(NormalMove(from: whiteKing, to: square)))
-            .isEmpty;
-
     // If white is in the goal, check
     // whether black can reach the goal
     // And vice-versa
     if (whiteInGoal && !blackCanReachGoal) return Outcome.whiteWins;
-    if (blackInGoal && !whiteCanReachGoal) return Outcome.blackWins;
+    if (blackInGoal) return Outcome.blackWins;
 
     return Outcome.draw;
   }
