@@ -1759,16 +1759,20 @@ class RacingKings extends Position<RacingKings> {
     if (whiteInGoal && blackInGoal) return Outcome.draw;
     final whiteKing = board.kingOf(Side.white);
     final blackKing = board.kingOf(Side.black);
-    final blackCanReachGoal =
-        !kingAttacks(blackKing ?? 0).intersect(goal).squares.where((square) {
-      return blackKing != null &&
-          isLegal(NormalMove(from: blackKing, to: square));
-    }).isEmpty;
-    final whiteCanReachGoal =
-        !kingAttacks(blackKing ?? 0).intersect(goal).squares.where((square) {
-      return whiteKing != null &&
-          isLegal(NormalMove(from: whiteKing, to: square));
-    }).isEmpty;
+    final blackCanReachGoal = !kingAttacks(blackKing ?? 0)
+        .intersect(goal)
+        .squares
+        .where((square) =>
+            blackKing != null &&
+            isLegal(NormalMove(from: blackKing, to: square)))
+        .isEmpty;
+    final whiteCanReachGoal = !kingAttacks(blackKing ?? 0)
+        .intersect(goal)
+        .squares
+        .where((square) =>
+            whiteKing != null &&
+            isLegal(NormalMove(from: whiteKing, to: square)))
+        .isEmpty;
 
     // If white is in the goal, check
     // whether black can reach the goal
