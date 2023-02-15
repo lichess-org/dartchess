@@ -41,6 +41,20 @@ class Board {
         Role.king: SquareSet(0x1000000000000010),
       });
 
+  /// Racing Kings start position
+  static const racingKings =
+      Board(occupied: SquareSet(0xffff), promoted: SquareSet.empty, sides: {
+    Side.white: SquareSet(0xf0f0),
+    Side.black: SquareSet(0x0f0f),
+  }, roles: {
+    Role.pawn: SquareSet.empty,
+    Role.knight: SquareSet(0x1818),
+    Role.bishop: SquareSet(0x2424),
+    Role.rook: SquareSet(0x4242),
+    Role.queen: SquareSet(0x0081),
+    Role.king: SquareSet(0x8100),
+  });
+
   static const empty =
       Board(occupied: SquareSet.empty, promoted: SquareSet.empty, sides: {
     Side.white: SquareSet.empty,

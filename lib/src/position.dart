@@ -98,7 +98,8 @@ abstract class Position<T extends Position<T>> {
       case Rules.horde:
         throw UnimplementedError('Missing Rules Horde');
       case Rules.racingKings:
-        throw RacingKings.fromSetup(setup, ignoreImpossibleCheck: ignoreImpossibleCheck);
+        throw RacingKings.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
     }
   }
 
@@ -1733,7 +1734,15 @@ class RacingKings extends Position<RacingKings> {
     required super.fullmoves,
   });
 
-  const RacingKings._initial() : super._initial();
+  const RacingKings._initial()
+      : super._initial(
+            board: Board.racingKings,
+            pockets: null,
+            turn: Side.white,
+            castles: Castles.standard,
+            epSquare: null,
+            halfmoves: 0,
+            fullmoves: 1);
 
   static const initial = RacingKings._initial();
 
@@ -1752,16 +1761,16 @@ class RacingKings extends Position<RacingKings> {
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
   factory RacingKings.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-      final pos = RacingKings(
-        board: setup.board,
-        turn: setup.turn,
-        castles: Castles.fromSetup(setup),
-        epSquare: _validEpSquare(setup),
-        halfmoves: setup.halfmoves,
-        fullmoves: setup.fullmoves,
-      );
-      pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
-      return pos;
+    final pos = RacingKings(
+      board: setup.board,
+      turn: setup.turn,
+      castles: Castles.fromSetup(setup),
+      epSquare: _validEpSquare(setup),
+      halfmoves: setup.halfmoves,
+      fullmoves: setup.fullmoves,
+    );
+    pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+    return pos;
   }
 
   @override
@@ -1781,8 +1790,8 @@ class RacingKings extends Position<RacingKings> {
       board.piecesOf(side, Role.king) == board.bySide(side);
 
   @override
-  RacingKings playUnchecked(Move move) => super.playUnchecked(move) as RacingKings;
-  
+  RacingKings playUnchecked(Move move) =>
+      super.playUnchecked(move) as RacingKings;
 
   @override
   RacingKings _copyWith({
