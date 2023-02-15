@@ -98,7 +98,7 @@ abstract class Position<T extends Position<T>> {
       case Rules.horde:
         throw UnimplementedError('Missing Rules Horde');
       case Rules.racingKings:
-        throw UnimplementedError('Missing Rules Racing Kings');
+        throw RacingKings.fromSetup(setup, ignoreImpossibleCheck: ignoreImpossibleCheck);
     }
   }
 
@@ -120,7 +120,7 @@ abstract class Position<T extends Position<T>> {
       case Rules.horde:
         throw UnimplementedError('Missing Rules Horde');
       case Rules.racingKings:
-        throw UnimplementedError('Missing Rules Racing Kinds');
+        return RacingKings.initial;
     }
   }
 
@@ -1716,6 +1716,92 @@ class ThreeCheck extends Position<ThreeCheck> {
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
       remainingChecks: remainingChecks ?? this.remainingChecks,
+    );
+  }
+}
+
+/// A variant where the goal is to put your king on the eigth rank
+@immutable
+class RacingKings extends Position<RacingKings> {
+  const RacingKings({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  });
+
+  const RacingKings._initial() : super._initial();
+
+  static const initial = RacingKings._initial();
+
+  @override
+  bool get isVariantEnd => true;
+
+  @override
+  Outcome? get variantOutcome {
+    return null;
+  }
+
+  /// Set up a playable [RacingKings] position.
+  ///
+  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// requirements.
+  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
+  /// requirement.
+  factory RacingKings.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+      final pos = RacingKings(
+        board: setup.board,
+        turn: setup.turn,
+        castles: Castles.fromSetup(setup),
+        epSquare: _validEpSquare(setup),
+        halfmoves: setup.halfmoves,
+        fullmoves: setup.fullmoves,
+      );
+      pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+      return pos;
+  }
+
+  @override
+  String get fen {
+    return Setup(
+      board: board,
+      turn: turn,
+      unmovedRooks: castles.unmovedRooks,
+      epSquare: _legalEpSquare(),
+      halfmoves: halfmoves,
+      fullmoves: fullmoves,
+    ).fen;
+  }
+
+  @override
+  bool hasInsufficientMaterial(Side side) =>
+      board.piecesOf(side, Role.king) == board.bySide(side);
+
+  @override
+  RacingKings playUnchecked(Move move) => super.playUnchecked(move) as RacingKings;
+  
+
+  @override
+  RacingKings _copyWith({
+    Board? board,
+    Box<Pockets?>? pockets,
+    Side? turn,
+    Castles? castles,
+    Box<Square?>? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return RacingKings(
+      board: board ?? this.board,
+      pockets: pockets != null ? pockets.value : this.pockets,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare != null ? epSquare.value : this.epSquare,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
     );
   }
 }
