@@ -1735,7 +1735,7 @@ class RacingKings extends Position<RacingKings> {
   });
 
   const RacingKings._initial()
-      : super._initial(
+      : super(
             board: Board.racingKings,
             pockets: null,
             turn: Side.white,
@@ -1745,13 +1745,38 @@ class RacingKings extends Position<RacingKings> {
             fullmoves: 1);
 
   static const initial = RacingKings._initial();
+  static const goal = SquareSet.fromRank(7);
 
   @override
-  bool get isVariantEnd => true;
+  bool get isVariantEnd => !board.kings.intersect(goal).isEmpty;
 
   @override
   Outcome? get variantOutcome {
-    return null;
+    if (!isVariantEnd) return null;
+
+    final blackInGoal = !board.black.intersect(goal).isEmpty;
+    final whiteInGoal = !board.white.intersect(goal).isEmpty;
+    if (whiteInGoal && blackInGoal) return Outcome.draw;
+    final whiteKing = board.kingOf(Side.white);
+    final blackKing = board.kingOf(Side.black);
+    final blackCanReachGoal =
+        !kingAttacks(blackKing ?? 0).intersect(goal).squares.where((square) {
+      return blackKing != null &&
+          isLegal(NormalMove(from: blackKing, to: square));
+    }).isEmpty;
+    final whiteCanReachGoal =
+        !kingAttacks(blackKing ?? 0).intersect(goal).squares.where((square) {
+      return whiteKing != null &&
+          isLegal(NormalMove(from: whiteKing, to: square));
+    }).isEmpty;
+
+    // If white is in the goal, check
+    // whether black can reach the goal
+    // And vice-versa
+    if (whiteInGoal && !blackCanReachGoal) return Outcome.whiteWins;
+    if (blackInGoal && !whiteCanReachGoal) return Outcome.blackWins;
+
+    return Outcome.draw;
   }
 
   /// Set up a playable [RacingKings] position.
