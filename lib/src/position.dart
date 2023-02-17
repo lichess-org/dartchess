@@ -1747,24 +1747,44 @@ class RacingKings extends Position<RacingKings> {
   static const initial = RacingKings._initial();
   static const goal = SquareSet.fromRank(7);
 
+  bool get blackCanReachGoal {
+    final blackKing = board.kingOf(Side.black);
+    return blackKing != null &&
+        !kingAttacks(blackKing).intersect(goal).squares.where((square) {
+          // Check whether this king move is legal
+          final context = _Context(
+            isVariantEnd: false,
+            mustCapture: false,
+            king: blackKing,
+            blockers: _sliderBlockers(blackKing),
+            checkers: checkers,
+          );
+          final legalMoves = _legalMovesOf(blackKing, context: context);
+          return legalMoves.has(square);
+        }).isEmpty;
+  }
+
+  bool get blackInGoal =>
+      !board.black.intersect(goal).intersect(board.kings).isEmpty;
+  bool get whiteInGoal =>
+      !board.white.intersect(goal).intersect(board.kings).isEmpty;
+
   @override
-  bool get isVariantEnd => !board.kings.intersect(goal).isEmpty;
+  bool get isVariantEnd {
+    if (!whiteInGoal && !blackInGoal) {
+      return false;
+    }
+    if (blackInGoal || !blackCanReachGoal) {
+      return true;
+    }
+    return false;
+  }
 
   @override
   Outcome? get variantOutcome {
     if (!isVariantEnd) return null;
-
-    final blackInGoal = !board.black.intersect(goal).isEmpty;
-    final whiteInGoal = !board.white.intersect(goal).isEmpty;
     if (whiteInGoal && blackInGoal) return Outcome.draw;
     final whiteKing = board.kingOf(Side.white);
-    final blackKing = board.kingOf(Side.black);
-    final blackCanReachGoal = blackKing != null &&
-        !kingAttacks(blackKing)
-            .intersect(goal)
-            .squares
-            .where((square) => isLegal(NormalMove(from: blackKing, to: square)))
-            .isEmpty;
     // If white is in the goal, check
     // whether black can reach the goal
     // And vice-versa
