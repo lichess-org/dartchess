@@ -678,7 +678,7 @@ abstract class Position<T extends Position<T>> {
 
   @override
   String toString() {
-    return '${T.toString()}(board: $board, turn: $turn, castles: $castles, halfmoves: $halfmoves, fullmoves: $fullmoves)';
+    return '$T(board: $board, turn: $turn, castles: $castles, halfmoves: $halfmoves, fullmoves: $fullmoves)';
   }
 
   @override
