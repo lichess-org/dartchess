@@ -173,6 +173,11 @@ abstract class Move {
     }
     return null;
   }
+
+  @override
+  String toString() {
+    return 'Move($uci)';
+  }
 }
 
 /// Represents a chess move, possibly a promotion.

@@ -538,7 +538,7 @@ abstract class Position<T extends Position<T>> {
               : san;
       return Tuple2(newPos, suffixed);
     } else {
-      throw const PlayError('Invalid move');
+      throw PlayError('Invalid move $move');
     }
   }
 
@@ -549,7 +549,7 @@ abstract class Position<T extends Position<T>> {
     if (isLegal(move)) {
       return playUnchecked(move);
     } else {
-      throw const PlayError('Invalid move');
+      throw PlayError('Invalid move $move');
     }
   }
 
