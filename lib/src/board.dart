@@ -1,4 +1,6 @@
 import 'package:meta/meta.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart'
+    hide Tuple2;
 import './square_set.dart';
 import './models.dart';
 import './attacks.dart';
@@ -26,33 +28,18 @@ class Board {
 
   /// Standard chess starting position.
   static const standard = Board(
-      occupied: SquareSet(0xffff00000000ffff),
-      promoted: SquareSet.empty,
-      sides: {
-        Side.white: SquareSet(0xffff),
-        Side.black: SquareSet(0xffff000000000000),
-      },
-      roles: {
-        Role.pawn: SquareSet(0x00ff00000000ff00),
-        Role.knight: SquareSet(0x4200000000000042),
-        Role.bishop: SquareSet(0x2400000000000024),
-        Role.rook: SquareSet.corners,
-        Role.queen: SquareSet(0x0800000000000008),
-        Role.king: SquareSet(0x1000000000000010),
-      });
+    occupied: SquareSet(0xffff00000000ffff),
+    promoted: SquareSet.empty,
+    sides: _standardSides,
+    roles: _standardRoles,
+  );
 
-  static const empty =
-      Board(occupied: SquareSet.empty, promoted: SquareSet.empty, sides: {
-    Side.white: SquareSet.empty,
-    Side.black: SquareSet.empty,
-  }, roles: {
-    Role.pawn: SquareSet.empty,
-    Role.knight: SquareSet.empty,
-    Role.bishop: SquareSet.empty,
-    Role.rook: SquareSet.empty,
-    Role.queen: SquareSet.empty,
-    Role.king: SquareSet.empty,
-  });
+  static const empty = Board(
+    occupied: SquareSet.empty,
+    promoted: SquareSet.empty,
+    sides: _emptySides,
+    roles: _emptyRoles,
+  );
 
   /// Parse the board part of a FEN string and returns a Board.
   ///
@@ -218,12 +205,12 @@ class Board {
     return removePieceAt(square)._copyWith(
       occupied: occupied.withSquare(square),
       promoted: piece.promoted ? promoted.withSquare(square) : null,
-      sides: {
+      sides: IMap({
         piece.color: sides[piece.color]!.withSquare(square),
-      },
-      roles: {
+      }),
+      roles: IMap({
         piece.role: roles[piece.role]!.withSquare(square),
-      },
+      }),
     );
   }
 
@@ -234,12 +221,12 @@ class Board {
         ? _copyWith(
             occupied: occupied.withoutSquare(square),
             promoted: piece.promoted ? promoted.withoutSquare(square) : null,
-            sides: {
+            sides: IMap({
               piece.color: sides[piece.color]!.withoutSquare(square),
-            },
-            roles: {
+            }),
+            roles: IMap({
               piece.role: roles[piece.role]!.withoutSquare(square),
-            },
+            }),
           )
         : this;
   }
@@ -257,12 +244,8 @@ class Board {
     return Board(
       occupied: occupied ?? this.occupied,
       promoted: promoted ?? this.promoted,
-      sides: sides != null
-          ? Map.unmodifiable({...this.sides, ...sides})
-          : this.sides,
-      roles: roles != null
-          ? Map.unmodifiable({...this.roles, ...roles})
-          : this.roles,
+      sides: sides != null ? this.sides.addAll(sides) : this.sides,
+      roles: roles != null ? this.roles.addAll(roles) : this.roles,
     );
   }
 
@@ -300,3 +283,31 @@ Piece? _charToPiece(String ch, bool promoted) {
   }
   return null;
 }
+
+const BySide<SquareSet> _standardSides = IMapConst({
+  Side.white: SquareSet(0xffff),
+  Side.black: SquareSet(0xffff000000000000),
+});
+
+const ByRole<SquareSet> _standardRoles = IMapConst({
+  Role.pawn: SquareSet(0x00ff00000000ff00),
+  Role.knight: SquareSet(0x4200000000000042),
+  Role.bishop: SquareSet(0x2400000000000024),
+  Role.rook: SquareSet.corners,
+  Role.queen: SquareSet(0x0800000000000008),
+  Role.king: SquareSet(0x1000000000000010),
+});
+
+const BySide<SquareSet> _emptySides = IMapConst({
+  Side.white: SquareSet.empty,
+  Side.black: SquareSet.empty,
+});
+
+const ByRole<SquareSet> _emptyRoles = IMapConst({
+  Role.pawn: SquareSet.empty,
+  Role.knight: SquareSet.empty,
+  Role.bishop: SquareSet.empty,
+  Role.rook: SquareSet.empty,
+  Role.queen: SquareSet.empty,
+  Role.king: SquareSet.empty,
+});

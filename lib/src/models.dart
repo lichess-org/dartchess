@@ -1,4 +1,6 @@
 import 'package:meta/meta.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart'
+    hide Tuple2;
 import './utils.dart';
 
 enum Side {
@@ -58,8 +60,8 @@ enum Role {
 /// See [SquareSet] to see how the mapping looks like.
 typedef Square = int;
 
-typedef BySide<T> = Map<Side, T>;
-typedef ByRole<T> = Map<Role, T>;
+typedef BySide<T> = IMap<Side, T>;
+typedef ByRole<T> = IMap<Role, T>;
 
 @immutable
 class Piece {

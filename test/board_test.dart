@@ -1,4 +1,6 @@
 import 'package:dartchess/dartchess.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart'
+    hide Tuple2;
 import 'package:test/test.dart';
 
 void main() {
@@ -22,20 +24,20 @@ void main() {
     expect(board2.pieceAt(60), piece);
     expect(
         board2.sides,
-        equals({
-          Side.white: const SquareSet(0x100000000000FFFF),
-          Side.black: const SquareSet(0xEFFF000000000000)
-        }));
+        equals(IMap(const {
+          Side.white: SquareSet(0x100000000000FFFF),
+          Side.black: SquareSet(0xEFFF000000000000)
+        })));
     expect(
         board2.roles,
-        equals({
-          Role.pawn: const SquareSet(0x00FF00000000FF00),
-          Role.knight: const SquareSet(0x4200000000000042),
-          Role.bishop: const SquareSet(0x2400000000000024),
+        equals(IMap(const {
+          Role.pawn: SquareSet(0x00FF00000000FF00),
+          Role.knight: SquareSet(0x4200000000000042),
+          Role.bishop: SquareSet(0x2400000000000024),
           Role.rook: SquareSet.corners,
-          Role.queen: const SquareSet(0x0800000000000008),
-          Role.king: const SquareSet(0x1000000000000010)
-        }));
+          Role.queen: SquareSet(0x0800000000000008),
+          Role.king: SquareSet(0x1000000000000010)
+        })));
   });
 
   test('removePieceAt', () {
