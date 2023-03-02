@@ -42,7 +42,7 @@ SquareSet makeSquareSet(String rep) {
 }
 
 /// Prints the square set as a human readable string format
-String printSquareSet(SquareSet sq) {
+String humanReadableSquareSet(SquareSet sq) {
   final buffer = StringBuffer();
   for (int y = 7; y >= 0; y--) {
     for (int x = 0; x < 8; x++) {
@@ -55,7 +55,7 @@ String printSquareSet(SquareSet sq) {
 }
 
 /// Prints the board as a human readable string format
-String printBoard(Board board) {
+String humanReadableBoard(Board board) {
   final buffer = StringBuffer();
   for (int y = 7; y >= 0; y--) {
     for (int x = 0; x < 8; x++) {
