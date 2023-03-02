@@ -1,6 +1,4 @@
 import 'package:dartchess/dartchess.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart'
-    hide Tuple2;
 import 'package:test/test.dart';
 
 void main() {
