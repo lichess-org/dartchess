@@ -1,3 +1,5 @@
+import 'package:fast_immutable_collections/fast_immutable_collections.dart'
+    hide Tuple2;
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
@@ -44,17 +46,17 @@ void main() {
     test('discard side', () {
       expect(
           Castles.standard.discardSide(Side.white).rook,
-          equals({
-            Side.white: const Tuple2(null, null),
-            Side.black: const Tuple2(56, 63)
-          }));
+          equals(IMap(const {
+            Side.white: Tuple2(null, null),
+            Side.black: Tuple2(56, 63)
+          })));
 
       expect(
           Castles.standard.discardSide(Side.black).rook,
-          equals({
-            Side.white: const Tuple2(0, 7),
-            Side.black: const Tuple2(null, null)
-          }));
+          equals(IMap(const {
+            Side.white: Tuple2(0, 7),
+            Side.black: Tuple2(null, null)
+          })));
     });
   });
 
@@ -315,7 +317,7 @@ void main() {
     });
 
     test('standard position legal moves', () {
-      final moves = {
+      final moves = IMap({
         0: SquareSet.empty,
         1: const SquareSet.fromSquare(16).withSquare(18),
         2: SquareSet.empty,
@@ -332,7 +334,7 @@ void main() {
         13: const SquareSet.fromSquare(21).withSquare(29),
         14: const SquareSet.fromSquare(22).withSquare(30),
         15: const SquareSet.fromSquare(23).withSquare(31),
-      };
+      });
       expect(Chess.initial.legalMoves, equals(moves));
     });
 

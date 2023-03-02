@@ -20,22 +20,15 @@ void main() {
 
     final board2 = Board.standard.setPieceAt(60, piece);
     expect(board2.pieceAt(60), piece);
-    expect(
-        board2.sides,
-        equals({
-          Side.white: const SquareSet(0x100000000000FFFF),
-          Side.black: const SquareSet(0xEFFF000000000000)
-        }));
-    expect(
-        board2.roles,
-        equals({
-          Role.pawn: const SquareSet(0x00FF00000000FF00),
-          Role.knight: const SquareSet(0x4200000000000042),
-          Role.bishop: const SquareSet(0x2400000000000024),
-          Role.rook: SquareSet.corners,
-          Role.queen: const SquareSet(0x0800000000000008),
-          Role.king: const SquareSet(0x1000000000000010)
-        }));
+    expect(board2.white, const SquareSet(0x100000000000FFFF));
+
+    expect(board2.black, const SquareSet(0xEFFF000000000000));
+    expect(board2.pawns, const SquareSet(0x00FF00000000FF00));
+    expect(board2.knights, const SquareSet(0x4200000000000042));
+    expect(board2.bishops, const SquareSet(0x2400000000000024));
+    expect(board2.rooks, SquareSet.corners);
+    expect(board2.queens, const SquareSet(0x0800000000000008));
+    expect(board2.kings, const SquareSet(0x1000000000000010));
   });
 
   test('removePieceAt', () {
