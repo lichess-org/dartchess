@@ -205,12 +205,15 @@ class Board {
     return removePieceAt(square)._copyWith(
       occupied: occupied.withSquare(square),
       promoted: piece.promoted ? promoted.withSquare(square) : null,
-      sides: IMap({
-        piece.color: sides[piece.color]!.withSquare(square),
-      }),
-      roles: IMap({
+      sides: IMap.unsafe(
+        {
+          piece.color: sides[piece.color]!.withSquare(square),
+        },
+        config: const ConfigMap(),
+      ),
+      roles: IMap.unsafe({
         piece.role: roles[piece.role]!.withSquare(square),
-      }),
+      }, config: const ConfigMap()),
     );
   }
 
@@ -221,12 +224,12 @@ class Board {
         ? _copyWith(
             occupied: occupied.withoutSquare(square),
             promoted: piece.promoted ? promoted.withoutSquare(square) : null,
-            sides: IMap({
+            sides: IMap.unsafe({
               piece.color: sides[piece.color]!.withoutSquare(square),
-            }),
-            roles: IMap({
+            }, config: const ConfigMap()),
+            roles: IMap.unsafe({
               piece.role: roles[piece.role]!.withoutSquare(square),
-            }),
+            }, config: const ConfigMap()),
           )
         : this;
   }

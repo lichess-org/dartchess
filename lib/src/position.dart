@@ -1896,7 +1896,7 @@ class Castles {
     return unmovedRooks.has(square)
         ? _copyWith(
             unmovedRooks: unmovedRooks.withoutSquare(square),
-            rook: IMap({
+            rook: IMap.unsafe({
               if (square <= 7)
                 Side.white: whiteRook.item1 == square
                     ? whiteRook.withItem1(null)
@@ -1909,7 +1909,7 @@ class Castles {
                     : blackRook.item2 == square
                         ? blackRook.withItem2(null)
                         : blackRook,
-            }),
+            }, config: const ConfigMap()),
           )
         : this;
   }
@@ -1917,9 +1917,9 @@ class Castles {
   Castles discardSide(Side side) {
     return _copyWith(
       unmovedRooks: unmovedRooks.diff(SquareSet.backrankOf(side)),
-      rook: IMap({
+      rook: IMap.unsafe({
         side: const Tuple2(null, null),
-      }),
+      }, config: const ConfigMap()),
     );
   }
 
@@ -1933,16 +1933,16 @@ class Castles {
         .withoutSquare(rook);
     return _copyWith(
       unmovedRooks: unmovedRooks.withSquare(rook),
-      rook: IMap({
+      rook: IMap.unsafe({
         side: cs == CastlingSide.queen
             ? this.rook[side]!.withItem1(rook)
             : this.rook[side]!.withItem2(rook),
-      }),
-      path: IMap({
+      }, config: const ConfigMap()),
+      path: IMap.unsafe({
         side: cs == CastlingSide.queen
             ? this.path[side]!.withItem1(path)
             : this.path[side]!.withItem2(path),
-      }),
+      }, config: const ConfigMap()),
     );
   }
 
