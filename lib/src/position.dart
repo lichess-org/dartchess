@@ -1896,20 +1896,23 @@ class Castles {
     return unmovedRooks.has(square)
         ? _copyWith(
             unmovedRooks: unmovedRooks.withoutSquare(square),
-            rook: IMap.unsafe({
-              if (square <= 7)
-                Side.white: whiteRook.item1 == square
-                    ? whiteRook.withItem1(null)
-                    : whiteRook.item2 == square
-                        ? whiteRook.withItem2(null)
-                        : whiteRook,
-              if (square >= 56)
-                Side.black: blackRook.item1 == square
-                    ? blackRook.withItem1(null)
-                    : blackRook.item2 == square
-                        ? blackRook.withItem2(null)
-                        : blackRook,
-            }, config: const ConfigMap()),
+            rook: square <= 7
+                ? MapEntry(
+                    Side.white,
+                    whiteRook.item1 == square
+                        ? whiteRook.withItem1(null)
+                        : whiteRook.item2 == square
+                            ? whiteRook.withItem2(null)
+                            : whiteRook)
+                : square >= 56
+                    ? MapEntry(
+                        Side.black,
+                        blackRook.item1 == square
+                            ? blackRook.withItem1(null)
+                            : blackRook.item2 == square
+                                ? blackRook.withItem2(null)
+                                : blackRook)
+                    : null,
           )
         : this;
   }
@@ -1917,9 +1920,7 @@ class Castles {
   Castles discardSide(Side side) {
     return _copyWith(
       unmovedRooks: unmovedRooks.diff(SquareSet.backrankOf(side)),
-      rook: IMap.unsafe({
-        side: const Tuple2(null, null),
-      }, config: const ConfigMap()),
+      rook: MapEntry(side, const Tuple2(null, null)),
     );
   }
 
@@ -1933,28 +1934,28 @@ class Castles {
         .withoutSquare(rook);
     return _copyWith(
       unmovedRooks: unmovedRooks.withSquare(rook),
-      rook: IMap.unsafe({
-        side: cs == CastlingSide.queen
-            ? this.rook[side]!.withItem1(rook)
-            : this.rook[side]!.withItem2(rook),
-      }, config: const ConfigMap()),
-      path: IMap.unsafe({
-        side: cs == CastlingSide.queen
-            ? this.path[side]!.withItem1(path)
-            : this.path[side]!.withItem2(path),
-      }, config: const ConfigMap()),
+      rook: MapEntry(
+          side,
+          cs == CastlingSide.queen
+              ? this.rook[side]!.withItem1(rook)
+              : this.rook[side]!.withItem2(rook)),
+      path: MapEntry(
+          side,
+          cs == CastlingSide.queen
+              ? this.path[side]!.withItem1(path)
+              : this.path[side]!.withItem2(path)),
     );
   }
 
   Castles _copyWith({
     SquareSet? unmovedRooks,
-    BySide<Tuple2<Square?, Square?>>? rook,
-    BySide<Tuple2<SquareSet, SquareSet>>? path,
+    MapEntry<Side, Tuple2<Square?, Square?>>? rook,
+    MapEntry<Side, Tuple2<SquareSet, SquareSet>>? path,
   }) {
     return Castles(
       unmovedRooks: unmovedRooks ?? this.unmovedRooks,
-      rook: rook != null ? this.rook.addAll(rook) : this.rook,
-      path: path != null ? this.path.addAll(path) : this.path,
+      rook: rook != null ? this.rook.addEntry(rook) : this.rook,
+      path: path != null ? this.path.addEntry(path) : this.path,
     );
   }
 

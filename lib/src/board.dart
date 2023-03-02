@@ -205,15 +205,8 @@ class Board {
     return removePieceAt(square)._copyWith(
       occupied: occupied.withSquare(square),
       promoted: piece.promoted ? promoted.withSquare(square) : null,
-      sides: IMap.unsafe(
-        {
-          piece.color: sides[piece.color]!.withSquare(square),
-        },
-        config: const ConfigMap(),
-      ),
-      roles: IMap.unsafe({
-        piece.role: roles[piece.role]!.withSquare(square),
-      }, config: const ConfigMap()),
+      side: MapEntry(piece.color, sides[piece.color]!.withSquare(square)),
+      role: MapEntry(piece.role, roles[piece.role]!.withSquare(square)),
     );
   }
 
@@ -224,12 +217,10 @@ class Board {
         ? _copyWith(
             occupied: occupied.withoutSquare(square),
             promoted: piece.promoted ? promoted.withoutSquare(square) : null,
-            sides: IMap.unsafe({
-              piece.color: sides[piece.color]!.withoutSquare(square),
-            }, config: const ConfigMap()),
-            roles: IMap.unsafe({
-              piece.role: roles[piece.role]!.withoutSquare(square),
-            }, config: const ConfigMap()),
+            side: MapEntry(
+                piece.color, sides[piece.color]!.withoutSquare(square)),
+            role:
+                MapEntry(piece.role, roles[piece.role]!.withoutSquare(square)),
           )
         : this;
   }
@@ -241,14 +232,14 @@ class Board {
   Board _copyWith({
     SquareSet? occupied,
     SquareSet? promoted,
-    BySide<SquareSet>? sides,
-    ByRole<SquareSet>? roles,
+    MapEntry<Side, SquareSet>? side,
+    MapEntry<Role, SquareSet>? role,
   }) {
     return Board(
       occupied: occupied ?? this.occupied,
       promoted: promoted ?? this.promoted,
-      sides: sides != null ? this.sides.addAll(sides) : this.sides,
-      roles: roles != null ? this.roles.addAll(roles) : this.roles,
+      sides: side != null ? sides.addEntry(side) : sides,
+      roles: role != null ? roles.addEntry(role) : roles,
     );
   }
 
