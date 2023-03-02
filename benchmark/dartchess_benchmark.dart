@@ -8,11 +8,15 @@ void main() {
         File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();
 
     PgnGame.parseMultiGamePgn(data);
-  }, iterations: 1);
+  });
 
   benchmark('perft', () {
     perft(Chess.initial, 4);
   }, iterations: 1);
+
+  benchmark('make fen from initial position', () {
+    Chess.initial.fen;
+  });
 
   benchmark('parse san moves', () {
     const moves =
@@ -21,7 +25,7 @@ void main() {
     for (final san in moves.split(' ')) {
       pos = pos.play(pos.parseSan(san)!);
     }
-  }, iterations: 1);
+  });
 
   benchmark('parse san moves, play unchecked', () {
     const moves =
@@ -30,25 +34,25 @@ void main() {
     for (final san in moves.split(' ')) {
       pos = pos.playUnchecked(pos.parseSan(san)!);
     }
-  }, iterations: 1);
+  });
 
   benchmark('valid fen moves', () {
     const fen = 'rn1qkb1r/pbp2ppp/1p2p3/3n4/8/2N2NP1/PP1PPPBP/R1BQ1RK1 b kq -';
     final pos = Chess.fromSetup(Setup.parseFen(fen));
     assert(pos.legalMoves.length == 20);
-  }, iterations: 1);
+  });
 
   benchmark('algebraic legal moves', () {
     const fen = 'rn1qkb1r/pbp2ppp/1p2p3/3n4/8/2N2NP1/PP1PPPBP/R1BQ1RK1 b kq -';
     final pos = Chess.fromSetup(Setup.parseFen(fen));
     algebraicLegalMoves(pos);
-  }, iterations: 1);
+  });
 
   benchmark('play moves', () {
     const fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
     final pos = Chess.fromSetup(Setup.parseFen(fen));
     pos.play(const NormalMove(from: 12, to: 28));
-  }, iterations: 1);
+  });
 
   final pgn = [
     '[Event "Rated Bullet game"]',
@@ -78,5 +82,5 @@ void main() {
   final game = PgnGame.parsePgn(pgn);
   benchmark('makePgn', () {
     game.makePgn();
-  }, iterations: 1);
+  });
 }
