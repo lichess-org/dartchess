@@ -1,6 +1,4 @@
 import 'package:meta/meta.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart'
-    hide Tuple2;
 import './square_set.dart';
 import './models.dart';
 import './attacks.dart';
@@ -13,7 +11,12 @@ class Board {
     required this.promoted,
     required this.white,
     required this.black,
-    required this.roles,
+    required this.pawns,
+    required this.knights,
+    required this.bishops,
+    required this.rooks,
+    required this.queens,
+    required this.kings,
   });
 
   /// All occupied squares.
@@ -30,7 +33,23 @@ class Board {
   /// All squares occupied by black pieces.
   final SquareSet black;
 
-  final ByRole<SquareSet> roles;
+  /// All squares occupied by pawns.
+  final SquareSet pawns;
+
+  /// All squares occupied by knights.
+  final SquareSet knights;
+
+  /// All squares occupied by bishops.
+  final SquareSet bishops;
+
+  /// All squares occupied by rooks.
+  final SquareSet rooks;
+
+  /// All squares occupied by queens.
+  final SquareSet queens;
+
+  /// All squares occupied by kings.
+  final SquareSet kings;
 
   /// Standard chess starting position.
   static const standard = Board(
@@ -38,7 +57,12 @@ class Board {
     promoted: SquareSet.empty,
     white: SquareSet(0xffff),
     black: SquareSet(0xffff000000000000),
-    roles: _standardRoles,
+    pawns: SquareSet(0x00ff00000000ff00),
+    knights: SquareSet(0x4200000000000042),
+    bishops: SquareSet(0x2400000000000024),
+    rooks: SquareSet.corners,
+    queens: SquareSet(0x0800000000000008),
+    kings: SquareSet(0x1000000000000010),
   );
 
   static const empty = Board(
@@ -46,7 +70,12 @@ class Board {
     promoted: SquareSet.empty,
     white: SquareSet.empty,
     black: SquareSet.empty,
-    roles: _emptyRoles,
+    pawns: SquareSet.empty,
+    knights: SquareSet.empty,
+    bishops: SquareSet.empty,
+    rooks: SquareSet.empty,
+    queens: SquareSet.empty,
+    kings: SquareSet.empty,
   );
 
   /// Parse the board part of a FEN string and returns a Board.
@@ -80,24 +109,6 @@ class Board {
     if (rank != 0 || file != 8) throw const FenError('ERR_BOARD');
     return board;
   }
-
-  /// All squares occupied by pawns.
-  SquareSet get pawns => roles[Role.pawn]!;
-
-  /// All squares occupied by knights.
-  SquareSet get knights => roles[Role.knight]!;
-
-  /// All squares occupied by bishops.
-  SquareSet get bishops => roles[Role.bishop]!;
-
-  /// All squares occupied by rooks.
-  SquareSet get rooks => roles[Role.rook]!;
-
-  /// All squares occupied by queens.
-  SquareSet get queens => roles[Role.queen]!;
-
-  /// All squares occupied by kings.
-  SquareSet get kings => roles[Role.king]!;
 
   SquareSet get rooksAndQueens => rooks | queens;
   SquareSet get bishopsAndQueens => bishops | queens;
@@ -148,11 +159,26 @@ class Board {
   SquareSet bySide(Side side) => side == Side.white ? white : black;
 
   /// Gets all squares occupied by [Role].
-  SquareSet byRole(Role role) => roles[role]!;
+  SquareSet byRole(Role role) {
+    switch (role) {
+      case Role.pawn:
+        return pawns;
+      case Role.knight:
+        return knights;
+      case Role.bishop:
+        return bishops;
+      case Role.rook:
+        return rooks;
+      case Role.queen:
+        return queens;
+      case Role.king:
+        return kings;
+    }
+  }
 
   /// Gets all squares occupied by [Piece].
   SquareSet byPiece(Piece piece) {
-    return bySide(piece.color) & roles[piece.role]!;
+    return bySide(piece.color) & byRole(piece.role);
   }
 
   /// Gets the [Side] at this [Square], if any.
@@ -169,7 +195,7 @@ class Board {
   /// Gets the [Role] at this [Square], if any.
   Role? roleAt(Square square) {
     for (final role in Role.values) {
-      if (roles[role]!.has(square)) {
+      if (byRole(role).has(square)) {
         return role;
       }
     }
@@ -209,7 +235,12 @@ class Board {
       promoted: piece.promoted ? promoted.withSquare(square) : null,
       white: piece.color == Side.white ? white.withSquare(square) : null,
       black: piece.color == Side.black ? black.withSquare(square) : null,
-      role: MapEntry(piece.role, roles[piece.role]!.withSquare(square)),
+      pawns: piece.role == Role.pawn ? pawns.withSquare(square) : null,
+      knights: piece.role == Role.knight ? knights.withSquare(square) : null,
+      bishops: piece.role == Role.bishop ? bishops.withSquare(square) : null,
+      rooks: piece.role == Role.rook ? rooks.withSquare(square) : null,
+      queens: piece.role == Role.queen ? queens.withSquare(square) : null,
+      kings: piece.role == Role.king ? kings.withSquare(square) : null,
     );
   }
 
@@ -224,8 +255,17 @@ class Board {
                 piece.color == Side.white ? white.withoutSquare(square) : null,
             black:
                 piece.color == Side.black ? black.withoutSquare(square) : null,
-            role:
-                MapEntry(piece.role, roles[piece.role]!.withoutSquare(square)),
+            pawns: piece.role == Role.pawn ? pawns.withoutSquare(square) : null,
+            knights: piece.role == Role.knight
+                ? knights.withoutSquare(square)
+                : null,
+            bishops: piece.role == Role.bishop
+                ? bishops.withoutSquare(square)
+                : null,
+            rooks: piece.role == Role.rook ? rooks.withoutSquare(square) : null,
+            queens:
+                piece.role == Role.queen ? queens.withoutSquare(square) : null,
+            kings: piece.role == Role.king ? kings.withoutSquare(square) : null,
           )
         : this;
   }
@@ -239,14 +279,24 @@ class Board {
     SquareSet? promoted,
     SquareSet? white,
     SquareSet? black,
-    MapEntry<Role, SquareSet>? role,
+    SquareSet? pawns,
+    SquareSet? knights,
+    SquareSet? bishops,
+    SquareSet? rooks,
+    SquareSet? queens,
+    SquareSet? kings,
   }) {
     return Board(
       occupied: occupied ?? this.occupied,
       promoted: promoted ?? this.promoted,
       white: white ?? this.white,
       black: black ?? this.black,
-      roles: role != null ? roles.addEntry(role) : roles,
+      pawns: pawns ?? this.pawns,
+      knights: knights ?? this.knights,
+      bishops: bishops ?? this.bishops,
+      rooks: rooks ?? this.rooks,
+      queens: queens ?? this.queens,
+      kings: kings ?? this.kings,
     );
   }
 
@@ -284,21 +334,3 @@ Piece? _charToPiece(String ch, bool promoted) {
   }
   return null;
 }
-
-const ByRole<SquareSet> _standardRoles = IMapConst({
-  Role.pawn: SquareSet(0x00ff00000000ff00),
-  Role.knight: SquareSet(0x4200000000000042),
-  Role.bishop: SquareSet(0x2400000000000024),
-  Role.rook: SquareSet.corners,
-  Role.queen: SquareSet(0x0800000000000008),
-  Role.king: SquareSet(0x1000000000000010),
-});
-
-const ByRole<SquareSet> _emptyRoles = IMapConst({
-  Role.pawn: SquareSet.empty,
-  Role.knight: SquareSet.empty,
-  Role.bishop: SquareSet.empty,
-  Role.rook: SquareSet.empty,
-  Role.queen: SquareSet.empty,
-  Role.king: SquareSet.empty,
-});
