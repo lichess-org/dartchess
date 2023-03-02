@@ -38,6 +38,12 @@ void main() {
     assert(pos.legalMoves.length == 20);
   }, iterations: 1);
 
+  benchmark('algebraic legal moves', () {
+    const fen = 'rn1qkb1r/pbp2ppp/1p2p3/3n4/8/2N2NP1/PP1PPPBP/R1BQ1RK1 b kq -';
+    final pos = Chess.fromSetup(Setup.parseFen(fen));
+    algebraicLegalMoves(pos);
+  }, iterations: 1);
+
   benchmark('play moves', () {
     const fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
     final pos = Chess.fromSetup(Setup.parseFen(fen));
