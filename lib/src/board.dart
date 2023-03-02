@@ -11,7 +11,8 @@ class Board {
   const Board({
     required this.occupied,
     required this.promoted,
-    required this.sides,
+    required this.white,
+    required this.black,
     required this.roles,
   });
 
@@ -23,21 +24,28 @@ class Board {
   /// This information is relevant in chess variants like [Crazyhouse].
   final SquareSet promoted;
 
-  final BySide<SquareSet> sides;
+  /// All squares occupied by white pieces.
+  final SquareSet white;
+
+  /// All squares occupied by black pieces.
+  final SquareSet black;
+
   final ByRole<SquareSet> roles;
 
   /// Standard chess starting position.
   static const standard = Board(
     occupied: SquareSet(0xffff00000000ffff),
     promoted: SquareSet.empty,
-    sides: _standardSides,
+    white: SquareSet(0xffff),
+    black: SquareSet(0xffff000000000000),
     roles: _standardRoles,
   );
 
   static const empty = Board(
     occupied: SquareSet.empty,
     promoted: SquareSet.empty,
-    sides: _emptySides,
+    white: SquareSet.empty,
+    black: SquareSet.empty,
     roles: _emptyRoles,
   );
 
@@ -72,12 +80,6 @@ class Board {
     if (rank != 0 || file != 8) throw const FenError('ERR_BOARD');
     return board;
   }
-
-  /// All squares occupied by white pieces.
-  SquareSet get white => sides[Side.white]!;
-
-  /// All squares occupied by black pieces.
-  SquareSet get black => sides[Side.black]!;
 
   /// All squares occupied by pawns.
   SquareSet get pawns => roles[Role.pawn]!;
@@ -143,21 +145,21 @@ class Board {
   }
 
   /// Gets all squares occupied by [Side].
-  SquareSet bySide(Side side) => sides[side]!;
+  SquareSet bySide(Side side) => side == Side.white ? white : black;
 
   /// Gets all squares occupied by [Role].
   SquareSet byRole(Role role) => roles[role]!;
 
   /// Gets all squares occupied by [Piece].
   SquareSet byPiece(Piece piece) {
-    return sides[piece.color]! & roles[piece.role]!;
+    return bySide(piece.color) & roles[piece.role]!;
   }
 
   /// Gets the [Side] at this [Square], if any.
   Side? sideAt(Square square) {
-    if (sides[Side.white]!.has(square)) {
+    if (bySide(Side.white).has(square)) {
       return Side.white;
-    } else if (sides[Side.black]!.has(square)) {
+    } else if (bySide(Side.black).has(square)) {
       return Side.black;
     } else {
       return null;
@@ -205,7 +207,8 @@ class Board {
     return removePieceAt(square)._copyWith(
       occupied: occupied.withSquare(square),
       promoted: piece.promoted ? promoted.withSquare(square) : null,
-      side: MapEntry(piece.color, sides[piece.color]!.withSquare(square)),
+      white: piece.color == Side.white ? white.withSquare(square) : null,
+      black: piece.color == Side.black ? black.withSquare(square) : null,
       role: MapEntry(piece.role, roles[piece.role]!.withSquare(square)),
     );
   }
@@ -217,8 +220,10 @@ class Board {
         ? _copyWith(
             occupied: occupied.withoutSquare(square),
             promoted: piece.promoted ? promoted.withoutSquare(square) : null,
-            side: MapEntry(
-                piece.color, sides[piece.color]!.withoutSquare(square)),
+            white:
+                piece.color == Side.white ? white.withoutSquare(square) : null,
+            black:
+                piece.color == Side.black ? black.withoutSquare(square) : null,
             role:
                 MapEntry(piece.role, roles[piece.role]!.withoutSquare(square)),
           )
@@ -232,13 +237,15 @@ class Board {
   Board _copyWith({
     SquareSet? occupied,
     SquareSet? promoted,
-    MapEntry<Side, SquareSet>? side,
+    SquareSet? white,
+    SquareSet? black,
     MapEntry<Role, SquareSet>? role,
   }) {
     return Board(
       occupied: occupied ?? this.occupied,
       promoted: promoted ?? this.promoted,
-      sides: side != null ? sides.addEntry(side) : sides,
+      white: white ?? this.white,
+      black: black ?? this.black,
       roles: role != null ? roles.addEntry(role) : roles,
     );
   }
@@ -278,11 +285,6 @@ Piece? _charToPiece(String ch, bool promoted) {
   return null;
 }
 
-const BySide<SquareSet> _standardSides = IMapConst({
-  Side.white: SquareSet(0xffff),
-  Side.black: SquareSet(0xffff000000000000),
-});
-
 const ByRole<SquareSet> _standardRoles = IMapConst({
   Role.pawn: SquareSet(0x00ff00000000ff00),
   Role.knight: SquareSet(0x4200000000000042),
@@ -290,11 +292,6 @@ const ByRole<SquareSet> _standardRoles = IMapConst({
   Role.rook: SquareSet.corners,
   Role.queen: SquareSet(0x0800000000000008),
   Role.king: SquareSet(0x1000000000000010),
-});
-
-const BySide<SquareSet> _emptySides = IMapConst({
-  Side.white: SquareSet.empty,
-  Side.black: SquareSet.empty,
 });
 
 const ByRole<SquareSet> _emptyRoles = IMapConst({

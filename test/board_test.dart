@@ -22,12 +22,9 @@ void main() {
 
     final board2 = Board.standard.setPieceAt(60, piece);
     expect(board2.pieceAt(60), piece);
-    expect(
-        board2.sides,
-        equals(IMap(const {
-          Side.white: SquareSet(0x100000000000FFFF),
-          Side.black: SquareSet(0xEFFF000000000000)
-        })));
+    expect(board2.white, const SquareSet(0x100000000000FFFF));
+
+    expect(board2.black, const SquareSet(0xEFFF000000000000));
     expect(
         board2.roles,
         equals(IMap(const {
