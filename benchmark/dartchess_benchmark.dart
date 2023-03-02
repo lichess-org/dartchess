@@ -11,11 +11,17 @@ void main() {
   });
 
   benchmark('perft', () {
-    perft(Chess.initial, 4);
+    perft(Chess.initial, 5);
   }, iterations: 1);
 
   benchmark('make fen from initial position', () {
     Chess.initial.fen;
+  });
+
+  final randomPos = Chess.fromSetup(
+      Setup.parseFen('6k1/pp4pp/1np2r2/3pr3/3N4/5P2/1PP3PP/2KRR3 b - - 3 20'));
+  benchmark('make fen from random position', () {
+    randomPos.fen;
   });
 
   benchmark('parse san moves', () {
@@ -36,22 +42,14 @@ void main() {
     }
   });
 
+  final legalMovesPos = Chess.fromSetup(Setup.parseFen(
+      'rn1qkb1r/pbp2ppp/1p2p3/3n4/8/2N2NP1/PP1PPPBP/R1BQ1RK1 b kq -'));
   benchmark('valid fen moves', () {
-    const fen = 'rn1qkb1r/pbp2ppp/1p2p3/3n4/8/2N2NP1/PP1PPPBP/R1BQ1RK1 b kq -';
-    final pos = Chess.fromSetup(Setup.parseFen(fen));
-    assert(pos.legalMoves.length == 20);
+    legalMovesPos.legalMoves.length;
   });
 
   benchmark('algebraic legal moves', () {
-    const fen = 'rn1qkb1r/pbp2ppp/1p2p3/3n4/8/2N2NP1/PP1PPPBP/R1BQ1RK1 b kq -';
-    final pos = Chess.fromSetup(Setup.parseFen(fen));
-    algebraicLegalMoves(pos);
-  });
-
-  benchmark('play moves', () {
-    const fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
-    final pos = Chess.fromSetup(Setup.parseFen(fen));
-    pos.play(const NormalMove(from: 12, to: 28));
+    algebraicLegalMoves(legalMovesPos);
   });
 
   final pgn = [
