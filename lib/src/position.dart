@@ -1765,9 +1765,9 @@ class RacingKings extends Position<RacingKings> {
   }
 
   bool get blackInGoal =>
-      !board.black.intersect(goal).intersect(board.kings).isEmpty;
+      board.black.intersect(goal).intersect(board.kings).isNotEmpty;
   bool get whiteInGoal =>
-      !board.white.intersect(goal).intersect(board.kings).isEmpty;
+      board.white.intersect(goal).intersect(board.kings).isNotEmpty;
 
   @override
   SquareSet _legalMovesOf(Square square, {_Context? context}) =>
@@ -1816,8 +1816,8 @@ class RacingKings extends Position<RacingKings> {
     final pos = RacingKings(
       board: setup.board,
       turn: setup.turn,
-      castles: Castles.fromSetup(setup),
-      epSquare: _validEpSquare(setup),
+      castles: null,
+      epSquare: null,
       halfmoves: setup.halfmoves,
       fullmoves: setup.fullmoves,
     );
@@ -1838,8 +1838,7 @@ class RacingKings extends Position<RacingKings> {
   }
 
   @override
-  bool hasInsufficientMaterial(Side side) =>
-      board.piecesOf(side, Role.king) == board.bySide(side);
+  bool hasInsufficientMaterial(Side side) => false;
 
   @override
   RacingKings playUnchecked(Move move) =>
