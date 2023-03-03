@@ -1,4 +1,6 @@
 import 'package:meta/meta.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart'
+    hide Tuple2;
 import 'dart:math' as math;
 import './square_set.dart';
 import './models.dart';
@@ -216,24 +218,7 @@ class Pockets {
   final BySide<ByRole<int>> value;
 
   /// An empty pocket.
-  static const empty = Pockets(value: {
-    Side.white: {
-      Role.pawn: 0,
-      Role.knight: 0,
-      Role.bishop: 0,
-      Role.rook: 0,
-      Role.queen: 0,
-      Role.king: 0,
-    },
-    Side.black: {
-      Role.pawn: 0,
-      Role.knight: 0,
-      Role.bishop: 0,
-      Role.rook: 0,
-      Role.queen: 0,
-      Role.king: 0,
-    },
-  });
+  static const empty = Pockets(value: _emptyPocketsBySide);
 
   /// Gets the total number of pieces in the pocket.
   int get size => value.values
@@ -266,26 +251,14 @@ class Pockets {
 
   /// Increments the number of pieces in the pocket of that [Side] and [Role].
   Pockets increment(Side side, Role role) {
-    return Pockets(
-        value: Map.unmodifiable({
-      ...value,
-      side: {
-        ...value[side]!,
-        role: of(side, role) + 1,
-      },
-    }));
+    final newPocket = value[side]!.add(role, of(side, role) + 1);
+    return Pockets(value: value.add(side, newPocket));
   }
 
   /// Decrements the number of pieces in the pocket of that [Side] and [Role].
   Pockets decrement(Side side, Role role) {
-    return Pockets(
-        value: Map.unmodifiable({
-      ...value,
-      side: {
-        ...value[side]!,
-        role: of(side, role) - 1,
-      },
-    }));
+    final newPocket = value[side]!.add(role, of(side, role) - 1);
+    return Pockets(value: value.add(side, newPocket));
   }
 
   @override
@@ -439,3 +412,17 @@ int _nthIndexOf(String haystack, String needle, int nth) {
   }
   return index;
 }
+
+const ByRole<int> _emptyPocket = IMapConst({
+  Role.pawn: 0,
+  Role.knight: 0,
+  Role.bishop: 0,
+  Role.rook: 0,
+  Role.queen: 0,
+  Role.king: 0,
+});
+
+const BySide<ByRole<int>> _emptyPocketsBySide = IMapConst({
+  Side.white: _emptyPocket,
+  Side.black: _emptyPocket,
+});

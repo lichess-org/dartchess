@@ -1,5 +1,7 @@
 import 'package:meta/meta.dart';
 import 'dart:math' as math;
+import 'package:fast_immutable_collections/fast_immutable_collections.dart'
+    hide Tuple2;
 import './constants.dart';
 import './square_set.dart';
 import './attacks.dart';
@@ -192,10 +194,10 @@ abstract class Position<T extends Position<T>> {
   }
 
   /// Gets all the legal moves of this position.
-  Map<Square, SquareSet> get legalMoves {
+  IMap<Square, SquareSet> get legalMoves {
     final context = _makeContext();
-    if (context.isVariantEnd) return Map.unmodifiable({});
-    return Map.unmodifiable({
+    if (context.isVariantEnd) return IMap(const {});
+    return IMap({
       for (final s in board.bySide(turn).squares)
         s: _legalMovesOf(s, context: context)
     });
@@ -539,7 +541,7 @@ abstract class Position<T extends Position<T>> {
               : san;
       return Tuple2(newPos, suffixed);
     } else {
-      throw const PlayError('Invalid move');
+      throw PlayError('Invalid move $move');
     }
   }
 
@@ -550,7 +552,7 @@ abstract class Position<T extends Position<T>> {
     if (isLegal(move)) {
       return playUnchecked(move);
     } else {
-      throw const PlayError('Invalid move');
+      throw PlayError('Invalid move $move');
     }
   }
 
@@ -679,7 +681,7 @@ abstract class Position<T extends Position<T>> {
 
   @override
   String toString() {
-    return '${T.toString()}(board: $board, turn: $turn, castles: $castles, halfmoves: $halfmoves, fullmoves: $fullmoves)';
+    return '$T(board: $board, turn: $turn, castles: $castles, halfmoves: $halfmoves, fullmoves: $fullmoves)';
   }
 
   @override
@@ -1993,22 +1995,14 @@ class Castles {
 
   static const standard = Castles(
     unmovedRooks: SquareSet.corners,
-    rook: {Side.white: Tuple2(0, 7), Side.black: Tuple2(56, 63)},
-    path: {
-      Side.white:
-          Tuple2(SquareSet(0x000000000000000e), SquareSet(0x0000000000000060)),
-      Side.black:
-          Tuple2(SquareSet(0x0e00000000000000), SquareSet(0x6000000000000000))
-    },
+    rook: _standardCastleRook,
+    path: _standardCastlePath,
   );
 
   static const empty = Castles(
     unmovedRooks: SquareSet.empty,
-    rook: {Side.white: Tuple2(null, null), Side.black: Tuple2(null, null)},
-    path: {
-      Side.white: Tuple2(SquareSet.empty, SquareSet.empty),
-      Side.black: Tuple2(SquareSet.empty, SquareSet.empty)
-    },
+    rook: _emptyCastleRook,
+    path: _emptyCastlePath,
   );
 
   factory Castles.fromSetup(Setup setup) {
@@ -2048,20 +2042,23 @@ class Castles {
     return unmovedRooks.has(square)
         ? _copyWith(
             unmovedRooks: unmovedRooks.withoutSquare(square),
-            rook: {
-              if (square <= 7)
-                Side.white: whiteRook.item1 == square
-                    ? whiteRook.withItem1(null)
-                    : whiteRook.item2 == square
-                        ? whiteRook.withItem2(null)
-                        : whiteRook,
-              if (square >= 56)
-                Side.black: blackRook.item1 == square
-                    ? blackRook.withItem1(null)
-                    : blackRook.item2 == square
-                        ? blackRook.withItem2(null)
-                        : blackRook,
-            },
+            rook: square <= 7
+                ? MapEntry(
+                    Side.white,
+                    whiteRook.item1 == square
+                        ? whiteRook.withItem1(null)
+                        : whiteRook.item2 == square
+                            ? whiteRook.withItem2(null)
+                            : whiteRook)
+                : square >= 56
+                    ? MapEntry(
+                        Side.black,
+                        blackRook.item1 == square
+                            ? blackRook.withItem1(null)
+                            : blackRook.item2 == square
+                                ? blackRook.withItem2(null)
+                                : blackRook)
+                    : null,
           )
         : this;
   }
@@ -2069,9 +2066,7 @@ class Castles {
   Castles discardSide(Side side) {
     return _copyWith(
       unmovedRooks: unmovedRooks.diff(SquareSet.backrankOf(side)),
-      rook: {
-        side: const Tuple2(null, null),
-      },
+      rook: MapEntry(side, const Tuple2(null, null)),
     );
   }
 
@@ -2085,36 +2080,34 @@ class Castles {
         .withoutSquare(rook);
     return _copyWith(
       unmovedRooks: unmovedRooks.withSquare(rook),
-      rook: {
-        side: cs == CastlingSide.queen
-            ? this.rook[side]!.withItem1(rook)
-            : this.rook[side]!.withItem2(rook),
-      },
-      path: {
-        side: cs == CastlingSide.queen
-            ? this.path[side]!.withItem1(path)
-            : this.path[side]!.withItem2(path),
-      },
+      rook: MapEntry(
+          side,
+          cs == CastlingSide.queen
+              ? this.rook[side]!.withItem1(rook)
+              : this.rook[side]!.withItem2(rook)),
+      path: MapEntry(
+          side,
+          cs == CastlingSide.queen
+              ? this.path[side]!.withItem1(path)
+              : this.path[side]!.withItem2(path)),
     );
   }
 
   Castles _copyWith({
     SquareSet? unmovedRooks,
-    BySide<Tuple2<Square?, Square?>>? rook,
-    BySide<Tuple2<SquareSet, SquareSet>>? path,
+    MapEntry<Side, Tuple2<Square?, Square?>>? rook,
+    MapEntry<Side, Tuple2<SquareSet, SquareSet>>? path,
   }) {
     return Castles(
       unmovedRooks: unmovedRooks ?? this.unmovedRooks,
-      rook:
-          rook != null ? Map.unmodifiable({...this.rook, ...rook}) : this.rook,
-      path:
-          path != null ? Map.unmodifiable({...this.path, ...path}) : this.path,
+      rook: rook != null ? this.rook.addEntry(rook) : this.rook,
+      path: path != null ? this.path.addEntry(path) : this.path,
     );
   }
 
   @override
   String toString() =>
-      'Castles(unmovedRooks: $unmovedRooks, rook: $rook, path: $path)';
+      'Castles(unmovedRooks: $unmovedRooks, rook: ${rook.unlockView}, path: ${path.unlockView})';
 
   @override
   bool operator ==(Object other) =>
@@ -2229,3 +2222,21 @@ SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
     return pseudo;
   }
 }
+
+const BySide<Tuple2<Square?, Square?>> _standardCastleRook =
+    IMapConst({Side.white: Tuple2(0, 7), Side.black: Tuple2(56, 63)});
+
+const BySide<Tuple2<SquareSet, SquareSet>> _standardCastlePath = IMapConst({
+  Side.white:
+      Tuple2(SquareSet(0x000000000000000e), SquareSet(0x0000000000000060)),
+  Side.black:
+      Tuple2(SquareSet(0x0e00000000000000), SquareSet(0x6000000000000000))
+});
+
+const BySide<Tuple2<Square?, Square?>> _emptyCastleRook =
+    IMapConst({Side.white: Tuple2(null, null), Side.black: Tuple2(null, null)});
+
+const BySide<Tuple2<SquareSet, SquareSet>> _emptyCastlePath = IMapConst({
+  Side.white: Tuple2(SquareSet.empty, SquareSet.empty),
+  Side.black: Tuple2(SquareSet.empty, SquareSet.empty)
+});

@@ -1,3 +1,5 @@
+import 'package:fast_immutable_collections/fast_immutable_collections.dart'
+    hide Tuple2;
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
@@ -29,6 +31,6 @@ void main() {
     final pos = Chess.fromSetup(Setup.parseFen(
         'rk2r3/pppbnppp/3p2n1/P2Pp3/4P2q/R5NP/1PP2PP1/1KNQRB2 b Kkq - 0 1'));
     expect(algebraicLegalMoves(pos, isChess960: true)['b8'],
-        equals({'a8', 'c8', 'e8'}));
+        equals(ISet(const {'a8', 'c8', 'e8'})));
   });
 }

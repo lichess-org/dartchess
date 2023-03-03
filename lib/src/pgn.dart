@@ -177,7 +177,7 @@ class PgnGame<T> {
           inVariation: false));
     }
 
-    var forceMoveNumber = true;
+    bool forceMoveNumber = true;
     while (stack.isNotEmpty) {
       final frame = stack[stack.length - 1];
 
@@ -362,9 +362,8 @@ class PgnChildNode<T> extends PgnNode<T> {
   T data;
 }
 
-@immutable
-
 /// Used to return result in the callback of [PgnNode.transform].
+@immutable
 class TransformResult<C, T> {
   const TransformResult(this.ctx, this.data);
   final C ctx;
