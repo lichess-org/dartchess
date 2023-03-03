@@ -26,6 +26,12 @@ class SquareSet {
       : value = 1 << square,
         assert(square >= 0 && square < 64);
 
+  /// Creates a [SquareSet] from several [Square]s.
+  SquareSet.fromSquares(Iterable<Square> squares)
+      : value = squares
+            .map((square) => 1 << square)
+            .fold(0, (left, right) => left | right);
+
   /// Create a [SquareSet] containing all squares of the given rank.
   const SquareSet.fromRank(int rank)
       : value = 0xff << (8 * rank),

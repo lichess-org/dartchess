@@ -1269,6 +1269,30 @@ void main() {
       expect(position.isVariantEnd, false);
       expect(position.variantOutcome, null);
     });
+
+    test('perft', () {
+      for (final test in [
+        // Start position
+        [
+          '8/8/8/8/8/8/krbnNBRK/qrbnNBRQ w - -',
+          21,
+          421,
+          11264,
+        ],
+        // Occupied goal
+        [
+          '4brn1/2K2k2/8/8/8/8/8/8 w - -',
+          6,
+          33,
+          178,
+        ],
+      ]) {
+        final position = RacingKings.fromSetup(Setup.parseFen(test[0] as String));
+        expect(perft(position, 1), test[1]);
+        expect(perft(position, 2), test[2]);
+        expect(perft(position, 3), test[3]);
+      }
+    });
   });
 
   group('Three check', () {

@@ -1770,6 +1770,18 @@ class RacingKings extends Position<RacingKings> {
       !board.white.intersect(goal).intersect(board.kings).isEmpty;
 
   @override
+  SquareSet _legalMovesOf(Square square, {_Context? context}) =>
+      SquareSet.fromSquares(super
+          ._legalMovesOf(square, context: context)
+          .squares
+          .where((to) =>
+              !playUnchecked(NormalMove(from: square, to: to)).isCheck));
+
+  @override
+  bool isLegal(Move move) =>
+      !playUnchecked(move).isCheck && super.isLegal(move);
+
+  @override
   bool get isVariantEnd {
     if (!whiteInGoal && !blackInGoal) {
       return false;
