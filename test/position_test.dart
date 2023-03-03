@@ -1289,7 +1289,8 @@ void main() {
           178,
         ],
       ]) {
-        final position = RacingKings.fromSetup(Setup.parseFen(test[0] as String));
+        final position =
+            RacingKings.fromSetup(Setup.parseFen(test[0] as String));
         expect(perft(position, 1), test[1]);
         expect(perft(position, 2), test[2]);
         expect(perft(position, 3), test[3]);
