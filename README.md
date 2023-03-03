@@ -2,6 +2,7 @@ Dart chess library for native platforms (does not support web).
 
 ## Features
 
+- Completely immutable Position class
 - Read and write FEN
 - Read and write SAN
 - Chess rules:
