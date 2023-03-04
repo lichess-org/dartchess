@@ -1741,7 +1741,7 @@ class RacingKings extends Position<RacingKings> {
             board: Board.racingKings,
             pockets: null,
             turn: Side.white,
-            castles: Castles.standard,
+            castles: Castles.empty,
             epSquare: null,
             halfmoves: 0,
             fullmoves: 1);
