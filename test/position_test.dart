@@ -525,8 +525,8 @@ void main() {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqk1nr/pppp1pbp/2n1p1p1/8/2B1P3/1P3N2/P1PP1PPP/RNBQK2R b KQkq - 4 4'))
             .play(const NormalMove(from: 54, to: 0));
-        expect(pos.castles.whiteRookQueenSide, isNull);
-        expect(pos.castles.whiteRookKingSide, Squares.h1);
+        expect(pos.castles.rookOf(Side.white, CastlingSide.queen), isNull);
+        expect(pos.castles.rookOf(Side.white, CastlingSide.king), Squares.h1);
         expect(pos.castles.unmovedRooks.has(0), false);
       });
 
@@ -561,8 +561,8 @@ void main() {
         expect(
             pos.castles.unmovedRooks.isIntersected(const SquareSet.fromRank(0)),
             false);
-        expect(pos.castles.whiteRookKingSide, isNull);
-        expect(pos.castles.whiteRookQueenSide, isNull);
+        expect(pos.castles.rookOf(Side.white, CastlingSide.king), isNull);
+        expect(pos.castles.rookOf(Side.white, CastlingSide.queen), isNull);
       });
 
       test('castling moves', () {

@@ -1827,41 +1827,33 @@ class Castles {
   /// SquareSet of rooks that have not moved yet.
   final SquareSet unmovedRooks;
 
-  /// White rook queen side position.
-  final Square? whiteRookQueenSide;
-
-  /// White rook king side position.
-  final Square? whiteRookKingSide;
-
-  /// Black rook queen side position.
-  final Square? blackRookQueenSide;
-
-  /// Black rook king side position.
-  final Square? blackRookKingSide;
-
-  /// Squares between the white king and queen side rook.
-  final SquareSet whitePathQueenSide;
-
-  /// Squares between the white king and king side rook.
-  final SquareSet whitePathKingSide;
-
-  /// Squares between the black king and queen side rook.
-  final SquareSet blackPathQueenSide;
-
-  /// Squares between the black king and king side rook.
-  final SquareSet blackPathKingSide;
+  final Square? _whiteRookQueenSide;
+  final Square? _whiteRookKingSide;
+  final Square? _blackRookQueenSide;
+  final Square? _blackRookKingSide;
+  final SquareSet _whitePathQueenSide;
+  final SquareSet _whitePathKingSide;
+  final SquareSet _blackPathQueenSide;
+  final SquareSet _blackPathKingSide;
 
   const Castles({
     required this.unmovedRooks,
-    required this.whiteRookQueenSide,
-    required this.whiteRookKingSide,
-    required this.blackRookQueenSide,
-    required this.blackRookKingSide,
-    required this.whitePathQueenSide,
-    required this.whitePathKingSide,
-    required this.blackPathQueenSide,
-    required this.blackPathKingSide,
-  });
+    required Square? whiteRookQueenSide,
+    required Square? whiteRookKingSide,
+    required Square? blackRookQueenSide,
+    required Square? blackRookKingSide,
+    required SquareSet whitePathQueenSide,
+    required SquareSet whitePathKingSide,
+    required SquareSet blackPathQueenSide,
+    required SquareSet blackPathKingSide,
+  })  : _whiteRookQueenSide = whiteRookQueenSide,
+        _whiteRookKingSide = whiteRookKingSide,
+        _blackRookQueenSide = blackRookQueenSide,
+        _blackRookKingSide = blackRookKingSide,
+        _whitePathQueenSide = whitePathQueenSide,
+        _whitePathKingSide = whitePathKingSide,
+        _blackPathQueenSide = blackPathQueenSide,
+        _blackPathKingSide = blackPathKingSide;
 
   static const standard = Castles(
     unmovedRooks: SquareSet.corners,
@@ -1911,12 +1903,12 @@ class Castles {
   BySide<ByCastlingSide<Square?>> get rooksPositions {
     return BySide({
       Side.white: ByCastlingSide({
-        CastlingSide.queen: whiteRookQueenSide,
-        CastlingSide.king: whiteRookKingSide,
+        CastlingSide.queen: _whiteRookQueenSide,
+        CastlingSide.king: _whiteRookKingSide,
       }),
       Side.black: ByCastlingSide({
-        CastlingSide.queen: blackRookQueenSide,
-        CastlingSide.king: blackRookKingSide,
+        CastlingSide.queen: _blackRookQueenSide,
+        CastlingSide.king: _blackRookKingSide,
       }),
     });
   }
@@ -1925,12 +1917,12 @@ class Castles {
   BySide<ByCastlingSide<SquareSet>> get paths {
     return BySide({
       Side.white: ByCastlingSide({
-        CastlingSide.queen: whitePathQueenSide,
-        CastlingSide.king: whitePathKingSide,
+        CastlingSide.queen: _whitePathQueenSide,
+        CastlingSide.king: _whitePathKingSide,
       }),
       Side.black: ByCastlingSide({
-        CastlingSide.queen: blackPathQueenSide,
-        CastlingSide.king: blackPathKingSide,
+        CastlingSide.queen: _blackPathQueenSide,
+        CastlingSide.king: _blackPathKingSide,
       }),
     });
   }
@@ -1938,11 +1930,11 @@ class Castles {
   /// Gets the rook [Square] by side and castling side.
   Square? rookOf(Side side, CastlingSide cs) => cs == CastlingSide.queen
       ? side == Side.white
-          ? whiteRookQueenSide
-          : blackRookQueenSide
+          ? _whiteRookQueenSide
+          : _blackRookQueenSide
       : side == Side.white
-          ? whiteRookKingSide
-          : blackRookKingSide;
+          ? _whiteRookKingSide
+          : _blackRookKingSide;
 
   /// Gets the squares that need to be empty so that castling is possible
   /// on the given side.
@@ -1950,19 +1942,21 @@ class Castles {
   /// We're assuming the player still has the required castling rigths.
   SquareSet pathOf(Side side, CastlingSide cs) => cs == CastlingSide.queen
       ? side == Side.white
-          ? whitePathQueenSide
-          : blackPathQueenSide
+          ? _whitePathQueenSide
+          : _blackPathQueenSide
       : side == Side.white
-          ? whitePathKingSide
-          : blackPathKingSide;
+          ? _whitePathKingSide
+          : _blackPathKingSide;
 
   Castles discardRookAt(Square square) {
     return _copyWith(
       unmovedRooks: unmovedRooks.withoutSquare(square),
-      whiteRookQueenSide: whiteRookQueenSide == square ? const Box(null) : null,
-      whiteRookKingSide: whiteRookKingSide == square ? const Box(null) : null,
-      blackRookQueenSide: blackRookQueenSide == square ? const Box(null) : null,
-      blackRookKingSide: blackRookKingSide == square ? const Box(null) : null,
+      whiteRookQueenSide:
+          _whiteRookQueenSide == square ? const Box(null) : null,
+      whiteRookKingSide: _whiteRookKingSide == square ? const Box(null) : null,
+      blackRookQueenSide:
+          _blackRookQueenSide == square ? const Box(null) : null,
+      blackRookKingSide: _blackRookKingSide == square ? const Box(null) : null,
     );
   }
 
@@ -2020,20 +2014,20 @@ class Castles {
       unmovedRooks: unmovedRooks ?? this.unmovedRooks,
       whiteRookQueenSide: whiteRookQueenSide != null
           ? whiteRookQueenSide.value
-          : this.whiteRookQueenSide,
+          : _whiteRookQueenSide,
       whiteRookKingSide: whiteRookKingSide != null
           ? whiteRookKingSide.value
-          : this.whiteRookKingSide,
+          : _whiteRookKingSide,
       blackRookQueenSide: blackRookQueenSide != null
           ? blackRookQueenSide.value
-          : this.blackRookQueenSide,
+          : _blackRookQueenSide,
       blackRookKingSide: blackRookKingSide != null
           ? blackRookKingSide.value
-          : this.blackRookKingSide,
-      whitePathQueenSide: whitePathQueenSide ?? this.whitePathQueenSide,
-      whitePathKingSide: whitePathKingSide ?? this.whitePathKingSide,
-      blackPathQueenSide: blackPathQueenSide ?? this.blackPathQueenSide,
-      blackPathKingSide: blackPathKingSide ?? this.blackPathKingSide,
+          : _blackRookKingSide,
+      whitePathQueenSide: whitePathQueenSide ?? _whitePathQueenSide,
+      whitePathKingSide: whitePathKingSide ?? _whitePathKingSide,
+      blackPathQueenSide: blackPathQueenSide ?? _blackPathQueenSide,
+      blackPathKingSide: blackPathKingSide ?? _blackPathKingSide,
     );
   }
 
@@ -2047,18 +2041,26 @@ class Castles {
       identical(this, other) ||
       other is Castles &&
           other.unmovedRooks == unmovedRooks &&
-          other.whiteRookQueenSide == whiteRookQueenSide &&
-          other.whiteRookKingSide == whiteRookKingSide &&
-          other.blackRookQueenSide == blackRookQueenSide &&
-          other.blackRookKingSide == blackRookKingSide &&
-          other.whitePathQueenSide == whitePathQueenSide &&
-          other.whitePathKingSide == whitePathKingSide &&
-          other.blackPathQueenSide == blackPathQueenSide &&
-          other.blackPathKingSide == blackPathKingSide;
+          other._whiteRookQueenSide == _whiteRookQueenSide &&
+          other._whiteRookKingSide == _whiteRookKingSide &&
+          other._blackRookQueenSide == _blackRookQueenSide &&
+          other._blackRookKingSide == _blackRookKingSide &&
+          other._whitePathQueenSide == _whitePathQueenSide &&
+          other._whitePathKingSide == _whitePathKingSide &&
+          other._blackPathQueenSide == _blackPathQueenSide &&
+          other._blackPathKingSide == _blackPathKingSide;
 
   @override
-  int get hashCode => Object.hash(unmovedRooks, whiteRookQueenSide,
-      whiteRookKingSide, blackRookQueenSide, blackRookKingSide);
+  int get hashCode => Object.hash(
+      unmovedRooks,
+      _whiteRookQueenSide,
+      _whiteRookKingSide,
+      _blackRookQueenSide,
+      _blackRookKingSide,
+      _whitePathQueenSide,
+      _whitePathKingSide,
+      _blackPathQueenSide,
+      _blackPathKingSide);
 }
 
 @immutable
