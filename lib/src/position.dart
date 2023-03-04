@@ -316,11 +316,11 @@ abstract class Position<T extends Position<T>> {
       Move? move;
       if (turn == Side.white) {
         // Castle the king from e1 to g1
-        move = const NormalMove(from: 4, to: 6);
+        move = const NormalMove(from: Squares.e1, to: Squares.g1);
       }
       if (turn == Side.black) {
         // Castle the king from e8 to g8
-        move = const NormalMove(from: 60, to: 62);
+        move = const NormalMove(from: Squares.e8, to: Squares.g8);
       }
       if (!isLegal(move!)) {
         return null;
@@ -331,11 +331,11 @@ abstract class Position<T extends Position<T>> {
       Move? move;
       if (turn == Side.white) {
         // Castle the king from e1 to c1
-        move = const NormalMove(from: 4, to: 2);
+        move = const NormalMove(from: Squares.e1, to: Squares.c1);
       }
       if (turn == Side.black) {
         // Castle the king from e8 to c8
-        move = const NormalMove(from: 60, to: 58);
+        move = const NormalMove(from: Squares.e8, to: Squares.c8);
       }
       if (!isLegal(move!)) {
         return null;
@@ -2098,18 +2098,18 @@ class _Context {
 
 Square _rookCastlesTo(Side side, CastlingSide cs) {
   return side == Side.white
-      ? (cs == CastlingSide.queen ? 3 : 5)
+      ? (cs == CastlingSide.queen ? Squares.d1 : Squares.f1)
       : cs == CastlingSide.queen
-          ? 59
-          : 61;
+          ? Squares.d8
+          : Squares.f8;
 }
 
 Square _kingCastlesTo(Side side, CastlingSide cs) {
   return side == Side.white
-      ? (cs == CastlingSide.queen ? 2 : 6)
+      ? (cs == CastlingSide.queen ? Squares.c1 : Squares.g1)
       : cs == CastlingSide.queen
-          ? 58
-          : 62;
+          ? Squares.c8
+          : Squares.g8;
 }
 
 Square? _validEpSquare(Setup setup) {
