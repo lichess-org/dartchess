@@ -263,27 +263,11 @@ class Pockets {
 
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (other is Pockets) {
-      bool sameVal = true;
-      for (final c in Side.values) {
-        for (final r in Role.values) {
-          sameVal = other.value[c]![r] == value[c]![r];
-          if (!sameVal) break;
-        }
-      }
-      return sameVal;
-    }
-    return false;
+    return identical(this, other) || other is Pockets && other.value == value;
   }
 
   @override
-  int get hashCode => Object.hashAll([
-        for (final c in Side.values)
-          for (final r in Role.values) value[c]![r]
-      ]);
+  int get hashCode => value.hashCode;
 }
 
 Pockets _parsePockets(String pocketPart) {
