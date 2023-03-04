@@ -1822,41 +1822,69 @@ class PositionError implements Exception {
   String toString() => 'PositionError(${cause.name})';
 }
 
-enum CastlingSide {
-  queen,
-  king;
-}
-
 @immutable
 class Castles {
+  /// SquareSet of rooks that have not moved yet.
   final SquareSet unmovedRooks;
 
-  /// Rooks positions pair.
-  ///
-  /// First item is queen side, second is king side.
-  final BySide<Tuple2<Square?, Square?>> rook;
+  /// White rook queen side position.
+  final Square? whiteRookQueenSide;
 
-  /// Squares between the white king and rooks.
-  ///
-  /// First item is queen side, second is king side.
-  final BySide<Tuple2<SquareSet, SquareSet>> path;
+  /// White rook king side position.
+  final Square? whiteRookKingSide;
+
+  /// Black rook queen side position.
+  final Square? blackRookQueenSide;
+
+  /// Black rook king side position.
+  final Square? blackRookKingSide;
+
+  /// Squares between the white king and queen side rook.
+  final SquareSet whitePathQueenSide;
+
+  /// Squares between the white king and king side rook.
+  final SquareSet whitePathKingSide;
+
+  /// Squares between the black king and queen side rook.
+  final SquareSet blackPathQueenSide;
+
+  /// Squares between the black king and king side rook.
+  final SquareSet blackPathKingSide;
 
   const Castles({
     required this.unmovedRooks,
-    required this.rook,
-    required this.path,
+    required this.whiteRookQueenSide,
+    required this.whiteRookKingSide,
+    required this.blackRookQueenSide,
+    required this.blackRookKingSide,
+    required this.whitePathQueenSide,
+    required this.whitePathKingSide,
+    required this.blackPathQueenSide,
+    required this.blackPathKingSide,
   });
 
   static const standard = Castles(
     unmovedRooks: SquareSet.corners,
-    rook: _standardCastleRook,
-    path: _standardCastlePath,
+    whiteRookQueenSide: Squares.a1,
+    whiteRookKingSide: Squares.h1,
+    blackRookQueenSide: Squares.a8,
+    blackRookKingSide: Squares.h8,
+    whitePathQueenSide: SquareSet(0x000000000000000e),
+    whitePathKingSide: SquareSet(0x0000000000000060),
+    blackPathQueenSide: SquareSet(0x0e00000000000000),
+    blackPathKingSide: SquareSet(0x6000000000000000),
   );
 
   static const empty = Castles(
     unmovedRooks: SquareSet.empty,
-    rook: _emptyCastleRook,
-    path: _emptyCastlePath,
+    whiteRookQueenSide: null,
+    whiteRookKingSide: null,
+    blackRookQueenSide: null,
+    blackRookKingSide: null,
+    whitePathQueenSide: SquareSet.empty,
+    whitePathKingSide: SquareSet.empty,
+    blackPathQueenSide: SquareSet.empty,
+    blackPathKingSide: SquareSet.empty,
   );
 
   factory Castles.fromSetup(Setup setup) {
@@ -1879,48 +1907,72 @@ class Castles {
     return castles;
   }
 
+  /// Gets rooks positions by side and castling side.
+  BySide<ByCastlingSide<Square?>> get rooksPositions {
+    return BySide({
+      Side.white: ByCastlingSide({
+        CastlingSide.queen: whiteRookQueenSide,
+        CastlingSide.king: whiteRookKingSide,
+      }),
+      Side.black: ByCastlingSide({
+        CastlingSide.queen: blackRookQueenSide,
+        CastlingSide.king: blackRookKingSide,
+      }),
+    });
+  }
+
+  /// Gets rooks paths by side and castling side.
+  BySide<ByCastlingSide<SquareSet>> get paths {
+    return BySide({
+      Side.white: ByCastlingSide({
+        CastlingSide.queen: whitePathQueenSide,
+        CastlingSide.king: whitePathKingSide,
+      }),
+      Side.black: ByCastlingSide({
+        CastlingSide.queen: blackPathQueenSide,
+        CastlingSide.king: blackPathKingSide,
+      }),
+    });
+  }
+
   /// Gets the rook [Square] by side and castling side.
-  Square? rookOf(Side side, CastlingSide cs) =>
-      cs == CastlingSide.queen ? rook[side]!.item1 : rook[side]!.item2;
+  Square? rookOf(Side side, CastlingSide cs) => cs == CastlingSide.queen
+      ? side == Side.white
+          ? whiteRookQueenSide
+          : blackRookQueenSide
+      : side == Side.white
+          ? whiteRookKingSide
+          : blackRookKingSide;
 
   /// Gets the squares that need to be empty so that castling is possible
   /// on the given side.
   ///
   /// We're assuming the player still has the required castling rigths.
-  SquareSet pathOf(Side side, CastlingSide cs) =>
-      cs == CastlingSide.queen ? path[side]!.item1 : path[side]!.item2;
+  SquareSet pathOf(Side side, CastlingSide cs) => cs == CastlingSide.queen
+      ? side == Side.white
+          ? whitePathQueenSide
+          : blackPathQueenSide
+      : side == Side.white
+          ? whitePathKingSide
+          : blackPathKingSide;
 
   Castles discardRookAt(Square square) {
-    final whiteRook = rook[Side.white]!;
-    final blackRook = rook[Side.black]!;
-    return unmovedRooks.has(square)
-        ? _copyWith(
-            unmovedRooks: unmovedRooks.withoutSquare(square),
-            rook: square <= 7
-                ? MapEntry(
-                    Side.white,
-                    whiteRook.item1 == square
-                        ? whiteRook.withItem1(null)
-                        : whiteRook.item2 == square
-                            ? whiteRook.withItem2(null)
-                            : whiteRook)
-                : square >= 56
-                    ? MapEntry(
-                        Side.black,
-                        blackRook.item1 == square
-                            ? blackRook.withItem1(null)
-                            : blackRook.item2 == square
-                                ? blackRook.withItem2(null)
-                                : blackRook)
-                    : null,
-          )
-        : this;
+    return _copyWith(
+      unmovedRooks: unmovedRooks.withoutSquare(square),
+      whiteRookQueenSide: whiteRookQueenSide == square ? const Box(null) : null,
+      whiteRookKingSide: whiteRookKingSide == square ? const Box(null) : null,
+      blackRookQueenSide: blackRookQueenSide == square ? const Box(null) : null,
+      blackRookKingSide: blackRookKingSide == square ? const Box(null) : null,
+    );
   }
 
   Castles discardSide(Side side) {
     return _copyWith(
       unmovedRooks: unmovedRooks.diff(SquareSet.backrankOf(side)),
-      rook: MapEntry(side, const Tuple2(null, null)),
+      whiteRookQueenSide: side == Side.white ? const Box(null) : null,
+      whiteRookKingSide: side == Side.white ? const Box(null) : null,
+      blackRookQueenSide: side == Side.black ? const Box(null) : null,
+      blackRookKingSide: side == Side.black ? const Box(null) : null,
     );
   }
 
@@ -1934,48 +1986,79 @@ class Castles {
         .withoutSquare(rook);
     return _copyWith(
       unmovedRooks: unmovedRooks.withSquare(rook),
-      rook: MapEntry(
-          side,
-          cs == CastlingSide.queen
-              ? this.rook[side]!.withItem1(rook)
-              : this.rook[side]!.withItem2(rook)),
-      path: MapEntry(
-          side,
-          cs == CastlingSide.queen
-              ? this.path[side]!.withItem1(path)
-              : this.path[side]!.withItem2(path)),
+      whiteRookQueenSide:
+          side == Side.white && cs == CastlingSide.queen ? Box(rook) : null,
+      whiteRookKingSide:
+          side == Side.white && cs == CastlingSide.king ? Box(rook) : null,
+      blackRookQueenSide:
+          side == Side.black && cs == CastlingSide.queen ? Box(rook) : null,
+      blackRookKingSide:
+          side == Side.black && cs == CastlingSide.king ? Box(rook) : null,
+      whitePathQueenSide:
+          side == Side.white && cs == CastlingSide.queen ? path : null,
+      whitePathKingSide:
+          side == Side.white && cs == CastlingSide.king ? path : null,
+      blackPathQueenSide:
+          side == Side.black && cs == CastlingSide.queen ? path : null,
+      blackPathKingSide:
+          side == Side.black && cs == CastlingSide.king ? path : null,
     );
   }
 
   Castles _copyWith({
     SquareSet? unmovedRooks,
-    MapEntry<Side, Tuple2<Square?, Square?>>? rook,
-    MapEntry<Side, Tuple2<SquareSet, SquareSet>>? path,
+    Box<Square?>? whiteRookQueenSide,
+    Box<Square?>? whiteRookKingSide,
+    Box<Square?>? blackRookQueenSide,
+    Box<Square?>? blackRookKingSide,
+    SquareSet? whitePathQueenSide,
+    SquareSet? whitePathKingSide,
+    SquareSet? blackPathQueenSide,
+    SquareSet? blackPathKingSide,
   }) {
     return Castles(
       unmovedRooks: unmovedRooks ?? this.unmovedRooks,
-      rook: rook != null ? this.rook.addEntry(rook) : this.rook,
-      path: path != null ? this.path.addEntry(path) : this.path,
+      whiteRookQueenSide: whiteRookQueenSide != null
+          ? whiteRookQueenSide.value
+          : this.whiteRookQueenSide,
+      whiteRookKingSide: whiteRookKingSide != null
+          ? whiteRookKingSide.value
+          : this.whiteRookKingSide,
+      blackRookQueenSide: blackRookQueenSide != null
+          ? blackRookQueenSide.value
+          : this.blackRookQueenSide,
+      blackRookKingSide: blackRookKingSide != null
+          ? blackRookKingSide.value
+          : this.blackRookKingSide,
+      whitePathQueenSide: whitePathQueenSide ?? this.whitePathQueenSide,
+      whitePathKingSide: whitePathKingSide ?? this.whitePathKingSide,
+      blackPathQueenSide: blackPathQueenSide ?? this.blackPathQueenSide,
+      blackPathKingSide: blackPathKingSide ?? this.blackPathKingSide,
     );
   }
 
   @override
-  String toString() =>
-      'Castles(unmovedRooks: $unmovedRooks, rook: ${rook.unlockView}, path: ${path.unlockView})';
+  String toString() {
+    return 'Castles(unmovedRooks: $unmovedRooks)';
+  }
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is Castles &&
           other.unmovedRooks == unmovedRooks &&
-          other.rook[Side.white] == rook[Side.white] &&
-          other.rook[Side.black] == rook[Side.black] &&
-          other.path[Side.white] == path[Side.white] &&
-          other.path[Side.black] == path[Side.black];
+          other.whiteRookQueenSide == whiteRookQueenSide &&
+          other.whiteRookKingSide == whiteRookKingSide &&
+          other.blackRookQueenSide == blackRookQueenSide &&
+          other.blackRookKingSide == blackRookKingSide &&
+          other.whitePathQueenSide == whitePathQueenSide &&
+          other.whitePathKingSide == whitePathKingSide &&
+          other.blackPathQueenSide == blackPathQueenSide &&
+          other.blackPathKingSide == blackPathKingSide;
 
   @override
-  int get hashCode => Object.hash(unmovedRooks, rook[Side.white],
-      rook[Side.black], path[Side.white], path[Side.black]);
+  int get hashCode => Object.hash(unmovedRooks, whiteRookQueenSide,
+      whiteRookKingSide, blackRookQueenSide, blackRookKingSide);
 }
 
 @immutable
@@ -2076,21 +2159,3 @@ SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
     return pseudo;
   }
 }
-
-const BySide<Tuple2<Square?, Square?>> _standardCastleRook =
-    IMapConst({Side.white: Tuple2(0, 7), Side.black: Tuple2(56, 63)});
-
-const BySide<Tuple2<SquareSet, SquareSet>> _standardCastlePath = IMapConst({
-  Side.white:
-      Tuple2(SquareSet(0x000000000000000e), SquareSet(0x0000000000000060)),
-  Side.black:
-      Tuple2(SquareSet(0x0e00000000000000), SquareSet(0x6000000000000000))
-});
-
-const BySide<Tuple2<Square?, Square?>> _emptyCastleRook =
-    IMapConst({Side.white: Tuple2(null, null), Side.black: Tuple2(null, null)});
-
-const BySide<Tuple2<SquareSet, SquareSet>> _emptyCastlePath = IMapConst({
-  Side.white: Tuple2(SquareSet.empty, SquareSet.empty),
-  Side.black: Tuple2(SquareSet.empty, SquareSet.empty)
-});

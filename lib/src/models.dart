@@ -10,6 +10,11 @@ enum Side {
   Side get opposite => this == Side.white ? Side.black : Side.white;
 }
 
+enum CastlingSide {
+  queen,
+  king;
+}
+
 enum Role {
   pawn,
   knight,
@@ -130,6 +135,7 @@ abstract class Squares {
 
 typedef BySide<T> = IMap<Side, T>;
 typedef ByRole<T> = IMap<Role, T>;
+typedef ByCastlingSide<T> = IMap<CastlingSide, T>;
 
 @immutable
 class Piece {

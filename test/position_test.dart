@@ -7,12 +7,12 @@ void main() {
   group('Position.toString()', () {
     test('Chess.toString()', () {
       expect(Chess.initial.toString(),
-          'Chess(board: $kInitialBoardFEN, turn: Side.white, castles: Castles(unmovedRooks: SquareSet(0x8100000000000081), rook: {Side.white: [0, 7], Side.black: [56, 63]}, path: {Side.white: [SquareSet(0x000000000000000E), SquareSet(0x0000000000000060)], Side.black: [SquareSet(0x0E00000000000000), SquareSet(0x6000000000000000)]}), halfmoves: 0, fullmoves: 1)');
+          'Chess(board: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR, turn: Side.white, castles: Castles(unmovedRooks: SquareSet(0x8100000000000081)), halfmoves: 0, fullmoves: 1)');
     });
 
     test('Antichess.toString()', () {
       expect(Antichess.initial.toString(),
-          'Antichess(board: $kInitialBoardFEN, turn: Side.white, castles: Castles(unmovedRooks: SquareSet(0), rook: {Side.white: [null, null], Side.black: [null, null]}, path: {Side.white: [SquareSet(0), SquareSet(0)], Side.black: [SquareSet(0), SquareSet(0)]}), halfmoves: 0, fullmoves: 1)');
+          'Antichess(board: $kInitialBoardFEN, turn: Side.white, castles: Castles(unmovedRooks: SquareSet(0)), halfmoves: 0, fullmoves: 1)');
     });
   });
 
@@ -39,23 +39,31 @@ void main() {
 
     test('discard rook', () {
       expect(Castles.standard.discardRookAt(24), Castles.standard);
-      expect(Castles.standard.discardRookAt(7).rook[Side.white],
-          const Tuple2(0, null));
+      expect(
+          Castles.standard.discardRookAt(7).rooksPositions[Side.white],
+          IMap(
+              const {CastlingSide.queen: Squares.a1, CastlingSide.king: null}));
     });
 
     test('discard side', () {
       expect(
-          Castles.standard.discardSide(Side.white).rook,
-          equals(IMap(const {
-            Side.white: Tuple2(null, null),
-            Side.black: Tuple2(56, 63)
+          Castles.standard.discardSide(Side.white).rooksPositions,
+          equals(BySide({
+            Side.white: ByCastlingSide(
+              const {CastlingSide.queen: null, CastlingSide.king: null},
+            ),
+            Side.black: ByCastlingSide(
+              const {CastlingSide.queen: 56, CastlingSide.king: 63},
+            )
           })));
 
       expect(
-          Castles.standard.discardSide(Side.black).rook,
-          equals(IMap(const {
-            Side.white: Tuple2(0, 7),
-            Side.black: Tuple2(null, null)
+          Castles.standard.discardSide(Side.black).rooksPositions,
+          equals(BySide({
+            Side.white: ByCastlingSide(
+                const {CastlingSide.queen: 0, CastlingSide.king: 7}),
+            Side.black: ByCastlingSide(
+                const {CastlingSide.queen: null, CastlingSide.king: null})
           })));
     });
   });
@@ -504,7 +512,12 @@ void main() {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
             .play(const NormalMove(from: 7, to: 5));
-        expect(pos.castles.rook[Side.white], equals(const Tuple2(0, null)));
+        expect(
+            pos.castles.rooksPositions[Side.white],
+            equals(IMap(const {
+              CastlingSide.queen: Squares.a1,
+              CastlingSide.king: null
+            })));
         expect(pos.castles.unmovedRooks.has(7), false);
       });
 
@@ -512,7 +525,8 @@ void main() {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqk1nr/pppp1pbp/2n1p1p1/8/2B1P3/1P3N2/P1PP1PPP/RNBQK2R b KQkq - 4 4'))
             .play(const NormalMove(from: 54, to: 0));
-        expect(pos.castles.rook[Side.white], equals(const Tuple2(null, 7)));
+        expect(pos.castles.whiteRookQueenSide, isNull);
+        expect(pos.castles.whiteRookKingSide, Squares.h1);
         expect(pos.castles.unmovedRooks.has(0), false);
       });
 
@@ -547,7 +561,8 @@ void main() {
         expect(
             pos.castles.unmovedRooks.isIntersected(const SquareSet.fromRank(0)),
             false);
-        expect(pos.castles.rook[Side.white], equals(const Tuple2(null, null)));
+        expect(pos.castles.whiteRookKingSide, isNull);
+        expect(pos.castles.whiteRookQueenSide, isNull);
       });
 
       test('castling moves', () {
