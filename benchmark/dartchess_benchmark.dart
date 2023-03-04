@@ -54,7 +54,7 @@ void main() {
     game.makePgn();
   });
 
-  benchmark('perft', () {
-    perft(Chess.initial, 6);
+  benchmark('initial position perft at depth 5', () {
+    perft(Chess.initial, 5);
   }, iterations: 1);
 }

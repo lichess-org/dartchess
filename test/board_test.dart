@@ -2,6 +2,14 @@ import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('implements hashCode/==', () {
+    expect(Board.empty, Board.empty);
+    expect(Board.standard, Board.standard);
+    expect(Board.empty, isNot(Board.standard));
+    expect(Board.standard, isNot(Board.empty));
+    expect(Board.parseFen(kInitialBoardFEN), Board.standard);
+  });
+
   test('empty board', () {
     expect(Board.empty.pieces.isEmpty, true);
     expect(Board.empty.pieceAt(0), null);
