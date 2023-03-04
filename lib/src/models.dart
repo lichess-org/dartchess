@@ -60,6 +60,74 @@ enum Role {
 /// See [SquareSet] to see how the mapping looks like.
 typedef Square = int;
 
+/// All the squares on the board.
+abstract class Squares {
+  static const a1 = 0;
+  static const b1 = 1;
+  static const c1 = 2;
+  static const d1 = 3;
+  static const e1 = 4;
+  static const f1 = 5;
+  static const g1 = 6;
+  static const h1 = 7;
+  static const a2 = 8;
+  static const b2 = 9;
+  static const c2 = 10;
+  static const d2 = 11;
+  static const e2 = 12;
+  static const f2 = 13;
+  static const g2 = 14;
+  static const h2 = 15;
+  static const a3 = 16;
+  static const b3 = 17;
+  static const c3 = 18;
+  static const d3 = 19;
+  static const e3 = 20;
+  static const f3 = 21;
+  static const g3 = 22;
+  static const h3 = 23;
+  static const a4 = 24;
+  static const b4 = 25;
+  static const c4 = 26;
+  static const d4 = 27;
+  static const e4 = 28;
+  static const f4 = 29;
+  static const g4 = 30;
+  static const h4 = 31;
+  static const a5 = 32;
+  static const b5 = 33;
+  static const c5 = 34;
+  static const d5 = 35;
+  static const e5 = 36;
+  static const f5 = 37;
+  static const g5 = 38;
+  static const h5 = 39;
+  static const a6 = 40;
+  static const b6 = 41;
+  static const c6 = 42;
+  static const d6 = 43;
+  static const e6 = 44;
+  static const f6 = 45;
+  static const g6 = 46;
+  static const h6 = 47;
+  static const a7 = 48;
+  static const b7 = 49;
+  static const c7 = 50;
+  static const d7 = 51;
+  static const e7 = 52;
+  static const f7 = 53;
+  static const g7 = 54;
+  static const h7 = 55;
+  static const a8 = 56;
+  static const b8 = 57;
+  static const c8 = 58;
+  static const d8 = 59;
+  static const e8 = 60;
+  static const f8 = 61;
+  static const g8 = 62;
+  static const h8 = 63;
+}
+
 typedef BySide<T> = IMap<Side, T>;
 typedef ByRole<T> = IMap<Role, T>;
 
