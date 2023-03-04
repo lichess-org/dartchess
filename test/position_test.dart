@@ -4,7 +4,13 @@ import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('Position.toString()', () {
+  group('Position', () {
+    test('implements hashCode/==', () {
+      expect(Chess.initial, Chess.initial);
+      expect(Chess.initial, isNot(Antichess.initial));
+      expect(Chess.initial, isNot(Chess.initial.play(Move.fromUci('e2e4')!)));
+    });
+
     test('Chess.toString()', () {
       expect(Chess.initial.toString(),
           'Chess(board: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR, turn: Side.white, castles: Castles(unmovedRooks: SquareSet(0x8100000000000081)), halfmoves: 0, fullmoves: 1)');
@@ -17,6 +23,18 @@ void main() {
   });
 
   group('Castles', () {
+    test('implements hashCode/==', () {
+      expect(Castles.standard, Castles.standard);
+      expect(Castles.standard, isNot(Castles.empty));
+      expect(
+          Castles.standard,
+          isNot(Castles.fromSetup(Setup.parseFen(
+              'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQq - 0 1'))));
+      expect(
+          Castles.standard,
+          isNot(Castles.fromSetup(Setup.parseFen(
+              'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBRN w KQkq - 0 1'))));
+    });
     test('fromSetup', () {
       final castles = Castles.fromSetup(Setup.standard);
       expect(castles.unmovedRooks, SquareSet.corners);

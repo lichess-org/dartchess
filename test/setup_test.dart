@@ -2,6 +2,15 @@ import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('implements hashCode/==', () {
+    expect(Setup.standard, Setup.standard);
+    expect(Setup.parseFen(kInitialFEN), Setup.standard);
+    expect(
+        Setup.parseFen(
+            'rnbqkbnr/pppppppp/8/8/8/P7/1PPPPPPP/RNBQKBRN w KQkq - 0 1'),
+        isNot(Setup.standard));
+  });
+
   test('parse castling fen, standard initial board', () {
     expect(
         Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq')
