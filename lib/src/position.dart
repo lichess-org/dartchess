@@ -1752,7 +1752,7 @@ class RacingKings extends Position<RacingKings> {
   bool get blackCanReachGoal {
     final blackKing = board.kingOf(Side.black);
     return blackKing != null &&
-        !kingAttacks(blackKing).intersect(goal).squares.where((square) {
+        kingAttacks(blackKing).intersect(goal).squares.where((square) {
           // Check whether this king move is legal
           final context = _Context(
             isVariantEnd: false,
@@ -1763,7 +1763,7 @@ class RacingKings extends Position<RacingKings> {
           );
           final legalMoves = _legalMovesOf(blackKing, context: context);
           return legalMoves.has(square);
-        }).isEmpty;
+        }).isNotEmpty;
   }
 
   bool get blackInGoal =>
@@ -1798,7 +1798,6 @@ class RacingKings extends Position<RacingKings> {
   Outcome? get variantOutcome {
     if (!isVariantEnd) return null;
     if (whiteInGoal && blackInGoal) return Outcome.draw;
-    final whiteKing = board.kingOf(Side.white);
     // If white is in the goal, check
     // whether black can reach the goal
     // And vice-versa
@@ -1818,8 +1817,7 @@ class RacingKings extends Position<RacingKings> {
     final pos = RacingKings(
       board: setup.board,
       turn: setup.turn,
-      castles: null,
-      epSquare: null,
+      castles: Castles.empty,
       halfmoves: setup.halfmoves,
       fullmoves: setup.fullmoves,
     );

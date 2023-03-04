@@ -1237,7 +1237,7 @@ void main() {
 
   group('Racing Kings', () {
     test('start position', () {
-      final position = RacingKings.initial;
+      const position = RacingKings.initial;
       expect(position.fen, equals('8/8/8/8/8/8/krbnNBRK/qrbnNBRQ w - - 0 1'));
     });
 
