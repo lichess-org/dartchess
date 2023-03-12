@@ -1832,8 +1832,8 @@ class RacingKings extends Position<RacingKings> {
     return Setup(
       board: board,
       turn: turn,
-      unmovedRooks: castles.unmovedRooks,
-      epSquare: _legalEpSquare(),
+      unmovedRooks: SquareSet.empty,
+      epSquare: null,
       halfmoves: halfmoves,
       fullmoves: fullmoves,
     ).fen;
