@@ -1858,10 +1858,10 @@ class RacingKings extends Position<RacingKings> {
   }) {
     return RacingKings(
       board: board ?? this.board,
-      pockets: pockets != null ? pockets.value : this.pockets,
+      pockets: null,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare != null ? epSquare.value : this.epSquare,
+      epSquare: null,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
