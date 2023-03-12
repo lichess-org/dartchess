@@ -1860,7 +1860,7 @@ class RacingKings extends Position<RacingKings> {
       board: board ?? this.board,
       pockets: null,
       turn: turn ?? this.turn,
-      castles: castles ?? this.castles,
+      castles: Castles.empty,
       epSquare: null,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
