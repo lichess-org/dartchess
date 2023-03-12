@@ -1798,10 +1798,12 @@ class RacingKings extends Position<RacingKings> {
   Outcome? get variantOutcome {
     if (!isVariantEnd) return null;
     if (whiteInGoal && blackInGoal) return Outcome.draw;
-    // If white is in the goal, check
-    // whether black can reach the goal
-    // And vice-versa
+    // If white is in the goal, check whether
+    // black can reach the goal. If not, then
+    // white wins
     if (whiteInGoal && !blackCanReachGoal) return Outcome.whiteWins;
+    // If black is the only side in the goal
+    // then black wins
     if (blackInGoal) return Outcome.blackWins;
 
     return Outcome.draw;
