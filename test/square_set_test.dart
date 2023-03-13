@@ -124,6 +124,19 @@ void main() {
 '''));
   });
 
+  test('from squares', () {
+    expect(SquareSet.fromSquares(const [42, 44, 26, 28]), makeSquareSet('''
+. . . . . . . .
+. . . . . . . .
+. . 1 . 1 . . .
+. . . . . . . .
+. . 1 . 1 . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+'''));
+  });
+
   test('with square', () {
     expect(SquareSet.center.withSquare(43), makeSquareSet('''
 . . . . . . . .
