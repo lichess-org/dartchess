@@ -1828,18 +1828,6 @@ class RacingKings extends Position<RacingKings> {
   }
 
   @override
-  String get fen {
-    return Setup(
-      board: board,
-      turn: turn,
-      unmovedRooks: SquareSet.empty,
-      epSquare: null,
-      halfmoves: halfmoves,
-      fullmoves: fullmoves,
-    ).fen;
-  }
-
-  @override
   bool hasInsufficientMaterial(Side side) => false;
 
   @override
