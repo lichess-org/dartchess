@@ -65,6 +65,19 @@ class Board {
     kings: SquareSet(0x1000000000000010),
   );
 
+  /// Racing Kings start position
+  static const racingKings = Board(
+      occupied: SquareSet(0xffff),
+      promoted: SquareSet.empty,
+      white: SquareSet(0xf0f0),
+      black: SquareSet(0x0f0f),
+      pawns: SquareSet.empty,
+      knights: SquareSet(0x1818),
+      bishops: SquareSet(0x2424),
+      rooks: SquareSet(0x4242),
+      queens: SquareSet(0x0081),
+      kings: SquareSet(0x8100));
+
   static const empty = Board(
     occupied: SquareSet.empty,
     promoted: SquareSet.empty,

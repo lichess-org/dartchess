@@ -100,7 +100,8 @@ abstract class Position<T extends Position<T>> {
       case Rules.horde:
         throw UnimplementedError('Missing Rules Horde');
       case Rules.racingKings:
-        throw UnimplementedError('Missing Rules Racing Kings');
+        throw RacingKings.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
     }
   }
 
@@ -122,7 +123,7 @@ abstract class Position<T extends Position<T>> {
       case Rules.horde:
         throw UnimplementedError('Missing Rules Horde');
       case Rules.racingKings:
-        throw UnimplementedError('Missing Rules Racing Kinds');
+        return RacingKings.initial;
     }
   }
 
@@ -1718,6 +1719,151 @@ class ThreeCheck extends Position<ThreeCheck> {
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
       remainingChecks: remainingChecks ?? this.remainingChecks,
+    );
+  }
+}
+
+/// A variant where the goal is to put your king on the eigth rank
+@immutable
+class RacingKings extends Position<RacingKings> {
+  const RacingKings({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  });
+
+  const RacingKings._initial()
+      : super(
+            board: Board.racingKings,
+            pockets: null,
+            turn: Side.white,
+            castles: Castles.empty,
+            epSquare: null,
+            halfmoves: 0,
+            fullmoves: 1);
+
+  static const initial = RacingKings._initial();
+  static const goal = SquareSet.fromRank(7);
+
+  bool get blackCanReachGoal {
+    final blackKing = board.kingOf(Side.black);
+    return blackKing != null &&
+        kingAttacks(blackKing).intersect(goal).squares.where((square) {
+          // Check whether this king move is legal
+          final context = _Context(
+            isVariantEnd: false,
+            mustCapture: false,
+            king: blackKing,
+            blockers: _sliderBlockers(blackKing),
+            checkers: checkers,
+          );
+          final legalMoves = _legalMovesOf(blackKing, context: context);
+          return legalMoves.has(square);
+        }).isNotEmpty;
+  }
+
+  bool get blackInGoal =>
+      board.black.intersect(goal).intersect(board.kings).isNotEmpty;
+  bool get whiteInGoal =>
+      board.white.intersect(goal).intersect(board.kings).isNotEmpty;
+
+  @override
+  SquareSet _legalMovesOf(Square square, {_Context? context}) =>
+      SquareSet.fromSquares(super
+          ._legalMovesOf(square, context: context)
+          .squares
+          .where((to) =>
+              !playUnchecked(NormalMove(from: square, to: to)).isCheck));
+
+  @override
+  bool isLegal(Move move) =>
+      !playUnchecked(move).isCheck && super.isLegal(move);
+
+  @override
+  bool get isVariantEnd {
+    if (!whiteInGoal && !blackInGoal) {
+      return false;
+    }
+    if (blackInGoal || !blackCanReachGoal) {
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  Outcome? get variantOutcome {
+    if (!isVariantEnd) return null;
+    if (whiteInGoal && blackInGoal) return Outcome.draw;
+    // If white is in the goal, check whether
+    // black can reach the goal. If not, then
+    // white wins
+    if (whiteInGoal && !blackCanReachGoal) return Outcome.whiteWins;
+    // If black is the only side in the goal
+    // then black wins
+    if (blackInGoal) return Outcome.blackWins;
+
+    return Outcome.draw;
+  }
+
+  /// Set up a playable [RacingKings] position.
+  ///
+  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// requirements.
+  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
+  /// requirement.
+  factory RacingKings.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+    final pos = RacingKings(
+      board: setup.board,
+      turn: setup.turn,
+      castles: Castles.empty,
+      halfmoves: setup.halfmoves,
+      fullmoves: setup.fullmoves,
+    );
+    pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+    return pos;
+  }
+
+  @override
+  String get fen {
+    return Setup(
+      board: board,
+      turn: turn,
+      unmovedRooks: SquareSet.empty,
+      epSquare: null,
+      halfmoves: halfmoves,
+      fullmoves: fullmoves,
+    ).fen;
+  }
+
+  @override
+  bool hasInsufficientMaterial(Side side) => false;
+
+  @override
+  RacingKings playUnchecked(Move move) =>
+      super.playUnchecked(move) as RacingKings;
+
+  @override
+  RacingKings _copyWith({
+    Board? board,
+    Box<Pockets?>? pockets,
+    Side? turn,
+    Castles? castles,
+    Box<Square?>? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return RacingKings(
+      board: board ?? this.board,
+      pockets: null,
+      turn: turn ?? this.turn,
+      castles: Castles.empty,
+      epSquare: null,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
     );
   }
 }

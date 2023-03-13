@@ -1268,6 +1268,69 @@ void main() {
     });
   });
 
+  group('Racing Kings', () {
+    test('start position', () {
+      const position = RacingKings.initial;
+      expect(position.fen, equals('8/8/8/8/8/8/krbnNBRK/qrbnNBRQ w - - 0 1'));
+    });
+
+    test('draw', () {
+      // Both pieces are on the backrank
+      final position = RacingKings.fromSetup(
+          Setup.parseFen('kr3NK1/1q2R3/8/8/8/5n2/2N5/1rb2B1R w - - 11 14'));
+      expect(position.isVariantEnd, true);
+      expect(position.variantOutcome, Outcome.draw);
+    });
+
+    test('white win', () {
+      final position = RacingKings.fromSetup(
+          Setup.parseFen('2KR4/k7/2Q5/4q3/8/8/8/2N5 b - - 0 1'));
+      expect(position.isVariantEnd, true);
+      expect(position.variantOutcome, Outcome.whiteWins);
+    });
+
+    test('black win', () {
+      final position = RacingKings.fromSetup(
+          Setup.parseFen('1k6/6K1/8/8/8/8/8/8 w - - 0 1'));
+      expect(position.isVariantEnd, true);
+      expect(position.variantOutcome, Outcome.blackWins);
+    });
+
+    test('game ongoing', () {
+      // While the white king is on the back rank
+      // The black king can reach the back rank this turn
+      final position =
+          RacingKings.fromSetup(Setup.parseFen('1K6/7k/8/8/8/8/8/8 b - - 0 1'));
+      expect(position.isVariantEnd, false);
+      expect(position.variantOutcome, null);
+    });
+
+    test('perft', () {
+      for (final test in [
+        // Start position
+        [
+          '8/8/8/8/8/8/krbnNBRK/qrbnNBRQ w - -',
+          21,
+          421,
+          11264,
+        ],
+        // Occupied goal
+        [
+          '4brn1/2K2k2/8/8/8/8/8/8 w - -',
+          6,
+          33,
+          178,
+        ],
+      ]) {
+        final position =
+            RacingKings.fromSetup(Setup.parseFen(test[0] as String));
+        expect(perft(position, 1), test[1]);
+        expect(perft(position, 2), test[2]);
+        expect(perft(position, 3), test[3]);
+      }
+    });
+  });
+
   group('Three check', () {
     test('insufficient material', () {
       for (final test in [
