@@ -78,6 +78,20 @@ class Board {
       queens: SquareSet(0x0081),
       kings: SquareSet(0x8100));
 
+  /// Horde start Positioin
+  static const horde = Board(
+    occupied: SquareSet(0xffff0066ffffffff),
+    promoted: SquareSet.empty,
+    white: SquareSet(0x00000066ffffffff),
+    black: SquareSet(0xffff000000000000),
+    pawns: SquareSet(0x00ff0066ffffffff),
+    knights: SquareSet(0x4200000000000000),
+    bishops: SquareSet(0x2400000000000000),
+    rooks: SquareSet(0x8100000000000000),
+    queens: SquareSet(0x0800000000000000),
+    kings: SquareSet(0x1000000000000000),
+  );
+
   static const empty = Board(
     occupied: SquareSet.empty,
     promoted: SquareSet.empty,

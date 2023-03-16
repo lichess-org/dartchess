@@ -1854,6 +1854,53 @@ class RacingKings extends Position<RacingKings> {
   }
 }
 
+@immutable
+class Horde extends Position<Horde> {
+  const Horde({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  });
+
+  // black captured all the pieces
+  bool get specialEnd => board.white.isEmpty;
+
+  @override
+  Outcome? get variantOutcome {
+    if (!isVariantEnd) return null;
+
+    return Outcome.draw;
+  }
+
+  @override
+  bool get isVariantEnd {
+    return false;
+  }
+
+  @override
+  Horde _copyWith({
+    Board? board,
+    Box<Pockets?>? pockets,
+    Side? turn,
+    Castles? castles,
+    Box<Square?>? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return Horde(
+      board: board ?? this.board,
+      turn: turn ?? this.turn,
+      castles: Castles.empty,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+    );
+  }
+}
+
 /// The outcome of a [Position]. No `winner` means a draw.
 @immutable
 class Outcome {
