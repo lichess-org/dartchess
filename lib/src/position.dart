@@ -1871,7 +1871,7 @@ class Horde extends Position<Horde> {
           board: Board.horde,
           pockets: null,
           turn: Side.white,
-          castles: Castles.empty,
+          castles: Castles.horde,
           epSquare: null,
           halfmoves: 0,
           fullmoves: 1,
@@ -1902,7 +1902,7 @@ class Horde extends Position<Horde> {
       throw PositionError.kings;
     }
 
-    final otherKing = board.kingOf(turn.opposite);
+    final otherKing = board.kings.singleSquare;
     if (otherKing != null && kingAttackers(otherKing, turn).isNotEmpty) {
       throw PositionError.oppositeCheck;
     }

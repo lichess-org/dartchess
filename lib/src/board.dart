@@ -1,4 +1,6 @@
 import 'package:meta/meta.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart'
+    hide Tuple2;
 import './square_set.dart';
 import './models.dart';
 import './attacks.dart';
@@ -177,12 +179,8 @@ class Board {
     }
   }
 
-  Map<Role, int> materialCount(Side side) {
-    final Map<Role, int> sideMaterial = {};
-    Role.values.map((role) =>
-        sideMaterial.putIfAbsent(role, () => piecesOf(side, role).size));
-    return sideMaterial;
-  }
+  IMap<Role, int> materialCount(Side side) => IMap.fromEntries(
+      Role.values.map((role) => MapEntry(role, piecesOf(side, role).size)));
 
   /// A [SquareSet] of all the pieces matching this [Side] and [Role].
   SquareSet piecesOf(Side side, Role role) {
