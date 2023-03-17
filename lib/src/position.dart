@@ -1866,18 +1866,79 @@ class Horde extends Position<Horde> {
     required super.fullmoves,
   });
 
+  const Horde._initial()
+      : super(
+          board: Board.horde,
+          pockets: null,
+          turn: Side.white,
+          castles: Castles.empty,
+          epSquare: null,
+          halfmoves: 0,
+          fullmoves: 1,
+        );
+
+  static const initial = Horde._initial();
+
   // black captured all the pieces
   bool get specialEnd => board.white.isEmpty;
+
+  factory Horde.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+    final pos = Horde(
+      board: setup.board,
+      turn: setup.turn,
+      castles: Castles.fromSetup(setup),
+      epSquare: _validEpSquare(setup),
+      halfmoves: setup.halfmoves,
+      fullmoves: setup.fullmoves,
+    );
+    pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+    return pos;
+  }
+
+  @override
+  void validate({bool? ignoreImpossibleCheck}) {
+    if (board.occupied.isEmpty) {
+      throw PositionError.empty;
+    }
+
+    if (board.kings.size != 1) {
+      throw PositionError.kings;
+    }
+
+    final otherKing = board.kingOf(turn.opposite);
+    if (otherKing != null && kingAttackers(otherKing, turn).isNotEmpty) {
+      throw PositionError.oppositeCheck;
+    }
+
+    if (SquareSet.backranks.isIntersected(board.pawns)) {
+      throw PositionError.pawnsOnBackrank;
+    }
+
+    final skipImpossibleCheck = ignoreImpossibleCheck ?? false;
+    final ourKing = board.kingOf(turn);
+    if (!skipImpossibleCheck && ourKing != null) {
+      _validateCheckers(ourKing);
+    }
+  }
 
   @override
   Outcome? get variantOutcome {
     if (!isVariantEnd) return null;
+
+    // white has no pawns left
+    if (specialEnd) return Outcome.blackWins;
+
+    // black is in check mate
+
+    // check for draw
 
     return Outcome.draw;
   }
 
   @override
   bool get isVariantEnd {
+    if (specialEnd) return true;
+
     return false;
   }
 
@@ -2056,6 +2117,18 @@ class Castles {
     whitePathKingSide: SquareSet.empty,
     blackPathQueenSide: SquareSet.empty,
     blackPathKingSide: SquareSet.empty,
+  );
+
+  static const horde = Castles(
+    unmovedRooks: SquareSet.corners,
+    whiteRookKingSide: null,
+    whiteRookQueenSide: null,
+    blackRookKingSide: Squares.h8,
+    blackRookQueenSide: Squares.a8,
+    whitePathKingSide: SquareSet.empty,
+    whitePathQueenSide: SquareSet.empty,
+    blackPathQueenSide: SquareSet(0x0e00000000000000),
+    blackPathKingSide: SquareSet(0x6000000000000000),
   );
 
   factory Castles.fromSetup(Setup setup) {
