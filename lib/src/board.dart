@@ -177,6 +177,13 @@ class Board {
     }
   }
 
+  Map<Role, int> materialCount(Side side) {
+    final Map<Role, int> sideMaterial = {};
+    Role.values.map((role) =>
+        sideMaterial.putIfAbsent(role, () => piecesOf(side, role).size));
+    return sideMaterial;
+  }
+
   /// A [SquareSet] of all the pieces matching this [Side] and [Role].
   SquareSet piecesOf(Side side, Role role) {
     return bySide(side) & byRole(role);
