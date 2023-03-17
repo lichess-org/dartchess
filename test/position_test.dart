@@ -1379,7 +1379,6 @@ void main() {
         ['8/8/1N6/qq6/kq6/nq6/8/8 b - - 0 1', true, false],
         ['8/P1P5/8/8/8/8/brqqn3/k7 b - - 0 1', false, false],
       ]) {
-        print('$test');
         final pos = Horde.fromSetup(Setup.parseFen(test[0] as String));
         expect(pos.hasInsufficientMaterial(Side.white), test[1]);
         expect(pos.hasInsufficientMaterial(Side.black), test[2]);

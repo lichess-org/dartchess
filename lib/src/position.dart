@@ -826,8 +826,6 @@ abstract class Position<T extends Position<T>> {
     if (ctx.isVariantEnd) return SquareSet.empty;
     final piece = board.pieceAt(square);
     if (piece == null || piece.color != turn) return SquareSet.empty;
-    final king = ctx.king;
-    if (king == null) return SquareSet.empty;
 
     SquareSet pseudo;
     SquareSet? legalEpSquare;
@@ -863,27 +861,28 @@ abstract class Position<T extends Position<T>> {
     }
 
     pseudo = pseudo.diff(board.bySide(turn));
-
-    if (piece.role == Role.king) {
-      final occ = board.occupied.withoutSquare(square);
-      for (final to in pseudo.squares) {
-        if (kingAttackers(to, turn.opposite, occupied: occ).isNotEmpty) {
-          pseudo = pseudo.withoutSquare(to);
+    if (ctx.king != null) {
+      if (piece.role == Role.king) {
+        final occ = board.occupied.withoutSquare(square);
+        for (final to in pseudo.squares) {
+          if (kingAttackers(to, turn.opposite, occupied: occ).isNotEmpty) {
+            pseudo = pseudo.withoutSquare(to);
+          }
         }
+        return pseudo
+            .union(_castlingMove(CastlingSide.queen, ctx))
+            .union(_castlingMove(CastlingSide.king, ctx));
       }
-      return pseudo
-          .union(_castlingMove(CastlingSide.queen, ctx))
-          .union(_castlingMove(CastlingSide.king, ctx));
-    }
 
-    if (ctx.checkers.isNotEmpty) {
-      final checker = ctx.checkers.singleSquare;
-      if (checker == null) return SquareSet.empty;
-      pseudo = pseudo & between(checker, king).withSquare(checker);
-    }
+      if (ctx.checkers.isNotEmpty) {
+        final checker = ctx.checkers.singleSquare;
+        if (checker == null) return SquareSet.empty;
+        pseudo = pseudo & between(checker, ctx.king!).withSquare(checker);
+      }
 
-    if (ctx.blockers.has(square)) {
-      pseudo = pseudo & ray(square, king);
+      if (ctx.blockers.has(square)) {
+        pseudo = pseudo & ray(square, ctx.king!);
+      }
     }
 
     if (legalEpSquare != null) {
