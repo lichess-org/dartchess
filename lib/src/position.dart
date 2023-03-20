@@ -1945,6 +1945,8 @@ class Horde extends Position<Horde> {
         bishops.isIntersected(SquareSet.lightSquares);
   }
 
+  int _pieceOfRoleNot(int piecesNum, int rolePieces) => piecesNum - rolePieces;
+
   @override
   bool hasInsufficientMaterial(Side side) {
     // side with king can always win by capturing the horde
@@ -1988,13 +1990,12 @@ class Horde extends Position<Horde> {
       // friendly pawn/opposite-color-bishop/rook/queen on C2.
       // A rook on B8 and a bishop C3 mate a king on A1 when there is a friendly
       // knight on A2.
-      if (!(hordeNum == 2 &&
+      return hordeNum == 2 &&
           hordeMap[Role.rook]! == 1 &&
           hordeMap[Role.bishop]! == 1 &&
-          ((piecesNum - _hordeBishops(side.opposite, hordeBishopColor)) ==
-              1))) {
-        return false;
-      }
+          (_pieceOfRoleNot(
+                  piecesNum, _hordeBishops(side.opposite, hordeBishopColor)) ==
+              1);
     }
 
     if (hordeNum == 1) {
@@ -2016,7 +2017,7 @@ class Horde extends Position<Horde> {
             _hordeBishops(side, SquareColor.dark) >= 2);
       } else if (hordeMap[Role.pawn] == 1) {
         // Promote the pawn to a queen or a knight and check whether white can mate.
-        final pawnSquare = (board.pawns & board.bySide(side)).singleSquare;
+        final pawnSquare = board.piecesOf(side, Role.pawn).last;
 
         final promoteToQueen = _copyWith();
         promoteToQueen.board
@@ -2024,7 +2025,7 @@ class Horde extends Position<Horde> {
         final promoteToKnight = _copyWith();
         promoteToKnight.board
             .setPieceAt(pawnSquare, Piece(color: side, role: Role.knight));
-        return promoteToQueen.hasInsufficientMaterial(side) ||
+        return promoteToQueen.hasInsufficientMaterial(side) &&
             promoteToKnight.hasInsufficientMaterial(side);
       } else if (hordeMap[Role.rook] == 1) {
         // A lone rook mates a king on A8 bounded by a pawn/rook on A7 and a
@@ -2050,7 +2051,7 @@ class Horde extends Position<Horde> {
         // a pawn/opposite-color-bishop on A4, a pawn/opposite-color-bishop on
         // B3, a pawn/bishop/rook/queen on A2 and any other piece on B2.
 
-        return !(_hordeBishops(side, hordeBishopColor.opposite) >= 2 ||
+        return !(_hordeBishops(side.opposite, hordeBishopColor.opposite) >= 2 ||
             (_hordeBishops(side.opposite, hordeBishopColor.opposite) >= 1 &&
                 piecesMap[Role.pawn]! >= 1) ||
             piecesMap[Role.pawn]! >= 2);
@@ -2072,17 +2073,16 @@ class Horde extends Position<Horde> {
                 (piecesMap[Role.rook]! >= 1 && piecesMap[Role.pawn]! >= 1) ||
                 (piecesMap[Role.knight]! >= 1 && piecesMap[Role.pawn]! >= 1) ||
                 (piecesMap[Role.bishop]! >= 1 && piecesMap[Role.pawn]! >= 1) ||
-                (_hasBishopPair(side.opposite)) &&
-                    (_hordeBishops(side.opposite, SquareColor.light) < 2 ||
-                        (piecesNum -
-                                _hordeBishops(
-                                    side.opposite, SquareColor.light)) >=
-                            3) &&
-                    (_hordeBishops(side.opposite, SquareColor.dark) < 2 ||
-                        (piecesNum -
-                                _hordeBishops(
-                                    side.opposite, SquareColor.dark)) >=
-                            3)));
+                (_hasBishopPair(side.opposite) &&
+                    piecesMap[Role.pawn]! >= 1)) &&
+            (_hordeBishops(side.opposite, SquareColor.light) < 2 ||
+                (_pieceOfRoleNot(piecesNum,
+                        _hordeBishops(side.opposite, SquareColor.light)) >=
+                    3)) &&
+            (_hordeBishops(side.opposite, SquareColor.dark) < 2 ||
+                (_pieceOfRoleNot(piecesNum,
+                        _hordeBishops(side.opposite, SquareColor.dark)) >=
+                    3)));
       }
     } else if (hordeNum == 2) {
       if (piecesNum == 1) {
@@ -2106,7 +2106,9 @@ class Horde extends Position<Horde> {
         // horde has a bishop and a knight
         return !(piecesMap[Role.pawn]! >= 1 ||
             _hordeBishops(side.opposite, hordeBishopColor.opposite) >= 1 ||
-            (piecesNum - _hordeBishops(side.opposite, hordeBishopColor) >= 3));
+            (_pieceOfRoleNot(piecesNum,
+                    _hordeBishops(side.opposite, hordeBishopColor)) >=
+                3));
       } else {
         // The horde has two or more bishops on the same color.
         // White can only win if black has enough material to obstruct
@@ -2174,6 +2176,7 @@ class Horde extends Position<Horde> {
       castles: Castles.empty,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
+      epSquare: epSquare != null ? epSquare.value : this.epSquare,
     );
   }
 }
