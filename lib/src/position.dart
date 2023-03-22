@@ -2149,13 +2149,11 @@ class Horde extends Position<Horde> {
   Outcome? get variantOutcome {
     if (board.white.isEmpty) return Outcome.blackWins;
 
-    if (board.black.isEmpty) return Outcome.whiteWins;
-
     return null;
   }
 
   @override
-  bool get isVariantEnd => board.white.isEmpty || board.black.isEmpty;
+  bool get isVariantEnd => board.white.isEmpty;
 
   @override
   Horde playUnchecked(Move move) => super.playUnchecked(move) as Horde;
