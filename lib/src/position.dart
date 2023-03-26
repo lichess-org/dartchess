@@ -2337,7 +2337,7 @@ class Castles {
   );
 
   static const horde = Castles(
-    unmovedRooks: SquareSet.corners,
+    unmovedRooks: SquareSet(0x8100000000000000),
     whiteRookKingSide: null,
     whiteRookQueenSide: null,
     blackRookKingSide: Squares.h8,
