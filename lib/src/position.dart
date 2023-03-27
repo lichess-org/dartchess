@@ -98,9 +98,10 @@ abstract class Position<T extends Position<T>> {
         return ThreeCheck.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
       case Rules.horde:
-        throw UnimplementedError('Missing Rules Horde');
+        return Horde.fromSetup(setup,
+            ignoreImpossibleCheck: ignoreImpossibleCheck);
       case Rules.racingKings:
-        throw RacingKings.fromSetup(setup,
+        return RacingKings.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
     }
   }
@@ -825,8 +826,6 @@ abstract class Position<T extends Position<T>> {
     if (ctx.isVariantEnd) return SquareSet.empty;
     final piece = board.pieceAt(square);
     if (piece == null || piece.color != turn) return SquareSet.empty;
-    final king = ctx.king;
-    if (king == null) return SquareSet.empty;
 
     SquareSet pseudo;
     SquareSet? legalEpSquare;
@@ -862,27 +861,28 @@ abstract class Position<T extends Position<T>> {
     }
 
     pseudo = pseudo.diff(board.bySide(turn));
-
-    if (piece.role == Role.king) {
-      final occ = board.occupied.withoutSquare(square);
-      for (final to in pseudo.squares) {
-        if (kingAttackers(to, turn.opposite, occupied: occ).isNotEmpty) {
-          pseudo = pseudo.withoutSquare(to);
+    if (ctx.king != null) {
+      if (piece.role == Role.king) {
+        final occ = board.occupied.withoutSquare(square);
+        for (final to in pseudo.squares) {
+          if (kingAttackers(to, turn.opposite, occupied: occ).isNotEmpty) {
+            pseudo = pseudo.withoutSquare(to);
+          }
         }
+        return pseudo
+            .union(_castlingMove(CastlingSide.queen, ctx))
+            .union(_castlingMove(CastlingSide.king, ctx));
       }
-      return pseudo
-          .union(_castlingMove(CastlingSide.queen, ctx))
-          .union(_castlingMove(CastlingSide.king, ctx));
-    }
 
-    if (ctx.checkers.isNotEmpty) {
-      final checker = ctx.checkers.singleSquare;
-      if (checker == null) return SquareSet.empty;
-      pseudo = pseudo & between(checker, king).withSquare(checker);
-    }
+      if (ctx.checkers.isNotEmpty) {
+        final checker = ctx.checkers.singleSquare;
+        if (checker == null) return SquareSet.empty;
+        pseudo = pseudo & between(checker, ctx.king!).withSquare(checker);
+      }
 
-    if (ctx.blockers.has(square)) {
-      pseudo = pseudo & ray(square, king);
+      if (ctx.blockers.has(square)) {
+        pseudo = pseudo & ray(square, ctx.king!);
+      }
     }
 
     if (legalEpSquare != null) {
@@ -1854,6 +1854,331 @@ class RacingKings extends Position<RacingKings> {
   }
 }
 
+@immutable
+class Horde extends Position<Horde> {
+  const Horde({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  });
+
+  const Horde._initial()
+      : super(
+          board: Board.horde,
+          pockets: null,
+          turn: Side.white,
+          castles: Castles.horde,
+          epSquare: null,
+          halfmoves: 0,
+          fullmoves: 1,
+        );
+
+  static const initial = Horde._initial();
+
+  factory Horde.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+    final pos = Horde(
+      board: setup.board,
+      turn: setup.turn,
+      castles: Castles.fromSetup(setup),
+      epSquare: _validEpSquare(setup),
+      halfmoves: setup.halfmoves,
+      fullmoves: setup.fullmoves,
+    );
+    pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+    return pos;
+  }
+
+  @override
+  void validate({bool? ignoreImpossibleCheck}) {
+    if (board.occupied.isEmpty) {
+      throw PositionError.empty;
+    }
+
+    if (board.kings.size != 1) {
+      throw PositionError.kings;
+    }
+
+    final otherKing = board.kingOf(turn.opposite);
+    if (otherKing != null && kingAttackers(otherKing, turn).isNotEmpty) {
+      throw PositionError.oppositeCheck;
+    }
+
+    // white can have pawns on back rank
+    if (SquareSet.backranks.isIntersected(board.black.intersect(board.pawns))) {
+      throw PositionError.pawnsOnBackrank;
+    }
+
+    final skipImpossibleCheck = ignoreImpossibleCheck ?? false;
+    final ourKing = board.kingOf(turn);
+    if (!skipImpossibleCheck && ourKing != null) {
+      _validateCheckers(ourKing);
+    }
+  }
+
+  // get the number of light or dark square bishops
+  int _hordeBishops(Side side, SquareColor sqColor) {
+    if (sqColor == SquareColor.light) {
+      return (board
+              .piecesOf(side, Role.bishop)
+              .intersect(SquareSet.lightSquares))
+          .size;
+    }
+    // dark squares
+    return (board.piecesOf(side, Role.bishop).intersect(SquareSet.darkSquares))
+        .size;
+  }
+
+  SquareColor _hordeBishopColor(Side side) {
+    if (_hordeBishops(side, SquareColor.light) >= 1) {
+      return SquareColor.light;
+    }
+    return SquareColor.dark;
+  }
+
+  bool _hasBishopPair(Side side) {
+    final bishops = board.piecesOf(side, Role.bishop);
+    return bishops.isIntersected(SquareSet.darkSquares) &&
+        bishops.isIntersected(SquareSet.lightSquares);
+  }
+
+  int _pieceOfRoleNot(int piecesNum, int rolePieces) => piecesNum - rolePieces;
+
+  @override
+  bool hasInsufficientMaterial(Side side) {
+    // side with king can always win by capturing the horde
+    if (board.piecesOf(side, Role.king).isNotEmpty) {
+      return false;
+    }
+
+    // now color represents horde and color.opposite is pieces
+    final hordeNum = board.piecesOf(side, Role.pawn).size +
+        board.piecesOf(side, Role.rook).size +
+        board.piecesOf(side, Role.queen).size +
+        board.piecesOf(side, Role.knight).size +
+        math.min(_hordeBishops(side, SquareColor.light), 2) +
+        math.min(_hordeBishops(side, SquareColor.dark), 2);
+
+    if (hordeNum == 0) {
+      return true;
+    }
+
+    if (hordeNum >= 4) {
+      // 4 or more pieces can always deliver mate.
+      return false;
+    }
+
+    final hordeMap = board.materialCount(side);
+    final hordeBishopColor = _hordeBishopColor(side);
+    final piecesMap = board.materialCount(side.opposite);
+    final piecesNum = board.bySide(side.opposite).size;
+
+    if ((hordeMap[Role.pawn]! >= 1 || hordeMap[Role.queen]! >= 1) &&
+        hordeNum >= 2) {
+      // Pawns/queens are never insufficient material when paired with any other
+      // piece (a pawn promotes to a queen and delivers mate).
+      return false;
+    }
+
+    if (hordeMap[Role.rook]! >= 1 && hordeNum >= 2) {
+      // A rook is insufficient material only when it is paired with a bishop
+      // against a lone king. The horde can mate in any other case.
+      // A rook on A1 and a bishop on C3 mate a king on B1 when there is a
+      // friendly pawn/opposite-color-bishop/rook/queen on C2.
+      // A rook on B8 and a bishop C3 mate a king on A1 when there is a friendly
+      // knight on A2.
+      return hordeNum == 2 &&
+          hordeMap[Role.rook]! == 1 &&
+          hordeMap[Role.bishop]! == 1 &&
+          (_pieceOfRoleNot(
+                  piecesNum, _hordeBishops(side.opposite, hordeBishopColor)) ==
+              1);
+    }
+
+    if (hordeNum == 1) {
+      if (piecesNum == 1) {
+        // lone piece cannot mate a lone king
+        return true;
+      } else if (hordeMap[Role.queen] == 1) {
+        // The horde has a lone queen.
+        // A lone queen mates a king on A1 bounded by:
+        //  -- a pawn/rook on A2
+        //  -- two same color bishops on A2, B1
+        // We ignore every other mating case, since it can be reduced to
+        // the two previous cases (e.g. a black pawn on A2 and a black
+        // bishop on B1).
+
+        return !(piecesMap[Role.pawn]! >= 1 ||
+            piecesMap[Role.rook]! >= 1 ||
+            _hordeBishops(side.opposite, SquareColor.light) >= 2 ||
+            _hordeBishops(side, SquareColor.dark) >= 2);
+      } else if (hordeMap[Role.pawn] == 1) {
+        // Promote the pawn to a queen or a knight and check whether white can mate.
+        final pawnSquare = board.piecesOf(side, Role.pawn).last;
+
+        final promoteToQueen = _copyWith();
+        promoteToQueen.board
+            .setPieceAt(pawnSquare!, Piece(color: side, role: Role.queen));
+        final promoteToKnight = _copyWith();
+        promoteToKnight.board
+            .setPieceAt(pawnSquare, Piece(color: side, role: Role.knight));
+        return promoteToQueen.hasInsufficientMaterial(side) &&
+            promoteToKnight.hasInsufficientMaterial(side);
+      } else if (hordeMap[Role.rook] == 1) {
+        // A lone rook mates a king on A8 bounded by a pawn/rook on A7 and a
+        // pawn/knight on B7. We ignore every other case, since it can be
+        // reduced to the two previous cases.
+        // (e.g. three pawns on A7, B7, C7)
+
+        return !(piecesMap[Role.pawn]! >= 2 ||
+            (piecesMap[Role.rook]! >= 1 && piecesMap[Role.pawn]! >= 1) ||
+            (piecesMap[Role.rook]! >= 1 && piecesMap[Role.knight]! >= 1) ||
+            (piecesMap[Role.pawn]! >= 1 && piecesMap[Role.knight]! >= 1));
+      } else if (hordeMap[Role.bishop] == 1) {
+        // horde has a lone bishop
+        // The king can be mated on A1 if there is a pawn/opposite-color-bishop
+        // on A2 and an opposite-color-bishop on B1.
+        // If black has two or more pawns, white gets the benefit of the doubt;
+        // there is an outside chance that white promotes its pawns to
+        // opposite-color-bishops and selfmates theirself.
+        // Every other case that the king is mated by the bishop requires that
+        // black has two pawns or two opposite-color-bishop or a pawn and an
+        // opposite-color-bishop.
+        // For example a king on A3 can be mated if there is
+        // a pawn/opposite-color-bishop on A4, a pawn/opposite-color-bishop on
+        // B3, a pawn/bishop/rook/queen on A2 and any other piece on B2.
+
+        return !(_hordeBishops(side.opposite, hordeBishopColor.opposite) >= 2 ||
+            (_hordeBishops(side.opposite, hordeBishopColor.opposite) >= 1 &&
+                piecesMap[Role.pawn]! >= 1) ||
+            piecesMap[Role.pawn]! >= 2);
+      } else if (hordeMap[Role.knight] == 1) {
+        // horde has a lone knight
+        // The king on A1 can be smother mated by a knight on C2 if there is
+        // a pawn/knight/bishop on B2, a knight/rook on B1 and any other piece
+        // on A2.
+        // Moreover, when black has four or more pieces and two of them are
+        // pawns, black can promote their pawns and selfmate theirself.
+
+        return !(piecesNum >= 4 &&
+            (piecesMap[Role.knight]! >= 2 ||
+                piecesMap[Role.pawn]! >= 2 ||
+                (piecesMap[Role.rook]! >= 1 && piecesMap[Role.knight]! >= 1) ||
+                (piecesMap[Role.rook]! >= 1 && piecesMap[Role.bishop]! >= 1) ||
+                (piecesMap[Role.knight]! >= 1 &&
+                    piecesMap[Role.bishop]! >= 1) ||
+                (piecesMap[Role.rook]! >= 1 && piecesMap[Role.pawn]! >= 1) ||
+                (piecesMap[Role.knight]! >= 1 && piecesMap[Role.pawn]! >= 1) ||
+                (piecesMap[Role.bishop]! >= 1 && piecesMap[Role.pawn]! >= 1) ||
+                (_hasBishopPair(side.opposite) &&
+                    piecesMap[Role.pawn]! >= 1)) &&
+            (_hordeBishops(side.opposite, SquareColor.light) < 2 ||
+                (_pieceOfRoleNot(piecesNum,
+                        _hordeBishops(side.opposite, SquareColor.light)) >=
+                    3)) &&
+            (_hordeBishops(side.opposite, SquareColor.dark) < 2 ||
+                (_pieceOfRoleNot(piecesNum,
+                        _hordeBishops(side.opposite, SquareColor.dark)) >=
+                    3)));
+      }
+    } else if (hordeNum == 2) {
+      if (piecesNum == 1) {
+        // two minor pieces cannot mate a lone king
+        return true;
+      } else if (hordeMap[Role.knight] == 2) {
+        // A king on A1 is mated by two knights, if it is obstructed by a
+        // pawn/bishop/knight on B2. On the other hand, if black only has
+        // major pieces it is a draw.
+
+        return piecesMap[Role.pawn]! +
+                piecesMap[Role.bishop]! +
+                piecesMap[Role.knight]! <
+            1;
+      } else if (_hasBishopPair(side)) {
+        return !(piecesMap[Role.pawn]! >= 1 ||
+            piecesMap[Role.bishop]! >= 1 ||
+            (piecesMap[Role.knight]! >= 1 &&
+                piecesMap[Role.rook]! + piecesMap[Role.queen]! >= 1));
+      } else if (hordeMap[Role.bishop]! >= 1 && hordeMap[Role.knight]! >= 1) {
+        // horde has a bishop and a knight
+        return !(piecesMap[Role.pawn]! >= 1 ||
+            _hordeBishops(side.opposite, hordeBishopColor.opposite) >= 1 ||
+            (_pieceOfRoleNot(piecesNum,
+                    _hordeBishops(side.opposite, hordeBishopColor)) >=
+                3));
+      } else {
+        // The horde has two or more bishops on the same color.
+        // White can only win if black has enough material to obstruct
+        // the squares of the opposite color around the king.
+        //
+        // A king on A1 obstructed by a pawn/opposite-bishop/knight
+        // on A2 and a opposite-bishop/knight on B1 is mated by two
+        // bishops on B2 and C3. This position is theoretically
+        // achievable even when black has two pawns or when they
+        // have a pawn and an opposite color bishop.
+
+        return !((piecesMap[Role.pawn]! >= 1 &&
+                _hordeBishops(side.opposite, hordeBishopColor.opposite) >= 1) ||
+            (piecesMap[Role.pawn]! >= 1 && piecesMap[Role.knight]! >= 1) ||
+            (_hordeBishops(side.opposite, hordeBishopColor.opposite) >= 1 &&
+                piecesMap[Role.knight]! >= 1) ||
+            (_hordeBishops(side.opposite, hordeBishopColor.opposite) >= 2) ||
+            piecesMap[Role.knight]! >= 2 ||
+            piecesMap[Role.pawn]! >= 2);
+      }
+    } else if (hordeNum == 3) {
+      // A king in the corner is mated by two knights and a bishop or three
+      // knights or the bishop pair and a knight/bishop.
+
+      if ((hordeMap[Role.knight] == 2 && hordeMap[Role.bishop] == 1) ||
+          hordeMap[Role.knight] == 3 ||
+          _hasBishopPair(side)) {
+        return false;
+      } else {
+        return piecesNum == 1;
+      }
+    }
+
+    return true;
+  }
+
+  @override
+  Outcome? get variantOutcome {
+    if (board.white.isEmpty) return Outcome.blackWins;
+
+    return null;
+  }
+
+  @override
+  bool get isVariantEnd => board.white.isEmpty;
+
+  @override
+  Horde playUnchecked(Move move) => super.playUnchecked(move) as Horde;
+
+  @override
+  Horde _copyWith({
+    Board? board,
+    Box<Pockets?>? pockets,
+    Side? turn,
+    Castles? castles,
+    Box<Square?>? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return Horde(
+      board: board ?? this.board,
+      turn: turn ?? this.turn,
+      castles: Castles.empty,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+      epSquare: epSquare != null ? epSquare.value : this.epSquare,
+    );
+  }
+}
+
 /// The outcome of a [Position]. No `winner` means a draw.
 @immutable
 class Outcome {
@@ -2009,6 +2334,18 @@ class Castles {
     whitePathKingSide: SquareSet.empty,
     blackPathQueenSide: SquareSet.empty,
     blackPathKingSide: SquareSet.empty,
+  );
+
+  static const horde = Castles(
+    unmovedRooks: SquareSet(0x8100000000000000),
+    whiteRookKingSide: null,
+    whiteRookQueenSide: null,
+    blackRookKingSide: Squares.h8,
+    blackRookQueenSide: Squares.a8,
+    whitePathKingSide: SquareSet.empty,
+    whitePathQueenSide: SquareSet.empty,
+    blackPathQueenSide: SquareSet(0x0e00000000000000),
+    blackPathKingSide: SquareSet(0x6000000000000000),
   );
 
   factory Castles.fromSetup(Setup setup) {
