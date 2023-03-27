@@ -63,18 +63,6 @@ class Parser {
 
 void main() {
   group('perft test', () {
-    test('random test', () async {
-      final tests = Parser()
-          .parse(await File('test/resources/random.perft').readAsString());
-
-      for (final perftTest in tests) {
-        final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
-        for (final testCase in perftTest.cases) {
-          expect(perft(position, testCase.depth), testCase.nodes);
-        }
-      }
-    });
-
     test('3check test', () async {
       final tests = Parser()
           .parse(await File('test/resources/3check.perft').readAsString());
@@ -82,7 +70,9 @@ void main() {
       for (final perftTest in tests) {
         final position = ThreeCheck.fromSetup(Setup.parseFen(perftTest.fen));
         for (final testCase in perftTest.cases) {
-          expect(perft(position, testCase.depth), testCase.nodes);
+          expect(perft(position, testCase.depth), testCase.nodes,
+              reason:
+                  'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
         }
       }
     });
@@ -93,7 +83,9 @@ void main() {
       for (final perftTest in tests) {
         final position = Antichess.fromSetup(Setup.parseFen(perftTest.fen));
         for (final testCase in perftTest.cases) {
-          expect(perft(position, testCase.depth), testCase.nodes);
+          expect(perft(position, testCase.depth), testCase.nodes,
+              reason:
+                  'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
         }
       }
     });
@@ -102,9 +94,11 @@ void main() {
           .parse(await File('test/resources/atomic.perft').readAsString());
 
       for (final perftTest in tests) {
-        final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
+        final position = Atomic.fromSetup(Setup.parseFen(perftTest.fen));
         for (final testCase in perftTest.cases) {
-          expect(perft(position, testCase.depth), testCase.nodes);
+          expect(perft(position, testCase.depth), testCase.nodes,
+              reason:
+                  'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
         }
       }
     });
@@ -115,7 +109,9 @@ void main() {
       for (final perftTest in tests) {
         final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
         for (final testCase in perftTest.cases) {
-          expect(perft(position, testCase.depth), testCase.nodes);
+          expect(perft(position, testCase.depth), testCase.nodes,
+              reason:
+                  'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
         }
       }
     });
@@ -126,7 +122,9 @@ void main() {
       for (final perftTest in tests) {
         final position = Crazyhouse.fromSetup(Setup.parseFen(perftTest.fen));
         for (final testCase in perftTest.cases) {
-          expect(perft(position, testCase.depth), testCase.nodes);
+          expect(perft(position, testCase.depth), testCase.nodes,
+              reason:
+                  'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
         }
       }
     });
@@ -138,7 +136,9 @@ void main() {
       for (final perftTest in tests) {
         final position = Horde.fromSetup(Setup.parseFen(perftTest.fen));
         for (final testCase in perftTest.cases) {
-          expect(perft(position, testCase.depth), testCase.nodes);
+          expect(perft(position, testCase.depth), testCase.nodes,
+            reason:
+              'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
         }
       }
     });
@@ -150,7 +150,9 @@ void main() {
       for (final perftTest in tests) {
         final position = RacingKings.fromSetup(Setup.parseFen(perftTest.fen));
         for (final testCase in perftTest.cases) {
-          expect(perft(position, testCase.depth), testCase.nodes);
+          expect(perft(position, testCase.depth), testCase.nodes,
+              reason:
+                  'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
         }
       }
     });
@@ -161,7 +163,23 @@ void main() {
       for (final perftTest in tests) {
         final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
         for (final testCase in perftTest.cases) {
-          expect(perft(position, testCase.depth), testCase.nodes);
+          expect(perft(position, testCase.depth), testCase.nodes,
+              reason:
+                  'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
+        }
+      }
+    });
+
+    test('random test', () async {
+      final tests = Parser()
+          .parse(await File('test/resources/random.perft').readAsString());
+
+      for (final perftTest in tests) {
+        final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
+        for (final testCase in perftTest.cases) {
+          expect(perft(position, testCase.depth), testCase.nodes,
+              reason:
+                  'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
         }
       }
     });
