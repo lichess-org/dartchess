@@ -1,13 +1,14 @@
 @Tags(['perft'])
 import 'package:test/test.dart';
 import 'dart:io';
+import 'package:dartchess/dartchess.dart';
 
 class Perft {
   String id;
-  String epd;
+  String fen;
   List<TestCase> cases;
 
-  Perft(this.id, this.epd, this.cases);
+  Perft(this.id, this.fen, this.cases);
 }
 
 class TestCase {
@@ -61,7 +62,108 @@ class Parser {
 }
 
 void main() {
-  test('perft testing', () {
-    print('testing perft');
+  group('perft test', () {
+    test('random test', () async {
+      final tests = Parser()
+          .parse(await File('test/resources/random.perft').readAsString());
+
+      for (final perftTest in tests) {
+        final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
+        for (final testCase in perftTest.cases) {
+          expect(perft(position, testCase.depth), testCase.nodes);
+        }
+      }
+    });
+
+    test('3check test', () async {
+      final tests = Parser()
+          .parse(await File('test/resources/3check.perft').readAsString());
+
+      for (final perftTest in tests) {
+        final position = ThreeCheck.fromSetup(Setup.parseFen(perftTest.fen));
+        for (final testCase in perftTest.cases) {
+          expect(perft(position, testCase.depth), testCase.nodes);
+        }
+      }
+    });
+    test('antichess test', () async {
+      final tests = Parser()
+          .parse(await File('test/resources/antichess.perft').readAsString());
+
+      for (final perftTest in tests) {
+        final position = Antichess.fromSetup(Setup.parseFen(perftTest.fen));
+        for (final testCase in perftTest.cases) {
+          expect(perft(position, testCase.depth), testCase.nodes);
+        }
+      }
+    });
+    test('atomic test', () async {
+      final tests = Parser()
+          .parse(await File('test/resources/atomic.perft').readAsString());
+
+      for (final perftTest in tests) {
+        final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
+        for (final testCase in perftTest.cases) {
+          expect(perft(position, testCase.depth), testCase.nodes);
+        }
+      }
+    });
+    test('chess 960 test', () async {
+      final tests = Parser()
+          .parse(await File('test/resources/chess960.perft').readAsString());
+
+      for (final perftTest in tests) {
+        final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
+        for (final testCase in perftTest.cases) {
+          expect(perft(position, testCase.depth), testCase.nodes);
+        }
+      }
+    });
+    test('crazyhouse test', () async {
+      final tests = Parser()
+          .parse(await File('test/resources/crazyhouse.perft').readAsString());
+
+      for (final perftTest in tests) {
+        final position = Crazyhouse.fromSetup(Setup.parseFen(perftTest.fen));
+        for (final testCase in perftTest.cases) {
+          expect(perft(position, testCase.depth), testCase.nodes);
+        }
+      }
+    });
+    /*
+    test('horde test', () async {
+      final tests = Parser()
+          .parse(await File('test/resources/horde.perft').readAsString());
+
+      for (final perftTest in tests) {
+        final position = Horde.fromSetup(Setup.parseFen(perftTest.fen));
+        for (final testCase in perftTest.cases) {
+          expect(perft(position, testCase.depth), testCase.nodes);
+        }
+      }
+    });
+    */
+    test('racing kings test', () async {
+      final tests = Parser()
+          .parse(await File('test/resources/racingkings.perft').readAsString());
+
+      for (final perftTest in tests) {
+        final position = RacingKings.fromSetup(Setup.parseFen(perftTest.fen));
+        for (final testCase in perftTest.cases) {
+          expect(perft(position, testCase.depth), testCase.nodes);
+        }
+      }
+    });
+    test('tricky test', () async {
+      final tests = Parser()
+          .parse(await File('test/resources/tricky.perft').readAsString());
+
+      for (final perftTest in tests) {
+        final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
+        for (final testCase in perftTest.cases) {
+          expect(perft(position, testCase.depth), testCase.nodes);
+        }
+      }
+    });
   });
 }
