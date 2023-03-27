@@ -67,7 +67,8 @@ void main() async {
   for (final perftTest in tests) {
     final position = ThreeCheck.fromSetup(Setup.parseFen(perftTest.fen));
     for (final testCase in perftTest.cases) {
-      test('three-check ${perftTest.id} ${testCase.depth}', () {
+      test('three-check ${perftTest.id} ${perftTest.fen} ${testCase.depth}',
+          () {
         expect(perft(position, testCase.depth), testCase.nodes,
             reason:
                 'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
@@ -80,7 +81,7 @@ void main() async {
   for (final perftTest in tests) {
     final position = Antichess.fromSetup(Setup.parseFen(perftTest.fen));
     for (final testCase in perftTest.cases) {
-      test('Antichess ${perftTest.id} ${testCase.depth}', () {
+      test('Antichess ${perftTest.id} ${perftTest.fen} ${testCase.depth}', () {
         expect(perft(position, testCase.depth), testCase.nodes,
             reason:
                 'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
@@ -93,7 +94,7 @@ void main() async {
   for (final perftTest in tests) {
     final position = Atomic.fromSetup(Setup.parseFen(perftTest.fen));
     for (final testCase in perftTest.cases) {
-      test('Atomic ${perftTest.id} ${testCase.depth}', () {
+      test('Atomic ${perftTest.id} ${perftTest.fen} ${testCase.depth}', () {
         expect(perft(position, testCase.depth), testCase.nodes,
             reason:
                 'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
@@ -106,7 +107,7 @@ void main() async {
   for (final perftTest in tests) {
     final position = Crazyhouse.fromSetup(Setup.parseFen(perftTest.fen));
     for (final testCase in perftTest.cases) {
-      test('Crazyhouse ${perftTest.id} ${testCase.depth}', () {
+      test('Crazyhouse ${perftTest.id} ${perftTest.fen} ${testCase.depth}', () {
         expect(perft(position, testCase.depth), testCase.nodes,
             reason:
                 'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
@@ -120,7 +121,7 @@ void main() async {
       for (final perftTest in tests) {
         final position = Horde.fromSetup(Setup.parseFen(perftTest.fen));
         for (final testCase in perftTest.cases) {
-      test('Horde ${perftTest.id} ${testCase.depth}', () {
+      test('Horde ${perftTest.id} ${perftTest.fen} ${testCase.depth}', () {
           expect(perft(position, testCase.depth), testCase.nodes,
             reason:
               'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
@@ -135,7 +136,8 @@ void main() async {
   for (final perftTest in tests) {
     final position = RacingKings.fromSetup(Setup.parseFen(perftTest.fen));
     for (final testCase in perftTest.cases) {
-      test('Racing Kings ${perftTest.id} ${testCase.depth}', () {
+      test('Racing Kings ${perftTest.id} ${perftTest.fen} ${testCase.depth}',
+          () {
         expect(perft(position, testCase.depth), testCase.nodes,
             reason:
                 'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
@@ -148,7 +150,8 @@ void main() async {
 
   for (final perftTest in tests) {
     for (final testCase in perftTest.cases) {
-      test('Chess ${perftTest.id} ${testCase.depth}', () {
+      test('Chess Tricky ${perftTest.id} ${perftTest.fen} ${testCase.depth}',
+          () {
         final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
         expect(perft(position, testCase.depth), testCase.nodes,
             reason:
@@ -163,7 +166,8 @@ void main() async {
   for (final perftTest in tests) {
     final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
     for (final testCase in perftTest.cases) {
-      test('Chess ${perftTest.id} ${testCase.depth}', () {
+      test('Chess Random ${perftTest.id} ${perftTest.fen}  ${testCase.depth}',
+          () {
         expect(perft(position, testCase.depth), testCase.nodes,
             reason:
                 'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
@@ -177,7 +181,7 @@ void main() async {
   for (final perftTest in tests) {
     final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
     for (final testCase in perftTest.cases) {
-      test('Chess 960 ${perftTest.id} ${testCase.depth}', () {
+      test('Chess 960 ${perftTest.id} ${perftTest.fen} ${testCase.depth}', () {
         expect(perft(position, testCase.depth), testCase.nodes,
             reason:
                 'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
