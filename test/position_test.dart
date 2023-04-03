@@ -1368,4 +1368,52 @@ void main() {
       }
     });
   });
+
+  group('Horde', () {
+    test('insufficient material', () {
+      for (final test in [
+        ['8/5k2/8/8/8/4NN2/8/8 w - - 0 1', true, false],
+        ['8/8/8/2B5/p7/kp6/pq6/8 b - - 0 1', false, false],
+        ['8/8/8/2B5/r7/kn6/nr6/8 b - - 0 1', true, false],
+        ['8/8/1N6/rb6/kr6/qn6/8/8 b - - 0 1', false, false],
+        ['8/8/1N6/qq6/kq6/nq6/8/8 b - - 0 1', true, false],
+        ['8/P1P5/8/8/8/8/brqqn3/k7 b - - 0 1', false, false],
+      ]) {
+        final pos = Horde.fromSetup(Setup.parseFen(test[0] as String));
+        expect(pos.hasInsufficientMaterial(Side.white), test[1]);
+        expect(pos.hasInsufficientMaterial(Side.black), test[2]);
+      }
+    });
+
+    test('perft', () {
+      for (final test in [
+        [
+          'horde-start',
+          'rnbqkbnr/pppppppp/8/1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w kq -',
+          8,
+          128,
+          1274
+        ],
+        [
+          'horde-open-flank',
+          '4k3/pp4q1/3P2p1/8/P3PP2/PPP2r2/PPP5/PPPP4 b - -',
+          30,
+          241,
+          6633
+        ],
+        [
+          'horde-en-passant',
+          'k7/5p2/4p2P/3p2P1/2p2P2/1p2P2P/p2P2P1/2P2P2 w - -',
+          13,
+          172,
+          2205
+        ],
+      ]) {
+        final pos = Horde.fromSetup(Setup.parseFen(test[1] as String));
+        expect(perft(pos, 1), test[2]);
+        expect(perft(pos, 2), test[3]);
+        expect(perft(pos, 3), test[4]);
+      }
+    });
+  });
 }

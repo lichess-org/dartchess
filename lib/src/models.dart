@@ -10,6 +10,14 @@ enum Side {
   Side get opposite => this == Side.white ? Side.black : Side.white;
 }
 
+enum SquareColor {
+  light,
+  dark;
+
+  SquareColor get opposite =>
+      this == SquareColor.light ? SquareColor.dark : SquareColor.light;
+}
+
 enum CastlingSide {
   queen,
   king;
