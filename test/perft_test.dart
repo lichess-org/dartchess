@@ -62,10 +62,9 @@ class Parser {
 }
 
 void main() async {
-  var tests =
-      Parser().parse(await File('test/resources/3check.perft').readAsString());
-
   group('Three Check', () {
+    final tests =
+        Parser().parse(File('test/resources/3check.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = ThreeCheck.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases) {
@@ -77,10 +76,10 @@ void main() async {
       }
     }
   });
-  tests = Parser()
-      .parse(await File('test/resources/antichess.perft').readAsString());
 
   group('Antichess', () {
+    final tests = Parser()
+        .parse(File('test/resources/antichess.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = Antichess.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases) {
@@ -92,14 +91,14 @@ void main() async {
       }
     }
   });
-  tests =
-      Parser().parse(await File('test/resources/atomic.perft').readAsString());
 
   group('Atomic', () {
+    final tests =
+        Parser().parse(File('test/resources/atomic.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = Atomic.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases) {
-        test('Atomic ${perftTest.id} ${perftTest.fen} ${testCase.depth}', () {
+        test('${perftTest.id} ${perftTest.fen} ${testCase.depth}', () {
           expect(perft(position, testCase.depth), testCase.nodes,
               reason:
                   'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
@@ -107,10 +106,10 @@ void main() async {
       }
     }
   });
-  tests = Parser()
-      .parse(await File('test/resources/crazyhouse.perft').readAsString());
 
   group('Crazyhouse', () {
+    final tests = Parser()
+        .parse(File('test/resources/crazyhouse.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = Crazyhouse.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases) {
@@ -122,10 +121,10 @@ void main() async {
       }
     }
   });
-  tests =
-      Parser().parse(await File('test/resources/horde.perft').readAsString());
 
   group('Horde', () {
+    final tests =
+        Parser().parse(File('test/resources/horde.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = Horde.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases) {
@@ -137,10 +136,10 @@ void main() async {
       }
     }
   });
-  tests = Parser()
-      .parse(await File('test/resources/racingkings.perft').readAsString());
 
   group('Racing Kings', () {
+    final tests = Parser()
+        .parse(File('test/resources/racingkings.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = RacingKings.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases) {
@@ -152,10 +151,10 @@ void main() async {
       }
     }
   });
-  tests =
-      Parser().parse(await File('test/resources/tricky.perft').readAsString());
 
   group('Chess Tricky', () {
+    final tests =
+        Parser().parse(File('test/resources/tricky.perft').readAsStringSync());
     for (final perftTest in tests) {
       for (final testCase in perftTest.cases) {
         test('${perftTest.id} ${perftTest.fen} ${testCase.depth}', () {
@@ -169,10 +168,10 @@ void main() async {
       }
     }
   });
-  tests =
-      Parser().parse(await File('test/resources/random.perft').readAsString());
 
   group('Random', () {
+    final tests =
+        Parser().parse(File('test/resources/random.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases) {
@@ -185,14 +184,13 @@ void main() async {
     }
   });
 
-  tests = Parser()
-      .parse(await File('test/resources/chess960.perft').readAsString());
   group('Chess 960', () {
+    final tests = Parser()
+        .parse(File('test/resources/chess960.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases) {
-        test('Chess 960 ${perftTest.id} ${perftTest.fen} ${testCase.depth}',
-            () {
+        test('${perftTest.id} ${perftTest.fen} ${testCase.depth}', () {
           expect(perft(position, testCase.depth), testCase.nodes,
               reason:
                   'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
