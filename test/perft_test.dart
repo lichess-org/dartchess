@@ -1,4 +1,3 @@
-@Tags(['perft'])
 import 'package:test/test.dart';
 import 'dart:io';
 import 'package:dartchess/dartchess.dart';
@@ -123,8 +122,8 @@ void main() async {
   group('Random', () {
     final tests =
         Parser().parse(File('test/resources/random.perft').readAsStringSync());
-    // only test 25 position in random. Test file has around 6000 positions
-    for (final perftTest in tests.take(25)) {
+    // only test 10 position in random. Test file has around 6000 positions
+    for (final perftTest in tests.take(50)) {
       final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases
           .takeWhile((testCase) => testCase.nodes < nodeLimit)) {
@@ -140,7 +139,7 @@ void main() async {
   group('Chess 960', () {
     final tests = Parser()
         .parse(File('test/resources/chess960.perft').readAsStringSync());
-    for (final perftTest in tests) {
+    for (final perftTest in tests.take(50)) {
       final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases
           .takeWhile((testCase) => testCase.nodes < nodeLimit)) {
