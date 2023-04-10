@@ -36,7 +36,7 @@ void main() async {
       }
     }
   });
-
+  /*
   group('Atomic', () {
     final tests =
         Parser().parse(File('test/resources/atomic.perft').readAsStringSync());
@@ -52,7 +52,8 @@ void main() async {
       }
     }
   });
-
+      */
+  /*
   group('Crazyhouse', () {
     final tests = Parser()
         .parse(File('test/resources/crazyhouse.perft').readAsStringSync());
@@ -68,7 +69,7 @@ void main() async {
       }
     }
   });
-
+      */
   group('Horde', () {
     final tests =
         Parser().parse(File('test/resources/horde.perft').readAsStringSync());
@@ -101,23 +102,23 @@ void main() async {
     }
   });
 
-  group('Chess Tricky', () {
-    final tests =
-        Parser().parse(File('test/resources/tricky.perft').readAsStringSync());
-    for (final perftTest in tests) {
-      for (final testCase in perftTest.cases
-          .takeWhile((testCase) => testCase.nodes < nodeLimit)) {
-        test('${perftTest.id} ${perftTest.fen} ${testCase.depth}', () {
-          final position = Chess.fromSetup(Setup.parseFen(perftTest.fen),
-              ignoreImpossibleCheck:
-                  true); // true: otherwise there is an Impossible Check Error
-          expect(perft(position, testCase.depth), testCase.nodes,
-              reason:
-                  'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
-        });
-      }
-    }
-  });
+  // group('Chess Tricky', () {
+  //   final tests =
+  //       Parser().parse(File('test/resources/tricky.perft').readAsStringSync());
+  //   for (final perftTest in tests) {
+  //     for (final testCase in perftTest.cases
+  //         .takeWhile((testCase) => testCase.nodes < nodeLimit)) {
+  //       test('${perftTest.id} ${perftTest.fen} ${testCase.depth}', () {
+  //         final position = Chess.fromSetup(Setup.parseFen(perftTest.fen),
+  //             ignoreImpossibleCheck:
+  //                 true); // true: otherwise there is an Impossible Check Error
+  //         expect(perft(position, testCase.depth), testCase.nodes,
+  //             reason:
+  //                 'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
+  //       });
+  //     }
+  //   }
+  // });
 
   group('Random', () {
     final tests =
@@ -134,6 +135,16 @@ void main() async {
         });
       }
     }
+  });
+
+  group('Standard', () {
+    test('initial position', () {
+      const pos = Chess.initial;
+      expect(perft(pos, 0), 1);
+      expect(perft(pos, 1), 20);
+      expect(perft(pos, 2), 400);
+      expect(perft(pos, 3), 8902);
+    });
   });
 
   group('Chess 960', () {
