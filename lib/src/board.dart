@@ -80,7 +80,7 @@ class Board {
       queens: SquareSet(0x0081),
       kings: SquareSet(0x8100));
 
-  /// Horde start Positioin
+  /// Horde start position
   static const horde = Board(
     occupied: SquareSet(0xffff0066ffffffff),
     promoted: SquareSet.empty,
@@ -92,6 +92,19 @@ class Board {
     rooks: SquareSet(0x8100000000000000),
     queens: SquareSet(0x0800000000000000),
     kings: SquareSet(0x1000000000000000),
+  );
+
+  static const chessSharp = Board(
+    occupied: SquareSet(0x00ff00000000ff00),
+    promoted: SquareSet.empty,
+    white: SquareSet(0x000000000000ff00),
+    black: SquareSet(0x00ff000000000000),
+    pawns: SquareSet(0x00ff00000000ff00),
+    knights: SquareSet.empty,
+    bishops: SquareSet.empty,
+    rooks: SquareSet.empty,
+    queens: SquareSet.empty,
+    kings: SquareSet.empty,
   );
 
   static const empty = Board(

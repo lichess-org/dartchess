@@ -220,6 +220,9 @@ class Pockets {
   /// An empty pocket.
   static const empty = Pockets(value: _emptyPocketsBySide);
 
+  /// Chess♯ initial pocket
+  static const chessSharp = Pockets(value: _sharpPocketsBySide);
+
   /// Gets the total number of pieces in the pocket.
   int get size => value.values
       .fold(0, (acc, e) => acc + e.values.fold(0, (acc, e) => acc + e));
@@ -232,6 +235,16 @@ class Pockets {
   /// Counts the number of pieces by [Role].
   int count(Role role) {
     return value[Side.white]![role]! + value[Side.black]![role]!;
+  }
+
+  /// Counts the number of pieces for [Side].
+  int countSide(Side side) {
+    final bySide = value[side]!;
+    return bySide[Role.knight]! +
+        bySide[Role.bishop]! +
+        bySide[Role.rook]! +
+        bySide[Role.queen]! +
+        bySide[Role.king]!;
   }
 
   /// Checks whether this side has at least 1 quality (any piece but a pawn).
@@ -268,6 +281,11 @@ class Pockets {
 
   @override
   int get hashCode => value.hashCode;
+
+  @override
+  String toString() {
+    return _makePockets(this);
+  }
 }
 
 Pockets _parsePockets(String pocketPart) {
@@ -409,4 +427,18 @@ const ByRole<int> _emptyPocket = IMapConst({
 const BySide<ByRole<int>> _emptyPocketsBySide = IMapConst({
   Side.white: _emptyPocket,
   Side.black: _emptyPocket,
+});
+
+const ByRole<int> _sharpPocket = IMapConst({
+  Role.pawn: 0,
+  Role.knight: 2,
+  Role.bishop: 2,
+  Role.rook: 2,
+  Role.queen: 1,
+  Role.king: 1,
+});
+
+const BySide<ByRole<int>> _sharpPocketsBySide = IMapConst({
+  Side.white: _sharpPocket,
+  Side.black: _sharpPocket,
 });
