@@ -122,7 +122,7 @@ abstract class Position<T extends Position<T>> {
       case Rules.crazyhouse:
         return Crazyhouse.initial;
       case Rules.horde:
-        throw UnimplementedError('Missing Rules Horde');
+        return Horde.initial;
       case Rules.racingKings:
         return RacingKings.initial;
     }
