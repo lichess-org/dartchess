@@ -4,6 +4,7 @@ import 'package:dartchess/dartchess.dart';
 import 'perft_parser.dart';
 
 const nodeLimit = 10000000;
+
 void main() async {
   group('Three Check', () {
     final tests =
@@ -144,6 +145,7 @@ void main() async {
       expect(perft(pos, 1), 20);
       expect(perft(pos, 2), 400);
       expect(perft(pos, 3), 8902);
+      expect(perft(pos, 4), 197281);
     });
   });
 
