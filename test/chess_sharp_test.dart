@@ -671,7 +671,7 @@ void main() {
     conditionalPrint('${humanReadableBoard(a.board)}\n');
   });
   test(
-      "Chess♯ stalemates - test and scoring\n\t(since it's legal to move into check, we made an alternate test to determine stalemate\n\tscore for stalemating the opponent is 8–2 or 2–8)",
+      "Chess♯ stalemates - test and scoring\n\t(since it's legal to move into check, we made an alternate test to determine stalemate...\n\tthe score for stalemating your opponent is 8–2 or 2–8)",
       () {
     // stalemate: king can't move
     Position a =
@@ -681,11 +681,17 @@ void main() {
     expect(a.outcome?.winner, Side.black);
     expect(Outcome.toPgnStringChessSharp(a.outcome), '2–8');
 
-    // no stalemate: there's a piece in my pocket
+    // no stalemate: there's a piece in my pocket, and somewhere to place it
     a = ChessSharp.fromSetup(
         Setup.parseFen('1r5k/8/8/8/8/8/7r/K7[Q] w - - 0 1'));
     printBoard(a);
     expect(a.outcome, null);
+
+    // stalemate: there's a piece in my pocket, but nowhere to place it
+    a = ChessSharp.fromSetup(
+        Setup.parseFen('4k3/8/8/8/8/8/7q/qqqnKnqq[NNBBRRQ] w - - 0 1'));
+    printBoard(a);
+    expect(Outcome.toPgnStringChessSharp(a.outcome), '2–8');
 
     // no stalemate: a pawn can promote
     a = ChessSharp.fromSetup(
@@ -712,7 +718,7 @@ void main() {
     expect(a.outcome, null);
   });
   test(
-      'Chess♯ impasses - test and scoring\n\t(games that go 50 moves without a capture or pawn-move\n\tscore for an impasse is 7–3 or 3–7 if one side has more material\n\tor 4–6 if both sides have the same material)',
+      'Chess♯ impasses - test and scoring\n\t(games that go 50 moves without a capture or pawn-move\n\tthe score for an impasse is 7–3 or 3–7 if one side has more material\n\tor 4–6 if both sides have the same material)',
       () {
     // fen with 100 half-moves made
     Position a = ChessSharp.fromSetup(
@@ -759,23 +765,48 @@ void main() {
     expect(Outcome.toPgnStringChessSharp(a.outcome), '7–3');
   });
   test('Chess♯ - test pgn & fen import/export', () {
-    final String pgn = File('./data/chess-sharp-caleb-david.pgn')
-        .readAsStringSync()
-        .replaceAll('\r\n', '\n');
+    void testPGN(String pgnFile, String finalFen) {
+      conditionalPrint('\n\n${pgnFile.replaceAll('./data/', '')}\n');
+      // See if the PGN we generate is the same PGN as the original
+      final String pgn =
+          File(pgnFile).readAsStringSync().replaceAll('\r\n', '\n');
+      final game = PgnGame.parsePgn(pgn);
+      expect(game.makePgn(), pgn);
 
-    final game = PgnGame.parsePgn(pgn);
+      // Play the moves to see if any are illegal
+      int queenDropCount = 0;
+      Position position = PgnGame.startingPosition(game.headers);
+      for (final node in game.moves.mainline()) {
+        final move = position.parseSan(node.san);
+        if (move == null) break; // Illegal move
+        position = position.play(move);
+        if (node.san.toUpperCase().contains('Q@')) {
+          queenDropCount++;
+          if (queenDropCount == 2) {
+            // Print board position and FEN after the 2nd queen has been dropped (so we can copy/paste it into Stockfish)
+            printBoard(position);
+            conditionalPrint('Analyzable: ${position.fen}\n');
+          }
+        }
+      }
 
-    // See if the PGN we generate is the same PGN as the original
-    expect(game.makePgn(), pgn);
+      // Test final fen
+      expect(position.fen, finalFen);
 
-    Position position = PgnGame.startingPosition(game.headers);
-    for (final node in game.moves.mainline()) {
-      final move = position.parseSan(node.san);
-      if (move == null) break; // Illegal move
-      position = position.play(move);
+      printBoard(position);
+      conditionalPrint('Final: ${position.fen}\n${game.headers['Result']}');
     }
-    conditionalPrint(humanReadableBoard(position.board, position.pockets));
-    expect(position.fen,
-        'kbb3r1/ppp4r/4pp2/8/P1N1PB2/1BP1R1pq/1P3P1P/3Q3K[] w - - 0 31');
+
+    testPGN(
+        './data/chess-sharp-david-john.pgn', '8/8/p7/8/8/8/2k5/8 w - - 0 71');
+
+    testPGN('./data/chess-sharp-caleb-david.pgn',
+        'kbb3r1/ppp4r/4pp2/8/P1N1PB2/1BP1R1pq/1P3P1P/3Q3K w - - 0 31');
+
+    testPGN('./data/chess-sharp-jim-david.pgn',
+        '8/3k4/bp2p3/4p3/PBRrP3/1P6/7P/5K2 w - - 6 53');
+
+    testPGN('./data/chess-sharp-jim-david2.pgn',
+        '3r3k/6p1/p1q3bp/8/5p2/2P2P2/PP1KQ3/7R w - - 1 42');
   });
 }

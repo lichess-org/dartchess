@@ -222,7 +222,7 @@ abstract class Position<T extends Position<T>> {
 
   bool get allMovesSuicide {
     if (pockets != null && pockets!.countSide(turn) > 0) {
-      return false;
+      if (legalDrops.size > 0) return false;
     }
     final context = _makeContext();
     for (final square in board.bySide(turn).squares) {

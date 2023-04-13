@@ -366,6 +366,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
 }
 
 String _makePockets(Pockets pockets) {
+  if (pockets.size < 1) return '';
   final wPart = [
     for (final r in Role.values)
       ...List.filled(pockets.of(Side.white, r), r.char)
