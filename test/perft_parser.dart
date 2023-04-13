@@ -32,7 +32,7 @@ class Parser {
         block.clear();
       }
 
-      if (line.isNotEmpty) {
+      if (line.trim().isNotEmpty) {
         block.add(line);
       }
     }
