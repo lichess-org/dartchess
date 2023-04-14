@@ -1,6 +1,27 @@
 import 'package:dartchess/dartchess.dart';
 
 const verbosePrinting = true;
+bool printedNotice = false;
+
+void conditionalPrint(Object? a) {
+  if (!printedNotice) {
+    printedNotice = true;
+    print(
+        '************************************************************\nVERBOSE PRINTING');
+    if (verbosePrinting) {
+      print(
+          'verbosePrinting is ON\n\nTo disable, set the "verbosePrinting" constant to false');
+    } else {
+      print(
+          'verbosePrinting is OFF\n\nSet the "verbosePrinting" constant to true to help with debugging these tests');
+    }
+    print(
+        '(line 3 of \\test\\db_testing_lib.dart)\n************************************************************');
+  }
+  if (verbosePrinting) {
+    print(a);
+  }
+}
 
 enum DropZone { none, whiteHomeRow, blackHomeRow, anywhere }
 
@@ -76,10 +97,6 @@ class MyExpectations {
   }
 }
 
-void conditionalPrint(Object? a) {
-  if (verbosePrinting) print(a);
-}
-
 List<DropMove> dropTestEachSquare(Position position) {
   final legalDrops = <DropMove>[];
   final allRoles = <Role>[
@@ -114,19 +131,29 @@ List<NormalMove> moveTestEachSquare(Position position) {
 
 List<Move> printBoard(Position a, {bool printLegalMoves = false}) {
   final z = StringBuffer();
+  final y = StringBuffer();
+  String x = '';
+  int moves = 0;
+  int drops = 0;
+
   final legalMoves = <Move>[];
   if (printLegalMoves) {
-    z.write('Legal moves: ');
     for (final move in moveTestEachSquare(a)) {
       z.write('${move.uci}, ');
       legalMoves.add(move);
+      moves++;
     }
+    x = 'Legal Moves ($moves):\n$z\n';
     for (final drop in dropTestEachSquare(a)) {
-      z.write('${drop.uci}, ');
+      y.write('${drop.uci}, ');
       legalMoves.add(drop);
+      drops++;
     }
+    x += 'Legal Drops ($drops):\n$y';
   }
 
-  conditionalPrint('${humanReadableBoard(a.board, a.pockets)}$z\n\n\n');
+  conditionalPrint('${humanReadableBoard(a.board, a.pockets)}$x');
+  conditionalPrint(
+      '------------------------------------------------------------');
   return legalMoves;
 }

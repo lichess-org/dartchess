@@ -6,7 +6,7 @@ import 'db_testing_lib.dart';
 
 void main() {
   print(
-      '**********\nChess♯ variant\nThe rules for Chess♯ can be found at\nhttps://chess-sharp.games/ChessSharp_Rules.pdf\n\nSet the "verbosePrinting" constant to true (line 3 of db_testing_lib.dart) to help with debugging these tests\n**********');
+      '****************************************\nChess♯\nThe rules for Chess♯ can be found at\nhttps://chess-sharp.games/ChessSharp_Rules.pdf\n****************************************');
   test('Chess♯ - board starts with 16 pawns (only)', () {
     expect(Board.chessSharp.pieces.length, 16);
     expect(Board.chessSharp.materialCount(Side.white)[Role.pawn], 8);
