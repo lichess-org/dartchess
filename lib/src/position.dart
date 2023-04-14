@@ -945,6 +945,7 @@ abstract class Position<T extends Position<T>> {
       if (piece.role == Role.king) {
         final occ = board.occupied.withoutSquare(square);
         for (final to in pseudo.squares) {
+          // Remove squares where the opponent has a piece attacking it
           if (kingAttackers(to, turn.opposite, occupied: occ).isNotEmpty) {
             pseudo = pseudo.withoutSquare(to);
           }
@@ -1055,6 +1056,8 @@ abstract class Position<T extends Position<T>> {
   /// Returns the [CastlingSide] or `null` if the move is a regular move.
   CastlingSide? _getCastlingSide(Move move) {
     if (move is NormalMove) {
+      if (turn == Side.white && move.to > 7) return null;
+      if (turn == Side.black && move.to < 56) return null;
       final delta = move.to - move.from;
       if (delta.abs() != 2 && !board.bySide(turn).has(move.to)) {
         return null;
