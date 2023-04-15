@@ -177,6 +177,7 @@ abstract class Position<T extends Position<T>> {
   bool get isImpasse => halfmoves >= 100;
 
   /// Returns diff of material value between [Side.white] and [Side.black].
+  ///
   /// Positive values indicate an advantage for white, negative for black.
   /// Zero indicates material equality. (Does not include kings or pieces in the pocket.)
   num get materialDiff {
@@ -220,6 +221,10 @@ abstract class Position<T extends Position<T>> {
     return false;
   }
 
+  /// Returns true if all legal moves put the king in check.
+  ///
+  /// A test to help evalutate stalemate in variants like Chess♯ where moving
+  /// into check is legal.
   bool get allMovesSuicide {
     if (pockets != null && pockets!.countSide(turn) > 0) {
       if (legalDrops.size > 0) return false;
@@ -291,16 +296,6 @@ abstract class Position<T extends Position<T>> {
   bool isLegal(Move move) {
     assert(move is NormalMove || move is DropMove);
     if (move is NormalMove) {
-      if (this is ChessSharp) {
-        // In Chess♯, pieces on the board cannot move until the king has been placed
-        if (pockets!.of(turn, Role.king) > 0) {
-          return false;
-        }
-        // In Chess♯, pawns may only promote to queens
-        if (move.promotion != null && move.promotion != Role.queen) {
-          return false;
-        }
-      }
       if (move.promotion == Role.pawn) return false;
       if (move.promotion == Role.king && this is! Antichess) return false;
       if (move.promotion != null &&
@@ -314,12 +309,6 @@ abstract class Position<T extends Position<T>> {
         return false;
       }
       if (move.role == Role.pawn && SquareSet.backranks.has(move.to)) {
-        return false;
-      }
-      // In Chess♯, a queen cannot be placed unless she is the last piece in your pocket
-      if (this is ChessSharp &&
-          move.role == Role.queen &&
-          pockets!.countSide(turn) > 1) {
         return false;
       }
       return legalDrops.has(move.to);
@@ -587,9 +576,8 @@ abstract class Position<T extends Position<T>> {
   String toSan(Move move) {
     final san = _makeSanWithoutSuffix(move);
     final newPos = playUnchecked(move);
-    // Chess♯ notation does not use check (+) or checkmate (#) symbols
-    if (this is! ChessSharp && newPos.outcome?.winner != null) return '$san#';
-    if (this is! ChessSharp && newPos.isCheck) return '$san+';
+    if (newPos.outcome?.winner != null) return '$san#';
+    if (newPos.isCheck) return '$san+';
     return san;
   }
 
@@ -600,10 +588,9 @@ abstract class Position<T extends Position<T>> {
     if (isLegal(move)) {
       final san = _makeSanWithoutSuffix(move);
       final newPos = playUnchecked(move);
-      // Chess♯ notation does not use check (+) or checkmate (#) symbols
-      final suffixed = (this is! ChessSharp && newPos.outcome?.winner != null)
+      final suffixed = newPos.outcome?.winner != null
           ? '$san#'
-          : (this is! ChessSharp && newPos.isCheck)
+          : newPos.isCheck
               ? '$san+'
               : san;
       return Tuple2(newPos, suffixed);
@@ -1649,6 +1636,26 @@ class ChessSharp extends Position<ChessSharp> {
   bool get isCheckmate => false;
 
   @override
+  bool isLegal(Move move) {
+    if (move is NormalMove) {
+      // In Chess♯, pieces on the board cannot move until the king has been placed
+      if (pockets!.of(turn, Role.king) > 0) {
+        return false;
+      }
+      // In Chess♯, pawns may only promote to queens
+      if (move.promotion != null && move.promotion != Role.queen) {
+        return false;
+      }
+    } else if (move is DropMove) {
+      // In Chess♯, a queen cannot be placed unless she is the last piece in your pocket
+      if (move.role == Role.queen && pockets!.countSide(turn) > 1) {
+        return false;
+      }
+    }
+    return super.isLegal(move);
+  }
+
+  @override
   Outcome? get variantOutcome {
     // Chess♯ ends when one side has lost its king
     for (final color in Side.values) {
@@ -1778,6 +1785,29 @@ class ChessSharp extends Position<ChessSharp> {
         : const SquareSet.fromRank(7));
 
     return mask;
+  }
+
+  @override
+  String toSan(Move move) {
+    // Chess♯ notation does not use check (+) or checkmate (#) symbols
+    if (isLegal(move)) {
+      final san = _makeSanWithoutSuffix(move);
+      return san;
+    } else {
+      throw PlayError('Invalid move $move');
+    }
+  }
+
+  @override
+  Tuple2<Position<ChessSharp>, String> playToSan(Move move) {
+    // Chess♯ notation does not use check (+) or checkmate (#) symbols
+    if (isLegal(move)) {
+      final san = _makeSanWithoutSuffix(move);
+      final newPos = playUnchecked(move);
+      return Tuple2(newPos, san);
+    } else {
+      throw PlayError('Invalid move $move');
+    }
   }
 
   @override
