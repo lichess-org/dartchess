@@ -1,3 +1,4 @@
+@Tags(['perft'])
 import 'package:test/test.dart';
 import 'dart:io';
 import 'package:dartchess/dartchess.dart';
