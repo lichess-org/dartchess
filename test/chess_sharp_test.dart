@@ -2,25 +2,15 @@ import 'dart:io';
 
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
+import 'db_testing_lib.dart';
 
 void main() {
-  const verbosePrinting = false;
-  void conditionalPrint(Object? a) {
-    if (verbosePrinting) print(a);
-  }
+  print('♯' * 60);
+  print('${'♯\tCHESS♯'.padRight(53)}♯');
+  print('${'♯\tThe rules for Chess♯ can be found at:'.padRight(53)}♯');
+  print('${'♯\thttps://chess-sharp.games/ChessSharp_Rules.pdf'.padRight(53)}♯');
+  print('♯' * 60);
 
-  void printBoard(Position a, [List<NormalMove>? legalMoves]) {
-    if (legalMoves == null) {
-      conditionalPrint(humanReadableBoard(a.board, a.pockets));
-      return;
-    } else {
-      conditionalPrint(
-          '${humanReadableBoard(a.board, a.pockets)}Legal moves: $legalMoves\n\n\n');
-    }
-  }
-
-  print(
-      '**********\nChess♯ variant\nThe rules for Chess♯ can be found at\nhttps://chess-sharp.games/ChessSharp_Rules.pdf\n\nSet the "verbosePrinting" constant to true (line 7 of chess_sharp_test.dart) to help with debugging these tests\n**********');
   test('Chess♯ - board starts with 16 pawns (only)', () {
     expect(Board.chessSharp.pieces.length, 16);
     expect(Board.chessSharp.materialCount(Side.white)[Role.pawn], 8);
@@ -80,406 +70,219 @@ void main() {
     expect(a.pockets!.of(Side.black, Role.king), 1);
   });
   test('Chess♯ - test all legal moves and drops from the beginning', () {
-    const noDrops = <int>[];
-    final whiteHomeRow = <int>[
-      0,
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-    ];
-    final blackHomeRow = <int>[
-      56,
-      57,
-      58,
-      59,
-      60,
-      61,
-      62,
-      63,
-    ];
-    List<int> dropTestEachSquare(Position position, Role pieceRole) {
-      final legalDrops = <int>[];
-      for (int a = 0; a < 64; a++) {
-        if (position.isLegal(DropMove(role: pieceRole, to: a))) {
-          legalDrops.add(a);
-        }
-      }
-      return legalDrops;
-    }
-
-    List<NormalMove> moveTestEachSquare(Position position) {
-      final legalMoves = <NormalMove>[];
-      for (int a = 0; a < 64; a++) {
-        for (int b = 0; b < 64; b++) {
-          if (position.isLegal(NormalMove(from: a, to: b))) {
-            legalMoves.add(NormalMove(from: a, to: b));
-          }
-        }
-      }
-      return legalMoves;
-    }
-
     Position a = ChessSharp.initial;
-
-    var legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 0);
-
-    var legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, whiteHomeRow);
+    List<Move> legalMoves = printBoard(a, printLegalMoves: true);
+    MyExpectations myExpectations = const MyExpectations(
+        legalMoves: 0,
+        legalDrops: 32,
+        legalDropZone: DropZone.whiteHomeRow,
+        rolesThatCanDrop: [Role.knight, Role.bishop, Role.rook, Role.king],
+        rolesThatCantDrop: [Role.pawn, Role.queen]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('K@a1');
-    whiteHomeRow.remove(0);
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 0);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, blackHomeRow);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 0,
+        legalDrops: 32,
+        legalDropZone: DropZone.blackHomeRow,
+        rolesThatCanDrop: [Role.knight, Role.bishop, Role.rook, Role.king],
+        rolesThatCantDrop: [Role.pawn, Role.queen]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('N@a8');
-    blackHomeRow.remove(56);
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 9);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, noDrops);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 9,
+        legalDrops: 21,
+        legalDropZone: DropZone.whiteHomeRow,
+        rolesThatCanDrop: [Role.knight, Role.bishop, Role.rook],
+        rolesThatCantDrop: [Role.pawn, Role.queen, Role.king]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('a3');
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 0);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, blackHomeRow);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 0,
+        legalDrops: 28,
+        legalDropZone: DropZone.blackHomeRow,
+        rolesThatCanDrop: [Role.knight, Role.bishop, Role.rook, Role.king],
+        rolesThatCantDrop: [Role.pawn, Role.queen]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('N@b8');
-    blackHomeRow.remove(57);
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 10);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, noDrops);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 10,
+        legalDrops: 21,
+        legalDropZone: DropZone.whiteHomeRow,
+        rolesThatCanDrop: [Role.knight, Role.bishop, Role.rook],
+        rolesThatCantDrop: [Role.pawn, Role.queen, Role.king]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('b3');
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 0);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, blackHomeRow);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 0,
+        legalDrops: 18,
+        legalDropZone: DropZone.blackHomeRow,
+        rolesThatCanDrop: [Role.bishop, Role.rook, Role.king],
+        rolesThatCantDrop: [Role.knight, Role.pawn, Role.queen]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('B@c8');
-    blackHomeRow.remove(58);
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 11);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, noDrops);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 11,
+        legalDrops: 21,
+        legalDropZone: DropZone.whiteHomeRow,
+        rolesThatCanDrop: [Role.knight, Role.bishop, Role.rook],
+        rolesThatCantDrop: [Role.pawn, Role.queen, Role.king]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('c3');
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 0);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, blackHomeRow);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 0,
+        legalDrops: 15,
+        legalDropZone: DropZone.blackHomeRow,
+        rolesThatCanDrop: [Role.bishop, Role.rook, Role.king],
+        rolesThatCantDrop: [Role.knight, Role.pawn, Role.queen]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('B@d8');
-    blackHomeRow.remove(59);
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 11);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, noDrops);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 11,
+        legalDrops: 21,
+        legalDropZone: DropZone.whiteHomeRow,
+        rolesThatCanDrop: [Role.knight, Role.bishop, Role.rook],
+        rolesThatCantDrop: [Role.pawn, Role.queen, Role.king]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('d3');
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 0);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, blackHomeRow);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 0,
+        legalDrops: 8,
+        legalDropZone: DropZone.blackHomeRow,
+        rolesThatCanDrop: [Role.rook, Role.king],
+        rolesThatCantDrop: [Role.bishop, Role.knight, Role.pawn, Role.queen]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('R@e8');
-    blackHomeRow.remove(60);
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 11);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, noDrops);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 11,
+        legalDrops: 21,
+        legalDropZone: DropZone.whiteHomeRow,
+        rolesThatCanDrop: [Role.knight, Role.bishop, Role.rook],
+        rolesThatCantDrop: [Role.pawn, Role.queen, Role.king]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('e3');
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 0);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, blackHomeRow);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 0,
+        legalDrops: 6,
+        legalDropZone: DropZone.blackHomeRow,
+        rolesThatCanDrop: [Role.rook, Role.king],
+        rolesThatCantDrop: [Role.bishop, Role.knight, Role.pawn, Role.queen]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('R@f8');
-    blackHomeRow.remove(61);
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 11);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, noDrops);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 11,
+        legalDrops: 21,
+        legalDropZone: DropZone.whiteHomeRow,
+        rolesThatCanDrop: [Role.knight, Role.bishop, Role.rook],
+        rolesThatCantDrop: [Role.pawn, Role.queen, Role.king]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('f3');
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 0);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, blackHomeRow);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 0,
+        legalDrops: 2,
+        legalDropZone: DropZone.blackHomeRow,
+        rolesThatCanDrop: [
+          Role.king
+        ],
+        rolesThatCantDrop: [
+          Role.rook,
+          Role.bishop,
+          Role.knight,
+          Role.pawn,
+          Role.queen
+        ]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('K@g8');
-    blackHomeRow.remove(62);
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 11);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, noDrops);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 11,
+        legalDrops: 21,
+        legalDropZone: DropZone.whiteHomeRow,
+        rolesThatCanDrop: [Role.knight, Role.bishop, Role.rook],
+        rolesThatCantDrop: [Role.pawn, Role.queen, Role.king]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('g3');
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 12); // 8 pawn moves, 1 king, 3 knight
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, noDrops);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 12,
+        legalDrops: 1,
+        legalDropZone: DropZone.blackHomeRow,
+        rolesThatCanDrop: [
+          Role.queen
+        ],
+        rolesThatCantDrop: [
+          Role.rook,
+          Role.bishop,
+          Role.knight,
+          Role.pawn,
+          Role.king
+        ]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('Nb6');
-    blackHomeRow
-      ..add(56)
-      ..sort();
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 11);
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, whiteHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, noDrops);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 11,
+        legalDrops: 21,
+        legalDropZone: DropZone.whiteHomeRow,
+        rolesThatCanDrop: [Role.knight, Role.bishop, Role.rook],
+        rolesThatCantDrop: [Role.pawn, Role.queen, Role.king]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('h3');
-
-    legalMoves = moveTestEachSquare(a);
-    printBoard(a, legalMoves);
-    expect(legalMoves.length, 14); // 7 pawn moves, 1 king, 6 knight
-
-    legalDrops = dropTestEachSquare(a, Role.pawn);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.knight);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.bishop);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.rook);
-    expect(legalDrops, noDrops);
-    legalDrops = dropTestEachSquare(a, Role.queen);
-    expect(legalDrops, blackHomeRow);
-    legalDrops = dropTestEachSquare(a, Role.king);
-    expect(legalDrops, noDrops);
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 14,
+        legalDrops: 2,
+        legalDropZone: DropZone.blackHomeRow,
+        rolesThatCanDrop: [
+          Role.queen
+        ],
+        rolesThatCantDrop: [
+          Role.rook,
+          Role.bishop,
+          Role.knight,
+          Role.pawn,
+          Role.king
+        ]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
 
     a = a.playSan('Nc6');
-    blackHomeRow
-      ..add(57)
-      ..sort();
+    legalMoves = printBoard(a, printLegalMoves: true);
+    myExpectations = const MyExpectations(
+        legalMoves: 11,
+        legalDrops: 21,
+        legalDropZone: DropZone.whiteHomeRow,
+        rolesThatCanDrop: [Role.knight, Role.bishop, Role.rook],
+        rolesThatCantDrop: [Role.pawn, Role.queen, Role.king]);
+    expect(myExpectations.testLegalMoves(legalMoves), '');
   });
   test(
       "Chess♯ - test that when a piece is captured it doesn't enter the pockets (like it does for Crazyhouse)",
