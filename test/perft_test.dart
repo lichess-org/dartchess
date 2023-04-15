@@ -104,41 +104,6 @@ void main() async {
     }
   });
 
-  // group('Chess Tricky', () {
-  //   final tests =
-  //       Parser().parse(File('test/resources/tricky.perft').readAsStringSync());
-  //   for (final perftTest in tests) {
-  //     for (final testCase in perftTest.cases
-  //         .takeWhile((testCase) => testCase.nodes < nodeLimit)) {
-  //       test('${perftTest.id} ${perftTest.fen} ${testCase.depth}', () {
-  //         final position = Chess.fromSetup(Setup.parseFen(perftTest.fen),
-  //             ignoreImpossibleCheck:
-  //                 true); // true: otherwise there is an Impossible Check Error
-  //         expect(perft(position, testCase.depth), testCase.nodes,
-  //             reason:
-  //                 'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
-  //       });
-  //     }
-  //   }
-  // });
-
-  group('Random', () {
-    final tests =
-        Parser().parse(File('test/resources/random.perft').readAsStringSync());
-    // only test 10 position in random. Test file has around 6000 positions
-    for (final perftTest in tests.take(50)) {
-      final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
-      for (final testCase in perftTest.cases
-          .takeWhile((testCase) => testCase.nodes < nodeLimit)) {
-        test('${perftTest.id} ${perftTest.fen}  ${testCase.depth}', () {
-          expect(perft(position, testCase.depth), testCase.nodes,
-              reason:
-                  'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
-        });
-      }
-    }
-  });
-
   group('Standard', () {
     test('initial position', () {
       const pos = Chess.initial;
@@ -147,6 +112,41 @@ void main() async {
       expect(perft(pos, 2), 400);
       expect(perft(pos, 3), 8902);
       expect(perft(pos, 4), 197281);
+    });
+
+    group('random', () {
+      final tests = Parser()
+          .parse(File('test/resources/random.perft').readAsStringSync());
+      // only test 10 position in random. Test file has around 6000 positions
+      for (final perftTest in tests.take(50)) {
+        final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
+        for (final testCase in perftTest.cases
+            .takeWhile((testCase) => testCase.nodes < nodeLimit)) {
+          test('${perftTest.id} ${perftTest.fen}  ${testCase.depth}', () {
+            expect(perft(position, testCase.depth), testCase.nodes,
+                reason:
+                    'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
+          });
+        }
+      }
+    });
+
+    group('tricky', () {
+      final tests = Parser()
+          .parse(File('test/resources/tricky.perft').readAsStringSync());
+      for (final perftTest in tests) {
+        for (final testCase in perftTest.cases
+            .takeWhile((testCase) => testCase.nodes < nodeLimit)) {
+          test('${perftTest.id} ${perftTest.fen} ${testCase.depth}', () {
+            final position = Chess.fromSetup(Setup.parseFen(perftTest.fen),
+                ignoreImpossibleCheck:
+                    true); // true: otherwise there is an Impossible Check Error
+            expect(perft(position, testCase.depth), testCase.nodes,
+                reason:
+                    'id: ${perftTest.id}\nfen: ${perftTest.fen} \ndepth: ${testCase.depth} \nnodes: ${testCase.nodes}');
+          });
+        }
+      }
     });
   });
 

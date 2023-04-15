@@ -844,8 +844,19 @@ abstract class Position<T extends Position<T>> {
       }
       if (epSquare != null && _canCaptureEp(square)) {
         final pawn = epSquare! - delta;
+
         if (ctx.checkers.isEmpty || ctx.checkers.singleSquare == pawn) {
           legalEpSquare = SquareSet.fromSquare(epSquare!);
+        }
+
+        // en passant capture is valid when blocking a sliding attack on king
+        final sniper = ctx.snipers.singleSquare;
+        if (ctx.checkers.isNotEmpty && sniper != null) {
+          final b = between(ctx.king!, sniper);
+          final epSquareSet = SquareSet.fromSquare(epSquare!);
+          if ((b & board.occupied).isEmpty && b.isIntersected(epSquareSet)) {
+            legalEpSquare = epSquareSet;
+          }
         }
       }
     } else if (piece.role == Role.bishop) {
@@ -899,24 +910,30 @@ abstract class Position<T extends Position<T>> {
           isVariantEnd: isVariantEnd,
           mustCapture: false,
           king: king,
+          snipers: SquareSet.empty,
           blockers: SquareSet.empty,
           checkers: SquareSet.empty);
     }
+    final snipers = _snipers(king);
     return _Context(
       isVariantEnd: isVariantEnd,
       mustCapture: false,
       king: king,
-      blockers: _sliderBlockers(king),
+      snipers: snipers,
+      blockers: _sliderBlockers(king, snipers),
       checkers: checkers,
     );
   }
 
-  SquareSet _sliderBlockers(Square king) {
-    final snipers = rookAttacks(king, SquareSet.empty)
+  SquareSet _snipers(Square king) {
+    return rookAttacks(king, SquareSet.empty)
         .intersect(board.rooksAndQueens)
         .union(bishopAttacks(king, SquareSet.empty)
             .intersect(board.bishopsAndQueens))
         .intersect(board.bySide(turn.opposite));
+  }
+
+  SquareSet _sliderBlockers(Square king, SquareSet snipers) {
     SquareSet blockers = SquareSet.empty;
     for (final sniper in snipers.squares) {
       final b = between(king, sniper) & board.occupied;
@@ -1754,11 +1771,13 @@ class RacingKings extends Position<RacingKings> {
     return blackKing != null &&
         kingAttacks(blackKing).intersect(goal).squares.where((square) {
           // Check whether this king move is legal
+          final snipers = _snipers(blackKing);
           final context = _Context(
             isVariantEnd: false,
             mustCapture: false,
             king: blackKing,
-            blockers: _sliderBlockers(blackKing),
+            snipers: snipers,
+            blockers: _sliderBlockers(blackKing, snipers),
             checkers: checkers,
           );
           final legalMoves = _legalMovesOf(blackKing, context: context);
@@ -2537,6 +2556,7 @@ class _Context {
   const _Context({
     required this.isVariantEnd,
     required this.king,
+    required this.snipers,
     required this.blockers,
     required this.checkers,
     required this.mustCapture,
@@ -2545,6 +2565,7 @@ class _Context {
   final bool isVariantEnd;
   final bool mustCapture;
   final Square? king;
+  final SquareSet snipers;
   final SquareSet blockers;
   final SquareSet checkers;
 
@@ -2552,6 +2573,7 @@ class _Context {
     bool? isVariantEnd,
     bool? mustCapture,
     Square? king,
+    SquareSet? snipers,
     SquareSet? blockers,
     SquareSet? checkers,
   }) {
@@ -2559,6 +2581,7 @@ class _Context {
       isVariantEnd: isVariantEnd ?? this.isVariantEnd,
       mustCapture: mustCapture ?? this.mustCapture,
       king: king,
+      snipers: snipers ?? this.snipers,
       blockers: blockers ?? this.blockers,
       checkers: checkers ?? this.checkers,
     );
