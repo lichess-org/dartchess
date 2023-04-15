@@ -1055,16 +1055,15 @@ abstract class Position<T extends Position<T>> {
   ///
   /// Returns the [CastlingSide] or `null` if the move is a regular move.
   CastlingSide? _getCastlingSide(Move move) {
-    if (move is NormalMove) {
-      if (turn == Side.white && move.to > 7) return null;
-      if (turn == Side.black && move.to < 56) return null;
-      final delta = move.to - move.from;
-      if (delta.abs() != 2 && !board.bySide(turn).has(move.to)) {
-        return null;
-      }
-      if (!board.kings.has(move.from)) {
-        return null;
-      }
+    if (move is! NormalMove) return null;
+    if (turn == Side.white && move.to > 7) return null;
+    if (turn == Side.black && move.to < 56) return null;
+    if (!board.kings.has(move.from)) return null;
+    if (!board.bySide(turn).has(move.from)) return null;
+
+    final delta = move.to - move.from;
+    if (delta.abs() == 2 ||
+        (board.bySide(turn).has(move.to) && board.rooks.has(move.to))) {
       return delta > 0 ? CastlingSide.king : CastlingSide.queen;
     }
     return null;
@@ -1611,7 +1610,7 @@ class Crazyhouse extends Position<Crazyhouse> {
       pockets: pockets != null ? pockets.value : this.pockets,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare != null ? epSquare.value : this.epSquare,
+      epSquare: epSquare?.value,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
