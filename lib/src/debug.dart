@@ -3,6 +3,7 @@ import './models.dart';
 import './position.dart';
 import './square_set.dart';
 import './utils.dart';
+import './setup.dart';
 
 /// Takes a string and returns a SquareSet. Useful for debugging/testing purposes.
 ///
@@ -55,8 +56,11 @@ String humanReadableSquareSet(SquareSet sq) {
 }
 
 /// Prints the board as a human readable string format
-String humanReadableBoard(Board board) {
+String humanReadableBoard(Board board, [Pockets? pockets]) {
   final buffer = StringBuffer();
+  if (pockets != null) {
+    buffer.write('Pockets: $pockets\n');
+  }
   for (int y = 7; y >= 0; y--) {
     for (int x = 0; x < 8; x++) {
       final square = x + y * 8;
