@@ -255,7 +255,13 @@ class PgnGame<T> {
           }
       }
     }
-    token.write(Outcome.toPgnString(Outcome.fromPgn(headers['Result'])));
+    final rules = Rules.fromPgn(headers['Variant']);
+    if (rules == Rules.chessSharp) {
+      token.write(
+          Outcome.toPgnStringChessSharp(Outcome.fromPgn(headers['Result'])));
+    } else {
+      token.write(Outcome.toPgnString(Outcome.fromPgn(headers['Result'])));
+    }
     builder.writeln(token.toString());
     return builder.toString();
   }
