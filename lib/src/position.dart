@@ -1597,7 +1597,7 @@ class Crazyhouse extends Position<Crazyhouse> {
       pockets: pockets != null ? pockets.value : this.pockets,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare != null ? epSquare.value : this.epSquare,
+      epSquare: epSquare?.value,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
