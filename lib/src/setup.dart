@@ -268,6 +268,11 @@ class Pockets {
 
   @override
   int get hashCode => value.hashCode;
+
+  @override
+  String toString() {
+    return _makePockets(this);
+  }
 }
 
 Pockets _parsePockets(String pocketPart) {
