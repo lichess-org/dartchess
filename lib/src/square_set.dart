@@ -58,6 +58,8 @@ class SquareSet {
   static const corners = SquareSet(0x8100000000000081);
   static const center = SquareSet(0x0000001818000000);
   static const backranks = SquareSet(0xff000000000000ff);
+  static const ranksThreeToEight = SquareSet(0xffffffffffff0000);
+  static const ranksOneToSix = SquareSet(0xffffffffffff);
 
   /// Bitwise right shift
   SquareSet shr(int shift) {

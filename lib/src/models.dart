@@ -365,7 +365,8 @@ enum Rules {
   atomic,
   horde,
   racingKings,
-  crazyhouse;
+  crazyhouse,
+  chessSharp;
 
   /// Parses a PGN header variant tag
   static Rules? fromPgn(String? variant) {
@@ -424,6 +425,16 @@ enum Rules {
       case 'racing':
       case 'race':
         return Rules.racingKings;
+      case 'chess♯':
+      case 'chess#':
+      case 'chess ♯':
+      case 'chess #':
+      case 'chess-sharp':
+      case 'chess sharp':
+      case 'chesssharp':
+        // The rules for Chess♯ can be found at
+        // https://chess-sharp.games/ChessSharp_Rules.pdf
+        return Rules.chessSharp;
       default:
         return null;
     }
