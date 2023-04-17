@@ -557,6 +557,17 @@ abstract class Position<T extends Position<T>> {
     }
   }
 
+  /// Plays a move from a Standard Algebraic Notation string.
+  ///
+  /// Throws a [PlayError] if the move is not legal.
+  Position<T> playSan(String san) {
+    final move = parseSan(san);
+    if (move == null) {
+      throw PlayError('Invalid SAN $san');
+    }
+    return play(move);
+  }
+
   /// Plays a move without checking if the move is legal.
   Position<T> playUnchecked(Move move) {
     assert(move is NormalMove || move is DropMove);
@@ -974,14 +985,15 @@ abstract class Position<T extends Position<T>> {
   ///
   /// Returns the [CastlingSide] or `null` if the move is a regular move.
   CastlingSide? _getCastlingSide(Move move) {
-    if (move is NormalMove) {
-      final delta = move.to - move.from;
-      if (delta.abs() != 2 && !board.bySide(turn).has(move.to)) {
-        return null;
-      }
-      if (!board.kings.has(move.from)) {
-        return null;
-      }
+    if (move is! NormalMove) return null;
+    if (turn == Side.white && move.to > 7) return null;
+    if (turn == Side.black && move.to < 56) return null;
+    if (!board.kings.has(move.from)) return null;
+    if (!board.bySide(turn).has(move.from)) return null;
+
+    final delta = move.to - move.from;
+    if (delta.abs() == 2 ||
+        (board.bySide(turn).has(move.to) && board.rooks.has(move.to))) {
       return delta > 0 ? CastlingSide.king : CastlingSide.queen;
     }
     return null;

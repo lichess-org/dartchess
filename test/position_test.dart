@@ -3,6 +3,8 @@ import 'package:fast_immutable_collections/fast_immutable_collections.dart'
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
+import 'db_testing_lib.dart';
+
 void main() {
   group('Position', () {
     test('implements hashCode/==', () {
@@ -83,6 +85,55 @@ void main() {
             Side.black: ByCastlingSide(
                 const {CastlingSide.queen: null, CastlingSide.king: null})
           })));
+    });
+
+    test('issue #25 - _getCastlingSide() creates extra legal castling moves',
+        () {
+      Position a = Chess.initial;
+      a = a.playSan('e4');
+      a = a.playSan('e5');
+      a = a.playSan('d4');
+      a = a.playSan('d5');
+      a = a.playSan('Qh5');
+      a = a.playSan('Qh4');
+      a = a.playSan('Be2');
+      a = a.playSan('Be7');
+      a = a.playSan('Bd2');
+      a = a.playSan('Bd7');
+      a = a.playSan('Nf3');
+      a = a.playSan('Nf6');
+      a = a.playSan('Nc3');
+      a = a.playSan('Nc6');
+      List<Move> legalMoves = printBoard(a, printLegalMoves: true);
+      // Bug: At this point, there are 63 legal moves for White, including 20
+      // possibilities for the king:
+      //   e1a1, e1c1, e1d1, e1e1, e1f1, e1g1, e1h1, e1a2, e1b2, e1c2,
+      //   e1d2, e1e2, e1f2, e1g2, e1h2, e1c3, e1f3, e1d4, e1e4, e1h5
+      // MyExpectations myExpectations = const MyExpectations(legalMoves: 63);
+
+      // With the bug fixed in _getCastlingSide(), there are now only 49 legal
+      // moves for White, including 6 possibilities for the king:
+      //    e1a1 (O-O-O), e1c1 (O-O-O),
+      //    e1d1, e1f1,
+      //    e1g1 (O-O), e1h1 (O-O)
+      MyExpectations myExpectations = const MyExpectations(legalMoves: 49);
+      expect(myExpectations.testLegalMoves(legalMoves), '');
+
+      a = a.playSan('Na4');
+      legalMoves = printBoard(a, printLegalMoves: true);
+      // Bug: And there are also 63 legal moves for Black, including 20
+      // possibilities for the king:
+      //    e8h4, e8d5, e8e5, e8c6, e8f6, e8a7, e8b7, e8c7, e8d7, e8e7,
+      //    e8f7, e8g7, e8h7, e8a8, e8c8, e8d8, e8e8, e8f8, e8g8, e8h8
+      // myExpectations = const MyExpectations(legalMoves: 63);
+
+      // With the bug fixed in _getCastlingSide(), there are now only 49 legal
+      // moves for Black, including 6 possibilities for the king:
+      //    e8a8 (O-O-O), e8c8 (O-O-O),
+      //    e8d8, e8f8,
+      //    e8g8 (O-O), e8h8 (O-O)
+      myExpectations = const MyExpectations(legalMoves: 49);
+      expect(myExpectations.testLegalMoves(legalMoves), '');
     });
   });
 
