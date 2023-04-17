@@ -12,7 +12,7 @@ Dart chess library for native platforms (does not support web).
     - insufficient material
     - setup validation
 - Chess960 support
-- Chess variants: Antichess, Atomic, Crazyhouse, KingOfTheHill, ThreeCheck
+- Chess variants: Antichess, Atomic, Crazyhouse, KingOfTheHill, ThreeCheck, Chess♯
 - Attacks and rays using hyperbola quintessence
 
 ## Example
