@@ -8,6 +8,7 @@ export 'src/models.dart';
 export 'src/utils.dart' hide Box;
 export 'src/square_set.dart';
 export 'src/node.dart';
+export 'src/uci.dart';
 export 'src/attacks.dart';
 export 'src/board.dart';
 export 'src/setup.dart';

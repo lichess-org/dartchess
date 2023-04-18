@@ -4,6 +4,12 @@ import 'package:meta/meta.dart';
 class Node<T> {
   final List<ChildNode<T>> children = [];
 
+  /// Adds a child to this node.
+  void addChild(ChildNode<T> node) => children.add(node);
+
+  /// Prepends a child to this node.
+  void prependChild(ChildNode<T> node) => children.insert(0, node);
+
   /// An iterable of all nodes on the mainline.
   Iterable<T> get mainline sync* {
     Node<T> node = this;

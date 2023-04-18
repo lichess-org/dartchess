@@ -14,9 +14,13 @@ environment:
 
 dependencies:
   fast_immutable_collections: ^9.0.0
+  freezed_annotation: ^2.2.0
   meta: ^1.8.0
 
 dev_dependencies:
   benchmark: ^0.3.0
+  build_runner: ^2.3.2
+  freezed: ^2.2.1
+  json_serializable: ^6.5.4
   lint: ^2.0.1
   test: ^1.16.0
