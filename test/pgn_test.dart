@@ -53,7 +53,7 @@ void main() {
 
   test('tricky tokens', () {
     final steps =
-        PgnGame.parsePgn('O-O-O !! 0-0-0# ??').moves.mainline().toList();
+        PgnGame.parsePgn('O-O-O !! 0-0-0# ??').moves.mainline.toList();
     expect(steps[0].san, 'O-O-O');
     expect(steps[0].nags, [3]);
     expect(steps[1].san, 'O-O-O#');
@@ -71,7 +71,7 @@ void main() {
     final String data =
         File('./data/leading-whitespace.pgn').readAsStringSync();
     final List<PgnGame<PgnNodeData>> games = PgnGame.parseMultiGamePgn(data);
-    expect(games[0].moves.mainline().map((move) => move.san).toList(),
+    expect(games[0].moves.mainline.map((move) => move.san).toList(),
         ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5']);
     expect(games.length, 4);
   });
@@ -81,7 +81,7 @@ void main() {
         .readAsStringSync();
     final List<PgnGame<PgnNodeData>> games = PgnGame.parseMultiGamePgn(data);
     expect(games[0].headers['Variant'], 'Antichess');
-    expect(games[1].moves.mainline().map((move) => move.san).toList(),
+    expect(games[1].moves.mainline.map((move) => move.san).toList(),
         ['e3', 'e6', 'b4', 'Bxb4', 'Qg4']);
     expect(games.length, 3);
   });

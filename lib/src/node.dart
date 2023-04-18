@@ -1,14 +1,14 @@
 import 'package:meta/meta.dart';
 
-/// Parent node containing a list of child nodes (does not contain any data itself).
+/// Root node containing a list of child nodes.
 class Node<T> {
   final List<ChildNode<T>> children = [];
 
-  /// Implements an [Iterable] to iterate the mainline.
-  Iterable<T> mainline() sync* {
-    var node = this;
+  /// An iterable of all nodes on the mainline.
+  Iterable<T> get mainline sync* {
+    Node<T> node = this;
     while (node.children.isNotEmpty) {
-      final child = node.children[0];
+      final child = node.children.first;
       yield child.data;
       node = child;
     }
@@ -40,13 +40,13 @@ class Node<T> {
   }
 }
 
-/// PGN child Node.
+/// Generic child node.
 ///
 /// This class has a mutable `data` field.
 class ChildNode<T> extends Node<T> {
   ChildNode(this.data);
 
-  /// PGN Data.
+  /// Node data.
   T data;
 }
 

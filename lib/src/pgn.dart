@@ -22,7 +22,7 @@ typedef Headers = Map<String, String>;
 /// const pgn = '1. d4 d5 *';
 /// final game = PgnGame.parsePgn(pgn);
 /// Position position = PgnGame.startingPosition(game.headers);
-/// for (final node in game.moves.mainline()) {
+/// for (final node in game.moves.mainline) {
 ///   final move = position.parseSan(node.san);
 ///   if (move == null) break; // Illegal move
 ///   position = position.play(move);
