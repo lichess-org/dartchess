@@ -1,8 +1,8 @@
 import 'package:meta/meta.dart';
 
 /// Parent node containing a list of child nodes (does not contain any data itself).
-class PgnNode<T> {
-  final List<PgnChildNode<T>> children = [];
+class Node<T> {
+  final List<ChildNode<T>> children = [];
 
   /// Implements an [Iterable] to iterate the mainline.
   Iterable<T> mainline() sync* {
@@ -15,10 +15,9 @@ class PgnNode<T> {
   }
 
   /// Function to walk through each node and transform this node tree into
-  /// a [PgnNode<U>] tree.
-  PgnNode<U> transform<U, C>(
-      C ctx, TransformResult<C, U>? Function(C, T, int) f) {
-    final root = PgnNode<U>();
+  /// a [Node<U>] tree.
+  Node<U> transform<U, C>(C ctx, TransformResult<C, U>? Function(C, T, int) f) {
+    final root = Node<U>();
     final stack = [_TransformFrame<T, U, C>(this, root, ctx)];
 
     while (stack.isNotEmpty) {
@@ -31,7 +30,7 @@ class PgnNode<T> {
         final transformData = f(ctx, childBefore.data, childIdx);
         if (transformData != null) {
           ctx = transformData.ctx;
-          final childAfter = PgnChildNode(transformData.data);
+          final childAfter = ChildNode(transformData.data);
           frame.after.children.add(childAfter);
           stack.add(_TransformFrame(childBefore, childAfter, ctx));
         }
@@ -44,14 +43,14 @@ class PgnNode<T> {
 /// PGN child Node.
 ///
 /// This class has a mutable `data` field.
-class PgnChildNode<T> extends PgnNode<T> {
-  PgnChildNode(this.data);
+class ChildNode<T> extends Node<T> {
+  ChildNode(this.data);
 
   /// PGN Data.
   T data;
 }
 
-/// Used to return result in the callback of [PgnNode.transform].
+/// Used to return result in the callback of [Node.transform].
 @immutable
 class TransformResult<C, T> {
   const TransformResult(this.ctx, this.data);
@@ -60,8 +59,8 @@ class TransformResult<C, T> {
 }
 
 class _TransformFrame<T, U, C> {
-  final PgnNode<T> before;
-  final PgnNode<U> after;
+  final Node<T> before;
+  final Node<U> after;
   final C ctx;
 
   _TransformFrame(this.before, this.after, this.ctx);

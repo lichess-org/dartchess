@@ -4,20 +4,19 @@ import 'dart:io';
 
 void main() {
   test('make pgn', () {
-    final root = PgnNode<PgnNodeData>();
-    final e4 =
-        PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'e4', nags: [7]));
-    final e3 = PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'e3'));
+    final root = Node<PgnNodeData>();
+    final e4 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e4', nags: [7]));
+    final e3 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e3'));
     root.children.add(e4);
     root.children.add(e3);
-    final e5 = PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'e5'));
-    final e6 = PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'e6'));
+    final e5 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e5'));
+    final e6 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'e6'));
     e4.children.add(e5);
     e4.children.add(e6);
-    final nf3 = PgnChildNode<PgnNodeData>(
+    final nf3 = ChildNode<PgnNodeData>(
         const PgnNodeData(san: 'Nf3', comments: ['a comment']));
     e6.children.add(nf3);
-    final c4 = PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'c4'));
+    final c4 = ChildNode<PgnNodeData>(const PgnNodeData(san: 'c4'));
     e5.children.add(c4);
 
     expect(
@@ -206,7 +205,7 @@ void main() {
 
   test('transform pgn', () {
     final game = PgnGame.parsePgn('1. a4 ( 1. b4 b5 -- ) 1... a5');
-    final PgnNode<PgnNodeWithFen> res =
+    final Node<PgnNodeWithFen> res =
         game.moves.transform<PgnNodeWithFen, Position>(
       PgnGame.startingPosition(game.headers),
       (pos, data, _) {

@@ -11,7 +11,7 @@ typedef Headers = Map<String, String>;
 
 /// A Portable Game Notation (PNG) representation.
 ///
-/// A PGN game is composed of [Headers] and moves represented by a [PgnNode] tree.
+/// A PGN game is composed of [Headers] and moves represented by a [Node] tree.
 ///
 /// ## Parser
 ///
@@ -31,7 +31,7 @@ typedef Headers = Map<String, String>;
 ///
 /// ## Augmenting game tree
 ///
-/// You can use [PgnNode.transform] to augment all nodes in the game tree with user data.
+/// You can use [Node.transform] to augment all nodes in the game tree with user data.
 ///
 /// It allows you to provide context. You update the context inside the
 /// callback, using the immutable [TransformResult] class. Context object itself
@@ -47,7 +47,7 @@ typedef Headers = Map<String, String>;
 ///
 /// final game = PgnGame.parsePgn('1. e4 e5 *');
 /// final pos = PgnGame.startingPosition(game.headers);
-/// final PgnNode<NodeWithFen> res = game.moves.transform<NodeWithFen, Position>(pos,
+/// final Node<NodeWithFen> res = game.moves.transform<NodeWithFen, Position>(pos,
 ///   (pos, data, _) {
 ///     final move = pos.parseSan(data.san);
 ///     if (move != null) {
@@ -72,7 +72,7 @@ class PgnGame<T> {
   final List<String> comments;
 
   /// Parent node containing the game.
-  final PgnNode<T> moves;
+  final Node<T> moves;
 
   /// Create default headers of a PGN.
   static Headers defaultHeaders() => {
@@ -167,7 +167,7 @@ class PgnGame<T> {
 
     if (moves.children.isNotEmpty) {
       final variations =
-          moves.children.iterator as Iterator<PgnChildNode<PgnNodeData>>;
+          moves.children.iterator as Iterator<ChildNode<PgnNodeData>>;
       variations.moveNext();
       stack.add(_PgnFrame(
           state: _PgnState.pre,
@@ -229,7 +229,7 @@ class PgnGame<T> {
                   ply: frame.ply,
                   node: frame.sidelines.current,
                   sidelines:
-                      <PgnChildNode<PgnNodeData>>[].iterator, // empty iterator
+                      <ChildNode<PgnNodeData>>[].iterator, // empty iterator
                   startsVariation: true,
                   inVariation: false));
               frame.inVariation = true;
@@ -262,7 +262,7 @@ class PgnGame<T> {
   }
 }
 
-/// PGN data for a [PgnNode].
+/// PGN data for a [Node].
 @immutable
 class PgnNodeData {
   /// Constructs a new immutable [PgnNodeData].
@@ -556,9 +556,9 @@ class PgnComment {
 
 /// A frame used for parsing a line
 class _ParserFrame {
-  PgnNode<PgnNodeData> parent;
+  Node<PgnNodeData> parent;
   bool root;
-  PgnChildNode<PgnNodeData>? node;
+  ChildNode<PgnNodeData>? node;
   List<String>? startingComments;
 
   _ParserFrame({required this.parent, required this.root});
@@ -572,8 +572,8 @@ enum _PgnState { pre, sidelines, end }
 class _PgnFrame {
   _PgnState state;
   int ply;
-  PgnChildNode<PgnNodeData> node;
-  Iterator<PgnChildNode<PgnNodeData>> sidelines;
+  ChildNode<PgnNodeData> node;
+  Iterator<ChildNode<PgnNodeData>> sidelines;
   bool startsVariation;
   bool inVariation;
 
@@ -616,7 +616,7 @@ class _PgnParser {
   late _ParserState _state = _ParserState.pre;
   late Headers _gameHeaders;
   late List<String> _gameComments;
-  late PgnNode<PgnNodeData> _gameMoves;
+  late Node<PgnNodeData> _gameMoves;
   late List<_ParserFrame> _stack;
   late List<String> _commentBuf;
 
@@ -635,7 +635,7 @@ class _PgnParser {
     _found = false;
     _state = _ParserState.pre;
     _gameHeaders = initHeaders();
-    _gameMoves = PgnNode();
+    _gameMoves = Node();
     _gameComments = [];
     _commentBuf = [];
     _stack = [_ParserFrame(parent: _gameMoves, root: true)];
@@ -776,7 +776,7 @@ class _PgnParser {
                   if (frame.node != null) {
                     frame.parent = frame.node!;
                   }
-                  frame.node = PgnChildNode(PgnNodeData(
+                  frame.node = ChildNode(PgnNodeData(
                       san: token, startingComments: frame.startingComments));
                   frame.startingComments = null;
                   frame.root = false;
