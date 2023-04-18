@@ -1,7 +1,13 @@
 import 'package:meta/meta.dart';
 
+import 'position.dart';
+import 'uci.dart';
+
 /// Root node containing a list of child nodes.
 class Node<T> {
+  Node(this.position);
+
+  final Position position;
   final List<ChildNode<T>> children = [];
 
   /// Adds a child to this node.
@@ -23,7 +29,7 @@ class Node<T> {
   /// Function to walk through each node and transform this node tree into
   /// a [Node<U>] tree.
   Node<U> transform<U, C>(C ctx, TransformResult<C, U>? Function(C, T, int) f) {
-    final root = Node<U>();
+    final root = Node<U>(position);
     final stack = [_TransformFrame<T, U, C>(this, root, ctx)];
 
     while (stack.isNotEmpty) {
@@ -36,7 +42,8 @@ class Node<T> {
         final transformData = f(ctx, childBefore.data, childIdx);
         if (transformData != null) {
           ctx = transformData.ctx;
-          final childAfter = ChildNode(transformData.data);
+          final childAfter = ChildNode(
+              childBefore.id, childBefore.position, transformData.data);
           frame.after.children.add(childAfter);
           stack.add(_TransformFrame(childBefore, childAfter, ctx));
         }
@@ -46,11 +53,13 @@ class Node<T> {
   }
 }
 
-/// Generic child node.
+/// Generic child node that contains data of type [T].
 ///
 /// This class has a mutable `data` field.
 class ChildNode<T> extends Node<T> {
-  ChildNode(this.data);
+  ChildNode(this.id, super.position, this.data);
+
+  final UciCharPair id;
 
   /// Node data.
   T data;

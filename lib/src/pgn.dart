@@ -5,6 +5,7 @@ import './setup.dart';
 import './models.dart';
 import './position.dart';
 import './node.dart';
+import './uci.dart';
 import './utils.dart';
 
 typedef Headers = Map<String, String>;
@@ -102,7 +103,7 @@ class PgnGame<T> {
       games.add(game);
     }, initHeaders)
         .parse(pgn);
-    return games[0];
+    return games.first;
   }
 
   /// Parse a multi game PGN string.
@@ -616,9 +617,10 @@ class _PgnParser {
   late _ParserState _state = _ParserState.pre;
   late Headers _gameHeaders;
   late List<String> _gameComments;
+  late List<String> _commentBuf;
+
   late Node<PgnNodeData> _gameMoves;
   late List<_ParserFrame> _stack;
-  late List<String> _commentBuf;
 
   /// Function to which the parsed game is passed to
   final void Function(PgnGame<PgnNodeData>) emitGame;
@@ -635,9 +637,9 @@ class _PgnParser {
     _found = false;
     _state = _ParserState.pre;
     _gameHeaders = initHeaders();
-    _gameMoves = Node();
     _gameComments = [];
     _commentBuf = [];
+    _gameMoves = Node(Chess.initial);
     _stack = [_ParserFrame(parent: _gameMoves, root: true)];
   }
 
@@ -716,6 +718,9 @@ class _PgnParser {
               });
             }
             if (_isWhitespace(line)) return;
+            final position = PgnGame.startingPosition(_gameHeaders);
+            _gameMoves = Node(position);
+            _stack = [_ParserFrame(parent: _gameMoves, root: true)];
             _state = _ParserState.moves;
             continue;
           }
@@ -776,8 +781,15 @@ class _PgnParser {
                   if (frame.node != null) {
                     frame.parent = frame.node!;
                   }
-                  frame.node = ChildNode(PgnNodeData(
-                      san: token, startingComments: frame.startingComments));
+                  final san = token;
+                  final move = frame.parent.position.parseSan(san);
+                  if (move == null) continue;
+                  final newPos = frame.parent.position.playUnchecked(move);
+                  frame.node = ChildNode(
+                      UciCharPair.fromMove(move),
+                      newPos,
+                      PgnNodeData(
+                          san: san, startingComments: frame.startingComments));
                   frame.startingComments = null;
                   frame.root = false;
                   frame.parent.children.add(frame.node!);
