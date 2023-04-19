@@ -67,15 +67,6 @@ void main() {
           '[Result "1-0"]\n\n1. e4 e5 2. Nf3 { foo\n  bar baz } 1-0\n');
     });
 
-    // test('tricky tokens', () {
-    //   final steps =
-    //       PgnGame.parsePgn('O-O-O !! 0-0-0# ??').moves.mainline.toList();
-    //   expect(steps[0].san, 'O-O-O');
-    //   expect(steps[0].nags, [3]);
-    //   expect(steps[1].san, 'O-O-O#');
-    //   expect(steps[1].nags, [4]);
-    // });
-
     test('pgn file - kasparov-deep-blue-1997', () {
       final String data =
           File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();
