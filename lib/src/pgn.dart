@@ -639,7 +639,7 @@ class _PgnParser {
     _gameHeaders = initHeaders();
     _gameComments = [];
     _commentBuf = [];
-    _gameMoves = Node(Chess.initial);
+    _gameMoves = Node(0, Chess.initial);
     _stack = [_ParserFrame(parent: _gameMoves, root: true)];
   }
 
@@ -719,7 +719,7 @@ class _PgnParser {
             }
             if (_isWhitespace(line)) return;
             final position = PgnGame.startingPosition(_gameHeaders);
-            _gameMoves = Node(position);
+            _gameMoves = Node(0, position);
             _stack = [_ParserFrame(parent: _gameMoves, root: true)];
             _state = _ParserState.moves;
             continue;
@@ -787,6 +787,8 @@ class _PgnParser {
                   final newPos = frame.parent.position.playUnchecked(move);
                   frame.node = ChildNode(
                       UciCharPair.fromMove(move),
+                      frame.parent.ply + 1,
+                      SanMove(san, move),
                       newPos,
                       PgnNodeData(
                           san: san, startingComments: frame.startingComments));

@@ -11,7 +11,7 @@ part 'uci.g.dart';
 /// Uniquely identify a node in a game tree in a concise way.
 ///
 /// This is a port of `UciCharPair` from scalachess.
-@Freezed(toStringOverride: false)
+@Freezed(toStringOverride: false, copyWith: false)
 class UciCharPair with _$UciCharPair {
   const factory UciCharPair(String a, String b) = _UciCharPair;
   const UciCharPair._();
@@ -66,7 +66,7 @@ class UciCharPair with _$UciCharPair {
 
 /// Compact representation of a path to a game node made from concatenated
 /// UciCharPair strings.
-@freezed
+@Freezed(copyWith: false)
 class UciPath with _$UciPath {
   const factory UciPath(String value) = _UciPath;
   const UciPath._();

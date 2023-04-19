@@ -1,7 +1,10 @@
-import 'package:meta/meta.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart'
     hide Tuple2;
 import './utils.dart';
+
+part 'models.freezed.dart';
+part 'models.g.dart';
 
 enum Side {
   white,
@@ -319,6 +322,22 @@ class DropMove extends Move {
   @override
   int get hashCode => Object.hash(to, role);
 }
+
+/// Represents a [Move] with its associated SAN.
+@Freezed(copyWith: false)
+class SanMove with _$SanMove {
+  const factory SanMove(
+    String san,
+    @JsonKey(fromJson: _sanMoveFromJson, toJson: _sanMoveToJson) Move move,
+  ) = _SanMove;
+
+  factory SanMove.fromJson(Map<String, dynamic> json) =>
+      _$SanMoveFromJson(json);
+}
+
+String _sanMoveToJson(Move move) => move.uci;
+// assume we are serializing only valid uci strings
+Move _sanMoveFromJson(String uci) => Move.fromUci(uci)!;
 
 /// Represents a 2-tuple, or pair.
 @immutable

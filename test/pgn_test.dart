@@ -5,34 +5,54 @@ import 'dart:io';
 void main() {
   group('PGN', () {
     test('make pgn', () {
-      final root = Node<PgnNodeData>(Chess.initial);
+      final root = Node<PgnNodeData>(0, Chess.initial);
       final e4Move = Move.fromUci('e2e4')!;
       final e4 = ChildNode(
           UciCharPair.fromMove(e4Move),
+          1,
+          SanMove('e4', e4Move),
           root.position.playUnchecked(e4Move),
           const PgnNodeData(san: 'e4', nags: [7]));
       final e3Move = Move.fromUci('e2e3')!;
-      final e3 = ChildNode(UciCharPair.fromMove(e3Move),
-          root.position.playUnchecked(e3Move), const PgnNodeData(san: 'e3'));
+      final e3 = ChildNode(
+          UciCharPair.fromMove(e3Move),
+          1,
+          SanMove('e3', e3Move),
+          root.position.playUnchecked(e3Move),
+          const PgnNodeData(san: 'e3'));
       root.children.add(e4);
       root.children.add(e3);
       final e5Move = Move.fromUci('e7e5')!;
-      final e5 = ChildNode(UciCharPair.fromMove(e5Move),
-          e4.position.playUnchecked(e5Move), const PgnNodeData(san: 'e5'));
+      final e5 = ChildNode(
+          UciCharPair.fromMove(e5Move),
+          2,
+          SanMove('e5', e5Move),
+          e4.position.playUnchecked(e5Move),
+          const PgnNodeData(san: 'e5'));
       final e6Move = Move.fromUci('e7e6')!;
-      final e6 = ChildNode(UciCharPair.fromMove(e6Move),
-          e4.position.playUnchecked(e6Move), const PgnNodeData(san: 'e6'));
+      final e6 = ChildNode(
+          UciCharPair.fromMove(e6Move),
+          2,
+          SanMove('e6', e6Move),
+          e4.position.playUnchecked(e6Move),
+          const PgnNodeData(san: 'e6'));
       e4.children.add(e5);
       e4.children.add(e6);
       final nf3Move = Move.fromUci('g1f3')!;
       final nf3 = ChildNode(
           UciCharPair.fromMove(nf3Move),
+          3,
+          SanMove('nf3', nf3Move),
           e6.position.playUnchecked(nf3Move),
           const PgnNodeData(san: 'Nf3', comments: ['a comment']));
       e6.children.add(nf3);
       final c4Move = Move.fromUci('c2c4')!;
-      final c4 = ChildNode(UciCharPair.fromMove(c4Move),
-          e5.position.playUnchecked(c4Move), const PgnNodeData(san: 'c4'));
+      final c4 = ChildNode(
+          UciCharPair.fromMove(c4Move),
+          3,
+          SanMove('c4', c4Move),
+          e5.position.playUnchecked(c4Move),
+          const PgnNodeData(san: 'c4'));
       e5.children.add(c4);
 
       expect(
