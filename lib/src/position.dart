@@ -315,31 +315,25 @@ abstract class Position<T extends Position<T>> {
     }
 
     if (san == 'O-O') {
-      Move? move;
-      if (turn == Side.white) {
-        // Castle the king from e1 to g1
-        move = const NormalMove(from: Squares.e1, to: Squares.g1);
+      final king = board.kingOf(turn);
+      final rook = castles.rookOf(turn, CastlingSide.king);
+      if (king == null || rook == null) {
+        return null;
       }
-      if (turn == Side.black) {
-        // Castle the king from e8 to g8
-        move = const NormalMove(from: Squares.e8, to: Squares.g8);
-      }
-      if (!isLegal(move!)) {
+      final move = NormalMove(from: king, to: rook);
+      if (!isLegal(move)) {
         return null;
       }
       return move;
     }
     if (san == 'O-O-O') {
-      Move? move;
-      if (turn == Side.white) {
-        // Castle the king from e1 to c1
-        move = const NormalMove(from: Squares.e1, to: Squares.c1);
+      final king = board.kingOf(turn);
+      final rook = castles.rookOf(turn, CastlingSide.queen);
+      if (king == null || rook == null) {
+        return null;
       }
-      if (turn == Side.black) {
-        // Castle the king from e8 to c8
-        move = const NormalMove(from: Squares.e8, to: Squares.c8);
-      }
-      if (!isLegal(move!)) {
+      final move = NormalMove(from: king, to: rook);
+      if (!isLegal(move)) {
         return null;
       }
       return move;

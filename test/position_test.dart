@@ -86,6 +86,184 @@ void main() {
     });
   });
 
+  group('san', () {
+    test('toSan en passant', () {
+      final setup = Setup.parseFen('6bk/7b/8/3pP3/8/8/8/Q3K3 w - d6 0 2');
+      final pos = Chess.fromSetup(setup);
+      final move = Move.fromUci('e5d6')!;
+      expect(pos.toSan(move), 'exd6#');
+    });
+
+    test('playToSan with scholar mate', () {
+      const moves = [
+        NormalMove(from: 12, to: 28),
+        NormalMove(from: 52, to: 36),
+        NormalMove(from: 5, to: 26),
+        NormalMove(from: 57, to: 42),
+        NormalMove(from: 3, to: 21),
+        NormalMove(from: 51, to: 43),
+        NormalMove(from: 21, to: 53),
+      ];
+      final sans = moves.fold<Tuple2<Position<Chess>, List<String>>>(
+          const Tuple2(Chess.initial, []), (acc, e) {
+        final ret = acc.item1.playToSan(e);
+        return Tuple2(ret.item1, [...acc.item2, ret.item2]);
+      });
+      expect(
+          sans.item2, equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));
+    });
+
+    test('parse basic san', () {
+      const position = Chess.initial;
+      expect(
+          position.parseSan('e4'), equals(const NormalMove(from: 12, to: 28)));
+      expect(
+          position.parseSan('Nf3'), equals(const NormalMove(from: 6, to: 21)));
+      expect(position.parseSan('Nf6'), null);
+      expect(position.parseSan('Ke2'), null);
+      expect(position.parseSan('O-O'), null);
+      expect(position.parseSan('O-O-O'), null);
+    });
+
+    test('parse pawn capture', () {
+      Position pos = Chess.initial;
+      const line = ['e4', 'd5', 'c4', 'Nf6', 'exd5'];
+      for (final san in line) {
+        pos = pos.play(pos.parseSan(san)!);
+      }
+      expect(pos.fen,
+          'rnbqkb1r/ppp1pppp/5n2/3P4/2P5/8/PP1P1PPP/RNBQKBNR b KQkq - 0 3');
+
+      final pos2 = Chess.fromSetup(
+          Setup.parseFen('r4br1/pp1Npkp1/2P4p/5P2/6P1/5KnP/PP6/R1B5 b - -'));
+      expect(pos2.parseSan('bxc6'), equals(const NormalMove(from: 49, to: 42)));
+
+      final pos3 = Chess.fromSetup(Setup.parseFen(
+          '2rq1rk1/pb2bppp/1p2p3/n1ppPn2/2PP4/PP3N2/1B1NQPPP/RB3RK1 b - -'));
+      expect(pos3.parseSan('c4'), isNull);
+    });
+
+    test('parse fools mate', () {
+      const moves = ['e4', 'e5', 'Qh5', 'Nf6', 'Bc4', 'Nc6', 'Qxf7#'];
+      Position position = Chess.initial;
+      for (final move in moves) {
+        position = position.play(position.parseSan(move)!);
+      }
+      expect(position.isCheckmate, equals(true));
+    });
+
+    test('cannot parse drop moves in Chess', () {
+      const illegalMoves = ['Q@e3', 'N@d4'];
+      const position = Chess.initial;
+      for (final move in illegalMoves) {
+        expect(position.parseSan(move), equals(null));
+      }
+    });
+
+    test('opening pawn moves', () {
+      const legalSans = [
+        'a3',
+        'a4',
+        'b3',
+        'b4',
+        'c3',
+        'c4',
+        'd3',
+        'd4',
+        'e3',
+        'e4',
+        'f3',
+        'f4',
+        'g3',
+        'g4',
+        'h3',
+        'h4',
+      ];
+
+      const illegalSans = [
+        'a1',
+        'a5',
+        'axd6',
+        'b1',
+        'b5',
+        'bxd9',
+        'c1',
+        'c5',
+        'c8',
+        'd1',
+        'd5',
+        'c0',
+        'e1',
+        'e5',
+        'e6',
+        'f1',
+        'f5',
+        'fxd3',
+        'g1',
+        'g5',
+        'fxh7',
+        'h1',
+        'h5',
+        'h?1',
+      ];
+      const position = Chess.initial;
+      for (final san in legalSans) {
+        expect(position.parseSan(san) != null, true);
+      }
+
+      for (final san in illegalSans) {
+        expect(position.parseSan(san) == null, true);
+      }
+    });
+
+    test('opening knight moves', () {
+      const legalSans = [
+        'Na3',
+        'Nc3',
+        'Nf3',
+        'Nh3',
+      ];
+
+      const illegalSans = [
+        'Ba3',
+        'Bc3',
+        'Bf3',
+        'Bh3',
+        'Ne4',
+        'Nb1',
+        'Ng1',
+      ];
+
+      const position = Chess.initial;
+      for (final san in legalSans) {
+        expect(position.parseSan(san) != null, true);
+      }
+
+      for (final san in illegalSans) {
+        expect(position.parseSan(san) == null, true);
+      }
+    });
+
+    test('overspecified pawn move', () {
+      const position = Chess.initial;
+      expect(
+          position.parseSan('2e4'), equals(const NormalMove(from: 12, to: 28)));
+    });
+
+    test('chess960 parseSan castle moves', () {
+      Position<Chess> position = Chess.fromSetup(Setup.parseFen(
+          'brknnqrb/pppppppp/8/8/8/8/PPPPPPPP/BRKNNQRB w KQkq - 0 1'));
+      const moves =
+          'b3 b6 Ne3 g6 Bxh8 Rxh8 O-O-O Qg7 Kb1 Ne6 Nd3 Nf6 h3 O-O-O Nc4 d5 Na3 Nd4 e3 Nc6 Nb5 Rhe8 f3 e5 g4 Re6 g5 Nd7 h4 h5 Bg2 a6 Nc3 Nc5 Nxc5 bxc5 Qxa6+ Bb7 Qa3 Kd7 Qxc5 Ra8 Nxd5 Rd6 Nf6+ Kc8 Ne8 Qf8 Nxd6+ cxd6 Qc3 f5 f4 e4 d3 Qd8 dxe4 Qb6 exf5 gxf5 Rxd6';
+      for (final move in moves.split(' ')) {
+        position = position.playUnchecked(position.parseSan(move)!);
+      }
+      expect(position.fullmoves, equals(31));
+      expect(position.fen,
+          'r1k5/1b6/1qnR4/5pPp/5P1P/1PQ1P3/P1P3B1/1K4R1 b - - 0 31');
+    });
+  });
+
   group('Chess', () {
     group('Position validation', () {
       test('Empty board', () {
@@ -140,172 +318,6 @@ void main() {
             throwsA(predicate((e) =>
                 e is PositionError &&
                 e.cause == IllegalSetup.impossibleCheck)));
-      });
-    });
-
-    group('san', () {
-      test('toSan en passant', () {
-        final setup = Setup.parseFen('6bk/7b/8/3pP3/8/8/8/Q3K3 w - d6 0 2');
-        final pos = Chess.fromSetup(setup);
-        final move = Move.fromUci('e5d6')!;
-        expect(pos.toSan(move), 'exd6#');
-      });
-
-      test('playToSan with scholar mate', () {
-        const moves = [
-          NormalMove(from: 12, to: 28),
-          NormalMove(from: 52, to: 36),
-          NormalMove(from: 5, to: 26),
-          NormalMove(from: 57, to: 42),
-          NormalMove(from: 3, to: 21),
-          NormalMove(from: 51, to: 43),
-          NormalMove(from: 21, to: 53),
-        ];
-        final sans = moves.fold<Tuple2<Position<Chess>, List<String>>>(
-            const Tuple2(Chess.initial, []), (acc, e) {
-          final ret = acc.item1.playToSan(e);
-          return Tuple2(ret.item1, [...acc.item2, ret.item2]);
-        });
-        expect(sans.item2,
-            equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));
-      });
-
-      test('parse basic san', () {
-        const position = Chess.initial;
-        expect(position.parseSan('e4'),
-            equals(const NormalMove(from: 12, to: 28)));
-        expect(position.parseSan('Nf3'),
-            equals(const NormalMove(from: 6, to: 21)));
-        expect(position.parseSan('Nf6'), null);
-        expect(position.parseSan('Ke2'), null);
-        expect(position.parseSan('O-O'), null);
-        expect(position.parseSan('O-O-O'), null);
-      });
-
-      test('parse pawn capture', () {
-        Position pos = Chess.initial;
-        const line = ['e4', 'd5', 'c4', 'Nf6', 'exd5'];
-        for (final san in line) {
-          pos = pos.play(pos.parseSan(san)!);
-        }
-        expect(pos.fen,
-            'rnbqkb1r/ppp1pppp/5n2/3P4/2P5/8/PP1P1PPP/RNBQKBNR b KQkq - 0 3');
-
-        final pos2 = Chess.fromSetup(
-            Setup.parseFen('r4br1/pp1Npkp1/2P4p/5P2/6P1/5KnP/PP6/R1B5 b - -'));
-        expect(
-            pos2.parseSan('bxc6'), equals(const NormalMove(from: 49, to: 42)));
-
-        final pos3 = Chess.fromSetup(Setup.parseFen(
-            '2rq1rk1/pb2bppp/1p2p3/n1ppPn2/2PP4/PP3N2/1B1NQPPP/RB3RK1 b - -'));
-        expect(pos3.parseSan('c4'), isNull);
-      });
-
-      test('parse fools mate', () {
-        const moves = ['e4', 'e5', 'Qh5', 'Nf6', 'Bc4', 'Nc6', 'Qxf7#'];
-        Position position = Chess.initial;
-        for (final move in moves) {
-          position = position.play(position.parseSan(move)!);
-        }
-        expect(position.isCheckmate, equals(true));
-      });
-
-      test('cannot parse drop moves in Chess', () {
-        const illegalMoves = ['Q@e3', 'N@d4'];
-        const position = Chess.initial;
-        for (final move in illegalMoves) {
-          expect(position.parseSan(move), equals(null));
-        }
-      });
-
-      test('opening pawn moves', () {
-        const legalSans = [
-          'a3',
-          'a4',
-          'b3',
-          'b4',
-          'c3',
-          'c4',
-          'd3',
-          'd4',
-          'e3',
-          'e4',
-          'f3',
-          'f4',
-          'g3',
-          'g4',
-          'h3',
-          'h4',
-        ];
-
-        const illegalSans = [
-          'a1',
-          'a5',
-          'axd6',
-          'b1',
-          'b5',
-          'bxd9',
-          'c1',
-          'c5',
-          'c8',
-          'd1',
-          'd5',
-          'c0',
-          'e1',
-          'e5',
-          'e6',
-          'f1',
-          'f5',
-          'fxd3',
-          'g1',
-          'g5',
-          'fxh7',
-          'h1',
-          'h5',
-          'h?1',
-        ];
-        const position = Chess.initial;
-        for (final san in legalSans) {
-          expect(position.parseSan(san) != null, true);
-        }
-
-        for (final san in illegalSans) {
-          expect(position.parseSan(san) == null, true);
-        }
-      });
-
-      test('opening knight moves', () {
-        const legalSans = [
-          'Na3',
-          'Nc3',
-          'Nf3',
-          'Nh3',
-        ];
-
-        const illegalSans = [
-          'Ba3',
-          'Bc3',
-          'Bf3',
-          'Bh3',
-          'Ne4',
-          'Nb1',
-          'Ng1',
-        ];
-
-        const position = Chess.initial;
-        for (final san in legalSans) {
-          expect(position.parseSan(san) != null, true);
-        }
-
-        for (final san in illegalSans) {
-          expect(position.parseSan(san) == null, true);
-        }
-      });
-
-      test('overspecified pawn move', () {
-        const position = Chess.initial;
-        expect(position.parseSan('2e4'),
-            equals(const NormalMove(from: 12, to: 28)));
       });
     });
 
