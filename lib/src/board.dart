@@ -179,6 +179,7 @@ class Board {
     }
   }
 
+  /// Gets the number of pieces of each [Role] for the given [Side].
   IMap<Role, int> materialCount(Side side) => IMap.fromEntries(
       Role.values.map((role) => MapEntry(role, piecesOf(side, role).size)));
 
