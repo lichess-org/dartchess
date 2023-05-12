@@ -1,6 +1,5 @@
 import 'package:meta/meta.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart'
-    hide Tuple2;
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import './utils.dart';
 
 enum Side {
@@ -318,36 +317,6 @@ class DropMove extends Move {
 
   @override
   int get hashCode => Object.hash(to, role);
-}
-
-/// Represents a 2-tuple, or pair.
-@immutable
-class Tuple2<T1, T2> {
-  /// First item of the tuple.
-  final T1 item1;
-
-  /// Second item of the tuple.
-  final T2 item2;
-
-  /// Creates a new tuple value with the specified items.
-  const Tuple2(this.item1, this.item2);
-
-  /// Returns a tuple with the first item set to the specified value.
-  Tuple2<T1, T2> withItem1(T1 v) => Tuple2<T1, T2>(v, item2);
-
-  /// Returns a tuple with the second item set to the specified value.
-  Tuple2<T1, T2> withItem2(T2 v) => Tuple2<T1, T2>(item1, v);
-
-  @override
-  String toString() => '[$item1, $item2]';
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Tuple2 && item1 == other.item1 && item2 == other.item2;
-
-  @override
-  int get hashCode => Object.hash(item1, item2);
 }
 
 @immutable

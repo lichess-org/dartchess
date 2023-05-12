@@ -1,4 +1,6 @@
 @Tags(['full_perft'])
+library;
+
 import 'package:test/test.dart';
 import 'dart:io';
 import 'package:dartchess/dartchess.dart';

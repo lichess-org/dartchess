@@ -1,5 +1,4 @@
-import 'package:fast_immutable_collections/fast_immutable_collections.dart'
-    hide Tuple2;
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
@@ -104,13 +103,13 @@ void main() {
         NormalMove(from: 51, to: 43),
         NormalMove(from: 21, to: 53),
       ];
-      final sans = moves.fold<Tuple2<Position<Chess>, List<String>>>(
-          const Tuple2(Chess.initial, []), (acc, e) {
-        final ret = acc.item1.playToSan(e);
-        return Tuple2(ret.item1, [...acc.item2, ret.item2]);
+      final (_, sans) = moves
+          .fold<(Position<Chess>, List<String>)>((Chess.initial, []), (acc, e) {
+        final (pos, sans) = acc;
+        final (newPos, san) = pos.playToSan(e);
+        return (newPos, [...sans, san]);
       });
-      expect(
-          sans.item2, equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));
+      expect(sans, equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));
     });
 
     test('parse basic san', () {
