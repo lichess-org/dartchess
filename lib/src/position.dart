@@ -521,7 +521,7 @@ abstract class Position<T extends Position<T>> {
     return san;
   }
 
-  /// Plays a move and returns the SAN representation of the [Move] from the [Position].
+  /// Plays a move and returns the SAN representation of the [Move] with the updated [Position].
   ///
   /// Throws a [PlayError] if the move is not legal.
   (Position<T>, String) playToSan(Move move) {
