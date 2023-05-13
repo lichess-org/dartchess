@@ -221,7 +221,7 @@ class Piece {
 ///
 /// A move can be either a [NormalMove] or a [DropMove].
 @immutable
-abstract class Move {
+sealed class Move {
   const Move({
     required this.to,
   });
