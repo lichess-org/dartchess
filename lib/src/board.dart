@@ -1,6 +1,5 @@
 import 'package:meta/meta.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart'
-    hide Tuple2;
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import './square_set.dart';
 import './models.dart';
 import './attacks.dart';
@@ -173,9 +172,9 @@ class Board {
   }
 
   /// An iterable of each [Piece] associated to its [Square].
-  Iterable<Tuple2<Square, Piece>> get pieces sync* {
+  Iterable<(Square, Piece)> get pieces sync* {
     for (final square in occupied.squares) {
-      yield Tuple2(square, pieceAt(square)!);
+      yield (square, pieceAt(square)!);
     }
   }
 

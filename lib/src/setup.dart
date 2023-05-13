@@ -1,6 +1,5 @@
 import 'package:meta/meta.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart'
-    hide Tuple2;
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'dart:math' as math;
 import './square_set.dart';
 import './models.dart';
@@ -34,8 +33,8 @@ class Setup {
   /// Current move number.
   final int fullmoves;
 
-  /// Number of remainingChecks for white (`item1`) and black (`item2`).
-  final Tuple2<int, int>? remainingChecks;
+  /// Number of remainingChecks for white and black.
+  final (int, int)? remainingChecks;
 
   const Setup({
     required this.board,
@@ -129,7 +128,7 @@ class Setup {
 
     // move counters or remainingChecks
     String? halfmovePart = parts.isNotEmpty ? parts.removeAt(0) : null;
-    Tuple2<int, int>? earlyRemainingChecks;
+    (int, int)? earlyRemainingChecks;
     if (halfmovePart != null && halfmovePart.contains('+')) {
       earlyRemainingChecks = _parseRemainingChecks(halfmovePart);
       halfmovePart = parts.isNotEmpty ? parts.removeAt(0) : null;
@@ -147,7 +146,7 @@ class Setup {
     }
 
     final remainingChecksPart = parts.isNotEmpty ? parts.removeAt(0) : null;
-    Tuple2<int, int>? remainingChecks;
+    (int, int)? remainingChecks;
     if (remainingChecksPart != null) {
       if (earlyRemainingChecks != null) {
         throw const FenError('ERR_REMAINING_CHECKS');
@@ -286,7 +285,7 @@ Pockets _parsePockets(String pocketPart) {
   return pockets;
 }
 
-Tuple2<int, int> _parseRemainingChecks(String part) {
+(int, int) _parseRemainingChecks(String part) {
   final parts = part.split('+');
   if (parts.length == 3 && parts[0] == '') {
     final white = _parseSmallUint(parts[1]);
@@ -294,14 +293,14 @@ Tuple2<int, int> _parseRemainingChecks(String part) {
     if (white == null || white > 3 || black == null || black > 3) {
       throw const FenError('ERR_REMAINING_CHECKS');
     }
-    return Tuple2(3 - white, 3 - black);
+    return (3 - white, 3 - black);
   } else if (parts.length == 2) {
     final white = _parseSmallUint(parts[0]);
     final black = _parseSmallUint(parts[1]);
     if (white == null || white > 3 || black == null || black > 3) {
       throw const FenError('ERR_REMAINING_CHECKS');
     }
-    return Tuple2(white, black);
+    return (white, black);
   } else {
     throw const FenError('ERR_REMAINING_CHECKS');
   }
@@ -381,8 +380,10 @@ String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
   return fen != '' ? fen : '-';
 }
 
-String _makeRemainingChecks(Tuple2<int, int> checks) =>
-    '${checks.item1}+${checks.item2}';
+String _makeRemainingChecks((int, int) checks) {
+  final (white, black) = checks;
+  return '$white+$black';
+}
 
 int? _parseSmallUint(String str) =>
     RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;

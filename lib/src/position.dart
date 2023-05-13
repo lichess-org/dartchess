@@ -1,7 +1,6 @@
 import 'package:meta/meta.dart';
 import 'dart:math' as math;
-import 'package:fast_immutable_collections/fast_immutable_collections.dart'
-    hide Tuple2;
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import './constants.dart';
 import './square_set.dart';
 import './attacks.dart';
@@ -522,10 +521,10 @@ abstract class Position<T extends Position<T>> {
     return san;
   }
 
-  /// Plays a move and returns the SAN representation of the [Move] from the [Position].
+  /// Plays a move and returns the SAN representation of the [Move] with the updated [Position].
   ///
   /// Throws a [PlayError] if the move is not legal.
-  Tuple2<Position<T>, String> playToSan(Move move) {
+  (Position<T>, String) playToSan(Move move) {
     if (isLegal(move)) {
       final san = _makeSanWithoutSuffix(move);
       final newPos = playUnchecked(move);
@@ -534,7 +533,7 @@ abstract class Position<T extends Position<T>> {
           : newPos.isCheck
               ? '$san+'
               : san;
-      return Tuple2(newPos, suffixed);
+      return (newPos, suffixed);
     } else {
       throw PlayError('Invalid move $move');
     }
@@ -1612,7 +1611,7 @@ class ThreeCheck extends Position<ThreeCheck> {
   });
 
   /// Number of remainingChecks for white (`item1`) and black (`item2`).
-  final Tuple2<int, int> remainingChecks;
+  final (int, int) remainingChecks;
 
   const ThreeCheck._initial()
       : remainingChecks = _defaultRemainingChecks,
@@ -1620,18 +1619,18 @@ class ThreeCheck extends Position<ThreeCheck> {
 
   static const initial = ThreeCheck._initial();
 
-  static const _defaultRemainingChecks = Tuple2(3, 3);
+  static const _defaultRemainingChecks = (3, 3);
 
   @override
-  bool get isVariantEnd =>
-      remainingChecks.item1 <= 0 || remainingChecks.item2 <= 0;
+  bool get isVariantEnd => remainingChecks.$1 <= 0 || remainingChecks.$2 <= 0;
 
   @override
   Outcome? get variantOutcome {
-    if (remainingChecks.item1 <= 0) {
+    final (white, black) = remainingChecks;
+    if (white <= 0) {
       return Outcome.whiteWins;
     }
-    if (remainingChecks.item2 <= 0) {
+    if (black <= 0) {
       return Outcome.blackWins;
     }
     return null;
@@ -1682,12 +1681,11 @@ class ThreeCheck extends Position<ThreeCheck> {
   ThreeCheck playUnchecked(Move move) {
     final newPos = super.playUnchecked(move) as ThreeCheck;
     if (newPos.isCheck) {
+      final (whiteChecks, blackChecks) = remainingChecks;
       return newPos._copyWith(
           remainingChecks: turn == Side.white
-              ? remainingChecks
-                  .withItem1(math.max(remainingChecks.item1 - 1, 0))
-              : remainingChecks
-                  .withItem2(math.max(remainingChecks.item2 - 1, 0)));
+              ? (math.max(whiteChecks - 1, 0), blackChecks)
+              : (whiteChecks, math.max(blackChecks - 1, 0)));
     } else {
       return newPos;
     }
@@ -1702,7 +1700,7 @@ class ThreeCheck extends Position<ThreeCheck> {
     Box<Square?>? epSquare,
     int? halfmoves,
     int? fullmoves,
-    Tuple2<int, int>? remainingChecks,
+    (int, int)? remainingChecks,
   }) {
     return ThreeCheck(
       board: board ?? this.board,
@@ -1916,13 +1914,15 @@ class Horde extends Position<Horde> {
   // get the number of light or dark square bishops
   int _hordeBishops(Side side, SquareColor sqColor) {
     if (sqColor == SquareColor.light) {
-      return (board
-              .piecesOf(side, Role.bishop)
-              .intersect(SquareSet.lightSquares))
+      return board
+          .piecesOf(side, Role.bishop)
+          .intersect(SquareSet.lightSquares)
           .size;
     }
     // dark squares
-    return (board.piecesOf(side, Role.bishop).intersect(SquareSet.darkSquares))
+    return board
+        .piecesOf(side, Role.bishop)
+        .intersect(SquareSet.darkSquares)
         .size;
   }
 
