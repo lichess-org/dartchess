@@ -33,8 +33,7 @@ typedef Headers = Map<String, String>;
 /// You can use [PgnNode.transform] to augment all nodes in the game tree with user data.
 ///
 /// It allows you to provide context. You update the context inside the
-/// callback, using the immutable [TransformResult] class. Context object itself
-/// should be immutable to prevent any unwanted mutation.
+/// callback. Context object itself should be immutable to prevent any unwanted mutation.
 /// In the example below, the current [Position] `pos` is provided as context.
 ///
 /// ```dart
@@ -51,7 +50,7 @@ typedef Headers = Map<String, String>;
 ///     final move = pos.parseSan(data.san);
 ///     if (move != null) {
 ///       final newPos = pos.play(move);
-///       return TransformResult(
+///       return (
 ///           newPos, NodeWithFen(fen: newPos.fen, data: data));
 ///     }
 ///     return null;
@@ -327,8 +326,7 @@ class PgnNode<T> {
 
   /// Function to walk through each node and transform this node tree into
   /// a [PgnNode<U>] tree.
-  PgnNode<U> transform<U, C>(
-      C ctx, TransformResult<C, U>? Function(C, T, int) f) {
+  PgnNode<U> transform<U, C>(C ctx, (C, U)? Function(C, T, int) f) {
     final root = PgnNode<U>();
     final stack = [_TransformFrame<T, U, C>(this, root, ctx)];
 
@@ -341,8 +339,9 @@ class PgnNode<T> {
         final childBefore = frame.before.children[childIdx];
         final transformData = f(ctx, childBefore.data, childIdx);
         if (transformData != null) {
-          ctx = transformData.ctx;
-          final childAfter = PgnChildNode(transformData.data);
+          final (newCtx, data) = transformData;
+          ctx = newCtx;
+          final childAfter = PgnChildNode(data);
           frame.after.children.add(childAfter);
           stack.add(_TransformFrame(childBefore, childAfter, ctx));
         }
@@ -360,14 +359,6 @@ class PgnChildNode<T> extends PgnNode<T> {
 
   /// PGN Data.
   T data;
-}
-
-/// Used to return result in the callback of [PgnNode.transform].
-@immutable
-class TransformResult<C, T> {
-  const TransformResult(this.ctx, this.data);
-  final C ctx;
-  final T data;
 }
 
 /// Represents the color of a PGN comment.

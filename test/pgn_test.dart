@@ -213,8 +213,7 @@ void main() {
         final move = pos.parseSan(data.san);
         if (move != null) {
           final pos2 = pos.play(move);
-          return TransformResult(
-              pos2, PgnNodeWithFen(fen: pos2.fen, data: data));
+          return (pos2, PgnNodeWithFen(fen: pos2.fen, data: data));
         }
         return null;
       },
