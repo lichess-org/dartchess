@@ -1,5 +1,5 @@
 name: dartchess
-description: Native mobile chess rules library
+description: Chess rules library for native platforms.
 version: 0.1.0
 platforms:
   android:
@@ -7,7 +7,6 @@ platforms:
   linux:
   macos:
   windows:
-# homepage: https://www.example.com
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
