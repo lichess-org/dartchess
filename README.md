@@ -1,4 +1,4 @@
-Dart chess library for native platforms (does not support web).
+Chess and chess variant rules written in dart for native platforms (does not support web).
 
 ## Features
 
@@ -14,6 +14,7 @@ Dart chess library for native platforms (does not support web).
 - Chess960 support
 - Chess variants: Antichess, Atomic, Crazyhouse, KingOfTheHill, ThreeCheck
 - PGN parser and writer
+- Bitboards
 - Attacks and rays using hyperbola quintessence
 
 ## Example
@@ -27,6 +28,6 @@ assert(pos.isCheckmate == true);
 
 ## Additional information
 
-This package code was heavily inspired from:
+This package was heavily inspired from:
 - https://github.com/niklasf/chessops
 - https://github.com/niklasf/shakmaty
