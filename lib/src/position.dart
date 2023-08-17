@@ -240,26 +240,24 @@ abstract class Position<T extends Position<T>> {
 
   /// Tests a move for legality.
   bool isLegal(Move move) {
-    assert(move is NormalMove || move is DropMove);
-    if (move is NormalMove) {
-      if (move.promotion == Role.pawn) return false;
-      if (move.promotion == Role.king && this is! Antichess) return false;
-      if (move.promotion != null &&
-          (!board.pawns.has(move.from) || !SquareSet.backranks.has(move.to))) {
-        return false;
-      }
-      final legalMoves = _legalMovesOf(move.from);
-      return legalMoves.has(move.to) || legalMoves.has(normalizeMove(move).to);
-    } else if (move is DropMove) {
-      if (pockets == null || pockets!.of(turn, move.role) <= 0) {
-        return false;
-      }
-      if (move.role == Role.pawn && SquareSet.backranks.has(move.to)) {
-        return false;
-      }
-      return legalDrops.has(move.to);
+    switch (move) {
+      case NormalMove(from: final f, to: final t, promotion: final p):
+        if (p == Role.pawn) return false;
+        if (p == Role.king && this is! Antichess) return false;
+        if (p != null && (!board.pawns.has(f) || !SquareSet.backranks.has(t))) {
+          return false;
+        }
+        final legalMoves = _legalMovesOf(f);
+        return legalMoves.has(t) || legalMoves.has(normalizeMove(move).to);
+      case DropMove(to: final t, role: final r):
+        if (pockets == null || pockets!.of(turn, r) <= 0) {
+          return false;
+        }
+        if (r == Role.pawn && SquareSet.backranks.has(t)) {
+          return false;
+        }
+        return legalDrops.has(t);
     }
-    return false;
   }
 
   /// Gets the legal moves for that [Square].
@@ -552,84 +550,83 @@ abstract class Position<T extends Position<T>> {
 
   /// Plays a move without checking if the move is legal.
   Position<T> playUnchecked(Move move) {
-    assert(move is NormalMove || move is DropMove);
-    if (move is NormalMove) {
-      final piece = board.pieceAt(move.from);
-      if (piece == null) {
-        return _copyWith();
-      }
-      final castlingSide = _getCastlingSide(move);
-      final epCaptureTarget = move.to + (turn == Side.white ? -8 : 8);
-      Square? newEpSquare;
-      Board newBoard = board.removePieceAt(move.from);
-      Castles newCastles = castles;
-      if (piece.role == Role.pawn) {
-        if (move.to == epSquare) {
-          newBoard = newBoard.removePieceAt(epCaptureTarget);
+    switch (move) {
+      case NormalMove(from: final from, to: final to, promotion: final prom):
+        final piece = board.pieceAt(from);
+        if (piece == null) {
+          return _copyWith();
         }
-        final delta = move.from - move.to;
-        if (delta.abs() == 16 && move.from >= 8 && move.from <= 55) {
-          newEpSquare = (move.from + move.to) >>> 1;
-        }
-      } else if (piece.role == Role.rook) {
-        newCastles = newCastles.discardRookAt(move.from);
-      } else if (piece.role == Role.king) {
-        if (castlingSide != null) {
-          final rookFrom = castles.rookOf(turn, castlingSide);
-          if (rookFrom != null) {
-            final rook = board.pieceAt(rookFrom);
-            newBoard = newBoard
-                .removePieceAt(rookFrom)
-                .setPieceAt(_kingCastlesTo(turn, castlingSide), piece);
-            if (rook != null) {
-              newBoard =
-                  newBoard.setPieceAt(_rookCastlesTo(turn, castlingSide), rook);
+        final castlingSide = _getCastlingSide(move);
+        final epCaptureTarget = to + (turn == Side.white ? -8 : 8);
+        Square? newEpSquare;
+        Board newBoard = board.removePieceAt(from);
+        Castles newCastles = castles;
+        if (piece.role == Role.pawn) {
+          if (to == epSquare) {
+            newBoard = newBoard.removePieceAt(epCaptureTarget);
+          }
+          final delta = from - to;
+          if (delta.abs() == 16 && from >= 8 && from <= 55) {
+            newEpSquare = (from + to) >>> 1;
+          }
+        } else if (piece.role == Role.rook) {
+          newCastles = newCastles.discardRookAt(from);
+        } else if (piece.role == Role.king) {
+          if (castlingSide != null) {
+            final rookFrom = castles.rookOf(turn, castlingSide);
+            if (rookFrom != null) {
+              final rook = board.pieceAt(rookFrom);
+              newBoard = newBoard
+                  .removePieceAt(rookFrom)
+                  .setPieceAt(_kingCastlesTo(turn, castlingSide), piece);
+              if (rook != null) {
+                newBoard = newBoard.setPieceAt(
+                    _rookCastlesTo(turn, castlingSide), rook);
+              }
             }
           }
+          newCastles = newCastles.discardSide(turn);
         }
-        newCastles = newCastles.discardSide(turn);
-      }
 
-      if (castlingSide == null) {
-        final newPiece = move.promotion != null
-            ? piece.copyWith(role: move.promotion, promoted: pockets != null)
-            : piece;
-        newBoard = newBoard.setPieceAt(move.to, newPiece);
-      }
+        if (castlingSide == null) {
+          final newPiece = prom != null
+              ? piece.copyWith(role: prom, promoted: pockets != null)
+              : piece;
+          newBoard = newBoard.setPieceAt(to, newPiece);
+        }
 
-      final capturedPiece = castlingSide == null
-          ? board.pieceAt(move.to)
-          : move.to == epSquare
-              ? board.pieceAt(epCaptureTarget)
-              : null;
-      final isCapture = capturedPiece != null;
+        final capturedPiece = castlingSide == null
+            ? board.pieceAt(to)
+            : to == epSquare
+                ? board.pieceAt(epCaptureTarget)
+                : null;
+        final isCapture = capturedPiece != null;
 
-      if (capturedPiece != null && capturedPiece.role == Role.rook) {
-        newCastles = newCastles.discardRookAt(move.to);
-      }
+        if (capturedPiece != null && capturedPiece.role == Role.rook) {
+          newCastles = newCastles.discardRookAt(to);
+        }
 
-      return _copyWith(
-        halfmoves: isCapture || piece.role == Role.pawn ? 0 : halfmoves + 1,
-        fullmoves: turn == Side.black ? fullmoves + 1 : fullmoves,
-        pockets: Box(capturedPiece != null
-            ? pockets?.increment(capturedPiece.color.opposite,
-                capturedPiece.promoted ? Role.pawn : capturedPiece.role)
-            : pockets),
-        board: newBoard,
-        turn: turn.opposite,
-        castles: newCastles,
-        epSquare: Box(newEpSquare),
-      );
-    } else if (move is DropMove) {
-      return _copyWith(
-        halfmoves: move.role == Role.pawn ? 0 : halfmoves + 1,
-        fullmoves: turn == Side.black ? fullmoves + 1 : fullmoves,
-        turn: turn.opposite,
-        board: board.setPieceAt(move.to, Piece(color: turn, role: move.role)),
-        pockets: Box(pockets?.decrement(turn, move.role)),
-      );
+        return _copyWith(
+          halfmoves: isCapture || piece.role == Role.pawn ? 0 : halfmoves + 1,
+          fullmoves: turn == Side.black ? fullmoves + 1 : fullmoves,
+          pockets: Box(capturedPiece != null
+              ? pockets?.increment(capturedPiece.color.opposite,
+                  capturedPiece.promoted ? Role.pawn : capturedPiece.role)
+              : pockets),
+          board: newBoard,
+          turn: turn.opposite,
+          castles: newCastles,
+          epSquare: Box(newEpSquare),
+        );
+      case DropMove(to: final to, role: final role):
+        return _copyWith(
+          halfmoves: role == Role.pawn ? 0 : halfmoves + 1,
+          fullmoves: turn == Side.black ? fullmoves + 1 : fullmoves,
+          turn: turn.opposite,
+          board: board.setPieceAt(to, Piece(color: turn, role: role)),
+          pockets: Box(pockets?.decrement(turn, role)),
+        );
     }
-    return this;
   }
 
   /// Returns the normalized form of a [NormalMove] to avoid castling inconsistencies.
@@ -736,76 +733,73 @@ abstract class Position<T extends Position<T>> {
   }
 
   String _makeSanWithoutSuffix(Move move) {
-    assert(move is NormalMove || move is DropMove);
     String san = '';
-    if (move is NormalMove) {
-      final role = board.roleAt(move.from);
-      if (role == null) return '--';
-      if (role == Role.king &&
-          (board.bySide(turn).has(move.to) ||
-              (move.to - move.from).abs() == 2)) {
-        san = move.to > move.from ? 'O-O' : 'O-O-O';
-      } else {
-        final capture = board.occupied.has(move.to) ||
-            (role == Role.pawn && squareFile(move.from) != squareFile(move.to));
-        if (role != Role.pawn) {
-          san = role.char.toUpperCase();
+    switch (move) {
+      case NormalMove(from: final from, to: final to, promotion: final prom):
+        final role = board.roleAt(from);
+        if (role == null) return '--';
+        if (role == Role.king &&
+            (board.bySide(turn).has(to) || (to - from).abs() == 2)) {
+          san = to > from ? 'O-O' : 'O-O-O';
+        } else {
+          final capture = board.occupied.has(to) ||
+              (role == Role.pawn && squareFile(from) != squareFile(to));
+          if (role != Role.pawn) {
+            san = role.char.toUpperCase();
 
-          // Disambiguation
-          SquareSet others;
-          if (role == Role.king) {
-            others = kingAttacks(move.to) & board.kings;
-          } else if (role == Role.queen) {
-            others = queenAttacks(move.to, board.occupied) & board.queens;
-          } else if (role == Role.rook) {
-            others = rookAttacks(move.to, board.occupied) & board.rooks;
-          } else if (role == Role.bishop) {
-            others = bishopAttacks(move.to, board.occupied) & board.bishops;
-          } else {
-            others = knightAttacks(move.to) & board.knights;
-          }
-          others =
-              others.intersect(board.bySide(turn)).withoutSquare(move.from);
-
-          if (others.isNotEmpty) {
-            final ctx = _makeContext();
-            for (final from in others.squares) {
-              if (!_legalMovesOf(from, context: ctx).has(move.to)) {
-                others = others.withoutSquare(from);
-              }
+            // Disambiguation
+            SquareSet others;
+            if (role == Role.king) {
+              others = kingAttacks(to) & board.kings;
+            } else if (role == Role.queen) {
+              others = queenAttacks(to, board.occupied) & board.queens;
+            } else if (role == Role.rook) {
+              others = rookAttacks(to, board.occupied) & board.rooks;
+            } else if (role == Role.bishop) {
+              others = bishopAttacks(to, board.occupied) & board.bishops;
+            } else {
+              others = knightAttacks(to) & board.knights;
             }
+            others = others.intersect(board.bySide(turn)).withoutSquare(from);
+
             if (others.isNotEmpty) {
-              bool row = false;
-              bool column = others
-                  .isIntersected(SquareSet.fromRank(squareRank(move.from)));
-              if (others
-                  .isIntersected(SquareSet.fromFile(squareFile(move.from)))) {
-                row = true;
-              } else {
-                column = true;
+              final ctx = _makeContext();
+              for (final from in others.squares) {
+                if (!_legalMovesOf(from, context: ctx).has(to)) {
+                  others = others.withoutSquare(from);
+                }
               }
-              if (column) {
-                san += kFileNames[squareFile(move.from)];
-              }
-              if (row) {
-                san += kRankNames[squareRank(move.from)];
+              if (others.isNotEmpty) {
+                bool row = false;
+                bool column =
+                    others.isIntersected(SquareSet.fromRank(squareRank(from)));
+                if (others
+                    .isIntersected(SquareSet.fromFile(squareFile(from)))) {
+                  row = true;
+                } else {
+                  column = true;
+                }
+                if (column) {
+                  san += kFileNames[squareFile(from)];
+                }
+                if (row) {
+                  san += kRankNames[squareRank(from)];
+                }
               }
             }
+          } else if (capture) {
+            san = kFileNames[squareFile(from)];
           }
-        } else if (capture) {
-          san = kFileNames[squareFile(move.from)];
-        }
 
-        if (capture) san += 'x';
-        san += toAlgebraic(move.to);
-        if (move.promotion != null) {
-          san += '=${move.promotion!.char.toUpperCase()}';
+          if (capture) san += 'x';
+          san += toAlgebraic(to);
+          if (prom != null) {
+            san += '=${prom.char.toUpperCase()}';
+          }
         }
-      }
-    } else {
-      move as DropMove;
-      if (move.role != Role.pawn) san = move.role.char.toUpperCase();
-      san += '@${toAlgebraic(move.to)}';
+      case DropMove(role: final role, to: final to):
+        if (role != Role.pawn) san = role.char.toUpperCase();
+        san += '@${toAlgebraic(to)}';
     }
     return san;
   }
@@ -965,14 +959,14 @@ abstract class Position<T extends Position<T>> {
 
   /// Detects if a move is a castling move.
   ///
-  /// Returns the [CastlingSide] or `null` if the move is a regular move.
+  /// Returns the [CastlingSide] or `null` if the move is a drop move.
   CastlingSide? _getCastlingSide(Move move) {
-    if (move is NormalMove) {
-      final delta = move.to - move.from;
-      if (delta.abs() != 2 && !board.bySide(turn).has(move.to)) {
+    if (move case NormalMove(from: final from, to: final to)) {
+      final delta = to - from;
+      if (delta.abs() != 2 && !board.bySide(turn).has(to)) {
         return null;
       }
-      if (!board.kings.has(move.from)) {
+      if (!board.kings.has(from)) {
         return null;
       }
       return delta > 0 ? CastlingSide.king : CastlingSide.queen;
