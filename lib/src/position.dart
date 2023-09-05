@@ -548,6 +548,17 @@ abstract class Position<T extends Position<T>> {
     }
   }
 
+  /// Plays a move from a Standard Algebraic Notation string.
+  ///
+  /// Throws a [PlayError] if the move is not legal.
+  Position<T> playSan(String san) {
+    final move = parseSan(san);
+    if (move == null) {
+      throw PlayError('Invalid SAN $san');
+    }
+    return play(move);
+  }
+
   /// Plays a move without checking if the move is legal.
   Position<T> playUnchecked(Move move) {
     switch (move) {
@@ -1513,7 +1524,7 @@ class Crazyhouse extends Position<Crazyhouse> {
       pockets: pockets != null ? pockets.value : this.pockets,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare != null ? epSquare.value : this.epSquare,
+      epSquare: epSquare?.value,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
