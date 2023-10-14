@@ -60,11 +60,9 @@ typedef PgnHeaders = Map<String, String>;
 ///   },
 /// );
 /// ```
-@immutable
 class PgnGame<T> {
-  /// Constructs a new immutable [PgnGame].
-  const PgnGame(
-      {required this.headers, required this.moves, required this.comments});
+  /// Constructs a new [PgnGame].
+  PgnGame({required this.headers, required this.moves, required this.comments});
 
   /// Headers of the game.
   final PgnHeaders headers;
@@ -103,6 +101,11 @@ class PgnGame<T> {
       games.add(game);
     }, initHeaders)
         .parse(pgn);
+
+    if (games.isEmpty) {
+      return PgnGame(
+          headers: initHeaders(), moves: PgnNode(), comments: const []);
+    }
     return games[0];
   }
 
@@ -115,7 +118,7 @@ class PgnGame<T> {
   /// syntactically valid (but not necessarily legal) moves, skipping any invalid
   /// tokens.
   static List<PgnGame<PgnNodeData>> parseMultiGamePgn(String pgn,
-      [PgnHeaders Function() initHeaders = PgnGame.defaultHeaders]) {
+      {PgnHeaders Function() initHeaders = defaultHeaders}) {
     final List<PgnGame<PgnNodeData>> games = [];
     _PgnParser((PgnGame<PgnNodeData> game) {
       games.add(game);
