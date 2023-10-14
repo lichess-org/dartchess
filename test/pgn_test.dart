@@ -232,6 +232,7 @@ void main() {
 
 class PgnNodeWithFen {
   final String fen;
+  // ignore: unreachable_from_main
   final PgnNodeData data;
   const PgnNodeWithFen({required this.fen, required this.data});
 }

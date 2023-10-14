@@ -6,11 +6,14 @@ import './models.dart';
 import './position.dart';
 import './utils.dart';
 
+@Deprecated('Use PgnHeaders instead')
 typedef Headers = Map<String, String>;
+
+typedef PgnHeaders = Map<String, String>;
 
 /// A Portable Game Notation (PNG) representation.
 ///
-/// A PGN game is composed of [Headers] and moves represented by a [PgnNode] tree.
+/// A PGN game is composed of [PgnHeaders] and moves represented by a [PgnNode] tree.
 ///
 /// ## Parser
 ///
@@ -64,7 +67,7 @@ class PgnGame<T> {
       {required this.headers, required this.moves, required this.comments});
 
   /// Headers of the game.
-  final Headers headers;
+  final PgnHeaders headers;
 
   /// Initial comments of the game.
   final List<String> comments;
@@ -73,7 +76,7 @@ class PgnGame<T> {
   final PgnNode<T> moves;
 
   /// Create default headers of a PGN.
-  static Headers defaultHeaders() => {
+  static PgnHeaders defaultHeaders() => {
         'Event': '?',
         'Site': '?',
         'Date': '????.??.??',
@@ -84,7 +87,7 @@ class PgnGame<T> {
       };
 
   /// Create empty headers of a PGN.
-  static Headers emptyHeaders() => <String, String>{};
+  static PgnHeaders emptyHeaders() => <String, String>{};
 
   /// Parse a PGN string and return a [PgnGame].
   ///
@@ -94,7 +97,7 @@ class PgnGame<T> {
   /// syntactically valid (but not necessarily legal) moves, skipping any invalid
   /// tokens.
   static PgnGame<PgnNodeData> parsePgn(String pgn,
-      {Headers Function() initHeaders = defaultHeaders}) {
+      {PgnHeaders Function() initHeaders = defaultHeaders}) {
     final List<PgnGame<PgnNodeData>> games = [];
     _PgnParser((PgnGame<PgnNodeData> game) {
       games.add(game);
@@ -112,7 +115,7 @@ class PgnGame<T> {
   /// syntactically valid (but not necessarily legal) moves, skipping any invalid
   /// tokens.
   static List<PgnGame<PgnNodeData>> parseMultiGamePgn(String pgn,
-      [Headers Function() initHeaders = PgnGame.defaultHeaders]) {
+      [PgnHeaders Function() initHeaders = PgnGame.defaultHeaders]) {
     final List<PgnGame<PgnNodeData>> games = [];
     _PgnParser((PgnGame<PgnNodeData> game) {
       games.add(game);
@@ -126,7 +129,7 @@ class PgnGame<T> {
   /// Headers can include an optional 'Variant' and 'Fen' key.
   ///
   /// Throws a [PositionError] if it does not meet basic validity requirements.
-  static Position startingPosition(Headers headers,
+  static Position startingPosition(PgnHeaders headers,
       {bool? ignoreImpossibleCheck}) {
     final rules = Rules.fromPgn(headers['Variant']);
     if (rules == null) throw PositionError.variant;
@@ -671,7 +674,7 @@ class _PgnParser {
   List<String> _lineBuf = [];
   late bool _found;
   late _ParserState _state = _ParserState.pre;
-  late Headers _gameHeaders;
+  late PgnHeaders _gameHeaders;
   late List<String> _gameComments;
   late PgnNode<PgnNodeData> _gameMoves;
   late List<_ParserFrame> _stack;
@@ -681,7 +684,7 @@ class _PgnParser {
   final void Function(PgnGame<PgnNodeData>) emitGame;
 
   /// Function to create the headers
-  final Headers Function() initHeaders;
+  final PgnHeaders Function() initHeaders;
 
   _PgnParser(this.emitGame, this.initHeaders) {
     _resetGame();
