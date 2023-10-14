@@ -1,6 +1,8 @@
-## 0.2.1
+## 0.3.0
 
-- rename `Headers` to `PgnHeaders` for consistency.
+- rename `Headers` to `PgnHeaders` for consistency
+- `PgnGame` isn't a const constructor anymore
+- tweak `parseMultiGamePgn` signature for consistency
 
 ## 0.2.0
 

@@ -6,9 +6,6 @@ import './models.dart';
 import './position.dart';
 import './utils.dart';
 
-@Deprecated('Use PgnHeaders instead')
-typedef Headers = Map<String, String>;
-
 typedef PgnHeaders = Map<String, String>;
 
 /// A Portable Game Notation (PNG) representation.
