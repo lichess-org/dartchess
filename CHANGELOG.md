@@ -1,3 +1,7 @@
+## 0.2.1
+
+- rename `Headers` to `PgnHeaders` for consistency.
+
 ## 0.2.0
 
 - add `makeSan` and `makeSanUnchecked` methods to the `Position` class.
