@@ -86,14 +86,16 @@ void main() {
   });
 
   group('san', () {
-    test('toSan en passant', () {
+    test('makeSan en passant', () {
       final setup = Setup.parseFen('6bk/7b/8/3pP3/8/8/8/Q3K3 w - d6 0 2');
       final pos = Chess.fromSetup(setup);
       final move = Move.fromUci('e5d6')!;
-      expect(pos.toSan(move), 'exd6#');
+      final (newPos, san) = pos.makeSan(move);
+      expect(san, 'exd6#');
+      expect(newPos.fen, '6bk/7b/3P4/8/8/8/8/Q3K3 b - - 0 2');
     });
 
-    test('playToSan with scholar mate', () {
+    test('makeSan with scholar mate', () {
       const moves = [
         NormalMove(from: 12, to: 28),
         NormalMove(from: 52, to: 36),
@@ -106,7 +108,7 @@ void main() {
       final (_, sans) = moves
           .fold<(Position<Chess>, List<String>)>((Chess.initial, []), (acc, e) {
         final (pos, sans) = acc;
-        final (newPos, san) = pos.playToSan(e);
+        final (newPos, san) = pos.makeSan(e);
         return (newPos, [...sans, san]);
       });
       expect(sans, equals(['e4', 'e5', 'Bc4', 'Nc6', 'Qf3', 'd6', 'Qxf7#']));

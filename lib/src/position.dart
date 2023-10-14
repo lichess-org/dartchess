@@ -510,34 +510,7 @@ abstract class Position<T extends Position<T>> {
     return move;
   }
 
-  /// Returns the Standard Algebraic Notation of this [Move] from the current [Position].
-  String toSan(Move move) {
-    final san = _makeSanWithoutSuffix(move);
-    final newPos = playUnchecked(move);
-    if (newPos.outcome?.winner != null) return '$san#';
-    if (newPos.isCheck) return '$san+';
-    return san;
-  }
-
-  /// Plays a move and returns the SAN representation of the [Move] with the updated [Position].
-  ///
-  /// Throws a [PlayError] if the move is not legal.
-  (Position<T>, String) playToSan(Move move) {
-    if (isLegal(move)) {
-      final san = _makeSanWithoutSuffix(move);
-      final newPos = playUnchecked(move);
-      final suffixed = newPos.outcome?.winner != null
-          ? '$san#'
-          : newPos.isCheck
-              ? '$san+'
-              : san;
-      return (newPos, suffixed);
-    } else {
-      throw PlayError('Invalid move $move');
-    }
-  }
-
-  /// Plays a move.
+  /// Plays a move and returns the updated [Position].
   ///
   /// Throws a [PlayError] if the move is not legal.
   Position<T> play(Move move) {
@@ -548,7 +521,7 @@ abstract class Position<T extends Position<T>> {
     }
   }
 
-  /// Plays a move without checking if the move is legal.
+  /// Plays a move without checking if the move is legal and returns the updated [Position].
   Position<T> playUnchecked(Move move) {
     switch (move) {
       case NormalMove(from: final from, to: final to, promotion: final prom):
@@ -626,6 +599,60 @@ abstract class Position<T extends Position<T>> {
           board: board.setPieceAt(to, Piece(color: turn, role: role)),
           pockets: Box(pockets?.decrement(turn, role)),
         );
+    }
+  }
+
+  /// Returns the SAN of this [Move] and the updated [Position], without checking if the move is legal.
+  (Position<T>, String) makeSanUnchecked(Move move) {
+    final san = _makeSanWithoutSuffix(move);
+    final newPos = playUnchecked(move);
+    final suffixed = newPos.outcome?.winner != null
+        ? '$san#'
+        : newPos.isCheck
+            ? '$san+'
+            : san;
+    return (newPos, suffixed);
+  }
+
+  /// Returns the SAN of this [Move] and the updated [Position].
+  ///
+  /// Throws a [PlayError] if the move is not legal.
+  (Position<T>, String) makeSan(Move move) {
+    if (isLegal(move)) {
+      return makeSanUnchecked(move);
+    } else {
+      throw PlayError('Invalid move $move');
+    }
+  }
+
+  /// Returns the SAN of this [Move] from the current [Position].
+  ///
+  /// Throws a [PlayError] if the move is not legal.
+  @Deprecated('Use makeSan instead')
+  String toSan(Move move) {
+    if (isLegal(move)) {
+      return makeSanUnchecked(move).$2;
+    } else {
+      throw PlayError('Invalid move $move');
+    }
+  }
+
+  /// Returns the SAN representation of the [Move] with the updated [Position].
+  ///
+  /// Throws a [PlayError] if the move is not legal.
+  @Deprecated('Use makeSan instead')
+  (Position<T>, String) playToSan(Move move) {
+    if (isLegal(move)) {
+      final san = _makeSanWithoutSuffix(move);
+      final newPos = playUnchecked(move);
+      final suffixed = newPos.outcome?.winner != null
+          ? '$san#'
+          : newPos.isCheck
+              ? '$san+'
+              : san;
+      return (newPos, suffixed);
+    } else {
+      throw PlayError('Invalid move $move');
     }
   }
 

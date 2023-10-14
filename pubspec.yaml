@@ -1,7 +1,7 @@
 name: dartchess
-description: Provides chess and chess variants rules and operations including chess move generation.
+description: Provides chess and chess variants rules and operations including chess move generation, read and write FEN, read and write PGN.
 repository: https://github.com/lichess-org/dartchess
-version: 0.1.0
+version: 0.2.0
 platforms:
   android:
   ios:
