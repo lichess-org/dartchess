@@ -1,3 +1,7 @@
+## 0.4.0
+
+- Add `PgnNodeData` as a bound to `PgnNode` generic type parameter
+
 ## 0.3.0
 
 - rename `Headers` to `PgnHeaders` for consistency
