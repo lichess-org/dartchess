@@ -28,7 +28,7 @@ void main() {
 
     test('make pgn from empty game', () {
       final game =
-          PgnGame(headers: {}, moves: PgnNode<PgnNodeData>(), comments: []);
+          PgnGame<PgnNodeData>(headers: {}, moves: PgnNode(), comments: []);
       expect(game.makePgn(), '*\n');
     });
 
@@ -240,7 +240,15 @@ void main() {
           final move = pos.parseSan(data.san);
           if (move != null) {
             final pos2 = pos.play(move);
-            return (pos2, PgnNodeWithFen(fen: pos2.fen, data: data));
+            return (
+              pos2,
+              PgnNodeWithFen(
+                  fen: pos2.fen,
+                  san: data.san,
+                  startingComments: data.startingComments,
+                  comments: data.comments,
+                  nags: data.nags)
+            );
           }
           return null;
         },
@@ -258,9 +266,12 @@ void main() {
   });
 }
 
-class PgnNodeWithFen {
+class PgnNodeWithFen extends PgnNodeData {
   final String fen;
-  // ignore: unreachable_from_main
-  final PgnNodeData data;
-  const PgnNodeWithFen({required this.fen, required this.data});
+  const PgnNodeWithFen(
+      {required this.fen,
+      required super.san,
+      super.startingComments,
+      super.comments,
+      super.nags});
 }

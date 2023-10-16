@@ -57,7 +57,7 @@ typedef PgnHeaders = Map<String, String>;
 ///   },
 /// );
 /// ```
-class PgnGame<T> {
+class PgnGame<T extends PgnNodeData> {
   /// Constructs a new [PgnGame].
   PgnGame({required this.headers, required this.moves, required this.comments});
 
@@ -167,8 +167,7 @@ class PgnGame<T> {
     final List<_PgnFrame> stack = [];
 
     if (moves.children.isNotEmpty) {
-      final variations =
-          moves.children.iterator as Iterator<PgnChildNode<PgnNodeData>>;
+      final variations = moves.children.iterator;
       variations.moveNext();
       stack.add(_PgnFrame(
           state: _PgnState.pre,
@@ -314,7 +313,7 @@ class PgnNodeData {
 }
 
 /// Parent node containing a list of child nodes (does not contain any data itself).
-class PgnNode<T> {
+class PgnNode<T extends PgnNodeData> {
   final List<PgnChildNode<T>> children = [];
 
   /// Implements an [Iterable] to iterate the mainline.
@@ -329,7 +328,8 @@ class PgnNode<T> {
 
   /// Function to walk through each node and transform this node tree into
   /// a [PgnNode<U>] tree.
-  PgnNode<U> transform<U, C>(C ctx, (C, U)? Function(C, T, int) f) {
+  PgnNode<U> transform<U extends PgnNodeData, C>(
+      C ctx, (C, U)? Function(C, T, int) f) {
     final root = PgnNode<U>();
     final stack = [_TransformFrame<T, U, C>(this, root, ctx)];
 
@@ -357,7 +357,7 @@ class PgnNode<T> {
 /// PGN child Node.
 ///
 /// This class has a mutable `data` field.
-class PgnChildNode<T> extends PgnNode<T> {
+class PgnChildNode<T extends PgnNodeData> extends PgnNode<T> {
   PgnChildNode(this.data);
 
   /// PGN Data.
@@ -606,7 +606,7 @@ class PgnComment {
   int get hashCode => Object.hash(text, shapes, clock, emt, eval);
 }
 
-class _TransformFrame<T, U, C> {
+class _TransformFrame<T extends PgnNodeData, U extends PgnNodeData, C> {
   final PgnNode<T> before;
   final PgnNode<U> after;
   final C ctx;
