@@ -37,10 +37,17 @@ typedef PgnHeaders = Map<String, String>;
 /// In the example below, the current [Position] `pos` is provided as context.
 ///
 /// ```dart
-/// class NodeWithFen {
+/// class PgnNodeWithFen extends PgnNodeData {
 ///   final String fen;
-///   final PgnNodeData data;
-///   const NodeWithFen({required this.fen, required this.data});
+///   const PgnNodeWithFen(
+///       {required this.fen,
+///       required super.san,
+///       super.startingComments,
+///       super.comments,
+///       super.nags});
+///
+///    // Override == and hashCode
+///    // ...
 /// }
 ///
 /// final game = PgnGame.parsePgn('1. e4 e5 *');
@@ -51,7 +58,7 @@ typedef PgnHeaders = Map<String, String>;
 ///     if (move != null) {
 ///       final newPos = pos.play(move);
 ///       return (
-///           newPos, NodeWithFen(fen: newPos.fen, data: data));
+///           newPos, NodeWithFen(fen: newPos.fen, san: data.san, comments: data.comments, nags: data.nags));
 ///     }
 ///     return null;
 ///   },
