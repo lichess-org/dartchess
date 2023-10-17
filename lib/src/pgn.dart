@@ -303,19 +303,22 @@ class PgnNode<T extends PgnNodeData> {
     }
   }
 
-  /// Function to walk through each node and transform this node tree into
-  /// a [PgnNode<U>] tree.
+  /// Transform this node into a [PgnNode<U>] tree.
+  ///
+  /// The callback function [f] is called for each node in the tree. If the
+  /// callback returns null, the node is not added to the result tree.
+  /// The callback should return a tuple of the updated context and node data.
   PgnNode<U> transform<U extends PgnNodeData, C>(
-      C ctx, (C, U)? Function(C, T, int) f) {
+      C context, (C, U)? Function(C context, T data, int childIndex) f) {
     final root = PgnNode<U>();
-    final stack = [_TransformFrame<T, U, C>(this, root, ctx)];
+    final stack = [(before: this, after: root, context: context)];
 
     while (stack.isNotEmpty) {
       final frame = stack.removeLast();
       for (int childIdx = 0;
           childIdx < frame.before.children.length;
           childIdx++) {
-        C ctx = frame.ctx;
+        C ctx = frame.context;
         final childBefore = frame.before.children[childIdx];
         final transformData = f(ctx, childBefore.data, childIdx);
         if (transformData != null) {
@@ -323,7 +326,7 @@ class PgnNode<T extends PgnNodeData> {
           ctx = newCtx;
           final childAfter = PgnChildNode(data);
           frame.after.children.add(childAfter);
-          stack.add(_TransformFrame(childBefore, childAfter, ctx));
+          stack.add((before: childBefore, after: childAfter, context: ctx));
         }
       }
     }
@@ -597,14 +600,6 @@ class PgnComment {
 
   @override
   int get hashCode => Object.hash(text, shapes, clock, emt, eval);
-}
-
-class _TransformFrame<T extends PgnNodeData, U extends PgnNodeData, C> {
-  final PgnNode<T> before;
-  final PgnNode<U> after;
-  final C ctx;
-
-  _TransformFrame(this.before, this.after, this.ctx);
 }
 
 /// A frame used for parsing a line
