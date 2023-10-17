@@ -1,3 +1,9 @@
+## 0.5.0
+
+- Add new `ply` getter to `Position`
+- `PgnNodeData` is no longer specified as immutable
+- Make `PgnComment` really immutable
+
 ## 0.4.0
 
 - Add `PgnNodeData` as a bound to `PgnNode` generic type parameter
