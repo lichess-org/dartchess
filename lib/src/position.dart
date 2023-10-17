@@ -133,6 +133,9 @@ abstract class Position<T extends Position<T>> {
   /// Tests special variant winning, losing and drawing conditions.
   Outcome? get variantOutcome;
 
+  /// Gets the current ply.
+  int get ply => fullmoves * 2 - (turn == Side.white ? 2 : 1);
+
   /// Gets the FEN string of this position.
   ///
   /// Contrary to the FEN given by [Setup], this should always be a legal

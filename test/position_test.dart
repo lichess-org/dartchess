@@ -19,6 +19,24 @@ void main() {
       expect(Antichess.initial.toString(),
           'Antichess(board: $kInitialBoardFEN, turn: Side.white, castles: Castles(unmovedRooks: SquareSet(0)), halfmoves: 0, fullmoves: 1)');
     });
+
+    test('ply', () {
+      expect(Chess.initial.ply, 0);
+      expect(Chess.initial.play(const NormalMove(from: 12, to: 28)).ply, 1);
+      expect(
+          Chess.initial
+              .play(const NormalMove(from: 12, to: 28))
+              .play(const NormalMove(from: 52, to: 36))
+              .ply,
+          2);
+      expect(
+          Chess.initial
+              .play(const NormalMove(from: 12, to: 28))
+              .play(const NormalMove(from: 52, to: 36))
+              .play(const NormalMove(from: 5, to: 26))
+              .ply,
+          3);
+    });
   });
 
   group('Castles', () {
