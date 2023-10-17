@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 
 import 'package:meta/meta.dart';
 import './setup.dart';
@@ -270,53 +271,22 @@ class PgnGame<T extends PgnNodeData> {
 }
 
 /// PGN data for a [PgnNode].
-@immutable
 class PgnNodeData {
-  /// Constructs a new immutable [PgnNodeData].
-  const PgnNodeData(
+  /// Constructs a new [PgnNodeData].
+  PgnNodeData(
       {required this.san, this.startingComments, this.comments, this.nags});
 
   /// SAN representation of the move.
   final String san;
 
   /// PGN comments before the move.
-  final List<String>? startingComments;
+  List<String>? startingComments;
 
   /// PGN comments after the move.
-  final List<String>? comments;
+  List<String>? comments;
 
   /// Numeric Annotation Glyphs for the move.
-  final List<int>? nags;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PgnNodeData &&
-          san == other.san &&
-          startingComments == other.startingComments &&
-          comments == other.comments &&
-          nags == other.nags;
-
-  @override
-  int get hashCode => Object.hash(san, startingComments, comments, nags);
-
-  /// Return a new PgnNodeData by adding a [comment] to the current object
-  PgnNodeData copyWithComment(String comment) {
-    return PgnNodeData(
-        san: san,
-        startingComments: startingComments,
-        comments: [...comments ?? [], comment],
-        nags: nags);
-  }
-
-  /// Return a new PgnNodeData by adding a [nag] to the current object
-  PgnNodeData copyWithNag(int nag) {
-    return PgnNodeData(
-        san: san,
-        startingComments: startingComments,
-        comments: comments,
-        nags: [...nags ?? [], nag]);
-  }
+  List<int>? nags;
 }
 
 /// Parent node containing a list of child nodes (does not contain any data itself).
@@ -442,6 +412,17 @@ class PgnCommentShape {
     }
     return null;
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PgnCommentShape &&
+          color == other.color &&
+          from == other.from &&
+          to == other.to;
+
+  @override
+  int get hashCode => Object.hash(color, from, to);
 }
 
 /// Represents the type of [PgnEvaluation].
@@ -502,13 +483,17 @@ class PgnEvaluation {
 @immutable
 class PgnComment {
   const PgnComment(
-      {this.text, this.shapes = const [], this.clock, this.emt, this.eval});
+      {this.text,
+      this.shapes = const IListConst([]),
+      this.clock,
+      this.emt,
+      this.eval});
 
   /// Comment string.
   final String? text;
 
   /// List of comment shapes.
-  final List<PgnCommentShape> shapes;
+  final IList<PgnCommentShape> shapes;
 
   /// Player's remaining time.
   final Duration? clock;
@@ -574,7 +559,7 @@ class PgnComment {
     }).trim();
 
     return PgnComment(
-        text: text, shapes: shapes, emt: emt, clock: clock, eval: eval);
+        text: text, shapes: IList(shapes), emt: emt, clock: clock, eval: eval);
   }
 
   /// Make a PGN string from this comment.
@@ -604,6 +589,7 @@ class PgnComment {
     return identical(this, other) ||
         other is PgnComment &&
             text == other.text &&
+            shapes == other.shapes &&
             clock == other.clock &&
             emt == other.emt &&
             eval == other.eval;
@@ -878,7 +864,8 @@ class _PgnParser {
   void _handleNag(int nag) {
     final frame = _stack[_stack.length - 1];
     if (frame.node != null) {
-      frame.node!.data = frame.node!.data.copyWithNag(nag);
+      frame.node!.data.nags ??= [];
+      frame.node!.data.nags?.add(nag);
     }
   }
 
@@ -887,7 +874,8 @@ class _PgnParser {
     final comment = _commentBuf.join('\n');
     _commentBuf = [];
     if (frame.node != null) {
-      frame.node!.data = frame.node!.data.copyWithComment(comment);
+      frame.node!.data.comments ??= [];
+      frame.node!.data.comments?.add(comment);
     } else if (frame.root) {
       _gameComments.add(comment);
     } else {

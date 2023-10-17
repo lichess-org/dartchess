@@ -1,24 +1,24 @@
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'dart:io';
 
 void main() {
   group('Pgn', () {
     test('make pgn', () {
       final root = PgnNode<PgnNodeData>();
-      final e4 =
-          PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'e4', nags: [7]));
-      final e3 = PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'e3'));
+      final e4 = PgnChildNode<PgnNodeData>(PgnNodeData(san: 'e4', nags: [7]));
+      final e3 = PgnChildNode<PgnNodeData>(PgnNodeData(san: 'e3'));
       root.children.add(e4);
       root.children.add(e3);
-      final e5 = PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'e5'));
-      final e6 = PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'e6'));
+      final e5 = PgnChildNode<PgnNodeData>(PgnNodeData(san: 'e5'));
+      final e6 = PgnChildNode<PgnNodeData>(PgnNodeData(san: 'e6'));
       e4.children.add(e5);
       e4.children.add(e6);
       final nf3 = PgnChildNode<PgnNodeData>(
-          const PgnNodeData(san: 'Nf3', comments: ['a comment']));
+          PgnNodeData(san: 'Nf3', comments: ['a comment']));
       e6.children.add(nf3);
-      final c4 = PgnChildNode<PgnNodeData>(const PgnNodeData(san: 'c4'));
+      final c4 = PgnChildNode<PgnNodeData>(PgnNodeData(san: 'c4'));
       e5.children.add(c4);
 
       expect(
@@ -55,8 +55,9 @@ void main() {
       final games = PgnGame.parseMultiGamePgn('');
       expect(games.length, 0);
 
-      // expect(game.headers, PgnGame.defaultHeaders());
-      // expect(game.moves.children.length, 0);
+      final game = PgnGame.parsePgn('');
+      expect(game.headers, PgnGame.defaultHeaders());
+      expect(game.moves.children.length, 0);
     });
 
     test('parse pgn roundtrip', () {
@@ -142,12 +143,16 @@ void main() {
       expect(
           PgnComment.fromPgn(
               '[%csl Ya1][%cal Ra1a1,Be1e2]commentary [%csl Gh8]'),
-          const PgnComment(text: 'commentary', shapes: [
-            PgnCommentShape(color: CommentShapeColor.yellow, from: 0, to: 0),
-            PgnCommentShape(color: CommentShapeColor.red, from: 0, to: 0),
-            PgnCommentShape(color: CommentShapeColor.blue, from: 4, to: 12),
-            PgnCommentShape(color: CommentShapeColor.green, from: 63, to: 63)
-          ]));
+          const PgnComment(
+              text: 'commentary',
+              shapes: IListConst([
+                PgnCommentShape(
+                    color: CommentShapeColor.yellow, from: 0, to: 0),
+                PgnCommentShape(color: CommentShapeColor.red, from: 0, to: 0),
+                PgnCommentShape(color: CommentShapeColor.blue, from: 4, to: 12),
+                PgnCommentShape(
+                    color: CommentShapeColor.green, from: 63, to: 63)
+              ])));
 
       expect(
           PgnComment.fromPgn('[%eval -0.42] suffix'),
@@ -170,9 +175,11 @@ void main() {
 
       expect(
           PgnComment.fromPgn('[%csl Ga1]foo'),
-          const PgnComment(text: 'foo', shapes: [
-            PgnCommentShape(color: CommentShapeColor.green, from: 0, to: 0)
-          ]));
+          const PgnComment(
+              text: 'foo',
+              shapes: IListConst([
+                PgnCommentShape(color: CommentShapeColor.green, from: 0, to: 0)
+              ])));
 
       expect(
           PgnComment.fromPgn(
@@ -189,12 +196,12 @@ void main() {
                   Duration(hours: 1, minutes: 2, seconds: 3, milliseconds: 400),
               eval: PgnEvaluation.pawns(pawns: 10),
               clock: Duration(seconds: 1),
-              shapes: [
+              shapes: IListConst([
                 PgnCommentShape(
                     color: CommentShapeColor.yellow, from: 0, to: 0),
                 PgnCommentShape(color: CommentShapeColor.red, from: 0, to: 1),
                 PgnCommentShape(color: CommentShapeColor.red, from: 0, to: 2)
-              ]).makeComment(),
+              ])).makeComment(),
           'text [%csl Ya1] [%cal Ra1b1,Ra1c1] [%eval 10.00] [%emt 1:02:03.4] [%clk 0:00:01]');
 
       expect(
@@ -215,6 +222,11 @@ void main() {
         final roundTripped = PgnComment.fromPgn(comment.makeComment());
         expect(comment, roundTripped);
       }
+    });
+
+    test('PgnComment implements hashCode/==', () {
+      const comment = '[%csl Ga1][%cal Ra1h1,Gb1b8] foo [%clk 3:25:45]';
+      expect(PgnComment.fromPgn(comment) == PgnComment.fromPgn(comment), true);
     });
 
     group('Invalid Pgns', () {
@@ -268,7 +280,7 @@ void main() {
 
 class PgnNodeWithFen extends PgnNodeData {
   final String fen;
-  const PgnNodeWithFen(
+  PgnNodeWithFen(
       {required this.fen,
       required super.san,
       super.startingComments,
