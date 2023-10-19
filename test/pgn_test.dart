@@ -314,6 +314,11 @@ void main() {
       expect(game.moves.mainline().length, 139);
     });
 
+    test('from lichess API moves', () {
+      final game = PgnGame.parsePgn(PgnFixtures.fromLichessApiMoves);
+      expect(game.moves.mainline().length, 89);
+    });
+
     // test('from smartChess', () {
     //   final game = PgnGame.parsePgn(PgnFixtures.bySmartChess);
     //   expect(game.moves.mainline().length, 65);
