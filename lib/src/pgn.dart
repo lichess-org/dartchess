@@ -812,7 +812,7 @@ class _PgnParser {
                   final openIndex = match.end;
                   if (openIndex < line.length) {
                     final beginIndex =
-                    line[openIndex] == ' ' ? openIndex + 1 : openIndex;
+                        line[openIndex] == ' ' ? openIndex + 1 : openIndex;
                     line = line.substring(beginIndex);
                   }
                   final beginIndex =
