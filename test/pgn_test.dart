@@ -53,7 +53,7 @@ void main() {
       expect(game.headers['Event'], '?');
     });
 
-    test('parse emtpy pgn', () {
+    test('parse empty pgn', () {
       final games = PgnGame.parseMultiGamePgn('');
       expect(games.length, 0);
 
@@ -332,10 +332,10 @@ the players are also trying to learn as much as possible about the opponent's pr
       expect(game.moves.mainline().length, 89);
     });
 
-    // test('from smartChess', () {
-    //   final game = PgnGame.parsePgn(PgnFixtures.bySmartChess);
-    //   expect(game.moves.mainline().length, 65);
-    // });
+    test('from smartChess', () {
+      final game = PgnGame.parsePgn(PgnFixtures.bySmartChess);
+      expect(game.moves.mainline().length, 65);
+    });
 
     // test('game from crafty', () {
     //   final game = PgnGame.parsePgn(PgnFixtures.fromCrafty);

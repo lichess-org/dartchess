@@ -9,7 +9,7 @@ import './utils.dart';
 
 typedef PgnHeaders = Map<String, String>;
 
-/// A Portable Game Notation (PNG) representation.
+/// A Portable Game Notation (PGN) representation.
 ///
 /// A PGN game is composed of [PgnHeaders] and moves represented by a [PgnNode] tree.
 ///
@@ -810,6 +810,11 @@ class _PgnParser {
                   if (_stack.length > 1) _stack.removeLast();
                 } else if (token == '{') {
                   final openIndex = match.end;
+                  if (openIndex < line.length) {
+                    final beginIndex =
+                    line[openIndex] == ' ' ? openIndex + 1 : openIndex;
+                    line = line.substring(beginIndex);
+                  }
                   final beginIndex =
                       line[openIndex] == ' ' ? openIndex + 1 : openIndex;
                   line = line.substring(beginIndex);
