@@ -815,9 +815,6 @@ class _PgnParser {
                         line[openIndex] == ' ' ? openIndex + 1 : openIndex;
                     line = line.substring(beginIndex);
                   }
-                  final beginIndex =
-                      line[openIndex] == ' ' ? openIndex + 1 : openIndex;
-                  line = line.substring(beginIndex);
                   _state = _ParserState.comment;
                   continue continuedLine;
                 } else {
