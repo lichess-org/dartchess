@@ -88,10 +88,22 @@ void main() {
           ));
 
       expect(
+          PgnComment.fromPgn('[%eval -0.42]'),
+          const PgnComment(
+            eval: PgnEvaluation.pawns(pawns: -0.42),
+          ));
+
+      expect(
           PgnComment.fromPgn('prefix [%emt 1:02:03.4]'),
           const PgnComment(
             text: 'prefix',
             emt: Duration(hours: 1, minutes: 2, seconds: 3, milliseconds: 400),
+          ));
+
+      expect(
+          PgnComment.fromPgn('[%clk 00:02:05]'),
+          const PgnComment(
+            clock: Duration(minutes: 2, seconds: 5),
           ));
 
       expect(
@@ -108,12 +120,6 @@ void main() {
                     color: CommentShapeColor.green, from: 63, to: 63)
               ])));
 
-      expect(
-          PgnComment.fromPgn('[%eval -0.42] suffix'),
-          const PgnComment(
-            text: 'suffix',
-            eval: PgnEvaluation.pawns(pawns: -0.42),
-          ));
       expect(
           PgnComment.fromPgn('prefix [%eval .99,23]'),
           const PgnComment(

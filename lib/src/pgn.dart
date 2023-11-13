@@ -490,7 +490,8 @@ class PgnComment {
       this.shapes = const IListConst([]),
       this.clock,
       this.emt,
-      this.eval});
+      this.eval})
+      : assert(text == null || text != '');
 
   /// Comment string.
   final String? text;
@@ -562,7 +563,11 @@ class PgnComment {
     }).trim();
 
     return PgnComment(
-        text: text, shapes: IList(shapes), emt: emt, clock: clock, eval: eval);
+        text: text.isNotEmpty ? text : null,
+        shapes: IList(shapes),
+        emt: emt,
+        clock: clock,
+        eval: eval);
   }
 
   /// Make a PGN string from this comment.
