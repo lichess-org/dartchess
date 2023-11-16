@@ -1,3 +1,7 @@
+## 0.5.1
+
+- Fix parsing PGN from smartchess
+
 ## 0.5.0
 
 - Add new `ply` getter to `Position`
