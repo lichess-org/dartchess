@@ -45,6 +45,8 @@ abstract class Position<T extends Position<T>> {
   /// Current move number.
   final int fullmoves;
 
+  Rule get rule;
+
   /// Abstract const constructor to be used by subclasses.
   const Position._initial()
       : board = Board.standard,
@@ -74,55 +76,55 @@ abstract class Position<T extends Position<T>> {
     int? fullmoves,
   });
 
-  /// Create a [Position] from a [Setup] and [Rules].
-  static Position setupPosition(Rules rules, Setup setup,
+  /// Create a [Position] from a [Setup] and [Rule].
+  static Position setupPosition(Rule rule, Setup setup,
       {bool? ignoreImpossibleCheck}) {
-    switch (rules) {
-      case Rules.chess:
+    switch (rule) {
+      case Rule.chess:
         return Chess.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Rules.antichess:
+      case Rule.antichess:
         return Antichess.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Rules.atomic:
+      case Rule.atomic:
         return Atomic.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Rules.kingofthehill:
+      case Rule.kingofthehill:
         return KingOfTheHill.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Rules.crazyhouse:
+      case Rule.crazyhouse:
         return Crazyhouse.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Rules.threecheck:
+      case Rule.threecheck:
         return ThreeCheck.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Rules.horde:
+      case Rule.horde:
         return Horde.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
-      case Rules.racingKings:
+      case Rule.racingKings:
         return RacingKings.fromSetup(setup,
             ignoreImpossibleCheck: ignoreImpossibleCheck);
     }
   }
 
-  /// Returns the initial [Position] for the corresponding [Rules].
-  static Position initialPosition(Rules rules) {
-    switch (rules) {
-      case Rules.chess:
+  /// Returns the initial [Position] for the corresponding [Rule].
+  static Position initialPosition(Rule rule) {
+    switch (rule) {
+      case Rule.chess:
         return Chess.initial;
-      case Rules.antichess:
+      case Rule.antichess:
         return Antichess.initial;
-      case Rules.atomic:
+      case Rule.atomic:
         return Atomic.initial;
-      case Rules.kingofthehill:
+      case Rule.kingofthehill:
         return KingOfTheHill.initial;
-      case Rules.threecheck:
+      case Rule.threecheck:
         return ThreeCheck.initial;
-      case Rules.crazyhouse:
+      case Rule.crazyhouse:
         return Crazyhouse.initial;
-      case Rules.horde:
+      case Rule.horde:
         return Horde.initial;
-      case Rules.racingKings:
+      case Rule.racingKings:
         return RacingKings.initial;
     }
   }
@@ -1020,6 +1022,9 @@ abstract class Position<T extends Position<T>> {
 /// A standard chess position.
 @immutable
 class Chess extends Position<Chess> {
+  @override
+  Rule get rule => Rule.chess;
+
   const Chess({
     required super.board,
     super.pockets,
@@ -1078,6 +1083,9 @@ class Chess extends Position<Chess> {
 /// A variant of chess where you lose all your pieces or get stalemated to win.
 @immutable
 class Antichess extends Position<Antichess> {
+  @override
+  Rule get rule => Rule.antichess;
+
   const Antichess({
     required super.board,
     super.pockets,
@@ -1216,6 +1224,9 @@ class Antichess extends Position<Antichess> {
 /// A variant of chess where captures cause an explosion to the surrounding pieces.
 @immutable
 class Atomic extends Position<Atomic> {
+  @override
+  Rule get rule => Rule.atomic;
+
   const Atomic({
     required super.board,
     super.pockets,
@@ -1431,6 +1442,9 @@ class Atomic extends Position<Atomic> {
 /// A variant where captured pieces can be dropped back on the board instead of moving a piece.
 @immutable
 class Crazyhouse extends Position<Crazyhouse> {
+  @override
+  Rule get rule => Rule.crazyhouse;
+
   const Crazyhouse({
     required super.board,
     super.pockets,
@@ -1554,6 +1568,9 @@ class Crazyhouse extends Position<Crazyhouse> {
 /// of the board.
 @immutable
 class KingOfTheHill extends Position<KingOfTheHill> {
+  @override
+  Rule get rule => Rule.kingofthehill;
+
   const KingOfTheHill({
     required super.board,
     super.pockets,
@@ -1623,6 +1640,9 @@ class KingOfTheHill extends Position<KingOfTheHill> {
 /// into the third check.
 @immutable
 class ThreeCheck extends Position<ThreeCheck> {
+  @override
+  Rule get rule => Rule.threecheck;
+
   const ThreeCheck({
     required super.board,
     super.pockets,
@@ -1742,6 +1762,9 @@ class ThreeCheck extends Position<ThreeCheck> {
 /// A variant where the goal is to put your king on the eigth rank
 @immutable
 class RacingKings extends Position<RacingKings> {
+  @override
+  Rule get rule => Rule.racingKings;
+
   const RacingKings({
     required super.board,
     super.pockets,
@@ -1872,6 +1895,9 @@ class RacingKings extends Position<RacingKings> {
 
 @immutable
 class Horde extends Position<Horde> {
+  @override
+  Rule get rule => Rule.horde;
+
   const Horde({
     required super.board,
     super.pockets,

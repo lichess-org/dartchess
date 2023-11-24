@@ -326,7 +326,7 @@ class FenError implements Exception {
 }
 
 /// Represents the different possible rules of chess and its variants
-enum Rules {
+enum Rule {
   chess,
   antichess,
   kingofthehill,
@@ -337,7 +337,7 @@ enum Rules {
   crazyhouse;
 
   /// Parses a PGN header variant tag
-  static Rules? fromPgn(String? variant) {
+  static Rule? fromPgn(String? variant) {
     switch ((variant ?? 'chess').toLowerCase()) {
       case 'chess':
       case 'chess960':
@@ -359,16 +359,16 @@ enum Rules {
       case 'wild/7':
       case 'wild/8':
       case 'wild/8a':
-        return Rules.chess;
+        return Rule.chess;
       case 'crazyhouse':
       case 'crazy house':
       case 'house':
       case 'zh':
-        return Rules.crazyhouse;
+        return Rule.crazyhouse;
       case 'king of the hill':
       case 'koth':
       case 'kingofthehill':
-        return Rules.kingofthehill;
+        return Rule.kingofthehill;
       case 'three-check':
       case 'three check':
       case 'threecheck':
@@ -376,23 +376,23 @@ enum Rules {
       case '3-check':
       case '3 check':
       case '3check':
-        return Rules.threecheck;
+        return Rule.threecheck;
       case 'antichess':
       case 'anti chess':
       case 'anti':
-        return Rules.antichess;
+        return Rule.antichess;
       case 'atomic':
       case 'atom':
       case 'atomic chess':
-        return Rules.atomic;
+        return Rule.atomic;
       case 'horde':
       case 'horde chess':
-        return Rules.horde;
+        return Rule.horde;
       case 'racing kings':
       case 'racingkings':
       case 'racing':
       case 'race':
-        return Rules.racingKings;
+        return Rule.racingKings;
       default:
         return null;
     }

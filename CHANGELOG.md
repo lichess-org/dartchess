@@ -1,3 +1,7 @@
+## 0.6.0
+
+- Rename Rules to Rule and add rule getter to Position
+
 ## 0.5.1
 
 - Fix parsing PGN from smartchess

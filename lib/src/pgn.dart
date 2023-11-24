@@ -139,14 +139,14 @@ class PgnGame<T extends PgnNodeData> {
   /// Throws a [PositionError] if it does not meet basic validity requirements.
   static Position startingPosition(PgnHeaders headers,
       {bool? ignoreImpossibleCheck}) {
-    final rules = Rules.fromPgn(headers['Variant']);
-    if (rules == null) throw PositionError.variant;
+    final rule = Rule.fromPgn(headers['Variant']);
+    if (rule == null) throw PositionError.variant;
     if (!headers.containsKey('FEN')) {
-      return Position.initialPosition(rules);
+      return Position.initialPosition(rule);
     }
     final fen = headers['FEN']!;
     try {
-      return Position.setupPosition(rules, Setup.parseFen(fen),
+      return Position.setupPosition(rule, Setup.parseFen(fen),
           ignoreImpossibleCheck: ignoreImpossibleCheck);
     } catch (err) {
       rethrow;
