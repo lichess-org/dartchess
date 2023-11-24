@@ -45,6 +45,7 @@ abstract class Position<T extends Position<T>> {
   /// Current move number.
   final int fullmoves;
 
+  /// The [Rule] of this position.
   Rule get rule;
 
   /// Abstract const constructor to be used by subclasses.
