@@ -1,3 +1,7 @@
+## 0.6.1
+
+- Upgrade fast_immutable_collections to version 10.0.0.
+
 ## 0.6.0
 
 - Rename Rules to Rule and add rule getter to Position
