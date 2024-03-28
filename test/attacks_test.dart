@@ -16,7 +16,7 @@ void main() {
     expect(kingAttacks(21), attacks);
   });
 
-  test('King attacks in near edges', () {
+  test('King attacks near edges', () {
     final attacks = makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
@@ -114,7 +114,7 @@ void main() {
     expect(pawnAttacks(Side.black, 39), attacks);
   });
 
-  test('bishop attacks, empty board', () {
+  test('Bishop attacks, empty board', () {
     expect(bishopAttacks(27, SquareSet.empty), makeSquareSet('''
 . . . . . . . 1
 1 . . . . . 1 .
@@ -150,7 +150,30 @@ void main() {
 '''));
   });
 
-  test('rook attacks, empty board', () {
+  test('Bishop attacks, surrounded in occupied board', () {
+    final occupied = makeSquareSet('''
+. . . . . . . .
+. . . . . . . .
+. . . 1 1 1 . .
+. . . 1 . 1 . .
+. . . 1 1 1 . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+''');
+    expect(bishopAttacks(36, occupied), makeSquareSet('''
+. . . . . . . .
+. . . . . . . .
+. . . 1 . 1 . .
+. . . . . . . .
+. . . 1 . 1 . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+'''));
+  });
+
+  test('Rook attacks, empty board', () {
     expect(rookAttacks(10, SquareSet.empty), makeSquareSet('''
 . . 1 . . . . .
 . . 1 . . . . .
@@ -163,7 +186,7 @@ void main() {
 '''));
   });
 
-  test('rook attacks, occupied board', () {
+  test('Rook attacks, occupied board', () {
     final occupied = makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
@@ -186,7 +209,30 @@ void main() {
 '''));
   });
 
-  test('queen attacks, empty board', () {
+  test('Rook attacks, surrounded in occupied board', () {
+    final occupied = makeSquareSet('''
+. . . . . . . .
+. . . . . . . .
+. . . 1 1 1 . .
+. . . 1 . 1 . .
+. . . 1 1 1 . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+''');
+    expect(rookAttacks(36, occupied), makeSquareSet('''
+. . . . . . . .
+. . . . . . . .
+. . . . 1 . . .
+. . . 1 . 1 . .
+. . . . 1 . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+'''));
+  });
+
+  test('Queen attacks, empty board', () {
     expect(queenAttacks(37, SquareSet.empty), makeSquareSet('''
 . . 1 . . 1 . .
 . . . 1 . 1 . 1
@@ -199,7 +245,7 @@ void main() {
 '''));
   });
 
-  test('queen attacks, occupied board', () {
+  test('Queen attacks, occupied board', () {
     final occupied = makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
@@ -217,6 +263,29 @@ void main() {
 . 1 1 1 . . . .
 1 . . . 1 . . .
 . . . . . 1 . .
+. . . . . . . .
+. . . . . . . .
+'''));
+  });
+
+  test('Queen attacks, surrounded in occupied board', () {
+    final occupied = makeSquareSet('''
+. . . . . . . .
+. . . . . . . .
+. . . 1 1 1 . .
+. . . 1 . 1 . .
+. . . 1 1 1 . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+''');
+    expect(queenAttacks(36, occupied), makeSquareSet('''
+. . . . . . . .
+. . . . . . . .
+. . . 1 1 1 . .
+. . . 1 . 1 . .
+. . . 1 1 1 . .
+. . . . . . . .
 . . . . . . . .
 . . . . . . . .
 '''));
