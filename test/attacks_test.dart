@@ -16,6 +16,20 @@ void main() {
     expect(kingAttacks(21), attacks);
   });
 
+  test('King attacks in near edges', () {
+    final attacks = makeSquareSet('''
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . 1 1
+. . . . . . 1 .
+''');
+    expect(kingAttacks(7), attacks);
+  });
+
   test('Knight attacks', () {
     final attacks = makeSquareSet('''
 . . . . . . . .
@@ -28,6 +42,20 @@ void main() {
 . . . . . . . .
 ''');
     expect(knightAttacks(35), attacks);
+  });
+
+  test('Knight attacks near edges', () {
+    final attacks = makeSquareSet('''
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . 1 . 1
+. . . . 1 . . .
+. . . . . . . .
+. . . . 1 . . .
+''');
+    expect(knightAttacks(14), attacks);
   });
 
   test('White pawn attacks', () {
@@ -44,6 +72,20 @@ void main() {
     expect(pawnAttacks(Side.white, 11), attacks);
   });
 
+  test('White pawn attacks near edges', () {
+    final attacks = makeSquareSet('''
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. 1 . . . . . .
+. . . . . . . .
+. . . . . . . .
+''');
+    expect(pawnAttacks(Side.white, 8), attacks);
+  });
+
   test('Black pawn attacks', () {
     final attacks = makeSquareSet('''
 . . . . . . . .
@@ -56,6 +98,20 @@ void main() {
 . . . . . . . .
 ''');
     expect(pawnAttacks(Side.black, 36), attacks);
+  });
+
+  test('Black pawn attacks near edges', () {
+    final attacks = makeSquareSet('''
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . 1 .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+''');
+    expect(pawnAttacks(Side.black, 39), attacks);
   });
 
   test('bishop attacks, empty board', () {
