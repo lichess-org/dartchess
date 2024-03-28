@@ -290,4 +290,33 @@ void main() {
 . . . . . . . .
 '''));
   });
+
+  test('Legal board position asserts for attacks', () {
+    const illegalBoardPosition = 65;
+    const emptySquareSet = SquareSet.empty;
+
+    expect(() {
+      kingAttacks(illegalBoardPosition);
+    }, throwsA(isA<AssertionError>()));
+
+    expect(() {
+      pawnAttacks(Side.white, illegalBoardPosition);
+    }, throwsA(isA<AssertionError>()));
+
+    expect(() {
+      knightAttacks(illegalBoardPosition);
+    }, throwsA(isA<AssertionError>()));
+
+    expect(() {
+      bishopAttacks(illegalBoardPosition, emptySquareSet);
+    }, throwsA(isA<AssertionError>()));
+
+    expect(() {
+      rookAttacks(illegalBoardPosition, emptySquareSet);
+    }, throwsA(isA<AssertionError>()));
+
+    expect(() {
+      queenAttacks(illegalBoardPosition, emptySquareSet);
+    }, throwsA(isA<AssertionError>()));
+  });
 }
