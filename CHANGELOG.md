@@ -1,3 +1,7 @@
+## 0.7.0
+
+- Migrate SquareSet to an extension type.
+
 ## 0.6.1
 
 - Upgrade fast_immutable_collections to version 10.0.0.
