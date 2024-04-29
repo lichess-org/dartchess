@@ -2547,7 +2547,7 @@ class Castles {
 
   @override
   String toString() {
-    return 'Castles(unmovedRooks: $unmovedRooks)';
+    return 'Castles(unmovedRooks: ${unmovedRooks.toHexString()})';
   }
 
   @override

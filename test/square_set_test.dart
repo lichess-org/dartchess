@@ -2,18 +2,18 @@ import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
 void main() {
-  test('toString', () {
-    expect(SquareSet.empty.toString(), 'SquareSet(0)');
-    expect(SquareSet.full.toString(), 'SquareSet(0xFFFFFFFFFFFFFFFF)');
-    expect(SquareSet.lightSquares.toString(), 'SquareSet(0x55AA55AA55AA55AA)');
-    expect(SquareSet.darkSquares.toString(), 'SquareSet(0xAA55AA55AA55AA55)');
-    expect(SquareSet.diagonal.toString(), 'SquareSet(0x8040201008040201)');
-    expect(SquareSet.antidiagonal.toString(), 'SquareSet(0x0102040810204080)');
-    expect(SquareSet.corners.toString(), 'SquareSet(0x8100000000000081)');
-    expect(SquareSet.backranks.toString(), 'SquareSet(0xFF000000000000FF)');
-    expect(const SquareSet(0x0000000000000001).toString(),
-        'SquareSet(0x0000000000000001)');
-    expect(const SquareSet(0xf).toString(), 'SquareSet(0x000000000000000F)');
+  test('toHexString', () {
+    expect(SquareSet.empty.toHexString(), '0');
+    expect(SquareSet.full.toHexString(), '0xFFFFFFFFFFFFFFFF');
+    expect(SquareSet.lightSquares.toHexString(), '0x55AA55AA55AA55AA');
+    expect(SquareSet.darkSquares.toHexString(), '0xAA55AA55AA55AA55');
+    expect(SquareSet.diagonal.toHexString(), '0x8040201008040201');
+    expect(SquareSet.antidiagonal.toHexString(), '0x0102040810204080');
+    expect(SquareSet.corners.toHexString(), '0x8100000000000081');
+    expect(SquareSet.backranks.toHexString(), '0xFF000000000000FF');
+    expect(const SquareSet(0x0000000000000001).toHexString(),
+        '0x0000000000000001');
+    expect(const SquareSet(0xf).toHexString(), '0x000000000000000F');
   });
 
   test('full set has all', () {

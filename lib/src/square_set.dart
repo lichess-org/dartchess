@@ -1,4 +1,3 @@
-import 'package:meta/meta.dart';
 import './models.dart';
 
 /// A set of squares represented by a 64 bit integer mask, using little endian
@@ -16,11 +15,7 @@ import './models.dart';
 ///    -------------------------
 ///      a  b  c  d  e  f  g  h
 /// ```
-@immutable
-class SquareSet {
-  /// Creates a [SquareSet] with the provided 64bit integer value.
-  const SquareSet(this.value);
-
+extension type const SquareSet(int value) {
   /// Creates a [SquareSet] with a single [Square].
   const SquareSet.fromSquare(Square square)
       : value = 1 << square,
@@ -45,9 +40,6 @@ class SquareSet {
   /// Create a [SquareSet] containing all squares of the given backrank [Side].
   const SquareSet.backrankOf(Side side)
       : value = side == Side.white ? 0xff : 0xff00000000000000;
-
-  /// 64 bit integer representing the square set.
-  final int value;
 
   static const empty = SquareSet(0);
   static const full = SquareSet(0xffffffffffffffff);
@@ -149,19 +141,8 @@ class SquareSet {
     return f != null ? withoutSquare(f) : empty;
   }
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        other is SquareSet &&
-            other.runtimeType == runtimeType &&
-            other.value == value;
-  }
-
-  @override
-  int get hashCode => value.hashCode;
-
-  @override
-  String toString() {
+  /// Returns the hexadecimal string representation of the bitboard value.
+  String toHexString() {
     final buffer = StringBuffer();
     for (Square square = 63; square >= 0; square--) {
       buffer.write(has(square) ? '1' : '0');
@@ -177,9 +158,9 @@ class SquareSet {
         .padLeft(8, '0');
     final stringVal = '$first$last';
     if (stringVal == '0000000000000000') {
-      return 'SquareSet(0)';
+      return '0';
     }
-    return 'SquareSet(0x$first$last)';
+    return '0x$first$last';
   }
 
   Iterable<Square> _iterateSquares() sync* {

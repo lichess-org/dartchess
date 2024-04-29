@@ -12,12 +12,12 @@ void main() {
 
     test('Chess.toString()', () {
       expect(Chess.initial.toString(),
-          'Chess(board: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR, turn: Side.white, castles: Castles(unmovedRooks: SquareSet(0x8100000000000081)), halfmoves: 0, fullmoves: 1)');
+          'Chess(board: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR, turn: Side.white, castles: Castles(unmovedRooks: 0x8100000000000081), halfmoves: 0, fullmoves: 1)');
     });
 
     test('Antichess.toString()', () {
       expect(Antichess.initial.toString(),
-          'Antichess(board: $kInitialBoardFEN, turn: Side.white, castles: Castles(unmovedRooks: SquareSet(0)), halfmoves: 0, fullmoves: 1)');
+          'Antichess(board: $kInitialBoardFEN, turn: Side.white, castles: Castles(unmovedRooks: 0), halfmoves: 0, fullmoves: 1)');
     });
 
     test('ply', () {
