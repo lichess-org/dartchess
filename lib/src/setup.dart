@@ -349,11 +349,11 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
 String _makePockets(Pockets pockets) {
   final wPart = [
     for (final r in Role.values)
-      ...List.filled(pockets.of(Side.white, r), r.char)
+      ...List.filled(pockets.of(Side.white, r), r.letter)
   ].join();
   final bPart = [
     for (final r in Role.values)
-      ...List.filled(pockets.of(Side.black, r), r.char)
+      ...List.filled(pockets.of(Side.black, r), r.letter)
   ].join();
   return '[${wPart.toUpperCase()}$bPart]';
 }

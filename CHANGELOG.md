@@ -1,3 +1,7 @@
+## 0.7.1
+
+- Add Piece.kind, Role.letter and Role.uppercaseLetter getters.
+
 ## 0.7.0
 
 - Migrate SquareSet to an extension type.

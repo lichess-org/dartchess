@@ -2,26 +2,32 @@ import 'package:meta/meta.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import './utils.dart';
 
+/// The chessboard side, white or black.
 enum Side {
   white,
   black;
 
+  /// Gets the opposite side.
   Side get opposite => this == Side.white ? Side.black : Side.white;
 }
 
+/// The chessboard square color, light or dark.
 enum SquareColor {
   light,
   dark;
 
+  /// Gets the opposite color.
   SquareColor get opposite =>
       this == SquareColor.light ? SquareColor.dark : SquareColor.light;
 }
 
+/// The chessboard castling side, queen or king side.
 enum CastlingSide {
   queen,
   king;
 }
 
+/// Piece role, such as pawn, knight, etc.
 enum Role {
   pawn,
   knight,
@@ -49,22 +55,28 @@ enum Role {
     }
   }
 
-  String get char {
-    switch (this) {
-      case Role.pawn:
-        return 'p';
-      case Role.knight:
-        return 'n';
-      case Role.bishop:
-        return 'b';
-      case Role.rook:
-        return 'r';
-      case Role.queen:
-        return 'q';
-      case Role.king:
-        return 'k';
-    }
-  }
+  @Deprecated('Use `letter` instead.')
+  String get char => letter;
+
+  /// Gets the role letter in lowercase (as for black piece in FEN notation).
+  String get letter => switch (this) {
+        Role.pawn => 'p',
+        Role.knight => 'n',
+        Role.bishop => 'b',
+        Role.rook => 'r',
+        Role.queen => 'q',
+        Role.king => 'k',
+      };
+
+  /// Gets the role letter in uppercase (as for white piece in FEN notation).
+  String get uppercaseLetter => switch (this) {
+        Role.pawn => 'P',
+        Role.knight => 'N',
+        Role.bishop => 'B',
+        Role.rook => 'R',
+        Role.queen => 'Q',
+        Role.king => 'K',
+      };
 }
 
 /// Number between 0 and 63 included representing a square on the board.
@@ -144,6 +156,10 @@ typedef BySide<T> = IMap<Side, T>;
 typedef ByRole<T> = IMap<Role, T>;
 typedef ByCastlingSide<T> = IMap<CastlingSide, T>;
 
+/// Represents a piece kind, which is a tuple of side and role.
+typedef PieceKind = (Side side, Role role);
+
+/// Describes a chess piece by its color, role and promotion status.
 @immutable
 class Piece {
   const Piece({
@@ -165,8 +181,14 @@ class Piece {
     return null;
   }
 
+  /// Gets the piece kind, which is a tuple of side and role.
+  PieceKind get kind => (color, role);
+
+  /// Gets the FEN character of this piece.
+  ///
+  /// For example, a white pawn is `P`, a black knight is `n`.
   String get fenChar {
-    String r = role.char;
+    String r = role.letter;
     if (color == Side.white) r = r.toUpperCase();
     if (promoted) r += '~';
     return r;
@@ -283,7 +305,7 @@ class NormalMove extends Move {
   String get uci =>
       toAlgebraic(from) +
       toAlgebraic(to) +
-      (promotion != null ? promotion!.char : '');
+      (promotion != null ? promotion!.letter : '');
 
   @override
   bool operator ==(Object other) {
@@ -307,7 +329,7 @@ class DropMove extends Move {
 
   /// Gets UCI notation of the drop, like `Q@f7`.
   @override
-  String get uci => '${role.char.toUpperCase()}@${toAlgebraic(to)}';
+  String get uci => '${role.uppercaseLetter}@${toAlgebraic(to)}';
 
   @override
   bool operator ==(Object other) {
@@ -398,3 +420,39 @@ enum Rule {
     }
   }
 }
+
+/// The white pawn piece kind.
+const PieceKind kWhitePawnKind = (Side.white, Role.pawn);
+
+/// The white knight piece kind.
+const PieceKind kWhiteKnightKind = (Side.white, Role.knight);
+
+/// The white bishop piece kind.
+const PieceKind kWhiteBishopKind = (Side.white, Role.bishop);
+
+/// The white rook piece kind.
+const PieceKind kWhiteRookKind = (Side.white, Role.rook);
+
+/// The white queen piece kind.
+const PieceKind kWhiteQueenKind = (Side.white, Role.queen);
+
+/// The white king piece kind.
+const PieceKind kWhiteKingKind = (Side.white, Role.king);
+
+/// The black pawn piece kind.
+const PieceKind kBlackPawnKind = (Side.black, Role.pawn);
+
+/// The black knight piece kind.
+const PieceKind kBlackKnightKind = (Side.black, Role.knight);
+
+/// The black bishop piece kind.
+const PieceKind kBlackBishopKind = (Side.black, Role.bishop);
+
+/// The black rook piece kind.
+const PieceKind kBlackRookKind = (Side.black, Role.rook);
+
+/// The black queen piece kind.
+const PieceKind kBlackQueenKind = (Side.black, Role.queen);
+
+/// The black king piece kind.
+const PieceKind kBlackKingKind = (Side.black, Role.king);

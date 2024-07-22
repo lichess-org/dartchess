@@ -778,7 +778,7 @@ abstract class Position<T extends Position<T>> {
           final capture = board.occupied.has(to) ||
               (role == Role.pawn && squareFile(from) != squareFile(to));
           if (role != Role.pawn) {
-            san = role.char.toUpperCase();
+            san = role.uppercaseLetter;
 
             // Disambiguation
             SquareSet others;
@@ -827,11 +827,11 @@ abstract class Position<T extends Position<T>> {
           if (capture) san += 'x';
           san += toAlgebraic(to);
           if (prom != null) {
-            san += '=${prom.char.toUpperCase()}';
+            san += '=${prom.uppercaseLetter}';
           }
         }
       case DropMove(role: final role, to: final to):
-        if (role != Role.pawn) san = role.char.toUpperCase();
+        if (role != Role.pawn) san = role.uppercaseLetter;
         san += '@${toAlgebraic(to)}';
     }
     return san;
