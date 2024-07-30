@@ -17,14 +17,12 @@ import './models.dart';
 /// ```
 extension type const SquareSet(int value) {
   /// Creates a [SquareSet] with a single [Square].
-  const SquareSet.fromSquare(Square square)
-      : value = 1 << square,
-        assert(square >= 0 && square < 64);
+  SquareSet.fromSquare(Square square) : value = 1 << square.value;
 
   /// Creates a [SquareSet] from several [Square]s.
   SquareSet.fromSquares(Iterable<Square> squares)
       : value = squares
-            .map((square) => 1 << square)
+            .map((square) => 1 << square.value)
             .fold(0, (left, right) => left | right);
 
   /// Create a [SquareSet] containing all squares of the given rank.
@@ -65,22 +63,29 @@ extension type const SquareSet(int value) {
     return this;
   }
 
+  /// Returns a new [SquareSet] with a bitwise XOR of this set and [other].
   SquareSet xor(SquareSet other) => SquareSet(value ^ other.value);
   SquareSet operator ^(SquareSet other) => SquareSet(value ^ other.value);
 
+  /// Returns a new [SquareSet] with the squares that are in either this set or [other].
   SquareSet union(SquareSet other) => SquareSet(value | other.value);
   SquareSet operator |(SquareSet other) => SquareSet(value | other.value);
 
+  /// Returns a new [SquareSet] with the squares that are in both this set and [other].
   SquareSet intersect(SquareSet other) => SquareSet(value & other.value);
   SquareSet operator &(SquareSet other) => SquareSet(value & other.value);
 
+  /// Returns a new [SquareSet] with the [other] squares removed from this set.
   SquareSet minus(SquareSet other) => SquareSet(value - other.value);
   SquareSet operator -(SquareSet other) => SquareSet(value - other.value);
 
+  /// Returns the set complement of this set.
   SquareSet complement() => SquareSet(~value);
 
+  /// Returns the set difference of this set and [other].
   SquareSet diff(SquareSet other) => SquareSet(value & ~other.value);
 
+  /// Flips the set vertically.
   SquareSet flipVertical() {
     const k1 = 0x00FF00FF00FF00FF;
     const k2 = 0x0000FFFF0000FFFF;
@@ -90,6 +95,7 @@ extension type const SquareSet(int value) {
     return SquareSet(x);
   }
 
+  /// Flips the set horizontally.
   SquareSet mirrorHorizontal() {
     const k1 = 0x5555555555555555;
     const k2 = 0x3333333333333333;
@@ -100,42 +106,60 @@ extension type const SquareSet(int value) {
     return SquareSet(x);
   }
 
+  /// Returns the number of squares in the set.
   int get size => _popcnt64(value);
+
+  /// Returns true if the set is empty.
   bool get isEmpty => value == 0;
+
+  /// Returns true if the set is not empty.
   bool get isNotEmpty => value != 0;
-  int? get first => _getFirstSquare(value);
-  int? get last => _getLastSquare(value);
+
+  /// Returns the first square in the set, or null if the set is empty.
+  Square? get first => _getFirstSquare(value);
+
+  /// Returns the last square in the set, or null if the set is empty.
+  Square? get last => _getLastSquare(value);
+
+  /// Returns the squares in the set as an iterable.
   Iterable<Square> get squares => _iterateSquares();
+
+  /// Returns the squares in the set as an iterable in reverse order.
   Iterable<Square> get squaresReversed => _iterateSquaresReversed();
+
+  /// Returns true if the set contains more than one square.
   bool get moreThanOne => isNotEmpty && size > 1;
 
   /// Returns square if it is single, otherwise returns null.
-  int? get singleSquare => moreThanOne ? null : last;
+  Square? get singleSquare => moreThanOne ? null : last;
 
+  /// Returns true if the [SquareSet] contains the given [square].
   bool has(Square square) {
-    assert(square >= 0 && square < 64);
-    return value & (1 << square) != 0;
+    return value & (1 << square.value) != 0;
   }
 
+  /// Returns true if the square set has any square in the [other] square set.
   bool isIntersected(SquareSet other) => intersect(other).isNotEmpty;
+
+  /// Returns true if the square set is disjoint from the [other] square set.
   bool isDisjoint(SquareSet other) => intersect(other).isEmpty;
 
+  /// Returns a new [SquareSet] with the given [square] added.
   SquareSet withSquare(Square square) {
-    assert(square >= 0 && square < 64);
-    return SquareSet(value | (1 << square));
+    return SquareSet(value | (1 << square.value));
   }
 
+  /// Returns a new [SquareSet] with the given [square] removed.
   SquareSet withoutSquare(Square square) {
-    assert(square >= 0 && square < 64);
-    return SquareSet(value & ~(1 << square));
+    return SquareSet(value & ~(1 << square.value));
   }
 
   /// Removes [Square] if present, or put it if absent.
   SquareSet toggleSquare(Square square) {
-    assert(square >= 0 && square < 64);
-    return SquareSet(value ^ (1 << square));
+    return SquareSet(value ^ (1 << square.value));
   }
 
+  /// Returns a new [SquareSet] with its first [Square] removed.
   SquareSet withoutFirst() {
     final f = first;
     return f != null ? withoutSquare(f) : empty;
@@ -144,8 +168,8 @@ extension type const SquareSet(int value) {
   /// Returns the hexadecimal string representation of the bitboard value.
   String toHexString() {
     final buffer = StringBuffer();
-    for (Square square = 63; square >= 0; square--) {
-      buffer.write(has(square) ? '1' : '0');
+    for (int square = 63; square >= 0; square--) {
+      buffer.write(has(Square(square)) ? '1' : '0');
     }
     final b = buffer.toString();
     final first = int.parse(b.substring(0, 32), radix: 2)
@@ -167,7 +191,7 @@ extension type const SquareSet(int value) {
     int bitboard = value;
     while (bitboard != 0) {
       final square = _getFirstSquare(bitboard);
-      bitboard ^= 1 << square!;
+      bitboard ^= 1 << square!.value;
       yield square;
     }
   }
@@ -176,19 +200,19 @@ extension type const SquareSet(int value) {
     int bitboard = value;
     while (bitboard != 0) {
       final square = _getLastSquare(bitboard);
-      bitboard ^= 1 << square!;
+      bitboard ^= 1 << square!.value;
       yield square;
     }
   }
 
-  int? _getFirstSquare(int bitboard) {
+  Square? _getFirstSquare(int bitboard) {
     final ntz = _ntz64(bitboard);
-    return ntz >= 0 && ntz < 64 ? ntz : null;
+    return ntz >= 0 && ntz < 64 ? Square(ntz) : null;
   }
 
-  int? _getLastSquare(int bitboard) {
+  Square? _getLastSquare(int bitboard) {
     if (bitboard == 0) return null;
-    return 63 - _nlz64(bitboard);
+    return Square(63 - _nlz64(bitboard));
   }
 }
 

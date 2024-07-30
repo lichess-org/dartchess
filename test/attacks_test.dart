@@ -13,7 +13,7 @@ void main() {
 . . . . 1 1 1 .
 . . . . . . . .
 ''');
-    expect(kingAttacks(21), attacks);
+    expect(kingAttacks(Square.f3), attacks);
   });
 
   test('King attacks near edges', () {
@@ -27,7 +27,7 @@ void main() {
 . . . . . . 1 1
 . . . . . . 1 .
 ''');
-    expect(kingAttacks(7), attacks);
+    expect(kingAttacks(Square.h1), attacks);
   });
 
   test('Knight attacks', () {
@@ -41,7 +41,7 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(knightAttacks(35), attacks);
+    expect(knightAttacks(Square.d5), attacks);
   });
 
   test('Knight attacks near edges', () {
@@ -55,7 +55,7 @@ void main() {
 . . . . . . . .
 . . . . 1 . . .
 ''');
-    expect(knightAttacks(14), attacks);
+    expect(knightAttacks(Square.g2), attacks);
   });
 
   test('White pawn attacks', () {
@@ -69,7 +69,7 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(pawnAttacks(Side.white, 11), attacks);
+    expect(pawnAttacks(Side.white, Square.d2), attacks);
   });
 
   test('White pawn attacks near edges', () {
@@ -83,7 +83,7 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(pawnAttacks(Side.white, 8), attacks);
+    expect(pawnAttacks(Side.white, Square.a2), attacks);
   });
 
   test('Black pawn attacks', () {
@@ -97,7 +97,7 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(pawnAttacks(Side.black, 36), attacks);
+    expect(pawnAttacks(Side.black, Square.e5), attacks);
   });
 
   test('Black pawn attacks near edges', () {
@@ -111,11 +111,11 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(pawnAttacks(Side.black, 39), attacks);
+    expect(pawnAttacks(Side.black, Square.h5), attacks);
   });
 
   test('Bishop attacks, empty board', () {
-    expect(bishopAttacks(27, SquareSet.empty), makeSquareSet('''
+    expect(bishopAttacks(Square.d4, SquareSet.empty), makeSquareSet('''
 . . . . . . . 1
 1 . . . . . 1 .
 . 1 . . . 1 . .
@@ -138,7 +138,7 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(bishopAttacks(0, occupied), makeSquareSet('''
+    expect(bishopAttacks(Square.a1, occupied), makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . 1 . .
@@ -161,7 +161,7 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(bishopAttacks(36, occupied), makeSquareSet('''
+    expect(bishopAttacks(Square.e5, occupied), makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . 1 . 1 . .
@@ -174,7 +174,7 @@ void main() {
   });
 
   test('Rook attacks, empty board', () {
-    expect(rookAttacks(10, SquareSet.empty), makeSquareSet('''
+    expect(rookAttacks(Square.c2, SquareSet.empty), makeSquareSet('''
 . . 1 . . . . .
 . . 1 . . . . .
 . . 1 . . . . .
@@ -197,7 +197,7 @@ void main() {
 . . 1 . . . . .
 . . . . . . . .
 ''');
-    expect(rookAttacks(42, occupied), makeSquareSet('''
+    expect(rookAttacks(Square.c6, occupied), makeSquareSet('''
 . . 1 . . . . .
 . . 1 . . . . .
 1 1 . 1 1 1 . .
@@ -220,7 +220,7 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(rookAttacks(36, occupied), makeSquareSet('''
+    expect(rookAttacks(Square.e5, occupied), makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . 1 . . .
@@ -233,7 +233,7 @@ void main() {
   });
 
   test('Queen attacks, empty board', () {
-    expect(queenAttacks(37, SquareSet.empty), makeSquareSet('''
+    expect(queenAttacks(Square.f5, SquareSet.empty), makeSquareSet('''
 . . 1 . . 1 . .
 . . . 1 . 1 . 1
 . . . . 1 1 1 .
@@ -256,7 +256,7 @@ void main() {
 . . 1 . . . . .
 . . . . . . . .
 ''');
-    expect(queenAttacks(42, occupied), makeSquareSet('''
+    expect(queenAttacks(Square.c6, occupied), makeSquareSet('''
 1 . 1 . 1 . . .
 . 1 1 1 . . . .
 . 1 . 1 1 1 1 1
@@ -279,7 +279,7 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(queenAttacks(36, occupied), makeSquareSet('''
+    expect(queenAttacks(Square.e5, occupied), makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . 1 1 1 . .
@@ -289,34 +289,5 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 '''));
-  });
-
-  test('Legal board position asserts for attacks', () {
-    const illegalBoardPosition = 65;
-    const emptySquareSet = SquareSet.empty;
-
-    expect(() {
-      kingAttacks(illegalBoardPosition);
-    }, throwsA(isA<AssertionError>()));
-
-    expect(() {
-      pawnAttacks(Side.white, illegalBoardPosition);
-    }, throwsA(isA<AssertionError>()));
-
-    expect(() {
-      knightAttacks(illegalBoardPosition);
-    }, throwsA(isA<AssertionError>()));
-
-    expect(() {
-      bishopAttacks(illegalBoardPosition, emptySquareSet);
-    }, throwsA(isA<AssertionError>()));
-
-    expect(() {
-      rookAttacks(illegalBoardPosition, emptySquareSet);
-    }, throwsA(isA<AssertionError>()));
-
-    expect(() {
-      queenAttacks(illegalBoardPosition, emptySquareSet);
-    }, throwsA(isA<AssertionError>()));
   });
 }

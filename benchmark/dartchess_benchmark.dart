@@ -38,7 +38,7 @@ void main() {
   });
 
   benchmark('algebraic legal moves', () {
-    algebraicLegalMoves(legalMovesPos);
+    legalMovesOf(legalMovesPos);
   });
 
   benchmark('parsePgn - kasparov-deep-blue', () {

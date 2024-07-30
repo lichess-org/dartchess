@@ -1,13 +1,6 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import './models.dart';
-import './constants.dart';
 import './position.dart';
-
-/// Gets the rank of that square.
-Square squareRank(Square square) => square >> 3;
-
-/// Gets the file of that square.
-Square squareFile(Square square) => square & 0x7;
 
 /// Parses a string like 'a1', 'a2', etc. and returns a [Square] or `null` if the square
 /// doesn't exist.
@@ -16,39 +9,35 @@ Square? parseSquare(String str) {
   final file = str.codeUnitAt(0) - 'a'.codeUnitAt(0);
   final rank = str.codeUnitAt(1) - '1'.codeUnitAt(0);
   if (file < 0 || file >= 8 || rank < 0 || rank >= 8) return null;
-  return file + 8 * rank;
+  return Square(file + 8 * rank);
 }
 
-/// Returns the algebraic coordinate notation of the [Square].
-String toAlgebraic(Square square) =>
-    kFileNames[squareFile(square)] + kRankNames[squareRank(square)];
-
-/// Gets all the legal moves of this position in the algebraic coordinate notation.
+/// Gets all the legal moves of this position as a map from the origin square to the set of destination squares.
 ///
 /// Includes both possible representations of castling moves (unless `chess960` is true).
-IMap<String, ISet<String>> algebraicLegalMoves(Position pos,
+IMap<Square, ISet<Square>> legalMovesOf(Position pos,
     {bool isChess960 = false}) {
-  final Map<String, ISet<String>> result = {};
+  final Map<Square, ISet<Square>> result = {};
   for (final entry in pos.legalMoves.entries) {
     final dests = entry.value.squares;
     if (dests.isNotEmpty) {
       final from = entry.key;
-      final destSet = dests.map((e) => toAlgebraic(e)).toSet();
+      final destSet = dests.toSet();
       if (!isChess960 &&
           from == pos.board.kingOf(pos.turn) &&
-          squareFile(entry.key) == 4) {
-        if (dests.contains(0)) {
-          destSet.add('c1');
-        } else if (dests.contains(56)) {
-          destSet.add('c8');
+          entry.key.file == 4) {
+        if (dests.contains(Square.a1)) {
+          destSet.add(Square.c1);
+        } else if (dests.contains(Square.a8)) {
+          destSet.add(Square.c8);
         }
-        if (dests.contains(7)) {
-          destSet.add('g1');
-        } else if (dests.contains(63)) {
-          destSet.add('g8');
+        if (dests.contains(Square.h1)) {
+          destSet.add(Square.g1);
+        } else if (dests.contains(Square.h8)) {
+          destSet.add(Square.g8);
         }
       }
-      result[toAlgebraic(from)] = ISet(destSet);
+      result[from] = ISet(destSet);
     }
   }
   return IMap(result);

@@ -44,7 +44,7 @@ void main() {
         Setup.parseFen(
                 'r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6')
             .epSquare,
-        45);
+        Square.f6);
   });
 
   test('parse initial fen', () {

@@ -7,11 +7,11 @@ void main() {
   final pos = Chess.fromSetup(setup);
 
   // Generate legal moves in algebraic notation
-  final legalMoves = algebraicLegalMoves(pos);
+  final legalMoves = legalMovesOf(pos);
 
-  assert(legalMoves['e2']!.length == 2);
+  assert(legalMoves[Square.e2]!.length == 2);
 
-  const move = NormalMove(from: 12, to: 28);
+  const move = NormalMove(from: Square.e2, to: Square.e4);
 
   assert(pos.isLegal(move));
 

@@ -22,18 +22,22 @@ void main() {
 
     test('ply', () {
       expect(Chess.initial.ply, 0);
-      expect(Chess.initial.play(const NormalMove(from: 12, to: 28)).ply, 1);
       expect(
           Chess.initial
-              .play(const NormalMove(from: 12, to: 28))
-              .play(const NormalMove(from: 52, to: 36))
+              .play(const NormalMove(from: Square.e2, to: Square.e4))
+              .ply,
+          1);
+      expect(
+          Chess.initial
+              .play(const NormalMove(from: Square.e2, to: Square.e4))
+              .play(const NormalMove(from: Square.e7, to: Square.e5))
               .ply,
           2);
       expect(
           Chess.initial
-              .play(const NormalMove(from: 12, to: 28))
-              .play(const NormalMove(from: 52, to: 36))
-              .play(const NormalMove(from: 5, to: 26))
+              .play(const NormalMove(from: Square.e2, to: Square.e4))
+              .play(const NormalMove(from: Square.e7, to: Square.e5))
+              .play(const NormalMove(from: Square.f1, to: Square.c4))
               .ply,
           3);
     });
@@ -57,27 +61,26 @@ void main() {
       expect(castles.unmovedRooks, SquareSet.corners);
       expect(castles, Castles.standard);
 
-      expect(castles.rookOf(Side.white, CastlingSide.queen), 0);
-      expect(castles.rookOf(Side.white, CastlingSide.king), 7);
-      expect(castles.rookOf(Side.black, CastlingSide.queen), 56);
-      expect(castles.rookOf(Side.black, CastlingSide.king), 63);
+      expect(castles.rookOf(Side.white, CastlingSide.queen), Square.a1);
+      expect(castles.rookOf(Side.white, CastlingSide.king), Square.h1);
+      expect(castles.rookOf(Side.black, CastlingSide.queen), Square.a8);
+      expect(castles.rookOf(Side.black, CastlingSide.king), Square.h8);
 
       expect(castles.pathOf(Side.white, CastlingSide.queen).squares,
-          equals([1, 2, 3]));
+          equals([Square.b1, Square.c1, Square.d1]));
       expect(castles.pathOf(Side.white, CastlingSide.king).squares,
-          equals([5, 6]));
+          equals([Square.f1, Square.g1]));
       expect(castles.pathOf(Side.black, CastlingSide.queen).squares,
-          equals([57, 58, 59]));
+          equals([Square.b8, Square.c8, Square.d8]));
       expect(castles.pathOf(Side.black, CastlingSide.king).squares,
-          equals([61, 62]));
+          equals([Square.f8, Square.g8]));
     });
 
     test('discard rook', () {
-      expect(Castles.standard.discardRookAt(24), Castles.standard);
+      expect(Castles.standard.discardRookAt(Square.a4), Castles.standard);
       expect(
-          Castles.standard.discardRookAt(7).rooksPositions[Side.white],
-          IMap(
-              const {CastlingSide.queen: Squares.a1, CastlingSide.king: null}));
+          Castles.standard.discardRookAt(Square.h1).rooksPositions[Side.white],
+          IMap(const {CastlingSide.queen: Square.a1, CastlingSide.king: null}));
     });
 
     test('discard side', () {
@@ -88,15 +91,20 @@ void main() {
               const {CastlingSide.queen: null, CastlingSide.king: null},
             ),
             Side.black: ByCastlingSide(
-              const {CastlingSide.queen: 56, CastlingSide.king: 63},
+              const {
+                CastlingSide.queen: Square.a8,
+                CastlingSide.king: Square.h8,
+              },
             )
           })));
 
       expect(
           Castles.standard.discardSide(Side.black).rooksPositions,
           equals(BySide({
-            Side.white: ByCastlingSide(
-                const {CastlingSide.queen: 0, CastlingSide.king: 7}),
+            Side.white: ByCastlingSide(const {
+              CastlingSide.queen: Square.a1,
+              CastlingSide.king: Square.h1,
+            }),
             Side.black: ByCastlingSide(
                 const {CastlingSide.queen: null, CastlingSide.king: null})
           })));
@@ -115,13 +123,13 @@ void main() {
 
     test('makeSan with scholar mate', () {
       const moves = [
-        NormalMove(from: 12, to: 28),
-        NormalMove(from: 52, to: 36),
-        NormalMove(from: 5, to: 26),
-        NormalMove(from: 57, to: 42),
-        NormalMove(from: 3, to: 21),
-        NormalMove(from: 51, to: 43),
-        NormalMove(from: 21, to: 53),
+        NormalMove(from: Square.e2, to: Square.e4),
+        NormalMove(from: Square.e7, to: Square.e5),
+        NormalMove(from: Square.f1, to: Square.c4),
+        NormalMove(from: Square.b8, to: Square.c6),
+        NormalMove(from: Square.d1, to: Square.f3),
+        NormalMove(from: Square.d7, to: Square.d6),
+        NormalMove(from: Square.f3, to: Square.f7),
       ];
       final (_, sans) = moves
           .fold<(Position<Chess>, List<String>)>((Chess.initial, []), (acc, e) {
@@ -134,10 +142,10 @@ void main() {
 
     test('parse basic san', () {
       const position = Chess.initial;
-      expect(
-          position.parseSan('e4'), equals(const NormalMove(from: 12, to: 28)));
-      expect(
-          position.parseSan('Nf3'), equals(const NormalMove(from: 6, to: 21)));
+      expect(position.parseSan('e4'),
+          equals(const NormalMove(from: Square.e2, to: Square.e4)));
+      expect(position.parseSan('Nf3'),
+          equals(const NormalMove(from: Square.g1, to: Square.f3)));
       expect(position.parseSan('Nf6'), null);
       expect(position.parseSan('Ke2'), null);
       expect(position.parseSan('O-O'), null);
@@ -155,7 +163,8 @@ void main() {
 
       final pos2 = Chess.fromSetup(
           Setup.parseFen('r4br1/pp1Npkp1/2P4p/5P2/6P1/5KnP/PP6/R1B5 b - -'));
-      expect(pos2.parseSan('bxc6'), equals(const NormalMove(from: 49, to: 42)));
+      expect(pos2.parseSan('bxc6'),
+          equals(const NormalMove(from: Square.b7, to: Square.c6)));
 
       final pos3 = Chess.fromSetup(Setup.parseFen(
           '2rq1rk1/pb2bppp/1p2p3/n1ppPn2/2PP4/PP3N2/1B1NQPPP/RB3RK1 b - -'));
@@ -265,8 +274,8 @@ void main() {
 
     test('overspecified pawn move', () {
       const position = Chess.initial;
-      expect(
-          position.parseSan('2e4'), equals(const NormalMove(from: 12, to: 28)));
+      expect(position.parseSan('2e4'),
+          equals(const NormalMove(from: Square.e2, to: Square.e4)));
     });
 
     test('chess960 parseSan castle moves', () {
@@ -375,22 +384,22 @@ void main() {
 
     test('standard position legal moves', () {
       final moves = IMap({
-        0: SquareSet.empty,
-        1: const SquareSet.fromSquare(16).withSquare(18),
-        2: SquareSet.empty,
-        3: SquareSet.empty,
-        4: SquareSet.empty,
-        5: SquareSet.empty,
-        6: const SquareSet.fromSquare(21).withSquare(23),
-        7: SquareSet.empty,
-        8: const SquareSet.fromSquare(16).withSquare(24),
-        9: const SquareSet.fromSquare(17).withSquare(25),
-        10: const SquareSet.fromSquare(18).withSquare(26),
-        11: const SquareSet.fromSquare(19).withSquare(27),
-        12: const SquareSet.fromSquare(20).withSquare(28),
-        13: const SquareSet.fromSquare(21).withSquare(29),
-        14: const SquareSet.fromSquare(22).withSquare(30),
-        15: const SquareSet.fromSquare(23).withSquare(31),
+        Square.a1: SquareSet.empty,
+        Square.b1: SquareSet.fromSquare(Square.a3).withSquare(Square.c3),
+        Square.c1: SquareSet.empty,
+        Square.d1: SquareSet.empty,
+        Square.e1: SquareSet.empty,
+        Square.f1: SquareSet.empty,
+        Square.g1: SquareSet.fromSquare(Square.f3).withSquare(Square.h3),
+        Square.h1: SquareSet.empty,
+        Square.a2: SquareSet.fromSquare(Square.a3).withSquare(Square.a4),
+        Square.b2: SquareSet.fromSquare(Square.b3).withSquare(Square.b4),
+        Square.c2: SquareSet.fromSquare(Square.c3).withSquare(Square.c4),
+        Square.d2: SquareSet.fromSquare(Square.d3).withSquare(Square.d4),
+        Square.e2: SquareSet.fromSquare(Square.e3).withSquare(Square.e4),
+        Square.f2: SquareSet.fromSquare(Square.f3).withSquare(Square.f4),
+        Square.g2: SquareSet.fromSquare(Square.g3).withSquare(Square.g4),
+        Square.h2: SquareSet.fromSquare(Square.h3).withSquare(Square.h4),
       });
       expect(Chess.initial.legalMoves, equals(moves));
     });
@@ -408,7 +417,7 @@ void main() {
     test('castling legal moves', () {
       final pos = Chess.fromSetup(Setup.parseFen(
           'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
-      expect(pos.legalMovesOf(4), const SquareSet(0x00000000000000A9));
+      expect(pos.legalMovesOf(Square.e1), const SquareSet(0x00000000000000A9));
     });
 
     test('isCheck', () {
@@ -466,50 +475,59 @@ void main() {
     });
 
     test('isLegal', () {
-      expect(Chess.initial.isLegal(const NormalMove(from: 12, to: 28)), true);
-      expect(Chess.initial.isLegal(const NormalMove(from: 12, to: 29)), false);
+      expect(
+          Chess.initial
+              .isLegal(const NormalMove(from: Square.e2, to: Square.e4)),
+          true);
+      expect(
+          Chess.initial
+              .isLegal(const NormalMove(from: Square.e4, to: Square.f4)),
+          false);
       final promPos = Chess.fromSetup(
           Setup.parseFen('8/5P2/2RK2P1/8/4k3/8/8/7r w - - 0 1'));
       expect(
-          promPos.isLegal(
-              const NormalMove(from: 53, to: 61, promotion: Role.king)),
+          promPos.isLegal(const NormalMove(
+              from: Square.f7, to: Square.f8, promotion: Role.king)),
           false);
       expect(
-          promPos.isLegal(
-              const NormalMove(from: 42, to: 58, promotion: Role.queen)),
+          promPos.isLegal(const NormalMove(
+              from: Square.c6, to: Square.c8, promotion: Role.queen)),
           false);
       expect(
-          promPos.isLegal(
-              const NormalMove(from: 46, to: 54, promotion: Role.queen)),
+          promPos.isLegal(const NormalMove(
+              from: Square.g6, to: Square.g7, promotion: Role.queen)),
           false);
       expect(
-          promPos.isLegal(
-              const NormalMove(from: 53, to: 61, promotion: Role.queen)),
+          promPos.isLegal(const NormalMove(
+              from: Square.f7, to: Square.f8, promotion: Role.queen)),
           true);
     });
 
     group('play', () {
       test('a move not valid', () {
-        expect(() => Chess.initial.play(const NormalMove(from: 12, to: 44)),
+        expect(
+            () => Chess.initial
+                .play(const NormalMove(from: Square.e4, to: Square.e6)),
             throwsA(const TypeMatcher<PlayError>()));
       });
 
       test('e2 e4 on standard position', () {
-        final pos = Chess.initial.play(const NormalMove(from: 12, to: 28));
-        expect(pos.board.pieceAt(28), Piece.whitePawn);
-        expect(pos.board.pieceAt(12), null);
+        final pos = Chess.initial
+            .play(const NormalMove(from: Square.e2, to: Square.e4));
+        expect(pos.board.pieceAt(Square.e4), Piece.whitePawn);
+        expect(pos.board.pieceAt(Square.e2), null);
         expect(pos.turn, Side.black);
       });
 
       test('scholar mate', () {
         final pos = Chess.initial
-            .play(const NormalMove(from: 12, to: 28))
-            .play(const NormalMove(from: 52, to: 36))
-            .play(const NormalMove(from: 5, to: 26))
-            .play(const NormalMove(from: 57, to: 42))
-            .play(const NormalMove(from: 3, to: 21))
-            .play(const NormalMove(from: 51, to: 43))
-            .play(const NormalMove(from: 21, to: 53));
+            .play(const NormalMove(from: Square.e2, to: Square.e4))
+            .play(const NormalMove(from: Square.e7, to: Square.e5))
+            .play(const NormalMove(from: Square.f1, to: Square.c4))
+            .play(const NormalMove(from: Square.b8, to: Square.c6))
+            .play(const NormalMove(from: Square.d1, to: Square.f3))
+            .play(const NormalMove(from: Square.d7, to: Square.d6))
+            .play(const NormalMove(from: Square.f3, to: Square.f7));
 
         expect(pos.isCheckmate, true);
         expect(pos.turn, Side.black);
@@ -521,68 +539,77 @@ void main() {
 
       test('halfmoves increment', () {
         // pawn move
-        expect(Chess.initial.play(const NormalMove(from: 12, to: 28)).halfmoves,
+        expect(
+            Chess.initial
+                .play(const NormalMove(from: Square.e2, to: Square.e4))
+                .halfmoves,
             0);
 
         // piece move
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r2qr2k/5Qpp/2R1nn2/3p4/3P4/1B3P2/PB4PP/4R1K1 b - - 0 29'))
-            .play(const NormalMove(from: 44, to: 38));
+            .play(const NormalMove(from: Square.e6, to: Square.g5));
         expect(pos.halfmoves, 1);
 
         // capture move
         final pos2 = Chess.fromSetup(Setup.parseFen(
                 'r2qr2k/5Qpp/2R2n2/3p2n1/3P4/1B3P2/PB4PP/4R1K1 w - - 1 30'))
-            .play(const NormalMove(from: 17, to: 35));
+            .play(const NormalMove(from: Square.b3, to: Square.d5));
         expect(pos2.halfmoves, 0);
       });
 
       test('fullmoves increment', () {
-        final pos = Chess.initial.play(const NormalMove(from: 12, to: 28));
+        final pos = Chess.initial
+            .play(const NormalMove(from: Square.e2, to: Square.e4));
         expect(pos.fullmoves, 1);
-        expect(pos.play(const NormalMove(from: 52, to: 36)).fullmoves, 2);
+        expect(
+            pos
+                .play(const NormalMove(from: Square.e7, to: Square.e5))
+                .fullmoves,
+            2);
       });
 
       test('epSquare is correctly set after a double push move', () {
-        final pos = Chess.initial.play(const NormalMove(from: 12, to: 28));
-        expect(pos.epSquare, 20);
+        final pos = Chess.initial
+            .play(const NormalMove(from: Square.e2, to: Square.e4));
+        expect(pos.epSquare, Square.e3);
       });
 
       test('en passant capture', () {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'))
-            .play(const NormalMove(from: 36, to: 45));
-        expect(pos.board.pieceAt(45), Piece.whitePawn);
-        expect(pos.board.pieceAt(37), null);
+            .play(const NormalMove(from: Square.e5, to: Square.f6));
+        expect(pos.board.pieceAt(Square.f6), Piece.whitePawn);
+        expect(pos.board.pieceAt(Square.f5), null);
         expect(pos.epSquare, null);
       });
 
       test('rook move removes castling right', () {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
-            .play(const NormalMove(from: 7, to: 5));
+            .play(const NormalMove(from: Square.h1, to: Square.f1));
         expect(
             pos.castles.rooksPositions[Side.white],
             equals(IMap(const {
-              CastlingSide.queen: Squares.a1,
+              CastlingSide.queen: Square.a1,
               CastlingSide.king: null
             })));
-        expect(pos.castles.unmovedRooks.has(7), false);
+        expect(pos.castles.unmovedRooks.has(Square.h1), false);
       });
 
       test('capturing a rook removes castling right', () {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqk1nr/pppp1pbp/2n1p1p1/8/2B1P3/1P3N2/P1PP1PPP/RNBQK2R b KQkq - 4 4'))
-            .play(const NormalMove(from: 54, to: 0));
+            .play(const NormalMove(from: Square.g7, to: Square.a1));
         expect(pos.castles.rookOf(Side.white, CastlingSide.queen), isNull);
-        expect(pos.castles.rookOf(Side.white, CastlingSide.king), Squares.h1);
-        expect(pos.castles.unmovedRooks.has(0), false);
+        expect(pos.castles.rookOf(Side.white, CastlingSide.king), Square.h1);
+        expect(pos.castles.unmovedRooks.has(Square.a1), false);
       });
 
       test('king captures unmoved rook', () {
         final pos = Chess.fromSetup(
             Setup.parseFen('8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K - 0 1'));
-        const move = NormalMove(from: 14, to: 7);
+        const move = NormalMove(from: Square.g2, to: Square.h1);
         expect(pos.isLegal(move), true);
         final pos2 = pos.play(move);
         expect(pos2.fen, '8/8/8/B2p3Q/2qPp1P1/b7/2P2P1P/4K2k w - - 0 2');
@@ -597,16 +624,16 @@ void main() {
                 e is PositionError &&
                 e.cause == IllegalSetup.impossibleCheck)));
         final pos = Chess.fromSetup(setup, ignoreImpossibleCheck: true);
-        const enPassant = NormalMove(from: 35, to: 42);
+        const enPassant = NormalMove(from: Square.d5, to: Square.c6);
         expect(pos.isLegal(enPassant), false);
       });
 
       test('castling move', () {
         final pos = Chess.fromSetup(Setup.parseFen(
                 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
-            .play(const NormalMove(from: 4, to: 6));
-        expect(pos.board.pieceAt(6), Piece.whiteKing);
-        expect(pos.board.pieceAt(5), Piece.whiteRook);
+            .play(const NormalMove(from: Square.e1, to: Square.g1));
+        expect(pos.board.pieceAt(Square.g1), Piece.whiteKing);
+        expect(pos.board.pieceAt(Square.f1), Piece.whiteRook);
         expect(
             pos.castles.unmovedRooks.isIntersected(const SquareSet.fromRank(0)),
             false);
@@ -617,19 +644,19 @@ void main() {
       test('castling moves', () {
         final pos =
             Chess.fromSetup(Setup.parseFen('2r5/8/8/8/8/8/6PP/k2KR3 w K -'));
-        const move = NormalMove(from: 3, to: 4);
+        const move = NormalMove(from: Square.d1, to: Square.e1);
         expect(pos.play(move).fen, '2r5/8/8/8/8/8/6PP/k4RK1 b - - 1 1');
 
         final pos2 = Chess.fromSetup(Setup.parseFen(
             'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
-        const move2 = NormalMove(from: 4, to: 0);
+        const move2 = NormalMove(from: Square.e1, to: Square.a1);
         expect(pos2.play(move2).fen,
             'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/2KR3R b kq - 1 1');
 
         final pos3 = Chess.fromSetup(Setup.parseFen(
             '1r2k2r/p1b1n1pp/1q3p2/1p2pPQ1/4P3/2P4P/1B2B1P1/R3K2R w KQk - 0 20'));
-        const queenSide = NormalMove(from: 4, to: 0);
-        const altQueenSide = NormalMove(from: 4, to: 2);
+        const queenSide = NormalMove(from: Square.e1, to: Square.a1);
+        const altQueenSide = NormalMove(from: Square.e1, to: Square.c1);
         expect(pos3.normalizeMove(queenSide), queenSide);
         expect(pos3.normalizeMove(altQueenSide), queenSide);
         expect(pos3.play(altQueenSide).fen,

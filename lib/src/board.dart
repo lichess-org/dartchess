@@ -124,7 +124,7 @@ class Board {
           file += code - 48;
         } else {
           if (file >= 8 || rank < 0) throw const FenError('ERR_BOARD');
-          final square = file + rank * 8;
+          final square = Square(file + rank * 8);
           final promoted = i + 1 < boardFen.length && boardFen[i + 1] == '~';
           final piece = _charToPiece(c, promoted);
           if (piece == null) throw const FenError('ERR_BOARD');
@@ -147,7 +147,7 @@ class Board {
     int empty = 0;
     for (int rank = 7; rank >= 0; rank--) {
       for (int file = 0; file < 8; file++) {
-        final square = file + rank * 8;
+        final square = Square(file + rank * 8);
         final piece = pieceAt(square);
         if (piece == null) {
           empty++;
