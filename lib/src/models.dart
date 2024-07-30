@@ -251,10 +251,10 @@ enum Square {
   /// Number between 0 and 63 representing a square on the board.
   final int value;
 
-  /// The file (0-based x-coordinate) of the square on the board.
+  /// The file (0 based x-coordinate) of the square on the board.
   int get file => value & 0x7;
 
-  /// The rank (0-based y-coordinate) of the square on the board.
+  /// The rank (0 based y-coordinate) of the square on the board.
   int get rank => value >> 3;
 
   /// The Algebraic Notation of the square, such as 'a1', 'b2', etc.

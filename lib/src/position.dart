@@ -1,7 +1,6 @@
 import 'package:meta/meta.dart';
 import 'dart:math' as math;
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
-import './constants.dart';
 import './square_set.dart';
 import './attacks.dart';
 import './models.dart';
@@ -814,15 +813,15 @@ abstract class Position<T extends Position<T>> {
                   column = true;
                 }
                 if (column) {
-                  san += kFileNames[from.file];
+                  san += from.algebraicFile;
                 }
                 if (row) {
-                  san += kRankNames[from.rank];
+                  san += from.algebraicRank;
                 }
               }
             }
           } else if (capture) {
-            san = kFileNames[from.file];
+            san = from.algebraicFile;
           }
 
           if (capture) san += 'x';
