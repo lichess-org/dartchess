@@ -616,10 +616,10 @@ sealed class Move {
   /// Gets the UCI notation of this move.
   String get uci;
 
-  /// Constructs a [Move] from an UCI string.
+  /// Parses a UCI string into a move.
   ///
   /// Returns `null` if UCI string is not valid.
-  static Move? fromUci(String str) {
+  static Move? parse(String str) {
     if (str[1] == '@' && str.length == 4) {
       final role = Role.fromChar(str[0]);
       final to = parseSquare(str.substring(2));
@@ -641,6 +641,12 @@ sealed class Move {
     return null;
   }
 
+  /// Returns `true` if [square] is a square of this move.
+  bool hasSquare(Square square);
+
+  /// Returns an iterable of all squares involved in this move.
+  Iterable<Square> get squares;
+
   @override
   String toString() {
     return 'Move($uci)';
@@ -656,11 +662,37 @@ class NormalMove extends Move {
     this.promotion,
   });
 
+  /// Constructs a [NormalMove] from a UCI string.
+  ///
+  /// Throws a [FormatException] if the UCI string is invalid.
+  factory NormalMove.fromUci(String uci) {
+    final from = parseSquare(uci.substring(0, 2));
+    final to = parseSquare(uci.substring(2, 4));
+    Role? promotion;
+    if (uci.length == 5) {
+      promotion = Role.fromChar(uci[4]);
+    }
+    if (from != null && to != null) {
+      return NormalMove(from: from, to: to, promotion: promotion);
+    }
+    throw FormatException('Invalid UCI notation: $uci');
+  }
+
   /// The origin square of this move.
   final Square from;
 
   /// The role of the promoted piece, if any.
   final Role? promotion;
+
+  @override
+  bool hasSquare(Square square) => square == from || square == to;
+
+  @override
+  Iterable<Square> get squares => [from, to];
+
+  /// Returns a copy of this move with a [promotion] role.
+  NormalMove withPromotion(Role? promotion) =>
+      NormalMove(from: from, to: to, promotion: promotion);
 
   /// Gets UCI notation, like `g1f3` for a normal move, `a7a8q` for promotion to a queen.
   @override
@@ -682,12 +714,32 @@ class NormalMove extends Move {
 /// Represents a drop move.
 @immutable
 class DropMove extends Move {
+  /// Constructs a [DropMove] from a target square and a role.
   const DropMove({
     required super.to,
     required this.role,
   });
 
+  /// Constructs a [DropMove] from a UCI string.
+  ///
+  /// Throws a [FormatException] if the UCI string is invalid.
+  factory DropMove.fromUci(String uci) {
+    final role = Role.fromChar(uci[0]);
+    final to = parseSquare(uci.substring(2));
+    if (role != null && to != null) {
+      return DropMove(to: to, role: role);
+    }
+    throw FormatException('Invalid UCI notation: $uci');
+  }
+
+  /// The [Role] of the dropped piece.
   final Role role;
+
+  @override
+  bool hasSquare(Square square) => square == to;
+
+  @override
+  Iterable<Square> get squares => [to];
 
   /// Gets UCI notation of the drop, like `Q@f7`.
   @override

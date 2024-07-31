@@ -81,15 +81,31 @@ void main() {
   });
 
   group('Move', () {
-    test('fromUci', () {
-      expect(Move.fromUci('a1a2'),
-          const NormalMove(from: Square.a1, to: Square.a2));
+    test('parse', () {
       expect(
-          Move.fromUci('h7h8q'),
+          Move.parse('a1a2'), const NormalMove(from: Square.a1, to: Square.a2));
+      expect(
+          Move.parse('h7h8q'),
           const NormalMove(
               from: Square.h7, to: Square.h8, promotion: Role.queen));
       expect(
-          Move.fromUci('P@h1'), const DropMove(role: Role.pawn, to: Square.h1));
+          Move.parse('P@h1'), const DropMove(role: Role.pawn, to: Square.h1));
+    });
+
+    test('NormalMove.fromUci', () {
+      expect(NormalMove.fromUci('a1a2'),
+          const NormalMove(from: Square.a1, to: Square.a2));
+      expect(
+          NormalMove.fromUci('h7h8q'),
+          const NormalMove(
+              from: Square.h7, to: Square.h8, promotion: Role.queen));
+      expect(() => NormalMove.fromUci('P@h1'), throwsFormatException);
+    });
+
+    test('DropMove.fromUci', () {
+      expect(DropMove.fromUci('P@h1'),
+          const DropMove(role: Role.pawn, to: Square.h1));
+      expect(() => DropMove.fromUci('a1a2'), throwsFormatException);
     });
 
     test('uci', () {
