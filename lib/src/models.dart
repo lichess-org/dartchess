@@ -1,6 +1,7 @@
 import 'package:meta/meta.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import './utils.dart';
+import './square_set.dart';
 
 /// The chessboard side, white or black.
 enum Side {
@@ -109,16 +110,14 @@ extension type const File._(int value) implements int {
 
   static const _names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
-  /// Calculates the offset from a file index without checking for
-  /// overflow.
+  /// Returns the file offset by [delta].
   ///
-  /// It is the callers responsibility to ensure that `delta` is a valid
-  /// offset for this [File].
-  File offset(int delta) {
+  /// Returns `null` if the resulting file is out of bounds.
+  File? offset(int delta) {
     assert(delta >= -7 && delta <= 7);
     final newFile = value + delta;
     if (newFile < 0 || newFile > 7) {
-      throw RangeError('Invalid offset: $delta for file $this');
+      return null;
     }
     return File(newFile);
   }
@@ -166,16 +165,14 @@ extension type const Rank._(int value) implements int {
 
   static const _names = ['1', '2', '3', '4', '5', '6', '7', '8'];
 
-  /// Calculates the offset from a rank index without checking for
-  /// overflow.
+  /// Returns the rank offset by [delta].
   ///
-  /// It is the callers responsibility to ensure that `delta` is a valid
-  /// offset for this [Rank].
-  Rank offset(int delta) {
+  /// Returns `null` if the resulting rank is out of bounds.
+  Rank? offset(int delta) {
     assert(delta >= -7 && delta <= 7);
     final newRank = value + delta;
     if (newRank < 0 || newRank > 7) {
-      throw RangeError('Invalid offset: $delta for rank $this');
+      return null;
     }
     return Rank(newRank);
   }
@@ -187,6 +184,9 @@ extension type const Rank._(int value) implements int {
 /// A square of the chessboard.
 ///
 /// Square values are between 0 and 63, representing the squares from a1 to h8.
+///
+/// See also:
+/// - [SquareSet] for the manipulation of sets of squares.
 extension type const Square._(int value) implements int {
   const Square(this.value) : assert(value >= 0 && value < 64);
 
@@ -202,16 +202,14 @@ extension type const Square._(int value) implements int {
     return Square(rank * 8 + file);
   }
 
-  /// Calculates the offset from a square index without checking for
-  /// overflow.
+  /// Returns the square offset by [delta].
   ///
-  /// It is the callers responsibility to ensure that `delta` is a valid
-  /// offset for this [Square].
-  Square offset(int delta) {
+  /// Returns `null` if the resulting square is out of bounds.
+  Square? offset(int delta) {
     assert(delta >= -63 && delta <= 63);
     final newSquare = value + delta;
     if (newSquare < 0 || newSquare > 63) {
-      throw RangeError('Invalid offset: $delta for square $this');
+      return null;
     }
     return Square(newSquare);
   }

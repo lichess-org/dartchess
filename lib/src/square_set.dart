@@ -17,7 +17,7 @@ import './models.dart';
 /// ```
 extension type const SquareSet(int value) {
   /// Creates a [SquareSet] with a single [Square].
-  const SquareSet.fromSquare(Square square) : value = 1 << (square as int);
+  const SquareSet.fromSquare(Square square) : value = 1 << square;
 
   /// Creates a [SquareSet] from several [Square]s.
   SquareSet.fromSquares(Iterable<Square> squares)
@@ -191,7 +191,7 @@ extension type const SquareSet(int value) {
     int bitboard = value;
     while (bitboard != 0) {
       final square = _getFirstSquare(bitboard);
-      bitboard ^= 1 << square!.value;
+      bitboard ^= 1 << square!;
       yield square;
     }
   }
@@ -200,7 +200,7 @@ extension type const SquareSet(int value) {
     int bitboard = value;
     while (bitboard != 0) {
       final square = _getLastSquare(bitboard);
-      bitboard ^= 1 << square!.value;
+      bitboard ^= 1 << square!;
       yield square;
     }
   }

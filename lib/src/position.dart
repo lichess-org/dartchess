@@ -541,12 +541,12 @@ abstract class Position<T extends Position<T>> {
         Castles newCastles = castles;
         if (piece.role == Role.pawn) {
           if (to == epSquare) {
-            epCaptureTarget = to.offset(turn == Side.white ? -8 : 8);
+            epCaptureTarget = Square(to + (turn == Side.white ? -8 : 8));
             newBoard = newBoard.removePieceAt(epCaptureTarget);
           }
-          final delta = from.value - to.value;
+          final delta = from - to;
           if (delta.abs() == 16 && from >= Square.a2 && from <= Square.h7) {
-            newEpSquare = Square((from.value + to.value) >>> 1);
+            newEpSquare = Square((from + to) >>> 1);
           }
         } else if (piece.role == Role.rook) {
           newCastles = newCastles.discardRookAt(from);
@@ -772,8 +772,7 @@ abstract class Position<T extends Position<T>> {
         final role = board.roleAt(from);
         if (role == null) return '--';
         if (role == Role.king &&
-            (board.bySide(turn).has(to) ||
-                (to.value - from.value).abs() == 2)) {
+            (board.bySide(turn).has(to) || (to - from).abs() == 2)) {
           san = to > from ? 'O-O' : 'O-O-O';
         } else {
           final capture = board.occupied.has(to) ||
@@ -863,7 +862,7 @@ abstract class Position<T extends Position<T>> {
         }
       }
       if (epSquare != null && _canCaptureEp(square)) {
-        final pawn = epSquare!.offset(-delta);
+        final pawn = epSquare! - delta;
         if (ctx.checkers.isEmpty || ctx.checkers.singleSquare == pawn) {
           legalEpSquare = SquareSet.fromSquare(epSquare!);
         }
@@ -980,7 +979,7 @@ abstract class Position<T extends Position<T>> {
     if (!pawnAttacks(turn, pawn).has(epSquare!)) return false;
     final king = board.kingOf(turn);
     if (king == null) return true;
-    final captured = epSquare!.offset(turn == Side.white ? -8 : 8);
+    final captured = Square(epSquare! + (turn == Side.white ? -8 : 8));
     final occupied = board.occupied
         .toggleSquare(pawn)
         .toggleSquare(epSquare!)

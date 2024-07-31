@@ -15,10 +15,7 @@ void main() {
     test('offset', () {
       expect(File.a.offset(1), File.b);
       expect(File.h.offset(-1), File.g);
-    });
-
-    test('offset throws exception if out of range', () {
-      expect(() => File.h.offset(1), throwsRangeError);
+      expect(File.h.offset(1), null);
     });
   });
 
@@ -35,10 +32,7 @@ void main() {
     test('offset', () {
       expect(Rank.first.offset(1), Rank.second);
       expect(Rank.eighth.offset(-1), Rank.seventh);
-    });
-
-    test('offset throws exception if out of range', () {
-      expect(() => Rank.eighth.offset(1), throwsRangeError);
+      expect(Rank.eighth.offset(1), null);
     });
   });
 
@@ -56,10 +50,7 @@ void main() {
     test('offset', () {
       expect(Square.a1.offset(8), Square.a2);
       expect(Square.h8.offset(-8), Square.h7);
-    });
-
-    test('offset throws exception if out of range', () {
-      expect(() => Square.h8.offset(1), throwsRangeError);
+      expect(Square.h8.offset(1), null);
     });
   });
 

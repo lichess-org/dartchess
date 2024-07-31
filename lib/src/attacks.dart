@@ -58,17 +58,17 @@ SquareSet attacks(Piece piece, Square square, SquareSet occupied) {
 /// `a` and `b`, or an empty set if they are not aligned.
 SquareSet ray(Square a, Square b) {
   final other = SquareSet.fromSquare(b);
-  if (_rankRange[a.value].isIntersected(other)) {
-    return _rankRange[a.value].withSquare(a);
+  if (_rankRange[a].isIntersected(other)) {
+    return _rankRange[a].withSquare(a);
   }
-  if (_antiDiagRange[a.value].isIntersected(other)) {
-    return _antiDiagRange[a.value].withSquare(a);
+  if (_antiDiagRange[a].isIntersected(other)) {
+    return _antiDiagRange[a].withSquare(a);
   }
-  if (_diagRange[a.value].isIntersected(other)) {
-    return _diagRange[a.value].withSquare(a);
+  if (_diagRange[a].isIntersected(other)) {
+    return _diagRange[a].withSquare(a);
   }
-  if (_fileRange[a.value].isIntersected(other)) {
-    return _fileRange[a.value].withSquare(a);
+  if (_fileRange[a].isIntersected(other)) {
+    return _fileRange[a].withSquare(a);
   }
   return SquareSet.empty;
 }
@@ -76,7 +76,7 @@ SquareSet ray(Square a, Square b) {
 /// Gets all squares between `a` and `b` (bounds not included), or an empty set
 /// if they are not on the same rank, file or diagonal.
 SquareSet between(Square a, Square b) => ray(a, b)
-    .intersect(SquareSet.full.shl(a.value).xor(SquareSet.full.shl(b.value)))
+    .intersect(SquareSet.full.shl(a).xor(SquareSet.full.shl(b)))
     .withoutFirst();
 
 // --
