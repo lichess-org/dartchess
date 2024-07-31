@@ -84,6 +84,17 @@ extension type const File._(int value) implements int {
   /// Gets the chessboard [File] from a file index between 0 and 7.
   const File(this.value) : assert(value >= 0 && value < 8);
 
+  /// Constructs a [File] from an algebraic notation, such as 'a', 'b', 'c', etc.
+  ///
+  /// Throws a [FormatException] if the algebraic notation is invalid.
+  factory File.fromAlgebraic(String algebraic) {
+    final file = algebraic.codeUnitAt(0) - 97;
+    if (file < 0 || file > 7) {
+      throw FormatException('Invalid algebraic notation: $algebraic');
+    }
+    return File(file);
+  }
+
   static const a = File(0);
   static const b = File(1);
   static const c = File(2);
@@ -93,6 +104,7 @@ extension type const File._(int value) implements int {
   static const g = File(6);
   static const h = File(7);
 
+  /// All files in ascending order.
   static const values = [a, b, c, d, e, f, g, h];
 
   static const _names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -120,6 +132,17 @@ extension type const Rank._(int value) implements int {
   /// Gets the chessboard [Rank] from a rank index between 0 and 7.
   const Rank(this.value) : assert(value >= 0 && value < 8);
 
+  /// Constructs a [Rank] from an algebraic notation, such as '1', '2', '3', etc.
+  ///
+  /// Throws a [FormatException] if the algebraic notation is invalid.
+  factory Rank.fromAlgebraic(String algebraic) {
+    final rank = algebraic.codeUnitAt(0) - 49;
+    if (rank < 0 || rank > 7) {
+      throw FormatException('Invalid algebraic notation: $algebraic');
+    }
+    return Rank(rank);
+  }
+
   static const first = Rank(0);
   static const second = Rank(1);
   static const third = Rank(2);
@@ -129,6 +152,7 @@ extension type const Rank._(int value) implements int {
   static const seventh = Rank(6);
   static const eighth = Rank(7);
 
+  /// All ranks in ascending order.
   static const values = [
     first,
     second,
@@ -167,9 +191,14 @@ extension type const Square._(int value) implements int {
   const Square(this.value) : assert(value >= 0 && value < 64);
 
   /// Constructs a [Square] from an algebraic notation, such as 'a1', 'b2', etc.
+  ///
+  /// Throws a [FormatException] if the algebraic notation is invalid.
   factory Square.fromAlgebraic(String algebraic) {
     final file = algebraic.codeUnitAt(0) - 97;
     final rank = algebraic.codeUnitAt(1) - 49;
+    if (file < 0 || file > 7 || rank < 0 || rank > 7) {
+      throw FormatException('Invalid algebraic notation: $algebraic');
+    }
     return Square(rank * 8 + file);
   }
 

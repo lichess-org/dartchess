@@ -852,7 +852,7 @@ abstract class Position<T extends Position<T>> {
     if (piece.role == Role.pawn) {
       pseudo = pawnAttacks(turn, square) & board.bySide(turn.opposite);
       final delta = turn == Side.white ? 8 : -8;
-      final step = square.value + delta;
+      final step = square + delta;
       if (0 <= step && step < 64 && !board.occupied.has(Square(step))) {
         pseudo = pseudo.withSquare(Square(step));
         final canDoubleStep =
@@ -995,7 +995,7 @@ abstract class Position<T extends Position<T>> {
   /// Returns the [CastlingSide] or `null` if the move is a drop move.
   CastlingSide? _getCastlingSide(Move move) {
     if (move case NormalMove(from: final from, to: final to)) {
-      final delta = to.value - from.value;
+      final delta = to - from;
       if (delta.abs() != 2 && !board.bySide(turn).has(to)) {
         return null;
       }

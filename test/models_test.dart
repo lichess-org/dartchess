@@ -2,6 +2,46 @@ import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('File', () {
+    test('File.values', () {
+      expect(File.values.length, 8);
+    });
+
+    test('fromAlgebraic', () {
+      expect(File.fromAlgebraic('a'), File.a);
+      expect(File.fromAlgebraic('h'), File.h);
+    });
+
+    test('offset', () {
+      expect(File.a.offset(1), File.b);
+      expect(File.h.offset(-1), File.g);
+    });
+
+    test('offset throws exception if out of range', () {
+      expect(() => File.h.offset(1), throwsRangeError);
+    });
+  });
+
+  group('Rank', () {
+    test('Rank.values', () {
+      expect(Rank.values.length, 8);
+    });
+
+    test('fromAlgebraic', () {
+      expect(Rank.fromAlgebraic('1'), Rank.first);
+      expect(Rank.fromAlgebraic('8'), Rank.eighth);
+    });
+
+    test('offset', () {
+      expect(Rank.first.offset(1), Rank.second);
+      expect(Rank.eighth.offset(-1), Rank.seventh);
+    });
+
+    test('offset throws exception if out of range', () {
+      expect(() => Rank.eighth.offset(1), throwsRangeError);
+    });
+  });
+
   group('Square', () {
     test('Square.values', () {
       expect(Square.values.length, 64);

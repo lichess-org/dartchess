@@ -3,25 +3,25 @@ import './models.dart';
 
 /// Gets squares attacked or defended by a king on [Square].
 SquareSet kingAttacks(Square square) {
-  return _kingAttacks[square.value];
+  return _kingAttacks[square];
 }
 
 /// Gets squares attacked or defended by a knight on [Square].
 SquareSet knightAttacks(Square square) {
-  return _knightAttacks[square.value];
+  return _knightAttacks[square];
 }
 
 /// Gets squares attacked or defended by a pawn of the given [Side] on [Square].
 SquareSet pawnAttacks(Side side, Square square) {
-  return _pawnAttacks[side]![square.value];
+  return _pawnAttacks[side]![square];
 }
 
 /// Gets squares attacked or defended by a bishop on [Square], given `occupied`
 /// squares.
 SquareSet bishopAttacks(Square square, SquareSet occupied) {
   final bit = SquareSet.fromSquare(square);
-  return _hyperbola(bit, _diagRange[square.value], occupied) ^
-      _hyperbola(bit, _antiDiagRange[square.value], occupied);
+  return _hyperbola(bit, _diagRange[square], occupied) ^
+      _hyperbola(bit, _antiDiagRange[square], occupied);
 }
 
 /// Gets squares attacked or defended by a rook on [Square], given `occupied`
@@ -84,7 +84,7 @@ SquareSet between(Square a, Square b) => ray(a, b)
 SquareSet _computeRange(Square square, List<int> deltas) {
   SquareSet range = SquareSet.empty;
   for (final delta in deltas) {
-    final sq = square.value + delta;
+    final sq = square + delta;
     if (0 <= sq && sq < 64 && (square.file - Square(sq).file).abs() <= 2) {
       range = range.withSquare(Square(sq));
     }
@@ -95,7 +95,7 @@ SquareSet _computeRange(Square square, List<int> deltas) {
 List<T> _tabulate<T>(T Function(Square square) f) {
   final List<T> table = [];
   for (final square in Square.values) {
-    table.insert(square.value, f(square));
+    table.insert(square, f(square));
   }
   return table;
 }
@@ -137,11 +137,11 @@ SquareSet _hyperbola(SquareSet bit, SquareSet range, SquareSet occupied) {
   return (forward ^ reverse.flipVertical()) & range;
 }
 
-SquareSet _fileAttacks(Square square, SquareSet occupied) => _hyperbola(
-    SquareSet.fromSquare(square), _fileRange[square.value], occupied);
+SquareSet _fileAttacks(Square square, SquareSet occupied) =>
+    _hyperbola(SquareSet.fromSquare(square), _fileRange[square], occupied);
 
 SquareSet _rankAttacks(Square square, SquareSet occupied) {
-  final range = _rankRange[square.value];
+  final range = _rankRange[square];
   final bit = SquareSet.fromSquare(square);
   SquareSet forward = occupied & range;
   SquareSet reverse = forward.mirrorHorizontal();

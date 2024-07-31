@@ -22,7 +22,7 @@ extension type const SquareSet(int value) {
   /// Creates a [SquareSet] from several [Square]s.
   SquareSet.fromSquares(Iterable<Square> squares)
       : value = squares
-            .map((square) => 1 << square.value)
+            .map((square) => 1 << square)
             .fold(0, (left, right) => left | right);
 
   /// Create a [SquareSet] containing all squares of the given rank.
@@ -135,7 +135,7 @@ extension type const SquareSet(int value) {
 
   /// Returns true if the [SquareSet] contains the given [square].
   bool has(Square square) {
-    return value & (1 << square.value) != 0;
+    return value & (1 << square) != 0;
   }
 
   /// Returns true if the square set has any square in the [other] square set.
@@ -146,17 +146,17 @@ extension type const SquareSet(int value) {
 
   /// Returns a new [SquareSet] with the given [square] added.
   SquareSet withSquare(Square square) {
-    return SquareSet(value | (1 << square.value));
+    return SquareSet(value | (1 << square));
   }
 
   /// Returns a new [SquareSet] with the given [square] removed.
   SquareSet withoutSquare(Square square) {
-    return SquareSet(value & ~(1 << square.value));
+    return SquareSet(value & ~(1 << square));
   }
 
   /// Removes [Square] if present, or put it if absent.
   SquareSet toggleSquare(Square square) {
-    return SquareSet(value ^ (1 << square.value));
+    return SquareSet(value ^ (1 << square));
   }
 
   /// Returns a new [SquareSet] with its first [Square] removed.
