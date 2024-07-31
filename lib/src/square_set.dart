@@ -17,7 +17,7 @@ import './models.dart';
 /// ```
 extension type const SquareSet(int value) {
   /// Creates a [SquareSet] with a single [Square].
-  SquareSet.fromSquare(Square square) : value = 1 << square.value;
+  const SquareSet.fromSquare(Square square) : value = 1 << (square as int);
 
   /// Creates a [SquareSet] from several [Square]s.
   SquareSet.fromSquares(Iterable<Square> squares)
@@ -26,12 +26,12 @@ extension type const SquareSet(int value) {
             .fold(0, (left, right) => left | right);
 
   /// Create a [SquareSet] containing all squares of the given rank.
-  const SquareSet.fromRank(int rank)
+  const SquareSet.fromRank(Rank rank)
       : value = 0xff << (8 * rank),
         assert(rank >= 0 && rank < 8);
 
   /// Create a [SquareSet] containing all squares of the given file.
-  const SquareSet.fromFile(int file)
+  const SquareSet.fromFile(File file)
       : value = 0x0101010101010101 << file,
         assert(file >= 0 && file < 8);
 

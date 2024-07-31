@@ -385,21 +385,21 @@ void main() {
     test('standard position legal moves', () {
       final moves = IMap({
         Square.a1: SquareSet.empty,
-        Square.b1: SquareSet.fromSquare(Square.a3).withSquare(Square.c3),
+        Square.b1: const SquareSet.fromSquare(Square.a3).withSquare(Square.c3),
         Square.c1: SquareSet.empty,
         Square.d1: SquareSet.empty,
         Square.e1: SquareSet.empty,
         Square.f1: SquareSet.empty,
-        Square.g1: SquareSet.fromSquare(Square.f3).withSquare(Square.h3),
+        Square.g1: const SquareSet.fromSquare(Square.f3).withSquare(Square.h3),
         Square.h1: SquareSet.empty,
-        Square.a2: SquareSet.fromSquare(Square.a3).withSquare(Square.a4),
-        Square.b2: SquareSet.fromSquare(Square.b3).withSquare(Square.b4),
-        Square.c2: SquareSet.fromSquare(Square.c3).withSquare(Square.c4),
-        Square.d2: SquareSet.fromSquare(Square.d3).withSquare(Square.d4),
-        Square.e2: SquareSet.fromSquare(Square.e3).withSquare(Square.e4),
-        Square.f2: SquareSet.fromSquare(Square.f3).withSquare(Square.f4),
-        Square.g2: SquareSet.fromSquare(Square.g3).withSquare(Square.g4),
-        Square.h2: SquareSet.fromSquare(Square.h3).withSquare(Square.h4),
+        Square.a2: const SquareSet.fromSquare(Square.a3).withSquare(Square.a4),
+        Square.b2: const SquareSet.fromSquare(Square.b3).withSquare(Square.b4),
+        Square.c2: const SquareSet.fromSquare(Square.c3).withSquare(Square.c4),
+        Square.d2: const SquareSet.fromSquare(Square.d3).withSquare(Square.d4),
+        Square.e2: const SquareSet.fromSquare(Square.e3).withSquare(Square.e4),
+        Square.f2: const SquareSet.fromSquare(Square.f3).withSquare(Square.f4),
+        Square.g2: const SquareSet.fromSquare(Square.g3).withSquare(Square.g4),
+        Square.h2: const SquareSet.fromSquare(Square.h3).withSquare(Square.h4),
       });
       expect(Chess.initial.legalMoves, equals(moves));
     });
@@ -635,7 +635,8 @@ void main() {
         expect(pos.board.pieceAt(Square.g1), Piece.whiteKing);
         expect(pos.board.pieceAt(Square.f1), Piece.whiteRook);
         expect(
-            pos.castles.unmovedRooks.isIntersected(const SquareSet.fromRank(0)),
+            pos.castles.unmovedRooks
+                .isIntersected(const SquareSet.fromRank(Rank.first)),
             false);
         expect(pos.castles.rookOf(Side.white, CastlingSide.king), isNull);
         expect(pos.castles.rookOf(Side.white, CastlingSide.queen), isNull);

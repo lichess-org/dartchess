@@ -397,8 +397,8 @@ class PgnCommentShape {
   @override
   String toString() {
     return to == from
-        ? '${color.string[0]}${to.name}'
-        : '${color.string[0]}${from.name}${to.name}';
+        ? '${color.string[0]}${to.algebraicNotation}'
+        : '${color.string[0]}${from.algebraicNotation}${to.algebraicNotation}';
   }
 
   /// Parse the PGN for any comment or return null.

@@ -79,143 +79,92 @@ enum Role {
       };
 }
 
+/// A file of the chessboard.
+extension type const File._(int value) implements int {
+  /// Gets the chessboard [File] from a file index between 0 and 7.
+  const File(this.value) : assert(value >= 0 && value < 8);
+
+  static const a = File(0);
+  static const b = File(1);
+  static const c = File(2);
+  static const d = File(3);
+  static const e = File(4);
+  static const f = File(5);
+  static const g = File(6);
+  static const h = File(7);
+
+  static const values = [a, b, c, d, e, f, g, h];
+
+  static const _names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+
+  /// Calculates the offset from a file index without checking for
+  /// overflow.
+  ///
+  /// It is the callers responsibility to ensure that `delta` is a valid
+  /// offset for this [File].
+  File offset(int delta) {
+    assert(delta >= -7 && delta <= 7);
+    final newFile = value + delta;
+    if (newFile < 0 || newFile > 7) {
+      throw RangeError('Invalid offset: $delta for file $this');
+    }
+    return File(newFile);
+  }
+
+  /// The Algebraic Notation of the file, such as 'a', 'b', 'c', etc.
+  String get algebraicNotation => _names[value];
+}
+
+/// A rank of the chessboard.
+extension type const Rank._(int value) implements int {
+  /// Gets the chessboard [Rank] from a rank index between 0 and 7.
+  const Rank(this.value) : assert(value >= 0 && value < 8);
+
+  static const first = Rank(0);
+  static const second = Rank(1);
+  static const third = Rank(2);
+  static const fourth = Rank(3);
+  static const fifth = Rank(4);
+  static const sixth = Rank(5);
+  static const seventh = Rank(6);
+  static const eighth = Rank(7);
+
+  static const values = [
+    first,
+    second,
+    third,
+    fourth,
+    fifth,
+    sixth,
+    seventh,
+    eighth
+  ];
+
+  static const _names = ['1', '2', '3', '4', '5', '6', '7', '8'];
+
+  /// Calculates the offset from a rank index without checking for
+  /// overflow.
+  ///
+  /// It is the callers responsibility to ensure that `delta` is a valid
+  /// offset for this [Rank].
+  Rank offset(int delta) {
+    assert(delta >= -7 && delta <= 7);
+    final newRank = value + delta;
+    if (newRank < 0 || newRank > 7) {
+      throw RangeError('Invalid offset: $delta for rank $this');
+    }
+    return Rank(newRank);
+  }
+
+  /// The Algebraic Notation of the rank, such as '1', '2', '3', etc.
+  String get algebraicNotation => _names[value];
+}
+
 /// A square of the chessboard.
 ///
 /// Square values are between 0 and 63, representing the squares from a1 to h8.
-enum Square {
-  a1._(0),
-  b1._(1),
-  c1._(2),
-  d1._(3),
-  e1._(4),
-  f1._(5),
-  g1._(6),
-  h1._(7),
-  a2._(8),
-  b2._(9),
-  c2._(10),
-  d2._(11),
-  e2._(12),
-  f2._(13),
-  g2._(14),
-  h2._(15),
-  a3._(16),
-  b3._(17),
-  c3._(18),
-  d3._(19),
-  e3._(20),
-  f3._(21),
-  g3._(22),
-  h3._(23),
-  a4._(24),
-  b4._(25),
-  c4._(26),
-  d4._(27),
-  e4._(28),
-  f4._(29),
-  g4._(30),
-  h4._(31),
-  a5._(32),
-  b5._(33),
-  c5._(34),
-  d5._(35),
-  e5._(36),
-  f5._(37),
-  g5._(38),
-  h5._(39),
-  a6._(40),
-  b6._(41),
-  c6._(42),
-  d6._(43),
-  e6._(44),
-  f6._(45),
-  g6._(46),
-  h6._(47),
-  a7._(48),
-  b7._(49),
-  c7._(50),
-  d7._(51),
-  e7._(52),
-  f7._(53),
-  g7._(54),
-  h7._(55),
-  a8._(56),
-  b8._(57),
-  c8._(58),
-  d8._(59),
-  e8._(60),
-  f8._(61),
-  g8._(62),
-  h8._(63);
-
-  /// Constructs a [Square] from a value between 0 and 63.
-  factory Square(int value) => switch (value) {
-        0 => Square.a1,
-        1 => Square.b1,
-        2 => Square.c1,
-        3 => Square.d1,
-        4 => Square.e1,
-        5 => Square.f1,
-        6 => Square.g1,
-        7 => Square.h1,
-        8 => Square.a2,
-        9 => Square.b2,
-        10 => Square.c2,
-        11 => Square.d2,
-        12 => Square.e2,
-        13 => Square.f2,
-        14 => Square.g2,
-        15 => Square.h2,
-        16 => Square.a3,
-        17 => Square.b3,
-        18 => Square.c3,
-        19 => Square.d3,
-        20 => Square.e3,
-        21 => Square.f3,
-        22 => Square.g3,
-        23 => Square.h3,
-        24 => Square.a4,
-        25 => Square.b4,
-        26 => Square.c4,
-        27 => Square.d4,
-        28 => Square.e4,
-        29 => Square.f4,
-        30 => Square.g4,
-        31 => Square.h4,
-        32 => Square.a5,
-        33 => Square.b5,
-        34 => Square.c5,
-        35 => Square.d5,
-        36 => Square.e5,
-        37 => Square.f5,
-        38 => Square.g5,
-        39 => Square.h5,
-        40 => Square.a6,
-        41 => Square.b6,
-        42 => Square.c6,
-        43 => Square.d6,
-        44 => Square.e6,
-        45 => Square.f6,
-        46 => Square.g6,
-        47 => Square.h6,
-        48 => Square.a7,
-        49 => Square.b7,
-        50 => Square.c7,
-        51 => Square.d7,
-        52 => Square.e7,
-        53 => Square.f7,
-        54 => Square.g7,
-        55 => Square.h7,
-        56 => Square.a8,
-        57 => Square.b8,
-        58 => Square.c8,
-        59 => Square.d8,
-        60 => Square.e8,
-        61 => Square.f8,
-        62 => Square.g8,
-        63 => Square.h8,
-        int() => throw ArgumentError('Invalid square value: $value'),
-      };
+extension type const Square._(int value) implements int {
+  const Square(this.value) : assert(value >= 0 && value < 64);
 
   /// Constructs a [Square] from an algebraic notation, such as 'a1', 'b2', etc.
   factory Square.fromAlgebraic(String algebraic) {
@@ -223,13 +172,6 @@ enum Square {
     final rank = algebraic.codeUnitAt(1) - 49;
     return Square(rank * 8 + file);
   }
-
-  const Square._(this.value);
-
-  bool operator <(Square other) => value < other.value;
-  bool operator <=(Square other) => value <= other.value;
-  bool operator >(Square other) => value > other.value;
-  bool operator >=(Square other) => value >= other.value;
 
   /// Calculates the offset from a square index without checking for
   /// overflow.
@@ -248,23 +190,147 @@ enum Square {
   /// Return the bitwise XOR of the numeric square representation.
   Square xor(Square other) => Square(value ^ other.value);
 
-  /// Number between 0 and 63 representing a square on the board.
-  final int value;
+  /// The file of the square on the board.
+  File get file => File(value & 0x7);
 
-  /// The file (0 based x-coordinate) of the square on the board.
-  int get file => value & 0x7;
-
-  /// The rank (0 based y-coordinate) of the square on the board.
-  int get rank => value >> 3;
+  /// The rank of the square on the board.
+  Rank get rank => Rank(value >> 3);
 
   /// The Algebraic Notation of the square, such as 'a1', 'b2', etc.
-  String get algebraicNotation => name;
+  String get algebraicNotation =>
+      file.algebraicNotation + rank.algebraicNotation;
 
-  /// The file of the square in Algebraic Notation, such as 'a', 'b', 'c', etc.
-  String get algebraicFile => name[0];
+  static const a1 = Square(0);
+  static const b1 = Square(1);
+  static const c1 = Square(2);
+  static const d1 = Square(3);
+  static const e1 = Square(4);
+  static const f1 = Square(5);
+  static const g1 = Square(6);
+  static const h1 = Square(7);
+  static const a2 = Square(8);
+  static const b2 = Square(9);
+  static const c2 = Square(10);
+  static const d2 = Square(11);
+  static const e2 = Square(12);
+  static const f2 = Square(13);
+  static const g2 = Square(14);
+  static const h2 = Square(15);
+  static const a3 = Square(16);
+  static const b3 = Square(17);
+  static const c3 = Square(18);
+  static const d3 = Square(19);
+  static const e3 = Square(20);
+  static const f3 = Square(21);
+  static const g3 = Square(22);
+  static const h3 = Square(23);
+  static const a4 = Square(24);
+  static const b4 = Square(25);
+  static const c4 = Square(26);
+  static const d4 = Square(27);
+  static const e4 = Square(28);
+  static const f4 = Square(29);
+  static const g4 = Square(30);
+  static const h4 = Square(31);
+  static const a5 = Square(32);
+  static const b5 = Square(33);
+  static const c5 = Square(34);
+  static const d5 = Square(35);
+  static const e5 = Square(36);
+  static const f5 = Square(37);
+  static const g5 = Square(38);
+  static const h5 = Square(39);
+  static const a6 = Square(40);
+  static const b6 = Square(41);
+  static const c6 = Square(42);
+  static const d6 = Square(43);
+  static const e6 = Square(44);
+  static const f6 = Square(45);
+  static const g6 = Square(46);
+  static const h6 = Square(47);
+  static const a7 = Square(48);
+  static const b7 = Square(49);
+  static const c7 = Square(50);
+  static const d7 = Square(51);
+  static const e7 = Square(52);
+  static const f7 = Square(53);
+  static const g7 = Square(54);
+  static const h7 = Square(55);
+  static const a8 = Square(56);
+  static const b8 = Square(57);
+  static const c8 = Square(58);
+  static const d8 = Square(59);
+  static const e8 = Square(60);
+  static const f8 = Square(61);
+  static const g8 = Square(62);
+  static const h8 = Square(63);
 
-  /// The rank of the square in Algebraic Notation, such as '1', '2', '3', etc.
-  String get algebraicRank => name[1];
+  static const values = [
+    a1,
+    b1,
+    c1,
+    d1,
+    e1,
+    f1,
+    g1,
+    h1,
+    a2,
+    b2,
+    c2,
+    d2,
+    e2,
+    f2,
+    g2,
+    h2,
+    a3,
+    b3,
+    c3,
+    d3,
+    e3,
+    f3,
+    g3,
+    h3,
+    a4,
+    b4,
+    c4,
+    d4,
+    e4,
+    f4,
+    g4,
+    h4,
+    a5,
+    b5,
+    c5,
+    d5,
+    e5,
+    f5,
+    g5,
+    h5,
+    a6,
+    b6,
+    c6,
+    d6,
+    e6,
+    f6,
+    g6,
+    h6,
+    a7,
+    b7,
+    c7,
+    d7,
+    e7,
+    f7,
+    g7,
+    h7,
+    a8,
+    b8,
+    c8,
+    d8,
+    e8,
+    f8,
+    g8,
+    h8
+  ];
 }
 
 typedef BySide<T> = IMap<Side, T>;
@@ -418,7 +484,9 @@ class NormalMove extends Move {
   /// Gets UCI notation, like `g1f3` for a normal move, `a7a8q` for promotion to a queen.
   @override
   String get uci =>
-      from.name + to.name + (promotion != null ? promotion!.letter : '');
+      from.algebraicNotation +
+      to.algebraicNotation +
+      (promotion != null ? promotion!.letter : '');
 
   @override
   bool operator ==(Object other) {

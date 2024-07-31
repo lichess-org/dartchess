@@ -343,9 +343,9 @@ abstract class Position<T extends Position<T>> {
 
     final isPromotion = san.contains('=');
     final isCapturing = san.contains('x');
-    int? pawnRank;
+    Rank? pawnRank;
     if (oneIndex <= san.codeUnits[0] && san.codeUnits[0] <= eightIndex) {
-      pawnRank = san.codeUnits[0] - oneIndex;
+      pawnRank = Rank(san.codeUnits[0] - oneIndex);
       san = san.substring(1);
     }
     final isPawnMove = aIndex <= san.codeUnits[0] && san.codeUnits[0] <= hIndex;
@@ -368,7 +368,7 @@ abstract class Position<T extends Position<T>> {
         return null;
       }
 
-      final sourceFile = sourceFileCharacter - aIndex;
+      final sourceFile = File(sourceFileCharacter - aIndex);
       final sourceFileFilter = SquareSet.fromFile(sourceFile);
       filter = filter.intersect(sourceFileFilter);
 
@@ -409,7 +409,7 @@ abstract class Position<T extends Position<T>> {
 
       // There may be many pawns in the corresponding file
       // The corect choice will always be the pawn behind the destination square that is furthest down the board
-      for (int rank = 0; rank < 8; rank++) {
+      for (final rank in Rank.values) {
         final rankFilter = SquareSet.fromRank(rank).complement();
         // If the square is behind or on this rank, the rank it will not contain the source pawn
         if (turn == Side.white && rank >= destination.rank ||
@@ -482,11 +482,11 @@ abstract class Position<T extends Position<T>> {
     if (san.length == 1) {
       final sourceCharacter = san.codeUnits[0];
       if (oneIndex <= sourceCharacter && sourceCharacter <= eightIndex) {
-        final rank = sourceCharacter - oneIndex;
+        final rank = Rank(sourceCharacter - oneIndex);
         final rankFilter = SquareSet.fromRank(rank);
         filter = filter.intersect(rankFilter);
       } else if (aIndex <= sourceCharacter && sourceCharacter <= hIndex) {
-        final file = sourceCharacter - aIndex;
+        final file = File(sourceCharacter - aIndex);
         final fileFilter = SquareSet.fromFile(file);
         filter = filter.intersect(fileFilter);
       } else {
@@ -813,15 +813,15 @@ abstract class Position<T extends Position<T>> {
                   column = true;
                 }
                 if (column) {
-                  san += from.algebraicFile;
+                  san += from.file.algebraicNotation;
                 }
                 if (row) {
-                  san += from.algebraicRank;
+                  san += from.rank.algebraicNotation;
                 }
               }
             }
           } else if (capture) {
-            san = from.algebraicFile;
+            san = from.file.algebraicNotation;
           }
 
           if (capture) san += 'x';
@@ -1787,7 +1787,7 @@ class RacingKings extends Position<RacingKings> {
             fullmoves: 1);
 
   static const initial = RacingKings._initial();
-  static const goal = SquareSet.fromRank(7);
+  static const goal = SquareSet.fromRank(Rank.eighth);
 
   bool get blackCanReachGoal {
     final blackKing = board.kingOf(Side.black);

@@ -58,7 +58,7 @@ void main() {
     expect(SquareSet.full.first, Square.a1);
     expect(SquareSet.empty.first, null);
     for (int rank = 0; rank < 8; rank++) {
-      expect(SquareSet.fromRank(rank).first, Square(rank * 8));
+      expect(SquareSet.fromRank(Rank(rank)).first, Square(rank * 8));
     }
   });
 
@@ -69,23 +69,27 @@ void main() {
     expect(SquareSet.full.last, Square.h8);
     expect(SquareSet.empty.last, null);
     for (int rank = 0; rank < 8; rank++) {
-      expect(SquareSet.fromRank(rank).last, Square(rank * 8 + 7));
+      expect(SquareSet.fromRank(Rank(rank)).last, Square(rank * 8 + 7));
     }
   });
 
   test('more that one', () {
     expect(SquareSet.empty.moreThanOne, false);
     expect(SquareSet.full.moreThanOne, true);
-    expect(SquareSet.fromSquare(Square.e1).moreThanOne, false);
-    expect(SquareSet.fromSquare(Square.e1).withSquare(Square.f1).moreThanOne,
+    expect(const SquareSet.fromSquare(Square.e1).moreThanOne, false);
+    expect(
+        const SquareSet.fromSquare(Square.e1).withSquare(Square.f1).moreThanOne,
         true);
   });
 
   test('singleSquare', () {
     expect(SquareSet.empty.singleSquare, null);
     expect(SquareSet.full.singleSquare, null);
-    expect(SquareSet.fromSquare(Square.e1).singleSquare, Square.e1);
-    expect(SquareSet.fromSquare(Square.e1).withSquare(Square.f1).singleSquare,
+    expect(const SquareSet.fromSquare(Square.e1).singleSquare, Square.e1);
+    expect(
+        const SquareSet.fromSquare(Square.e1)
+            .withSquare(Square.f1)
+            .singleSquare,
         null);
   });
 
@@ -130,17 +134,21 @@ void main() {
   });
 
   test('from file', () {
-    expect(const SquareSet.fromFile(0), const SquareSet(0x0101010101010101));
-    expect(const SquareSet.fromFile(7), const SquareSet(0x8080808080808080));
+    expect(
+        const SquareSet.fromFile(File(0)), const SquareSet(0x0101010101010101));
+    expect(
+        const SquareSet.fromFile(File(7)), const SquareSet(0x8080808080808080));
   });
 
   test('from rank', () {
-    expect(const SquareSet.fromRank(0), const SquareSet(0x00000000000000FF));
-    expect(const SquareSet.fromRank(7), const SquareSet(0xFF00000000000000));
+    expect(
+        const SquareSet.fromRank(Rank(0)), const SquareSet(0x00000000000000FF));
+    expect(
+        const SquareSet.fromRank(Rank(7)), const SquareSet(0xFF00000000000000));
   });
 
   test('from square', () {
-    expect(SquareSet.fromSquare(Square.c6), makeSquareSet('''
+    expect(const SquareSet.fromSquare(Square.c6), makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . 1 . . . . .

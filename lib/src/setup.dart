@@ -324,7 +324,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
       candidates = backrank.squaresReversed;
     } else if ('a'.compareTo(lower) <= 0 && lower.compareTo('h') <= 0) {
       candidates =
-          (SquareSet.fromFile(lower.codeUnitAt(0) - 'a'.codeUnitAt(0)) &
+          (SquareSet.fromFile(File(lower.codeUnitAt(0) - 'a'.codeUnitAt(0))) &
                   backrank)
               .squares;
     } else {
@@ -338,8 +338,8 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
       }
     }
   }
-  if ((const SquareSet.fromRank(0) & unmovedRooks).size > 2 ||
-      (const SquareSet.fromRank(7) & unmovedRooks).size > 2) {
+  if ((const SquareSet.fromRank(Rank.first) & unmovedRooks).size > 2 ||
+      (const SquareSet.fromRank(Rank.eighth) & unmovedRooks).size > 2) {
     throw const FenError('ERR_CASTLING');
   }
   return unmovedRooks;
@@ -370,7 +370,7 @@ String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
       } else if (rook == candidates.last && king != null && king < rook) {
         buffer.write(color == Side.white ? 'K' : 'k');
       } else {
-        final file = rook.algebraicFile;
+        final file = rook.file.algebraicNotation;
         buffer.write(color == Side.white ? file.toUpperCase() : file);
       }
     }
