@@ -363,7 +363,7 @@ extension type const Square._(int value) implements int {
   ];
 }
 
-/// Zero-based numeric chessboard coordinate.
+/// Zero-based numeric chessboard coordinates.
 ///
 /// For instance a1 is (0, 0), a2 is (0, 1), etc.
 extension type const Coord._((int x, int y) value) {
@@ -435,6 +435,12 @@ extension type const Coord._((int x, int y) value) {
             value == (7, 5) ||
             value == (7, 6) ||
             value == (7, 7));
+
+  /// The file of the coordinates.
+  File get file => File(value.$1);
+
+  /// The rank of the coordinates.
+  Rank get rank => Rank(value.$2);
 
   /// Gets the square from the coordinates.
   Square get square => Square(value.$2 * 8 + value.$1);
