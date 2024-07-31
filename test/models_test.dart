@@ -10,6 +10,7 @@ void main() {
     test('fromAlgebraic', () {
       expect(File.fromAlgebraic('a'), File.a);
       expect(File.fromAlgebraic('h'), File.h);
+      expect(() => File.fromAlgebraic('i'), throwsFormatException);
     });
 
     test('offset', () {
@@ -27,6 +28,7 @@ void main() {
     test('fromAlgebraic', () {
       expect(Rank.fromAlgebraic('1'), Rank.first);
       expect(Rank.fromAlgebraic('8'), Rank.eighth);
+      expect(() => Rank.fromAlgebraic('9'), throwsFormatException);
     });
 
     test('offset', () {
@@ -45,6 +47,7 @@ void main() {
       expect(Square.fromAlgebraic('a1'), Square.a1);
       expect(Square.fromAlgebraic('h8'), Square.h8);
       expect(Square.fromAlgebraic('e4'), Square.e4);
+      expect(() => Square.fromAlgebraic('i1'), throwsFormatException);
     });
 
     test('offset', () {
