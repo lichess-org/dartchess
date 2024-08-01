@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import './square_set.dart';
 import './models.dart';
 import './board.dart';
-import './utils.dart';
 
 /// A not necessarily legal position.
 @immutable
@@ -120,7 +119,7 @@ class Setup {
     if (parts.isNotEmpty) {
       final epPart = parts.removeAt(0);
       if (epPart != '-') {
-        epSquare = parseSquare(epPart);
+        epSquare = Square.parse(epPart);
         if (epSquare == null) throw const FenError('ERR_EP_SQUARE');
       }
     }

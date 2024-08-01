@@ -1,6 +1,5 @@
 import 'package:meta/meta.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
-import './utils.dart';
 import './square_set.dart';
 
 /// The chessboard side, white or black.
@@ -207,6 +206,9 @@ extension type const Square._(int value) implements int {
   ///
   /// Throws a [FormatException] if the algebraic notation is invalid.
   factory Square.fromName(String algebraic) {
+    if (algebraic.length != 2) {
+      throw FormatException('Invalid algebraic notation: $algebraic');
+    }
     final file = algebraic.codeUnitAt(0) - 97;
     final rank = algebraic.codeUnitAt(1) - 49;
     if (file < 0 || file > 7 || rank < 0 || rank > 7) {
@@ -219,11 +221,10 @@ extension type const Square._(int value) implements int {
   ///
   /// Returns either a [Square] or `null` if the algebraic notation is invalid.
   static Square? parse(String algebraic) {
+    if (algebraic.length != 2) return null;
     final file = algebraic.codeUnitAt(0) - 97;
     final rank = algebraic.codeUnitAt(1) - 49;
-    if (file < 0 || file > 7 || rank < 0 || rank > 7) {
-      return null;
-    }
+    if (file < 0 || file > 7 || rank < 0 || rank > 7) return null;
     return Square(rank * 8 + file);
   }
 
@@ -319,6 +320,7 @@ extension type const Square._(int value) implements int {
   static const g8 = Square(62);
   static const h8 = Square(63);
 
+  /// All squares on the chessboard, from a1 to h8.
   static const values = [
     a1,
     b1,
@@ -648,11 +650,11 @@ sealed class Move {
   static Move? parse(String str) {
     if (str[1] == '@' && str.length == 4) {
       final role = Role.fromChar(str[0]);
-      final to = parseSquare(str.substring(2));
+      final to = Square.parse(str.substring(2));
       if (role != null && to != null) return DropMove(to: to, role: role);
     } else if (str.length == 4 || str.length == 5) {
-      final from = parseSquare(str.substring(0, 2));
-      final to = parseSquare(str.substring(2, 4));
+      final from = Square.parse(str.substring(0, 2));
+      final to = Square.parse(str.substring(2, 4));
       Role? promotion;
       if (str.length == 5) {
         promotion = Role.fromChar(str[4]);
@@ -692,8 +694,8 @@ class NormalMove extends Move {
   ///
   /// Throws a [FormatException] if the UCI string is invalid.
   factory NormalMove.fromUci(String uci) {
-    final from = parseSquare(uci.substring(0, 2));
-    final to = parseSquare(uci.substring(2, 4));
+    final from = Square.parse(uci.substring(0, 2));
+    final to = Square.parse(uci.substring(2, 4));
     Role? promotion;
     if (uci.length == 5) {
       promotion = Role.fromChar(uci[4]);
@@ -749,7 +751,7 @@ class DropMove extends Move {
   /// Throws a [FormatException] if the UCI string is invalid.
   factory DropMove.fromUci(String uci) {
     final role = Role.fromChar(uci[0]);
-    final to = parseSquare(uci.substring(2));
+    final to = Square.parse(uci.substring(2));
     if (role != null && to != null) {
       return DropMove(to: to, role: role);
     }

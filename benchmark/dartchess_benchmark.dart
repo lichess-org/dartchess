@@ -37,10 +37,6 @@ void main() {
     legalMovesPos.legalMoves.length;
   });
 
-  benchmark('algebraic legal moves', () {
-    legalMovesOf(legalMovesPos);
-  });
-
   benchmark('parsePgn - kasparov-deep-blue', () {
     final String data =
         io.File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();

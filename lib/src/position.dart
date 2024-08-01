@@ -305,7 +305,7 @@ abstract class Position<T extends Position<T>> {
       } else {
         return null;
       }
-      final destination = parseSquare(san.substring(san.length - 2));
+      final destination = Square.parse(san.substring(san.length - 2));
       if (destination == null) {
         return null;
       }
@@ -402,7 +402,7 @@ abstract class Position<T extends Position<T>> {
         return null;
       }
 
-      final destination = parseSquare(san);
+      final destination = Square.parse(san);
       if (destination == null) {
         return null;
       }
@@ -439,7 +439,7 @@ abstract class Position<T extends Position<T>> {
     }
 
     // The final two moves define the destination
-    final destination = parseSquare(san.substring(san.length - 2));
+    final destination = Square.parse(san.substring(san.length - 2));
     if (destination == null) {
       return null;
     }
@@ -472,7 +472,7 @@ abstract class Position<T extends Position<T>> {
       return null;
     }
     if (san.length == 2) {
-      final sourceSquare = parseSquare(san);
+      final sourceSquare = Square.parse(san);
       if (sourceSquare == null) {
         return null;
       }

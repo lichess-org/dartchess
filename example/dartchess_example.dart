@@ -6,10 +6,8 @@ void main() {
       'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
   final pos = Chess.fromSetup(setup);
 
-  // Generate legal moves in algebraic notation
-  final legalMoves = legalMovesOf(pos);
-
-  assert(legalMoves[Square.e2]!.length == 2);
+  // Generate legal moves
+  assert(pos.legalMoves.length == 16);
 
   const move = NormalMove(from: Square.e2, to: Square.e4);
 

@@ -48,6 +48,17 @@ void main() {
       expect(Square.fromName('h8'), Square.h8);
       expect(Square.fromName('e4'), Square.e4);
       expect(() => Square.fromName('i1'), throwsFormatException);
+      expect(() => Square.fromName('a9'), throwsFormatException);
+      expect(() => Square.fromName('a11'), throwsFormatException);
+    });
+
+    test('parse', () {
+      expect(Square.parse('a1'), Square.a1);
+      expect(Square.parse('h8'), Square.h8);
+      expect(Square.parse('e4'), Square.e4);
+      expect(Square.parse('a9'), isNull);
+      expect(Square.parse('i1'), isNull);
+      expect(Square.parse('a11'), isNull);
     });
 
     test('offset', () {
