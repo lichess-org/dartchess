@@ -298,16 +298,18 @@ void main() {
       test('Empty board', () {
         expect(
             () => Chess.fromSetup(Setup.parseFen(kEmptyFEN)),
-            throwsA(predicate(
-                (e) => e is PositionError && e.cause == IllegalSetup.empty)));
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.empty)));
       });
 
       test('Missing king', () {
         expect(
             () => Chess.fromSetup(Setup.parseFen(
                 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1BNR w HAkq - 0 1')),
-            throwsA(predicate(
-                (e) => e is PositionError && e.cause == IllegalSetup.kings)));
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.kings)));
       });
 
       test('Opposite check', () {
@@ -315,7 +317,8 @@ void main() {
             () => Chess.fromSetup(Setup.parseFen(
                 'rnbqkbnr/pppp1ppp/8/8/8/8/PPPPQPPP/RNB1KBNR w KQkq - 0 1')),
             throwsA(predicate((e) =>
-                e is PositionError && e.cause == IllegalSetup.oppositeCheck)));
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.oppositeCheck)));
       });
 
       test('Backrank pawns', () {
@@ -323,8 +326,8 @@ void main() {
             () => Chess.fromSetup(Setup.parseFen(
                 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPNP/RNBQKBPR w KQkq - 0 1')),
             throwsA(predicate((e) =>
-                e is PositionError &&
-                e.cause == IllegalSetup.pawnsOnBackrank)));
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.pawnsOnBackrank)));
       });
 
       test('checkers alignment', () {
@@ -333,8 +336,8 @@ void main() {
             () => Chess.fromSetup(
                 Setup.parseFen('3R4/8/q4k2/2B5/1NK5/3b4/8/8 w - - 0 1')),
             throwsA(predicate((e) =>
-                e is PositionError &&
-                e.cause == IllegalSetup.impossibleCheck)));
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.impossibleCheck)));
 
         // Checkers aligned with opponent king are fine.
         Chess.fromSetup(Setup.parseFen(
@@ -345,8 +348,8 @@ void main() {
             () => Chess.fromSetup(
                 Setup.parseFen('8/8/8/1k6/3Pp3/8/8/4KQ2 b - d3 0 1')),
             throwsA(predicate((e) =>
-                e is PositionError &&
-                e.cause == IllegalSetup.impossibleCheck)));
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.impossibleCheck)));
       });
     });
 
@@ -509,7 +512,7 @@ void main() {
         expect(
             () => Chess.initial
                 .play(const NormalMove(from: Square.e4, to: Square.e6)),
-            throwsA(const TypeMatcher<PlayError>()));
+            throwsA(const TypeMatcher<PlayException>()));
       });
 
       test('e2 e4 on standard position', () {
@@ -622,8 +625,8 @@ void main() {
         expect(
             () => Chess.fromSetup(setup),
             throwsA(predicate((e) =>
-                e is PositionError &&
-                e.cause == IllegalSetup.impossibleCheck)));
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.impossibleCheck)));
         final pos = Chess.fromSetup(setup, ignoreImpossibleCheck: true);
         const enPassant = NormalMove(from: Square.d5, to: Square.c6);
         expect(pos.isLegal(enPassant), false);

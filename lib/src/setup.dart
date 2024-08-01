@@ -63,10 +63,10 @@ class Setup {
   /// * Accepts multiple spaces and underscores (`_`) as separators between
   ///   FEN fields.
   ///
-  /// Throws a [FenError] if the provided FEN is not valid.
+  /// Throws a [FenException] if the provided FEN is not valid.
   factory Setup.parseFen(String fen) {
     final parts = fen.split(RegExp(r'[\s_]+'));
-    if (parts.isEmpty) throw const FenError('ERR_FEN');
+    if (parts.isEmpty) throw const FenException(IllegalFenCause.format);
 
     // board and pockets
     final boardPart = parts.removeAt(0);
@@ -75,7 +75,7 @@ class Setup {
     if (boardPart.endsWith(']')) {
       final pocketStart = boardPart.indexOf('[');
       if (pocketStart == -1) {
-        throw const FenError('ERR_FEN');
+        throw const FenException(IllegalFenCause.format);
       }
       board = Board.parseFen(boardPart.substring(0, pocketStart));
       pockets = _parsePockets(
@@ -101,7 +101,7 @@ class Setup {
       } else if (turnPart == 'b') {
         turn = Side.black;
       } else {
-        throw const FenError('ERR_TURN');
+        throw const FenException(IllegalFenCause.turn);
       }
     }
 
@@ -120,7 +120,9 @@ class Setup {
       final epPart = parts.removeAt(0);
       if (epPart != '-') {
         epSquare = Square.parse(epPart);
-        if (epSquare == null) throw const FenError('ERR_EP_SQUARE');
+        if (epSquare == null) {
+          throw const FenException(IllegalFenCause.enPassant);
+        }
       }
     }
 
@@ -133,21 +135,21 @@ class Setup {
     }
     final halfmoves = halfmovePart != null ? _parseSmallUint(halfmovePart) : 0;
     if (halfmoves == null) {
-      throw const FenError('ERR_HALFMOVES');
+      throw const FenException(IllegalFenCause.halfmoveClock);
     }
 
     final fullmovesPart = parts.isNotEmpty ? parts.removeAt(0) : null;
     final fullmoves =
         fullmovesPart != null ? _parseSmallUint(fullmovesPart) : 1;
     if (fullmoves == null) {
-      throw const FenError('ERR_FULLMOVES');
+      throw const FenException(IllegalFenCause.fullmoveNumber);
     }
 
     final remainingChecksPart = parts.isNotEmpty ? parts.removeAt(0) : null;
     (int, int)? remainingChecks;
     if (remainingChecksPart != null) {
       if (earlyRemainingChecks != null) {
-        throw const FenError('ERR_REMAINING_CHECKS');
+        throw const FenException(IllegalFenCause.remainingChecks);
       }
       remainingChecks = _parseRemainingChecks(remainingChecksPart);
     } else if (earlyRemainingChecks != null) {
@@ -155,7 +157,7 @@ class Setup {
     }
 
     if (parts.isNotEmpty) {
-      throw const FenError('ERR_FEN');
+      throw const FenException(IllegalFenCause.format);
     }
 
     return Setup(
@@ -269,14 +271,14 @@ class Pockets {
 
 Pockets _parsePockets(String pocketPart) {
   if (pocketPart.length > 64) {
-    throw const FenError('ERR_POCKETS');
+    throw const FenException(IllegalFenCause.pockets);
   }
   Pockets pockets = Pockets.empty;
   for (int i = 0; i < pocketPart.length; i++) {
     final c = pocketPart[i];
     final piece = Piece.fromChar(c);
     if (piece == null) {
-      throw const FenError('ERR_POCKETS');
+      throw const FenException(IllegalFenCause.pockets);
     }
     pockets = pockets.increment(piece.color, piece.role);
   }
@@ -289,18 +291,18 @@ Pockets _parsePockets(String pocketPart) {
     final white = _parseSmallUint(parts[1]);
     final black = _parseSmallUint(parts[2]);
     if (white == null || white > 3 || black == null || black > 3) {
-      throw const FenError('ERR_REMAINING_CHECKS');
+      throw const FenException(IllegalFenCause.remainingChecks);
     }
     return (3 - white, 3 - black);
   } else if (parts.length == 2) {
     final white = _parseSmallUint(parts[0]);
     final black = _parseSmallUint(parts[1]);
     if (white == null || white > 3 || black == null || black > 3) {
-      throw const FenError('ERR_REMAINING_CHECKS');
+      throw const FenException(IllegalFenCause.remainingChecks);
     }
     return (white, black);
   } else {
-    throw const FenError('ERR_REMAINING_CHECKS');
+    throw const FenException(IllegalFenCause.remainingChecks);
   }
 }
 
@@ -327,7 +329,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
                   backrank)
               .squares;
     } else {
-      throw const FenError('ERR_CASTLING');
+      throw const FenException(IllegalFenCause.castling);
     }
     for (final square in candidates) {
       if (board.kings.has(square)) break;
@@ -339,7 +341,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
   }
   if ((const SquareSet.fromRank(Rank.first) & unmovedRooks).size > 2 ||
       (const SquareSet.fromRank(Rank.eighth) & unmovedRooks).size > 2) {
-    throw const FenError('ERR_CASTLING');
+    throw const FenException(IllegalFenCause.castling);
   }
   return unmovedRooks;
 }

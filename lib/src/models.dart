@@ -630,10 +630,108 @@ class DropMove extends Move {
   int get hashCode => Object.hash(to, role);
 }
 
+/// An enumeration of the possible causes of an illegal FEN string.
+enum IllegalFenCause {
+  /// The FEN string is not in the correct format.
+  format,
+
+  /// The board part of the FEN string is invalid.
+  board,
+
+  /// The turn part of the FEN string is invalid.
+  turn,
+
+  /// The castling part of the FEN string is invalid.
+  castling,
+
+  /// The en passant part of the FEN string is invalid.
+  enPassant,
+
+  /// The halfmove clock part of the FEN string is invalid.
+  halfmoveClock,
+
+  /// The fullmove number part of the FEN string is invalid.
+  fullmoveNumber,
+
+  /// The remaining checks part of the FEN string is invalid.
+  remainingChecks,
+
+  /// The pockets part of the FEN string is invalid.
+  pockets,
+}
+
+/// An exception thrown when trying to parse an invalid FEN string.
 @immutable
-class FenError implements Exception {
+class FenException implements Exception {
+  /// Constructs a [FenException] with a [cause].
+  const FenException(this.cause);
+
+  /// The cause of the exception.
+  final IllegalFenCause cause;
+
+  @override
+  String toString() => 'FenException: ${cause.name}';
+}
+
+/// Exception thrown when trying to play an illegal move.
+@immutable
+class PlayException implements Exception {
+  /// Constructs a [PlayException] with a [message].
+  const PlayException(this.message);
+
+  /// The exception message.
   final String message;
-  const FenError(this.message);
+
+  @override
+  String toString() => 'PlayException: $message';
+}
+
+/// Enumeration of the possible causes of an illegal setup.
+enum IllegalSetupCause {
+  /// There are no pieces on the board.
+  empty,
+
+  /// The player not to move is in check.
+  oppositeCheck,
+
+  /// There are impossibly many checkers, two sliding checkers are
+  /// aligned, or check is not possible because the last move was a
+  /// double pawn push.
+  ///
+  /// Such a position cannot be reached by any sequence of legal moves.
+  impossibleCheck,
+
+  /// There are pawns on the backrank.
+  pawnsOnBackrank,
+
+  /// A king is missing, or there are too many kings.
+  kings,
+
+  /// A variant specific rule is violated.
+  variant,
+}
+
+/// Exception thrown when trying to create a [Position] from an illegal [Setup].
+@immutable
+class PositionSetupException implements Exception {
+  /// Constructs a [PositionSetupException] with a [cause].
+  const PositionSetupException(this.cause);
+
+  /// The cause of the exception.
+  final IllegalSetupCause cause;
+
+  static const empty = PositionSetupException(IllegalSetupCause.empty);
+  static const oppositeCheck =
+      PositionSetupException(IllegalSetupCause.oppositeCheck);
+  static const impossibleCheck =
+      PositionSetupException(IllegalSetupCause.impossibleCheck);
+  static const pawnsOnBackrank =
+      PositionSetupException(IllegalSetupCause.pawnsOnBackrank);
+  static const kings = PositionSetupException(IllegalSetupCause.kings);
+  static const variant = PositionSetupException(IllegalSetupCause.variant);
+
+  @override
+  String toString() => 'PositionSetupException: ${cause.name}';
 }
 
 /// Represents the different possible rules of chess and its variants

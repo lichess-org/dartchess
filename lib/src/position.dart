@@ -517,12 +517,12 @@ abstract class Position<T extends Position<T>> {
 
   /// Plays a move and returns the updated [Position].
   ///
-  /// Throws a [PlayError] if the move is not legal.
+  /// Throws a [PlayException] if the move is not legal.
   Position<T> play(Move move) {
     if (isLegal(move)) {
       return playUnchecked(move);
     } else {
-      throw PlayError('Invalid move $move');
+      throw PlayException('Invalid move $move');
     }
   }
 
@@ -622,30 +622,30 @@ abstract class Position<T extends Position<T>> {
 
   /// Returns the SAN of this [Move] and the updated [Position].
   ///
-  /// Throws a [PlayError] if the move is not legal.
+  /// Throws a [PlayException] if the move is not legal.
   (Position<T>, String) makeSan(Move move) {
     if (isLegal(move)) {
       return makeSanUnchecked(move);
     } else {
-      throw PlayError('Invalid move $move');
+      throw PlayException('Invalid move $move');
     }
   }
 
   /// Returns the SAN of this [Move] from the current [Position].
   ///
-  /// Throws a [PlayError] if the move is not legal.
+  /// Throws a [PlayException] if the move is not legal.
   @Deprecated('Use makeSan instead')
   String toSan(Move move) {
     if (isLegal(move)) {
       return makeSanUnchecked(move).$2;
     } else {
-      throw PlayError('Invalid move $move');
+      throw PlayException('Invalid move $move');
     }
   }
 
   /// Returns the SAN representation of the [Move] with the updated [Position].
   ///
-  /// Throws a [PlayError] if the move is not legal.
+  /// Throws a [PlayException] if the move is not legal.
   @Deprecated('Use makeSan instead')
   (Position<T>, String) playToSan(Move move) {
     if (isLegal(move)) {
@@ -658,7 +658,7 @@ abstract class Position<T extends Position<T>> {
               : san;
       return (newPos, suffixed);
     } else {
-      throw PlayError('Invalid move $move');
+      throw PlayException('Invalid move $move');
     }
   }
 
@@ -675,27 +675,27 @@ abstract class Position<T extends Position<T>> {
 
   /// Checks the legality of this position.
   ///
-  /// Throws a [PositionError] if it does not meet basic validity requirements.
+  /// Throws a [PositionSetupException] if it does not meet basic validity requirements.
   void validate({bool? ignoreImpossibleCheck}) {
     if (board.occupied.isEmpty) {
-      throw PositionError.empty;
+      throw PositionSetupException.empty;
     }
     if (board.kings.size != 2) {
-      throw PositionError.kings;
+      throw PositionSetupException.kings;
     }
     final ourKing = board.kingOf(turn);
     if (ourKing == null) {
-      throw PositionError.kings;
+      throw PositionSetupException.kings;
     }
     final otherKing = board.kingOf(turn.opposite);
     if (otherKing == null) {
-      throw PositionError.kings;
+      throw PositionSetupException.kings;
     }
     if (kingAttackers(otherKing, turn).isNotEmpty) {
-      throw PositionError.oppositeCheck;
+      throw PositionSetupException.oppositeCheck;
     }
     if (SquareSet.backranks.isIntersected(board.pawns)) {
-      throw PositionError.pawnsOnBackrank;
+      throw PositionSetupException.pawnsOnBackrank;
     }
     final skipImpossibleCheck = ignoreImpossibleCheck ?? false;
     if (!skipImpossibleCheck) {
@@ -734,7 +734,7 @@ abstract class Position<T extends Position<T>> {
 
   /// Checks if checkers are legal in this position.
   ///
-  /// Throws a [PositionError.impossibleCheck] if it does not meet validity
+  /// Throws a [PositionSetupException.impossibleCheck] if it does not meet validity
   /// requirements.
   void _validateCheckers(Square ourKing) {
     final checkers = kingAttackers(ourKing, turn.opposite);
@@ -752,14 +752,14 @@ abstract class Position<T extends Position<T>> {
                             .withoutSquare(pushedTo)
                             .withSquare(pushedFrom))
                     .isNotEmpty)) {
-          throw PositionError.impossibleCheck;
+          throw PositionSetupException.impossibleCheck;
         }
       } else {
         // Multiple sliding checkers aligned with king.
         if (checkers.size > 2 ||
             (checkers.size == 2 &&
                 ray(checkers.first!, checkers.last!).has(ourKing))) {
-          throw PositionError.impossibleCheck;
+          throw PositionSetupException.impossibleCheck;
         }
       }
     }
@@ -1048,7 +1048,7 @@ class Chess extends Position<Chess> {
 
   /// Set up a playable [Chess] position.
   ///
-  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
@@ -1119,7 +1119,7 @@ class Antichess extends Position<Antichess> {
 
   /// Set up a playable [Antichess] position.
   ///
-  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
@@ -1133,10 +1133,10 @@ class Antichess extends Position<Antichess> {
   @override
   void validate({bool? ignoreImpossibleCheck}) {
     if (board.occupied.isEmpty) {
-      throw PositionError.empty;
+      throw PositionSetupException.empty;
     }
     if (SquareSet.backranks.isIntersected(board.pawns)) {
-      throw PositionError.pawnsOnBackrank;
+      throw PositionSetupException.pawnsOnBackrank;
     }
   }
 
@@ -1257,7 +1257,7 @@ class Atomic extends Position<Atomic> {
 
   /// Set up a playable [Atomic] position.
   ///
-  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
@@ -1284,24 +1284,24 @@ class Atomic extends Position<Atomic> {
   /// Checks the legality of this position.
   ///
   /// Validation is like chess, but it allows our king to be missing.
-  /// Throws a [PositionError] if it does not meet basic validity requirements.
+  /// Throws a [PositionSetupException] if it does not meet basic validity requirements.
   @override
   void validate({bool? ignoreImpossibleCheck}) {
     if (board.occupied.isEmpty) {
-      throw PositionError.empty;
+      throw PositionSetupException.empty;
     }
     if (board.kings.size > 2) {
-      throw PositionError.kings;
+      throw PositionSetupException.kings;
     }
     final otherKing = board.kingOf(turn.opposite);
     if (otherKing == null) {
-      throw PositionError.kings;
+      throw PositionSetupException.kings;
     }
     if (kingAttackers(otherKing, turn).isNotEmpty) {
-      throw PositionError.oppositeCheck;
+      throw PositionSetupException.oppositeCheck;
     }
     if (SquareSet.backranks.isIntersected(board.pawns)) {
-      throw PositionError.pawnsOnBackrank;
+      throw PositionSetupException.pawnsOnBackrank;
     }
     final skipImpossibleCheck = ignoreImpossibleCheck ?? false;
     final ourKing = board.kingOf(turn);
@@ -1474,7 +1474,7 @@ class Crazyhouse extends Position<Crazyhouse> {
 
   /// Set up a playable [Crazyhouse] position.
   ///
-  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
@@ -1494,13 +1494,13 @@ class Crazyhouse extends Position<Crazyhouse> {
   void validate({bool? ignoreImpossibleCheck}) {
     super.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
     if (pockets == null) {
-      throw PositionError.variant;
+      throw PositionSetupException.variant;
     } else {
       if (pockets!.count(Role.king) > 0) {
-        throw PositionError.kings;
+        throw PositionSetupException.kings;
       }
       if (pockets!.size + board.occupied.size > 64) {
-        throw PositionError.variant;
+        throw PositionSetupException.variant;
       }
     }
   }
@@ -1601,7 +1601,7 @@ class KingOfTheHill extends Position<KingOfTheHill> {
 
   /// Set up a playable [KingOfTheHill] position.
   ///
-  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
@@ -1682,13 +1682,13 @@ class ThreeCheck extends Position<ThreeCheck> {
 
   /// Set up a playable [ThreeCheck] position.
   ///
-  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
   factory ThreeCheck.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     if (setup.remainingChecks == null) {
-      throw PositionError.variant;
+      throw PositionSetupException.variant;
     } else {
       final pos = ThreeCheck(
         board: setup.board,
@@ -1850,7 +1850,7 @@ class RacingKings extends Position<RacingKings> {
 
   /// Set up a playable [RacingKings] position.
   ///
-  /// Throws a [PositionError] if the [Setup] does not meet basic validity
+  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
@@ -1937,21 +1937,21 @@ class Horde extends Position<Horde> {
   @override
   void validate({bool? ignoreImpossibleCheck}) {
     if (board.occupied.isEmpty) {
-      throw PositionError.empty;
+      throw PositionSetupException.empty;
     }
 
     if (board.kings.size != 1) {
-      throw PositionError.kings;
+      throw PositionSetupException.kings;
     }
 
     final otherKing = board.kingOf(turn.opposite);
     if (otherKing != null && kingAttackers(otherKing, turn).isNotEmpty) {
-      throw PositionError.oppositeCheck;
+      throw PositionSetupException.oppositeCheck;
     }
 
     // white can have pawns on back rank
     if (SquareSet.backranks.isIntersected(board.black.intersect(board.pawns))) {
-      throw PositionError.pawnsOnBackrank;
+      throw PositionSetupException.pawnsOnBackrank;
     }
 
     final skipImpossibleCheck = ignoreImpossibleCheck ?? false;
@@ -2271,56 +2271,6 @@ class Outcome {
       return '1/2-1/2';
     }
   }
-}
-
-enum IllegalSetup {
-  /// There are no pieces on the board.
-  empty,
-
-  /// The player not to move is in check.
-  oppositeCheck,
-
-  /// There are impossibly many checkers, two sliding checkers are
-  /// aligned, or check is not possible because the last move was a
-  /// double pawn push.
-  ///
-  /// Such a position cannot be reached by any sequence of legal moves.
-  impossibleCheck,
-
-  /// There are pawns on the backrank.
-  pawnsOnBackrank,
-
-  /// A king is missing, or there are too many kings.
-  kings,
-
-  /// A variant specific rule is violated.
-  variant,
-}
-
-@immutable
-class PlayError implements Exception {
-  final String message;
-  const PlayError(this.message);
-
-  @override
-  String toString() => 'PlayError($message)';
-}
-
-/// Error when trying to create a [Position] from an illegal [Setup].
-@immutable
-class PositionError implements Exception {
-  final IllegalSetup cause;
-  const PositionError(this.cause);
-
-  static const empty = PositionError(IllegalSetup.empty);
-  static const oppositeCheck = PositionError(IllegalSetup.oppositeCheck);
-  static const impossibleCheck = PositionError(IllegalSetup.impossibleCheck);
-  static const pawnsOnBackrank = PositionError(IllegalSetup.pawnsOnBackrank);
-  static const kings = PositionError(IllegalSetup.kings);
-  static const variant = PositionError(IllegalSetup.variant);
-
-  @override
-  String toString() => 'PositionError(${cause.name})';
 }
 
 @immutable

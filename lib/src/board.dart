@@ -108,7 +108,7 @@ class Board {
 
   /// Parse the board part of a FEN string and returns a Board.
   ///
-  /// Throws a [FenError] if the provided FEN string is not valid.
+  /// Throws a [FenException] if the provided FEN string is not valid.
   factory Board.parseFen(String boardFen) {
     Board board = Board.empty;
     int rank = 7;
@@ -123,18 +123,20 @@ class Board {
         if (code < 57) {
           file += code - 48;
         } else {
-          if (file >= 8 || rank < 0) throw const FenError('ERR_BOARD');
+          if (file >= 8 || rank < 0) {
+            throw const FenException(IllegalFenCause.board);
+          }
           final square = Square(file + rank * 8);
           final promoted = i + 1 < boardFen.length && boardFen[i + 1] == '~';
           final piece = _charToPiece(c, promoted);
-          if (piece == null) throw const FenError('ERR_BOARD');
+          if (piece == null) throw const FenException(IllegalFenCause.board);
           if (promoted) i++;
           board = board.setPieceAt(square, piece);
           file++;
         }
       }
     }
-    if (rank != 0 || file != 8) throw const FenError('ERR_BOARD');
+    if (rank != 0 || file != 8) throw const FenException(IllegalFenCause.board);
     return board;
   }
 

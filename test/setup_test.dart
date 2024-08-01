@@ -34,8 +34,8 @@ void main() {
         () =>
             Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w BGL')
                 .unmovedRooks,
-        throwsA(
-            predicate((e) => e is FenError && e.message == 'ERR_CASTLING')));
+        throwsA(predicate(
+            (e) => e is FenException && e.cause == IllegalFenCause.castling)));
   });
 
   test('parse en passant square', () {

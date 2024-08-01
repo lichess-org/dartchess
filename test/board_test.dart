@@ -56,10 +56,13 @@ void main() {
   });
 
   test('invalid board fen', () {
-    expect(() => Board.parseFen('4k2r/8/8/8/8/RR2K2R'),
-        throwsA(predicate((e) => e is FenError && e.message == 'ERR_BOARD')));
+    expect(
+        () => Board.parseFen('4k2r/8/8/8/8/RR2K2R'),
+        throwsA(predicate(
+            (e) => e is FenException && e.cause == IllegalFenCause.board)));
 
-    expect(() => Board.parseFen('lol'), throwsA(const TypeMatcher<FenError>()));
+    expect(() => Board.parseFen('lol'),
+        throwsA(const TypeMatcher<FenException>()));
   });
 
   test('make board fen', () {
