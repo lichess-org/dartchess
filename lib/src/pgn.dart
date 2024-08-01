@@ -5,7 +5,6 @@ import 'package:meta/meta.dart';
 import './setup.dart';
 import './models.dart';
 import './position.dart';
-import './utils.dart';
 
 typedef PgnHeaders = Map<String, String>;
 
@@ -397,19 +396,19 @@ class PgnCommentShape {
   @override
   String toString() {
     return to == from
-        ? '${color.string[0]}${toAlgebraic(to)}'
-        : '${color.string[0]}${toAlgebraic(from)}${toAlgebraic(to)}';
+        ? '${color.string[0]}${to.name}'
+        : '${color.string[0]}${from.name}${to.name}';
   }
 
   /// Parse the PGN for any comment or return null.
   static PgnCommentShape? fromPgn(String str) {
     final color = CommentShapeColor.parseShapeColor(str.substring(0, 1));
-    final from = parseSquare(str.substring(1, 3));
+    final from = Square.parse(str.substring(1, 3));
     if (color == null || from == null) return null;
     if (str.length == 3) {
       return PgnCommentShape(color: color, from: from, to: from);
     }
-    final to = parseSquare(str.substring(3, 5));
+    final to = Square.parse(str.substring(3, 5));
     if (str.length == 5 && to != null) {
       return PgnCommentShape(color: color, from: from, to: to);
     }

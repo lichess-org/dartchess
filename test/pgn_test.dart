@@ -1,4 +1,4 @@
-import 'package:dartchess/dartchess.dart';
+import 'package:dartchess/dartchess.dart' hide File;
 import 'package:test/test.dart';
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'dart:io';
@@ -113,11 +113,21 @@ void main() {
               text: 'commentary',
               shapes: IListConst([
                 PgnCommentShape(
-                    color: CommentShapeColor.yellow, from: 0, to: 0),
-                PgnCommentShape(color: CommentShapeColor.red, from: 0, to: 0),
-                PgnCommentShape(color: CommentShapeColor.blue, from: 4, to: 12),
+                    color: CommentShapeColor.yellow,
+                    from: Square.a1,
+                    to: Square.a1),
                 PgnCommentShape(
-                    color: CommentShapeColor.green, from: 63, to: 63)
+                    color: CommentShapeColor.red,
+                    from: Square.a1,
+                    to: Square.a1),
+                PgnCommentShape(
+                    color: CommentShapeColor.blue,
+                    from: Square.e1,
+                    to: Square.e2),
+                PgnCommentShape(
+                    color: CommentShapeColor.green,
+                    from: Square.h8,
+                    to: Square.h8)
               ])));
 
       expect(
@@ -138,7 +148,10 @@ void main() {
           const PgnComment(
               text: 'foo',
               shapes: IListConst([
-                PgnCommentShape(color: CommentShapeColor.green, from: 0, to: 0)
+                PgnCommentShape(
+                    color: CommentShapeColor.green,
+                    from: Square.a1,
+                    to: Square.a1)
               ])));
 
       expect(
@@ -158,9 +171,17 @@ void main() {
               clock: Duration(seconds: 1),
               shapes: IListConst([
                 PgnCommentShape(
-                    color: CommentShapeColor.yellow, from: 0, to: 0),
-                PgnCommentShape(color: CommentShapeColor.red, from: 0, to: 1),
-                PgnCommentShape(color: CommentShapeColor.red, from: 0, to: 2)
+                    color: CommentShapeColor.yellow,
+                    from: Square.a1,
+                    to: Square.a1),
+                PgnCommentShape(
+                    color: CommentShapeColor.red,
+                    from: Square.a1,
+                    to: Square.b1),
+                PgnCommentShape(
+                    color: CommentShapeColor.red,
+                    from: Square.a1,
+                    to: Square.c1)
               ])).makeComment(),
           'text [%csl Ya1] [%cal Ra1b1,Ra1c1] [%eval 10.00] [%emt 1:02:03.4] [%clk 0:00:01]');
 

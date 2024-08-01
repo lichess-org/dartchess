@@ -1,22 +1,18 @@
 import './square_set.dart';
-import './utils.dart';
 import './models.dart';
 
 /// Gets squares attacked or defended by a king on [Square].
 SquareSet kingAttacks(Square square) {
-  assert(square >= 0 && square < 64);
   return _kingAttacks[square];
 }
 
 /// Gets squares attacked or defended by a knight on [Square].
 SquareSet knightAttacks(Square square) {
-  assert(square >= 0 && square < 64);
   return _knightAttacks[square];
 }
 
 /// Gets squares attacked or defended by a pawn of the given [Side] on [Square].
 SquareSet pawnAttacks(Side side, Square square) {
-  assert(square >= 0 && square < 64);
   return _pawnAttacks[side]![square];
 }
 
@@ -89,10 +85,8 @@ SquareSet _computeRange(Square square, List<int> deltas) {
   SquareSet range = SquareSet.empty;
   for (final delta in deltas) {
     final sq = square + delta;
-    if (0 <= sq &&
-        sq < 64 &&
-        (squareFile(square) - squareFile(sq)).abs() <= 2) {
-      range = range.withSquare(sq);
+    if (0 <= sq && sq < 64 && (square.file - Square(sq).file).abs() <= 2) {
+      range = range.withSquare(Square(sq));
     }
   }
   return range;
@@ -100,7 +94,7 @@ SquareSet _computeRange(Square square, List<int> deltas) {
 
 List<T> _tabulate<T>(T Function(Square square) f) {
   final List<T> table = [];
-  for (Square square = 0; square < 64; square++) {
+  for (final square in Square.values) {
     table.insert(square, f(square));
   }
   return table;
@@ -116,18 +110,18 @@ final _pawnAttacks = {
 };
 
 final _fileRange =
-    _tabulate((sq) => SquareSet.fromFile(squareFile(sq)).withoutSquare(sq));
+    _tabulate((sq) => SquareSet.fromFile(sq.file).withoutSquare(sq));
 final _rankRange =
-    _tabulate((sq) => SquareSet.fromRank(squareRank(sq)).withoutSquare(sq));
+    _tabulate((sq) => SquareSet.fromRank(sq.rank).withoutSquare(sq));
 final _diagRange = _tabulate((sq) {
-  final shift = 8 * (squareRank(sq) - squareFile(sq));
+  final shift = 8 * (sq.rank - sq.file);
   return (shift >= 0
           ? SquareSet.diagonal.shl(shift)
           : SquareSet.diagonal.shr(-shift))
       .withoutSquare(sq);
 });
 final _antiDiagRange = _tabulate((sq) {
-  final shift = 8 * (squareRank(sq) + squareFile(sq) - 7);
+  final shift = 8 * (sq.rank + sq.file - 7);
   return (shift >= 0
           ? SquareSet.antidiagonal.shl(shift)
           : SquareSet.antidiagonal.shr(-shift))

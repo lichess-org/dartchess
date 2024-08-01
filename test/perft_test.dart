@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:dartchess/dartchess.dart';
 import 'perft_parser.dart';
 
@@ -18,7 +18,7 @@ void main() async {
 
     group('tricky', () {
       final tests = Parser()
-          .parse(File('test/resources/tricky.perft').readAsStringSync());
+          .parse(io.File('test/resources/tricky.perft').readAsStringSync());
       for (final perftTest in tests) {
         for (final testCase in perftTest.cases
             .takeWhile((testCase) => testCase.nodes < nodeLimit)) {
@@ -34,7 +34,8 @@ void main() async {
 
     group('impossible checker', () {
       final tests = Parser().parse(
-          File('test/resources/impossible-checker.perft').readAsStringSync());
+          io.File('test/resources/impossible-checker.perft')
+              .readAsStringSync());
       for (final perftTest in tests) {
         for (final testCase in perftTest.cases
             .takeWhile((testCase) => testCase.nodes < nodeLimit)) {
@@ -51,7 +52,7 @@ void main() async {
 
     group('random', () {
       final tests = Parser()
-          .parse(File('test/resources/random.perft').readAsStringSync());
+          .parse(io.File('test/resources/random.perft').readAsStringSync());
       // only test 10 position in random. Test file has around 6000 positions
       for (final perftTest in tests.take(50)) {
         final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
@@ -68,8 +69,8 @@ void main() async {
   });
 
   group('Three Check', () {
-    final tests =
-        Parser().parse(File('test/resources/3check.perft').readAsStringSync());
+    final tests = Parser()
+        .parse(io.File('test/resources/3check.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = ThreeCheck.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases
@@ -85,7 +86,7 @@ void main() async {
 
   group('Antichess', () {
     final tests = Parser()
-        .parse(File('test/resources/antichess.perft').readAsStringSync());
+        .parse(io.File('test/resources/antichess.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = Antichess.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases
@@ -133,8 +134,8 @@ void main() async {
   });
       */
   group('Horde', () {
-    final tests =
-        Parser().parse(File('test/resources/horde.perft').readAsStringSync());
+    final tests = Parser()
+        .parse(io.File('test/resources/horde.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = Horde.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases
@@ -150,7 +151,7 @@ void main() async {
 
   group('Racing Kings', () {
     final tests = Parser()
-        .parse(File('test/resources/racingkings.perft').readAsStringSync());
+        .parse(io.File('test/resources/racingkings.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = RacingKings.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases
@@ -166,7 +167,7 @@ void main() async {
 
   group('Chess 960', () {
     final tests = Parser()
-        .parse(File('test/resources/chess960.perft').readAsStringSync());
+        .parse(io.File('test/resources/chess960.perft').readAsStringSync());
     for (final perftTest in tests.take(50)) {
       final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases

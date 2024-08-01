@@ -1,7 +1,6 @@
 import 'package:meta/meta.dart';
 import 'dart:math' as math;
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
-import './constants.dart';
 import './square_set.dart';
 import './attacks.dart';
 import './models.dart';
@@ -306,7 +305,7 @@ abstract class Position<T extends Position<T>> {
       } else {
         return null;
       }
-      final destination = parseSquare(san.substring(san.length - 2));
+      final destination = Square.parse(san.substring(san.length - 2));
       if (destination == null) {
         return null;
       }
@@ -344,9 +343,9 @@ abstract class Position<T extends Position<T>> {
 
     final isPromotion = san.contains('=');
     final isCapturing = san.contains('x');
-    int? pawnRank;
+    Rank? pawnRank;
     if (oneIndex <= san.codeUnits[0] && san.codeUnits[0] <= eightIndex) {
-      pawnRank = san.codeUnits[0] - oneIndex;
+      pawnRank = Rank(san.codeUnits[0] - oneIndex);
       san = san.substring(1);
     }
     final isPawnMove = aIndex <= san.codeUnits[0] && san.codeUnits[0] <= hIndex;
@@ -369,7 +368,7 @@ abstract class Position<T extends Position<T>> {
         return null;
       }
 
-      final sourceFile = sourceFileCharacter - aIndex;
+      final sourceFile = File(sourceFileCharacter - aIndex);
       final sourceFileFilter = SquareSet.fromFile(sourceFile);
       filter = filter.intersect(sourceFileFilter);
 
@@ -403,18 +402,18 @@ abstract class Position<T extends Position<T>> {
         return null;
       }
 
-      final destination = parseSquare(san);
+      final destination = Square.parse(san);
       if (destination == null) {
         return null;
       }
 
       // There may be many pawns in the corresponding file
       // The corect choice will always be the pawn behind the destination square that is furthest down the board
-      for (int rank = 0; rank < 8; rank++) {
+      for (final rank in Rank.values) {
         final rankFilter = SquareSet.fromRank(rank).complement();
         // If the square is behind or on this rank, the rank it will not contain the source pawn
-        if (turn == Side.white && rank >= squareRank(destination) ||
-            turn == Side.black && rank <= squareRank(destination)) {
+        if (turn == Side.white && rank >= destination.rank ||
+            turn == Side.black && rank <= destination.rank) {
           filter = filter.intersect(rankFilter);
         }
       }
@@ -440,7 +439,7 @@ abstract class Position<T extends Position<T>> {
     }
 
     // The final two moves define the destination
-    final destination = parseSquare(san.substring(san.length - 2));
+    final destination = Square.parse(san.substring(san.length - 2));
     if (destination == null) {
       return null;
     }
@@ -473,7 +472,7 @@ abstract class Position<T extends Position<T>> {
       return null;
     }
     if (san.length == 2) {
-      final sourceSquare = parseSquare(san);
+      final sourceSquare = Square.parse(san);
       if (sourceSquare == null) {
         return null;
       }
@@ -483,11 +482,11 @@ abstract class Position<T extends Position<T>> {
     if (san.length == 1) {
       final sourceCharacter = san.codeUnits[0];
       if (oneIndex <= sourceCharacter && sourceCharacter <= eightIndex) {
-        final rank = sourceCharacter - oneIndex;
+        final rank = Rank(sourceCharacter - oneIndex);
         final rankFilter = SquareSet.fromRank(rank);
         filter = filter.intersect(rankFilter);
       } else if (aIndex <= sourceCharacter && sourceCharacter <= hIndex) {
-        final file = sourceCharacter - aIndex;
+        final file = File(sourceCharacter - aIndex);
         final fileFilter = SquareSet.fromFile(file);
         filter = filter.intersect(fileFilter);
       } else {
@@ -536,17 +535,18 @@ abstract class Position<T extends Position<T>> {
           return _copyWith();
         }
         final castlingSide = _getCastlingSide(move);
-        final epCaptureTarget = to + (turn == Side.white ? -8 : 8);
+        Square? epCaptureTarget;
         Square? newEpSquare;
         Board newBoard = board.removePieceAt(from);
         Castles newCastles = castles;
         if (piece.role == Role.pawn) {
           if (to == epSquare) {
+            epCaptureTarget = Square(to + (turn == Side.white ? -8 : 8));
             newBoard = newBoard.removePieceAt(epCaptureTarget);
           }
           final delta = from - to;
-          if (delta.abs() == 16 && from >= 8 && from <= 55) {
-            newEpSquare = (from + to) >>> 1;
+          if (delta.abs() == 16 && from >= Square.a2 && from <= Square.h7) {
+            newEpSquare = Square((from + to) >>> 1);
           }
         } else if (piece.role == Role.rook) {
           newCastles = newCastles.discardRookAt(from);
@@ -576,7 +576,7 @@ abstract class Position<T extends Position<T>> {
 
         final capturedPiece = castlingSide == null
             ? board.pieceAt(to)
-            : to == epSquare
+            : to == epSquare && epCaptureTarget != null
                 ? board.pieceAt(epCaptureTarget)
                 : null;
         final isCapture = capturedPiece != null;
@@ -742,8 +742,8 @@ abstract class Position<T extends Position<T>> {
       if (epSquare != null) {
         // The pushed pawn must be the only checker, or it has uncovered
         // check by a single sliding piece.
-        final pushedTo = epSquare! ^ 8;
-        final pushedFrom = epSquare! ^ 24;
+        final pushedTo = epSquare!.xor(Square.a2);
+        final pushedFrom = epSquare!.xor(Square.a4);
         if (checkers.moreThanOne ||
             (checkers.first != pushedTo &&
                 board
@@ -776,7 +776,7 @@ abstract class Position<T extends Position<T>> {
           san = to > from ? 'O-O' : 'O-O-O';
         } else {
           final capture = board.occupied.has(to) ||
-              (role == Role.pawn && squareFile(from) != squareFile(to));
+              (role == Role.pawn && from.file != to.file);
           if (role != Role.pawn) {
             san = role.uppercaseLetter;
 
@@ -805,34 +805,33 @@ abstract class Position<T extends Position<T>> {
               if (others.isNotEmpty) {
                 bool row = false;
                 bool column =
-                    others.isIntersected(SquareSet.fromRank(squareRank(from)));
-                if (others
-                    .isIntersected(SquareSet.fromFile(squareFile(from)))) {
+                    others.isIntersected(SquareSet.fromRank(from.rank));
+                if (others.isIntersected(SquareSet.fromFile(from.file))) {
                   row = true;
                 } else {
                   column = true;
                 }
                 if (column) {
-                  san += kFileNames[squareFile(from)];
+                  san += from.file.name;
                 }
                 if (row) {
-                  san += kRankNames[squareRank(from)];
+                  san += from.rank.name;
                 }
               }
             }
           } else if (capture) {
-            san = kFileNames[squareFile(from)];
+            san = from.file.name;
           }
 
           if (capture) san += 'x';
-          san += toAlgebraic(to);
+          san += to.name;
           if (prom != null) {
             san += '=${prom.uppercaseLetter}';
           }
         }
       case DropMove(role: final role, to: final to):
         if (role != Role.pawn) san = role.uppercaseLetter;
-        san += '@${toAlgebraic(to)}';
+        san += '@${to.name}';
     }
     return san;
   }
@@ -853,13 +852,13 @@ abstract class Position<T extends Position<T>> {
       pseudo = pawnAttacks(turn, square) & board.bySide(turn.opposite);
       final delta = turn == Side.white ? 8 : -8;
       final step = square + delta;
-      if (0 <= step && step < 64 && !board.occupied.has(step)) {
-        pseudo = pseudo.withSquare(step);
+      if (0 <= step && step < 64 && !board.occupied.has(Square(step))) {
+        pseudo = pseudo.withSquare(Square(step));
         final canDoubleStep =
-            turn == Side.white ? square < 16 : square >= 64 - 16;
+            turn == Side.white ? square < Square.a3 : square >= Square.a7;
         final doubleStep = step + delta;
-        if (canDoubleStep && !board.occupied.has(doubleStep)) {
-          pseudo = pseudo.withSquare(doubleStep);
+        if (canDoubleStep && !board.occupied.has(Square(doubleStep))) {
+          pseudo = pseudo.withSquare(Square(doubleStep));
         }
       }
       if (epSquare != null && _canCaptureEp(square)) {
@@ -980,7 +979,7 @@ abstract class Position<T extends Position<T>> {
     if (!pawnAttacks(turn, pawn).has(epSquare!)) return false;
     final king = board.kingOf(turn);
     if (king == null) return true;
-    final captured = epSquare! + (turn == Side.white ? -8 : 8);
+    final captured = Square(epSquare! + (turn == Side.white ? -8 : 8));
     final occupied = board.occupied
         .toggleSquare(pawn)
         .toggleSquare(epSquare!)
@@ -1787,7 +1786,7 @@ class RacingKings extends Position<RacingKings> {
             fullmoves: 1);
 
   static const initial = RacingKings._initial();
-  static const goal = SquareSet.fromRank(7);
+  static const goal = SquareSet.fromRank(Rank.eighth);
 
   bool get blackCanReachGoal {
     final blackKing = board.kingOf(Side.black);
@@ -2359,10 +2358,10 @@ class Castles {
 
   static const standard = Castles(
     unmovedRooks: SquareSet.corners,
-    whiteRookQueenSide: Squares.a1,
-    whiteRookKingSide: Squares.h1,
-    blackRookQueenSide: Squares.a8,
-    blackRookKingSide: Squares.h8,
+    whiteRookQueenSide: Square.a1,
+    whiteRookKingSide: Square.h1,
+    blackRookQueenSide: Square.a8,
+    blackRookKingSide: Square.h8,
     whitePathQueenSide: SquareSet(0x000000000000000e),
     whitePathKingSide: SquareSet(0x0000000000000060),
     blackPathQueenSide: SquareSet(0x0e00000000000000),
@@ -2385,8 +2384,8 @@ class Castles {
     unmovedRooks: SquareSet(0x8100000000000000),
     whiteRookKingSide: null,
     whiteRookQueenSide: null,
-    blackRookKingSide: Squares.h8,
-    blackRookQueenSide: Squares.a8,
+    blackRookKingSide: Square.h8,
+    blackRookQueenSide: Square.a8,
     whitePathKingSide: SquareSet.empty,
     whitePathQueenSide: SquareSet.empty,
     blackPathQueenSide: SquareSet(0x0e00000000000000),
@@ -2612,27 +2611,29 @@ class _Context {
 
 Square _rookCastlesTo(Side side, CastlingSide cs) {
   return side == Side.white
-      ? (cs == CastlingSide.queen ? Squares.d1 : Squares.f1)
+      ? (cs == CastlingSide.queen ? Square.d1 : Square.f1)
       : cs == CastlingSide.queen
-          ? Squares.d8
-          : Squares.f8;
+          ? Square.d8
+          : Square.f8;
 }
 
 Square _kingCastlesTo(Side side, CastlingSide cs) {
   return side == Side.white
-      ? (cs == CastlingSide.queen ? Squares.c1 : Squares.g1)
+      ? (cs == CastlingSide.queen ? Square.c1 : Square.g1)
       : cs == CastlingSide.queen
-          ? Squares.c8
-          : Squares.g8;
+          ? Square.c8
+          : Square.g8;
 }
 
 Square? _validEpSquare(Setup setup) {
   if (setup.epSquare == null) return null;
   final epRank = setup.turn == Side.white ? 5 : 2;
   final forward = setup.turn == Side.white ? 8 : -8;
-  if (squareRank(setup.epSquare!) != epRank) return null;
-  if (setup.board.occupied.has(setup.epSquare! + forward)) return null;
-  final pawn = setup.epSquare! - forward;
+  if (setup.epSquare!.rank != epRank) return null;
+  if (setup.board.occupied.has(Square(setup.epSquare!.value + forward))) {
+    return null;
+  }
+  final pawn = Square(setup.epSquare!.value - forward);
   if (!setup.board.pawns.has(pawn) ||
       !setup.board.bySide(setup.turn.opposite).has(pawn)) {
     return null;
@@ -2654,13 +2655,12 @@ SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
     pseudo = pseudo & captureTargets;
     final delta = pos.turn == Side.white ? 8 : -8;
     final step = square + delta;
-    if (0 <= step && step < 64 && !pos.board.occupied.has(step)) {
-      pseudo = pseudo.withSquare(step);
+    if (0 <= step && step < 64 && !pos.board.occupied.has(Square(step))) {
+      pseudo = pseudo.withSquare(Square(step));
       final canDoubleStep =
-          pos.turn == Side.white ? square < 16 : square >= 64 - 16;
-      final doubleStep = step + delta;
-      if (canDoubleStep && !pos.board.occupied.has(doubleStep)) {
-        pseudo = pseudo.withSquare(doubleStep);
+          pos.turn == Side.white ? square < Square.a3 : square >= Square.a7;
+      if (canDoubleStep && !pos.board.occupied.has(Square(step + delta))) {
+        pseudo = pseudo.withSquare(Square(step + delta));
       }
     }
     return pseudo;

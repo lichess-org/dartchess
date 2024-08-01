@@ -2,18 +2,118 @@ import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('File', () {
+    test('File.values', () {
+      expect(File.values.length, 8);
+    });
+
+    test('fromName', () {
+      expect(File.fromName('a'), File.a);
+      expect(File.fromName('h'), File.h);
+      expect(() => File.fromName('i'), throwsFormatException);
+    });
+
+    test('offset', () {
+      expect(File.a.offset(1), File.b);
+      expect(File.h.offset(-1), File.g);
+      expect(File.h.offset(1), null);
+    });
+  });
+
+  group('Rank', () {
+    test('Rank.values', () {
+      expect(Rank.values.length, 8);
+    });
+
+    test('fromName', () {
+      expect(Rank.fromName('1'), Rank.first);
+      expect(Rank.fromName('8'), Rank.eighth);
+      expect(() => Rank.fromName('9'), throwsFormatException);
+    });
+
+    test('offset', () {
+      expect(Rank.first.offset(1), Rank.second);
+      expect(Rank.eighth.offset(-1), Rank.seventh);
+      expect(Rank.eighth.offset(1), null);
+    });
+  });
+
+  group('Square', () {
+    test('Square.values', () {
+      expect(Square.values.length, 64);
+    });
+
+    test('fromName', () {
+      expect(Square.fromName('a1'), Square.a1);
+      expect(Square.fromName('h8'), Square.h8);
+      expect(Square.fromName('e4'), Square.e4);
+      expect(() => Square.fromName('i1'), throwsFormatException);
+      expect(() => Square.fromName('a9'), throwsFormatException);
+      expect(() => Square.fromName('a11'), throwsFormatException);
+    });
+
+    test('fromCoords', () {
+      expect(Square.fromCoords(const File(0), const Rank(0)), Square.a1);
+      expect(Square.fromCoords(const File(2), const Rank(5)), Square.c6);
+      expect(Square.fromCoords(const File(7), const Rank(7)), Square.h8);
+    });
+
+    test('parse', () {
+      expect(Square.parse('a1'), Square.a1);
+      expect(Square.parse('h8'), Square.h8);
+      expect(Square.parse('e4'), Square.e4);
+      expect(Square.parse('a9'), isNull);
+      expect(Square.parse('i1'), isNull);
+      expect(Square.parse('a11'), isNull);
+    });
+
+    test('offset', () {
+      expect(Square.a1.offset(8), Square.a2);
+      expect(Square.h8.offset(-8), Square.h7);
+      expect(Square.h8.offset(1), null);
+    });
+
+    test('name', () {
+      expect(Square.a1.name, 'a1');
+      expect(Square.h8.name, 'h8');
+    });
+  });
+
   group('Move', () {
-    test('fromUci', () {
-      expect(Move.fromUci('a1a2'), const NormalMove(from: 0, to: 8));
-      expect(Move.fromUci('h7h8q'),
-          const NormalMove(from: 55, to: 63, promotion: Role.queen));
-      expect(Move.fromUci('P@h1'), const DropMove(role: Role.pawn, to: 7));
+    test('parse', () {
+      expect(
+          Move.parse('a1a2'), const NormalMove(from: Square.a1, to: Square.a2));
+      expect(
+          Move.parse('h7h8q'),
+          const NormalMove(
+              from: Square.h7, to: Square.h8, promotion: Role.queen));
+      expect(
+          Move.parse('P@h1'), const DropMove(role: Role.pawn, to: Square.h1));
+    });
+
+    test('NormalMove.fromUci', () {
+      expect(NormalMove.fromUci('a1a2'),
+          const NormalMove(from: Square.a1, to: Square.a2));
+      expect(
+          NormalMove.fromUci('h7h8q'),
+          const NormalMove(
+              from: Square.h7, to: Square.h8, promotion: Role.queen));
+      expect(() => NormalMove.fromUci('P@h1'), throwsFormatException);
+    });
+
+    test('DropMove.fromUci', () {
+      expect(DropMove.fromUci('P@h1'),
+          const DropMove(role: Role.pawn, to: Square.h1));
+      expect(() => DropMove.fromUci('a1a2'), throwsFormatException);
     });
 
     test('uci', () {
-      expect(const DropMove(role: Role.queen, to: 1).uci, 'Q@b1');
-      expect(const NormalMove(from: 2, to: 3).uci, 'c1d1');
-      expect(const NormalMove(from: 0, to: 0, promotion: Role.knight).uci,
+      expect(const DropMove(role: Role.queen, to: Square.b1).uci, 'Q@b1');
+      expect(const NormalMove(from: Square.c1, to: Square.d1).uci, 'c1d1');
+      expect(
+          const NormalMove(
+                  from: Square.a1, to: Square.a1, promotion: Role.knight)
+              .uci,
           'a1a1n');
     });
   });

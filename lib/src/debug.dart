@@ -2,7 +2,6 @@ import './board.dart';
 import './models.dart';
 import './position.dart';
 import './square_set.dart';
-import './utils.dart';
 
 /// Takes a string and returns a SquareSet. Useful for debugging/testing purposes.
 ///
@@ -34,7 +33,7 @@ SquareSet makeSquareSet(String rep) {
     for (int x = 0; x < 8; x++) {
       final repSq = table[y][x];
       if (repSq == '1') {
-        ret = ret.withSquare(x + y * 8);
+        ret = ret.withSquare(Square(x + y * 8));
       }
     }
   }
@@ -46,7 +45,7 @@ String humanReadableSquareSet(SquareSet sq) {
   final buffer = StringBuffer();
   for (int y = 7; y >= 0; y--) {
     for (int x = 0; x < 8; x++) {
-      final square = x + y * 8;
+      final square = Square(x + y * 8);
       buffer.write(sq.has(square) ? '1' : '.');
       buffer.write(x < 7 ? ' ' : '\n');
     }
@@ -59,7 +58,7 @@ String humanReadableBoard(Board board) {
   final buffer = StringBuffer();
   for (int y = 7; y >= 0; y--) {
     for (int x = 0; x < 8; x++) {
-      final square = x + y * 8;
+      final square = Square(x + y * 8);
       final p = board.pieceAt(square);
       final col = p != null ? p.fenChar : '.';
       buffer.write(col);
@@ -100,7 +99,7 @@ int perft(Position pos, int depth, {bool shouldLog = false}) {
     for (final entry in pos.legalMoves.entries) {
       final from = entry.key;
       final dests = entry.value;
-      final promotions = squareRank(from) == (pos.turn == Side.white ? 6 : 1) &&
+      final promotions = from.rank == (pos.turn == Side.white ? 6 : 1) &&
               pos.board.pawns.has(from)
           ? promotionRoles
           : [null];

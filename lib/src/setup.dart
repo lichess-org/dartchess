@@ -4,8 +4,6 @@ import 'dart:math' as math;
 import './square_set.dart';
 import './models.dart';
 import './board.dart';
-import './utils.dart';
-import './constants.dart';
 
 /// A not necessarily legal position.
 @immutable
@@ -121,7 +119,7 @@ class Setup {
     if (parts.isNotEmpty) {
       final epPart = parts.removeAt(0);
       if (epPart != '-') {
-        epSquare = parseSquare(epPart);
+        epSquare = Square.parse(epPart);
         if (epSquare == null) throw const FenError('ERR_EP_SQUARE');
       }
     }
@@ -178,7 +176,7 @@ class Setup {
         board.fen + (pockets != null ? _makePockets(pockets!) : ''),
         turnLetter,
         _makeCastlingFen(board, unmovedRooks),
-        if (epSquare != null) toAlgebraic(epSquare!) else '-',
+        if (epSquare != null) epSquare!.name else '-',
         if (remainingChecks != null) _makeRemainingChecks(remainingChecks!),
         math.max(0, math.min(halfmoves, 9999)),
         math.max(1, math.min(fullmoves, 9999)),
@@ -325,7 +323,7 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
       candidates = backrank.squaresReversed;
     } else if ('a'.compareTo(lower) <= 0 && lower.compareTo('h') <= 0) {
       candidates =
-          (SquareSet.fromFile(lower.codeUnitAt(0) - 'a'.codeUnitAt(0)) &
+          (SquareSet.fromFile(File(lower.codeUnitAt(0) - 'a'.codeUnitAt(0))) &
                   backrank)
               .squares;
     } else {
@@ -339,8 +337,8 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
       }
     }
   }
-  if ((const SquareSet.fromRank(0) & unmovedRooks).size > 2 ||
-      (const SquareSet.fromRank(7) & unmovedRooks).size > 2) {
+  if ((const SquareSet.fromRank(Rank.first) & unmovedRooks).size > 2 ||
+      (const SquareSet.fromRank(Rank.eighth) & unmovedRooks).size > 2) {
     throw const FenError('ERR_CASTLING');
   }
   return unmovedRooks;
@@ -371,7 +369,7 @@ String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
       } else if (rook == candidates.last && king != null && king < rook) {
         buffer.write(color == Side.white ? 'K' : 'k');
       } else {
-        final file = kFileNames[squareFile(rook)];
+        final file = rook.file.name;
         buffer.write(color == Side.white ? file.toUpperCase() : file);
       }
     }

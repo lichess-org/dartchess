@@ -1,6 +1,3 @@
-const kFileNames = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-const kRankNames = ['1', '2', '3', '4', '5', '6', '7', '8'];
-
 /// The board part of the initial position in the FEN format.
 const kInitialBoardFEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
 

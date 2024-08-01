@@ -1,25 +1,15 @@
 import './models.dart';
 
-/// A set of squares represented by a 64 bit integer mask, using little endian
-/// rank-file (LERF) mapping.
+/// A finite set of all squares on a chessboard.
 ///
-/// ```
-///  8 | 56 57 58 59 60 61 62 63
-///  7 | 48 49 50 51 52 53 54 55
-///  6 | 40 41 42 43 44 45 46 47
-///  5 | 32 33 34 35 36 37 38 39
-///  4 | 24 25 26 27 28 29 30 31
-///  3 | 16 17 18 19 20 21 22 23
-///  2 | 8  9  10 11 12 13 14 15
-///  1 | 0  1  2  3  4  5  6  7
-///    -------------------------
-///      a  b  c  d  e  f  g  h
-/// ```
+/// All the squares are represented by a single 64-bit integer, where each bit
+/// corresponds to a square, using a little-endian rank-file mapping.
+/// See also [Square].
+///
+/// The set operations are implemented as bitwise operations on the integer.
 extension type const SquareSet(int value) {
   /// Creates a [SquareSet] with a single [Square].
-  const SquareSet.fromSquare(Square square)
-      : value = 1 << square,
-        assert(square >= 0 && square < 64);
+  const SquareSet.fromSquare(Square square) : value = 1 << square;
 
   /// Creates a [SquareSet] from several [Square]s.
   SquareSet.fromSquares(Iterable<Square> squares)
@@ -28,12 +18,12 @@ extension type const SquareSet(int value) {
             .fold(0, (left, right) => left | right);
 
   /// Create a [SquareSet] containing all squares of the given rank.
-  const SquareSet.fromRank(int rank)
+  const SquareSet.fromRank(Rank rank)
       : value = 0xff << (8 * rank),
         assert(rank >= 0 && rank < 8);
 
   /// Create a [SquareSet] containing all squares of the given file.
-  const SquareSet.fromFile(int file)
+  const SquareSet.fromFile(File file)
       : value = 0x0101010101010101 << file,
         assert(file >= 0 && file < 8);
 
@@ -50,6 +40,10 @@ extension type const SquareSet(int value) {
   static const corners = SquareSet(0x8100000000000081);
   static const center = SquareSet(0x0000001818000000);
   static const backranks = SquareSet(0xff000000000000ff);
+  static const firstRank = SquareSet(0xff);
+  static const eighthRank = SquareSet(0xff00000000000000);
+  static const aFile = SquareSet(0x0101010101010101);
+  static const hFile = SquareSet(0x8080808080808080);
 
   /// Bitwise right shift
   SquareSet shr(int shift) {
@@ -65,22 +59,29 @@ extension type const SquareSet(int value) {
     return this;
   }
 
+  /// Returns a new [SquareSet] with a bitwise XOR of this set and [other].
   SquareSet xor(SquareSet other) => SquareSet(value ^ other.value);
   SquareSet operator ^(SquareSet other) => SquareSet(value ^ other.value);
 
+  /// Returns a new [SquareSet] with the squares that are in either this set or [other].
   SquareSet union(SquareSet other) => SquareSet(value | other.value);
   SquareSet operator |(SquareSet other) => SquareSet(value | other.value);
 
+  /// Returns a new [SquareSet] with the squares that are in both this set and [other].
   SquareSet intersect(SquareSet other) => SquareSet(value & other.value);
   SquareSet operator &(SquareSet other) => SquareSet(value & other.value);
 
+  /// Returns a new [SquareSet] with the [other] squares removed from this set.
   SquareSet minus(SquareSet other) => SquareSet(value - other.value);
   SquareSet operator -(SquareSet other) => SquareSet(value - other.value);
 
+  /// Returns the set complement of this set.
   SquareSet complement() => SquareSet(~value);
 
+  /// Returns the set difference of this set and [other].
   SquareSet diff(SquareSet other) => SquareSet(value & ~other.value);
 
+  /// Flips the set vertically.
   SquareSet flipVertical() {
     const k1 = 0x00FF00FF00FF00FF;
     const k2 = 0x0000FFFF0000FFFF;
@@ -90,6 +91,7 @@ extension type const SquareSet(int value) {
     return SquareSet(x);
   }
 
+  /// Flips the set horizontally.
   SquareSet mirrorHorizontal() {
     const k1 = 0x5555555555555555;
     const k2 = 0x3333333333333333;
@@ -100,42 +102,60 @@ extension type const SquareSet(int value) {
     return SquareSet(x);
   }
 
+  /// Returns the number of squares in the set.
   int get size => _popcnt64(value);
+
+  /// Returns true if the set is empty.
   bool get isEmpty => value == 0;
+
+  /// Returns true if the set is not empty.
   bool get isNotEmpty => value != 0;
-  int? get first => _getFirstSquare(value);
-  int? get last => _getLastSquare(value);
+
+  /// Returns the first square in the set, or null if the set is empty.
+  Square? get first => _getFirstSquare(value);
+
+  /// Returns the last square in the set, or null if the set is empty.
+  Square? get last => _getLastSquare(value);
+
+  /// Returns the squares in the set as an iterable.
   Iterable<Square> get squares => _iterateSquares();
+
+  /// Returns the squares in the set as an iterable in reverse order.
   Iterable<Square> get squaresReversed => _iterateSquaresReversed();
+
+  /// Returns true if the set contains more than one square.
   bool get moreThanOne => isNotEmpty && size > 1;
 
   /// Returns square if it is single, otherwise returns null.
-  int? get singleSquare => moreThanOne ? null : last;
+  Square? get singleSquare => moreThanOne ? null : last;
 
+  /// Returns true if the [SquareSet] contains the given [square].
   bool has(Square square) {
-    assert(square >= 0 && square < 64);
     return value & (1 << square) != 0;
   }
 
+  /// Returns true if the square set has any square in the [other] square set.
   bool isIntersected(SquareSet other) => intersect(other).isNotEmpty;
+
+  /// Returns true if the square set is disjoint from the [other] square set.
   bool isDisjoint(SquareSet other) => intersect(other).isEmpty;
 
+  /// Returns a new [SquareSet] with the given [square] added.
   SquareSet withSquare(Square square) {
-    assert(square >= 0 && square < 64);
     return SquareSet(value | (1 << square));
   }
 
+  /// Returns a new [SquareSet] with the given [square] removed.
   SquareSet withoutSquare(Square square) {
-    assert(square >= 0 && square < 64);
     return SquareSet(value & ~(1 << square));
   }
 
   /// Removes [Square] if present, or put it if absent.
   SquareSet toggleSquare(Square square) {
-    assert(square >= 0 && square < 64);
     return SquareSet(value ^ (1 << square));
   }
 
+  /// Returns a new [SquareSet] with its first [Square] removed.
   SquareSet withoutFirst() {
     final f = first;
     return f != null ? withoutSquare(f) : empty;
@@ -144,8 +164,8 @@ extension type const SquareSet(int value) {
   /// Returns the hexadecimal string representation of the bitboard value.
   String toHexString() {
     final buffer = StringBuffer();
-    for (Square square = 63; square >= 0; square--) {
-      buffer.write(has(square) ? '1' : '0');
+    for (int square = 63; square >= 0; square--) {
+      buffer.write(has(Square(square)) ? '1' : '0');
     }
     final b = buffer.toString();
     final first = int.parse(b.substring(0, 32), radix: 2)
@@ -181,14 +201,14 @@ extension type const SquareSet(int value) {
     }
   }
 
-  int? _getFirstSquare(int bitboard) {
+  Square? _getFirstSquare(int bitboard) {
     final ntz = _ntz64(bitboard);
-    return ntz >= 0 && ntz < 64 ? ntz : null;
+    return ntz >= 0 && ntz < 64 ? Square(ntz) : null;
   }
 
-  int? _getLastSquare(int bitboard) {
+  Square? _getLastSquare(int bitboard) {
     if (bitboard == 0) return null;
-    return 63 - _nlz64(bitboard);
+    return Square(63 - _nlz64(bitboard));
   }
 }
 

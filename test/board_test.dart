@@ -12,7 +12,7 @@ void main() {
 
   test('empty board', () {
     expect(Board.empty.pieces.isEmpty, true);
-    expect(Board.empty.pieceAt(0), null);
+    expect(Board.empty.pieceAt(Square.a1), null);
   });
 
   test('standard board', () {
@@ -21,13 +21,13 @@ void main() {
 
   test('setPieceAt', () {
     const piece = Piece.whiteKing;
-    final board = Board.empty.setPieceAt(0, piece);
+    final board = Board.empty.setPieceAt(Square.a1, piece);
     expect(board.occupied, const SquareSet(0x0000000000000001));
     expect(board.pieces.length, 1);
-    expect(board.pieceAt(0), piece);
+    expect(board.pieceAt(Square.a1), piece);
 
-    final board2 = Board.standard.setPieceAt(60, piece);
-    expect(board2.pieceAt(60), piece);
+    final board2 = Board.standard.setPieceAt(Square.e8, piece);
+    expect(board2.pieceAt(Square.e8), piece);
     expect(board2.white, const SquareSet(0x100000000000FFFF));
 
     expect(board2.black, const SquareSet(0xEFFF000000000000));
@@ -40,8 +40,8 @@ void main() {
   });
 
   test('removePieceAt', () {
-    final board = Board.empty.setPieceAt(10, Piece.whiteKing);
-    expect(board.removePieceAt(10), Board.empty);
+    final board = Board.empty.setPieceAt(Square.c2, Piece.whiteKing);
+    expect(board.removePieceAt(Square.c2), Board.empty);
   });
 
   test('parse board fen', () {
