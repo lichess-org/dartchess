@@ -2654,7 +2654,7 @@ SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
     }
     pseudo = pseudo & captureTargets;
     final delta = pos.turn == Side.white ? 8 : -8;
-    final step = square.value + delta;
+    final step = square + delta;
     if (0 <= step && step < 64 && !pos.board.occupied.has(Square(step))) {
       pseudo = pseudo.withSquare(Square(step));
       final canDoubleStep =

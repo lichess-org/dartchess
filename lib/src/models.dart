@@ -81,7 +81,7 @@ extension type const File._(int value) implements int {
   /// Gets the chessboard [File] from a file index between 0 and 7.
   const File(this.value) : assert(value >= 0 && value < 8);
 
-  /// Gets a [File] its name in algebraic notation.
+  /// Gets a [File] from its name in algebraic notation.
   ///
   /// Throws a [FormatException] if the algebraic notation is invalid.
   factory File.fromName(String algebraic) {
