@@ -812,26 +812,26 @@ abstract class Position<T extends Position<T>> {
                   column = true;
                 }
                 if (column) {
-                  san += from.file.algebraicNotation;
+                  san += from.file.name;
                 }
                 if (row) {
-                  san += from.rank.algebraicNotation;
+                  san += from.rank.name;
                 }
               }
             }
           } else if (capture) {
-            san = from.file.algebraicNotation;
+            san = from.file.name;
           }
 
           if (capture) san += 'x';
-          san += to.algebraicNotation;
+          san += to.name;
           if (prom != null) {
             san += '=${prom.uppercaseLetter}';
           }
         }
       case DropMove(role: final role, to: final to):
         if (role != Role.pawn) san = role.uppercaseLetter;
-        san += '@${to.algebraicNotation}';
+        san += '@${to.name}';
     }
     return san;
   }

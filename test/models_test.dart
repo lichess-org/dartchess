@@ -7,10 +7,10 @@ void main() {
       expect(File.values.length, 8);
     });
 
-    test('fromAlgebraic', () {
-      expect(File.fromAlgebraic('a'), File.a);
-      expect(File.fromAlgebraic('h'), File.h);
-      expect(() => File.fromAlgebraic('i'), throwsFormatException);
+    test('fromName', () {
+      expect(File.fromName('a'), File.a);
+      expect(File.fromName('h'), File.h);
+      expect(() => File.fromName('i'), throwsFormatException);
     });
 
     test('offset', () {
@@ -25,10 +25,10 @@ void main() {
       expect(Rank.values.length, 8);
     });
 
-    test('fromAlgebraic', () {
-      expect(Rank.fromAlgebraic('1'), Rank.first);
-      expect(Rank.fromAlgebraic('8'), Rank.eighth);
-      expect(() => Rank.fromAlgebraic('9'), throwsFormatException);
+    test('fromName', () {
+      expect(Rank.fromName('1'), Rank.first);
+      expect(Rank.fromName('8'), Rank.eighth);
+      expect(() => Rank.fromName('9'), throwsFormatException);
     });
 
     test('offset', () {
@@ -43,11 +43,11 @@ void main() {
       expect(Square.values.length, 64);
     });
 
-    test('fromAlgebraic', () {
-      expect(Square.fromAlgebraic('a1'), Square.a1);
-      expect(Square.fromAlgebraic('h8'), Square.h8);
-      expect(Square.fromAlgebraic('e4'), Square.e4);
-      expect(() => Square.fromAlgebraic('i1'), throwsFormatException);
+    test('fromName', () {
+      expect(Square.fromName('a1'), Square.a1);
+      expect(Square.fromName('h8'), Square.h8);
+      expect(Square.fromName('e4'), Square.e4);
+      expect(() => Square.fromName('i1'), throwsFormatException);
     });
 
     test('offset', () {
@@ -56,9 +56,9 @@ void main() {
       expect(Square.h8.offset(1), null);
     });
 
-    test('algebraicNotation', () {
-      expect(Square.a1.algebraicNotation, 'a1');
-      expect(Square.h8.algebraicNotation, 'h8');
+    test('name', () {
+      expect(Square.a1.name, 'a1');
+      expect(Square.h8.name, 'h8');
     });
 
     test('coord', () {

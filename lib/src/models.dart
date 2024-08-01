@@ -56,9 +56,6 @@ enum Role {
     }
   }
 
-  @Deprecated('Use `letter` instead.')
-  String get char => letter;
-
   /// Gets the role letter in lowercase (as for black piece in FEN notation).
   String get letter => switch (this) {
         Role.pawn => 'p',
@@ -85,10 +82,10 @@ extension type const File._(int value) implements int {
   /// Gets the chessboard [File] from a file index between 0 and 7.
   const File(this.value) : assert(value >= 0 && value < 8);
 
-  /// Constructs a [File] from an algebraic notation, such as 'a', 'b', 'c', etc.
+  /// Gets a [File] its name in algebraic notation.
   ///
   /// Throws a [FormatException] if the algebraic notation is invalid.
-  factory File.fromAlgebraic(String algebraic) {
+  factory File.fromName(String algebraic) {
     final file = algebraic.codeUnitAt(0) - 97;
     if (file < 0 || file > 7) {
       throw FormatException('Invalid algebraic notation: $algebraic');
@@ -110,6 +107,9 @@ extension type const File._(int value) implements int {
 
   static const _names = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 
+  /// The name of the file, such as 'a', 'b', 'c', etc.
+  String get name => _names[value];
+
   /// Returns the file offset by [delta].
   ///
   /// Returns `null` if the resulting file is out of bounds.
@@ -121,9 +121,6 @@ extension type const File._(int value) implements int {
     }
     return File(newFile);
   }
-
-  /// The Algebraic Notation of the file, such as 'a', 'b', 'c', etc.
-  String get algebraicNotation => _names[value];
 }
 
 /// A rank of the chessboard.
@@ -131,10 +128,10 @@ extension type const Rank._(int value) implements int {
   /// Gets the chessboard [Rank] from a rank index between 0 and 7.
   const Rank(this.value) : assert(value >= 0 && value < 8);
 
-  /// Constructs a [Rank] from an algebraic notation, such as '1', '2', '3', etc.
+  /// Gets a [Rank] from its name in algebraic notation.
   ///
   /// Throws a [FormatException] if the algebraic notation is invalid.
-  factory Rank.fromAlgebraic(String algebraic) {
+  factory Rank.fromName(String algebraic) {
     final rank = algebraic.codeUnitAt(0) - 49;
     if (rank < 0 || rank > 7) {
       throw FormatException('Invalid algebraic notation: $algebraic');
@@ -165,6 +162,9 @@ extension type const Rank._(int value) implements int {
 
   static const _names = ['1', '2', '3', '4', '5', '6', '7', '8'];
 
+  /// The name of the rank, such as '1', '2', '3', etc.
+  String get name => _names[value];
+
   /// Returns the rank offset by [delta].
   ///
   /// Returns `null` if the resulting rank is out of bounds.
@@ -176,24 +176,37 @@ extension type const Rank._(int value) implements int {
     }
     return Rank(newRank);
   }
-
-  /// The Algebraic Notation of the rank, such as '1', '2', '3', etc.
-  String get algebraicNotation => _names[value];
 }
 
 /// A square of the chessboard.
 ///
-/// Square values are between 0 and 63, representing the squares from a1 to h8.
+/// The square is represented with an integer ranging from 0 to 63, using a
+/// little-endian rank-file mapping (LERF):
+/// ```
+///  8 | 56 57 58 59 60 61 62 63
+///  7 | 48 49 50 51 52 53 54 55
+///  6 | 40 41 42 43 44 45 46 47
+///  5 | 32 33 34 35 36 37 38 39
+///  4 | 24 25 26 27 28 29 30 31
+///  3 | 16 17 18 19 20 21 22 23
+///  2 | 8  9  10 11 12 13 14 15
+///  1 | 0  1  2  3  4  5  6  7
+///    -------------------------
+///      a  b  c  d  e  f  g  h
+/// ```
 ///
 /// See also:
+/// - [File]
+/// - [Rank]
 /// - [SquareSet] for the manipulation of sets of squares.
 extension type const Square._(int value) implements int {
+  /// Gets the chessboard [Square] from a square index between 0 and 63.
   const Square(this.value) : assert(value >= 0 && value < 64);
 
-  /// Constructs a [Square] from an algebraic notation, such as 'a1', 'b2', etc.
+  /// Gets a [Square] from its name in algebraic notation.
   ///
   /// Throws a [FormatException] if the algebraic notation is invalid.
-  factory Square.fromAlgebraic(String algebraic) {
+  factory Square.fromName(String algebraic) {
     final file = algebraic.codeUnitAt(0) - 97;
     final rank = algebraic.codeUnitAt(1) - 49;
     if (file < 0 || file > 7 || rank < 0 || rank > 7) {
@@ -201,6 +214,30 @@ extension type const Square._(int value) implements int {
     }
     return Square(rank * 8 + file);
   }
+
+  /// Parses a square name in algebraic notation.
+  ///
+  /// Returns either a [Square] or `null` if the algebraic notation is invalid.
+  static Square? parse(String algebraic) {
+    final file = algebraic.codeUnitAt(0) - 97;
+    final rank = algebraic.codeUnitAt(1) - 49;
+    if (file < 0 || file > 7 || rank < 0 || rank > 7) {
+      return null;
+    }
+    return Square(rank * 8 + file);
+  }
+
+  /// The file of the square on the board.
+  File get file => File(value & 0x7);
+
+  /// The rank of the square on the board.
+  Rank get rank => Rank(value >> 3);
+
+  /// The Zero-based, numeric coordinates of the square on the board.
+  Coord get coord => Coord(value & 0x7, value >> 3);
+
+  /// Unique identifier of the square, using pure algebraic notation.
+  String get name => file.name + rank.name;
 
   /// Returns the square offset by [delta].
   ///
@@ -216,19 +253,6 @@ extension type const Square._(int value) implements int {
 
   /// Return the bitwise XOR of the numeric square representation.
   Square xor(Square other) => Square(value ^ other.value);
-
-  /// The file of the square on the board.
-  File get file => File(value & 0x7);
-
-  /// The rank of the square on the board.
-  Rank get rank => Rank(value >> 3);
-
-  /// The Zero-based, numeric coordinates of the square on the board.
-  Coord get coord => Coord(value & 0x7, value >> 3);
-
-  /// The Algebraic Notation of the square, such as 'a1', 'b2', etc.
-  String get algebraicNotation =>
-      file.algebraicNotation + rank.algebraicNotation;
 
   static const a1 = Square(0);
   static const b1 = Square(1);
@@ -618,6 +642,8 @@ sealed class Move {
 
   /// Parses a UCI string into a move.
   ///
+  /// Will return a [NormalMove] or a [DropMove] depending on the UCI string.
+  ///
   /// Returns `null` if UCI string is not valid.
   static Move? parse(String str) {
     if (str[1] == '@' && str.length == 4) {
@@ -697,9 +723,7 @@ class NormalMove extends Move {
   /// Gets UCI notation, like `g1f3` for a normal move, `a7a8q` for promotion to a queen.
   @override
   String get uci =>
-      from.algebraicNotation +
-      to.algebraicNotation +
-      (promotion != null ? promotion!.letter : '');
+      from.name + to.name + (promotion != null ? promotion!.letter : '');
 
   @override
   bool operator ==(Object other) {
@@ -743,7 +767,7 @@ class DropMove extends Move {
 
   /// Gets UCI notation of the drop, like `Q@f7`.
   @override
-  String get uci => '${role.uppercaseLetter}@${to.algebraicNotation}';
+  String get uci => '${role.uppercaseLetter}@${to.name}';
 
   @override
   bool operator ==(Object other) {

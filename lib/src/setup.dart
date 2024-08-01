@@ -177,7 +177,7 @@ class Setup {
         board.fen + (pockets != null ? _makePockets(pockets!) : ''),
         turnLetter,
         _makeCastlingFen(board, unmovedRooks),
-        if (epSquare != null) epSquare!.algebraicNotation else '-',
+        if (epSquare != null) epSquare!.name else '-',
         if (remainingChecks != null) _makeRemainingChecks(remainingChecks!),
         math.max(0, math.min(halfmoves, 9999)),
         math.max(1, math.min(fullmoves, 9999)),
@@ -370,7 +370,7 @@ String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
       } else if (rook == candidates.last && king != null && king < rook) {
         buffer.write(color == Side.white ? 'K' : 'k');
       } else {
-        final file = rook.file.algebraicNotation;
+        final file = rook.file.name;
         buffer.write(color == Side.white ? file.toUpperCase() : file);
       }
     }

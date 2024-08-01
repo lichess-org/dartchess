@@ -1,20 +1,12 @@
 import './models.dart';
 
-/// A set of squares represented by a 64 bit integer mask, using little endian
-/// rank-file (LERF) mapping.
+/// A finite set of all squares on a chessboard.
 ///
-/// ```
-///  8 | 56 57 58 59 60 61 62 63
-///  7 | 48 49 50 51 52 53 54 55
-///  6 | 40 41 42 43 44 45 46 47
-///  5 | 32 33 34 35 36 37 38 39
-///  4 | 24 25 26 27 28 29 30 31
-///  3 | 16 17 18 19 20 21 22 23
-///  2 | 8  9  10 11 12 13 14 15
-///  1 | 0  1  2  3  4  5  6  7
-///    -------------------------
-///      a  b  c  d  e  f  g  h
-/// ```
+/// All the squares are represented by a single 64-bit integer, where each bit
+/// corresponds to a square, using a little-endian rank-file mapping.
+/// See also [Square].
+///
+/// The set operations are implemented as bitwise operations on the integer.
 extension type const SquareSet(int value) {
   /// Creates a [SquareSet] with a single [Square].
   const SquareSet.fromSquare(Square square) : value = 1 << square;
@@ -48,6 +40,10 @@ extension type const SquareSet(int value) {
   static const corners = SquareSet(0x8100000000000081);
   static const center = SquareSet(0x0000001818000000);
   static const backranks = SquareSet(0xff000000000000ff);
+  static const firstRank = SquareSet(0xff);
+  static const eighthRank = SquareSet(0xff00000000000000);
+  static const aFile = SquareSet(0x0101010101010101);
+  static const hFile = SquareSet(0x8080808080808080);
 
   /// Bitwise right shift
   SquareSet shr(int shift) {
