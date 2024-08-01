@@ -214,8 +214,11 @@ extension type const Square._(int value) implements int {
     if (file < 0 || file > 7 || rank < 0 || rank > 7) {
       throw FormatException('Invalid algebraic notation: $algebraic');
     }
-    return Square(rank * 8 + file);
+    return Square(file | (rank << 3));
   }
+
+  /// Gets a [Square] from its file and rank.
+  factory Square.fromCoords(File file, Rank rank) => Square(file | (rank << 3));
 
   /// Parses a square name in algebraic notation.
   ///
@@ -225,7 +228,7 @@ extension type const Square._(int value) implements int {
     final file = algebraic.codeUnitAt(0) - 97;
     final rank = algebraic.codeUnitAt(1) - 49;
     if (file < 0 || file > 7 || rank < 0 || rank > 7) return null;
-    return Square(rank * 8 + file);
+    return Square(file | (rank << 3));
   }
 
   /// The file of the square on the board.

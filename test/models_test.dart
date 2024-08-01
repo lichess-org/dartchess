@@ -52,6 +52,12 @@ void main() {
       expect(() => Square.fromName('a11'), throwsFormatException);
     });
 
+    test('fromCoords', () {
+      expect(Square.fromCoords(const File(0), const Rank(0)), Square.a1);
+      expect(Square.fromCoords(const File(2), const Rank(5)), Square.c6);
+      expect(Square.fromCoords(const File(7), const Rank(7)), Square.h8);
+    });
+
     test('parse', () {
       expect(Square.parse('a1'), Square.a1);
       expect(Square.parse('h8'), Square.h8);
