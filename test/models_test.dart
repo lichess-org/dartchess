@@ -77,24 +77,6 @@ void main() {
       expect(Square.a1.name, 'a1');
       expect(Square.h8.name, 'h8');
     });
-
-    test('coord', () {
-      expect(Square.a1.coord, const Coord(0, 0));
-      expect(Square.c6.coord, const Coord(2, 5));
-      expect(Square.h8.coord, const Coord(7, 7));
-    });
-  });
-
-  group('Coord', () {
-    test('Coord.values', () {
-      expect(Coord.values.length, 64);
-    });
-
-    test('square', () {
-      expect(const Coord(0, 0).square, Square.a1);
-      expect(const Coord(2, 5).square, Square.c6);
-      expect(const Coord(7, 7).square, Square.h8);
-    });
   });
 
   group('Move', () {
