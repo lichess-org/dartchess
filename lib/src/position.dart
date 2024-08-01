@@ -1,12 +1,12 @@
 import 'package:meta/meta.dart';
 import 'dart:math' as math;
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
-import './square_set.dart';
-import './attacks.dart';
-import './models.dart';
-import './board.dart';
-import './setup.dart';
-import './utils.dart';
+import 'attacks.dart';
+import 'castles.dart';
+import 'models.dart';
+import 'board.dart';
+import 'setup.dart';
+import 'square_set.dart';
 
 /// A base class for playable chess or chess variant positions.
 ///
@@ -47,31 +47,13 @@ abstract class Position<T extends Position<T>> {
   /// The [Rule] of this position.
   Rule get rule;
 
-  /// Abstract const constructor to be used by subclasses.
-  const Position._initial()
-      : board = Board.standard,
-        pockets = null,
-        turn = Side.white,
-        castles = Castles.standard,
-        epSquare = null,
-        halfmoves = 0,
-        fullmoves = 1;
-
-  Position._fromSetupUnchecked(Setup setup)
-      : board = setup.board,
-        pockets = setup.pockets,
-        turn = setup.turn,
-        castles = Castles.fromSetup(setup),
-        epSquare = _validEpSquare(setup),
-        halfmoves = setup.halfmoves,
-        fullmoves = setup.fullmoves;
-
-  Position<T> _copyWith({
+  /// Creates a copy of this position with some fields changed.
+  Position<T> copyWith({
     Board? board,
-    Box<Pockets?>? pockets,
+    Pockets? pockets,
     Side? turn,
     Castles? castles,
-    Box<Square?>? epSquare,
+    Square? epSquare,
     int? halfmoves,
     int? fullmoves,
   });
@@ -532,7 +514,7 @@ abstract class Position<T extends Position<T>> {
       case NormalMove(from: final from, to: final to, promotion: final prom):
         final piece = board.pieceAt(from);
         if (piece == null) {
-          return _copyWith();
+          return copyWith();
         }
         final castlingSide = _getCastlingSide(move);
         Square? epCaptureTarget;
@@ -585,25 +567,25 @@ abstract class Position<T extends Position<T>> {
           newCastles = newCastles.discardRookAt(to);
         }
 
-        return _copyWith(
+        return copyWith(
           halfmoves: isCapture || piece.role == Role.pawn ? 0 : halfmoves + 1,
           fullmoves: turn == Side.black ? fullmoves + 1 : fullmoves,
-          pockets: Box(capturedPiece != null
+          pockets: capturedPiece != null
               ? pockets?.increment(capturedPiece.color.opposite,
                   capturedPiece.promoted ? Role.pawn : capturedPiece.role)
-              : pockets),
+              : pockets,
           board: newBoard,
           turn: turn.opposite,
           castles: newCastles,
-          epSquare: Box(newEpSquare),
+          epSquare: newEpSquare,
         );
       case DropMove(to: final to, role: final role):
-        return _copyWith(
+        return copyWith(
           halfmoves: role == Role.pawn ? 0 : halfmoves + 1,
           fullmoves: turn == Side.black ? fullmoves + 1 : fullmoves,
           turn: turn.opposite,
           board: board.setPieceAt(to, Piece(color: turn, role: role)),
-          pockets: Box(pockets?.decrement(turn, role)),
+          pockets: pockets?.decrement(turn, role),
         );
     }
   }
@@ -638,25 +620,6 @@ abstract class Position<T extends Position<T>> {
   String toSan(Move move) {
     if (isLegal(move)) {
       return makeSanUnchecked(move).$2;
-    } else {
-      throw PlayException('Invalid move $move');
-    }
-  }
-
-  /// Returns the SAN representation of the [Move] with the updated [Position].
-  ///
-  /// Throws a [PlayException] if the move is not legal.
-  @Deprecated('Use makeSan instead')
-  (Position<T>, String) playToSan(Move move) {
-    if (isLegal(move)) {
-      final san = _makeSanWithoutSuffix(move);
-      final newPos = playUnchecked(move);
-      final suffixed = newPos.outcome?.winner != null
-          ? '$san#'
-          : newPos.isCheck
-              ? '$san+'
-              : san;
-      return (newPos, suffixed);
     } else {
       throw PlayException('Invalid move $move');
     }
@@ -1021,11 +984,22 @@ abstract class Position<T extends Position<T>> {
 
 /// A standard chess position.
 @immutable
-class Chess extends Position<Chess> {
+abstract class Chess extends Position<Chess> {
+  /// Creates a new [Chess] position.
+  const factory Chess({
+    required Board board,
+    Pockets? pockets,
+    required Side turn,
+    required Castles castles,
+    Square? epSquare,
+    required int halfmoves,
+    required int fullmoves,
+  }) = _Chess;
+
   @override
   Rule get rule => Rule.chess;
 
-  const Chess({
+  const Chess._({
     required super.board,
     super.pockets,
     required super.turn,
@@ -1035,10 +1009,13 @@ class Chess extends Position<Chess> {
     required super.fullmoves,
   });
 
-  Chess._fromSetupUnchecked(super.setup) : super._fromSetupUnchecked();
-  const Chess._initial() : super._initial();
-
-  static const initial = Chess._initial();
+  static const initial = Chess(
+    board: Board.standard,
+    turn: Side.white,
+    castles: Castles.standard,
+    halfmoves: 0,
+    fullmoves: 1,
+  );
 
   @override
   bool get isVariantEnd => false;
@@ -1053,27 +1030,61 @@ class Chess extends Position<Chess> {
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
   factory Chess.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-    final pos = Chess._fromSetupUnchecked(setup);
+    final pos = Chess(
+      board: setup.board,
+      pockets: setup.pockets,
+      turn: setup.turn,
+      castles: Castles.fromSetup(setup),
+      epSquare: _validEpSquare(setup),
+      halfmoves: setup.halfmoves,
+      fullmoves: setup.fullmoves,
+    );
     pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
     return pos;
   }
 
   @override
-  Chess _copyWith({
+  Chess copyWith({
     Board? board,
-    Box<Pockets?>? pockets,
+    Pockets? pockets,
     Side? turn,
     Castles? castles,
-    Box<Square?>? epSquare,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  });
+}
+
+class _Chess extends Chess {
+  const _Chess({
+    required super.board,
+    required super.turn,
+    required super.castles,
+    required super.halfmoves,
+    required super.fullmoves,
+    super.pockets,
+    super.epSquare,
+  }) : super._();
+
+  @override
+  Chess copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
   }) {
     return Chess(
       board: board ?? this.board,
-      pockets: pockets != null ? pockets.value : this.pockets,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare != null ? epSquare.value : this.epSquare,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
@@ -1082,11 +1093,21 @@ class Chess extends Position<Chess> {
 
 /// A variant of chess where you lose all your pieces or get stalemated to win.
 @immutable
-class Antichess extends Position<Antichess> {
+abstract class Antichess extends Position<Antichess> {
   @override
   Rule get rule => Rule.antichess;
 
-  const Antichess({
+  const factory Antichess({
+    required Board board,
+    Pockets? pockets,
+    required Side turn,
+    required Castles castles,
+    Square? epSquare,
+    required int halfmoves,
+    required int fullmoves,
+  }) = _Antichess;
+
+  const Antichess._({
     required super.board,
     super.pockets,
     required super.turn,
@@ -1095,8 +1116,6 @@ class Antichess extends Position<Antichess> {
     required super.halfmoves,
     required super.fullmoves,
   });
-
-  Antichess._fromSetupUnchecked(super.setup) : super._fromSetupUnchecked();
 
   static const initial = Antichess(
     board: Board.standard,
@@ -1124,10 +1143,17 @@ class Antichess extends Position<Antichess> {
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
   factory Antichess.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-    final pos = Antichess._fromSetupUnchecked(setup);
-    final noCastles = pos._copyWith(castles: Castles.empty);
-    noCastles.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
-    return noCastles;
+    final pos = Antichess(
+      board: setup.board,
+      pockets: setup.pockets,
+      turn: setup.turn,
+      castles: Castles.empty,
+      epSquare: _validEpSquare(setup),
+      halfmoves: setup.halfmoves,
+      fullmoves: setup.fullmoves,
+    );
+    pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+    return pos;
   }
 
   @override
@@ -1198,23 +1224,38 @@ class Antichess extends Position<Antichess> {
     }
     return false;
   }
+}
+
+class _Antichess extends Antichess {
+  const _Antichess({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  }) : super._();
 
   @override
-  Antichess _copyWith({
+  Antichess copyWith({
     Board? board,
-    Box<Pockets?>? pockets,
+    Object? pockets = _uniqueObjectInstance,
     Side? turn,
     Castles? castles,
-    Box<Square?>? epSquare,
+    Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
   }) {
     return Antichess(
       board: board ?? this.board,
-      pockets: pockets != null ? pockets.value : this.pockets,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare != null ? epSquare.value : this.epSquare,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
@@ -1223,11 +1264,21 @@ class Antichess extends Position<Antichess> {
 
 /// A variant of chess where captures cause an explosion to the surrounding pieces.
 @immutable
-class Atomic extends Position<Atomic> {
+abstract class Atomic extends Position<Atomic> {
   @override
   Rule get rule => Rule.atomic;
 
-  const Atomic({
+  const factory Atomic({
+    required Board board,
+    Pockets? pockets,
+    required Side turn,
+    required Castles castles,
+    Square? epSquare,
+    required int halfmoves,
+    required int fullmoves,
+  }) = _Atomic;
+
+  const Atomic._({
     required super.board,
     super.pockets,
     required super.turn,
@@ -1237,10 +1288,13 @@ class Atomic extends Position<Atomic> {
     required super.fullmoves,
   });
 
-  Atomic._fromSetupUnchecked(super.setup) : super._fromSetupUnchecked();
-  const Atomic._initial() : super._initial();
-
-  static const initial = Atomic._initial();
+  static const initial = Atomic(
+    board: Board.standard,
+    turn: Side.white,
+    castles: Castles.standard,
+    halfmoves: 0,
+    fullmoves: 1,
+  );
 
   @override
   bool get isVariantEnd => variantOutcome != null;
@@ -1262,7 +1316,15 @@ class Atomic extends Position<Atomic> {
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
   factory Atomic.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-    final pos = Atomic._fromSetupUnchecked(setup);
+    final pos = Atomic(
+      board: setup.board,
+      pockets: setup.pockets,
+      turn: setup.turn,
+      castles: Castles.fromSetup(setup),
+      epSquare: _validEpSquare(setup),
+      halfmoves: setup.halfmoves,
+      fullmoves: setup.fullmoves,
+    );
     pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
     return pos;
   }
@@ -1350,7 +1412,7 @@ class Atomic extends Position<Atomic> {
           }
         }
       }
-      return newPos._copyWith(board: newBoard, castles: newCastles);
+      return newPos.copyWith(board: newBoard, castles: newCastles);
     } else {
       return newPos;
     }
@@ -1418,21 +1480,47 @@ class Atomic extends Position<Atomic> {
   }
 
   @override
-  Atomic _copyWith({
+  Atomic copyWith({
     Board? board,
-    Box<Pockets?>? pockets,
+    Pockets? pockets,
     Side? turn,
     Castles? castles,
-    Box<Square?>? epSquare,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  });
+}
+
+class _Atomic extends Atomic {
+  const _Atomic({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  }) : super._();
+
+  @override
+  Atomic copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
   }) {
     return Atomic(
       board: board ?? this.board,
-      pockets: pockets != null ? pockets.value : this.pockets,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare != null ? epSquare.value : this.epSquare,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
@@ -1441,11 +1529,21 @@ class Atomic extends Position<Atomic> {
 
 /// A variant where captured pieces can be dropped back on the board instead of moving a piece.
 @immutable
-class Crazyhouse extends Position<Crazyhouse> {
+abstract class Crazyhouse extends Position<Crazyhouse> {
   @override
   Rule get rule => Rule.crazyhouse;
 
-  const Crazyhouse({
+  const factory Crazyhouse({
+    required Board board,
+    Pockets? pockets,
+    required Side turn,
+    required Castles castles,
+    Square? epSquare,
+    required int halfmoves,
+    required int fullmoves,
+  }) = _Crazyhouse;
+
+  const Crazyhouse._({
     required super.board,
     super.pockets,
     required super.turn,
@@ -1454,8 +1552,6 @@ class Crazyhouse extends Position<Crazyhouse> {
     required super.halfmoves,
     required super.fullmoves,
   });
-
-  Crazyhouse._fromSetupUnchecked(super.setup) : super._fromSetupUnchecked();
 
   static const initial = Crazyhouse(
     board: Board.standard,
@@ -1479,12 +1575,17 @@ class Crazyhouse extends Position<Crazyhouse> {
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
   factory Crazyhouse.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-    final pos = Crazyhouse._fromSetupUnchecked(setup)._copyWith(
-      pockets: Box(setup.pockets ?? Pockets.empty),
+    final pos = Crazyhouse(
       board: setup.board.withPromoted(setup.board.promoted
           .intersect(setup.board.occupied)
           .diff(setup.board.kings)
           .diff(setup.board.pawns)),
+      pockets: setup.pockets ?? Pockets.empty,
+      turn: setup.turn,
+      castles: Castles.fromSetup(setup),
+      epSquare: _validEpSquare(setup),
+      halfmoves: setup.halfmoves,
+      fullmoves: setup.fullmoves,
     );
     pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
     return pos;
@@ -1543,21 +1644,47 @@ class Crazyhouse extends Position<Crazyhouse> {
   }
 
   @override
-  Crazyhouse _copyWith({
+  Crazyhouse copyWith({
     Board? board,
-    Box<Pockets?>? pockets,
+    Pockets? pockets,
     Side? turn,
     Castles? castles,
-    Box<Square?>? epSquare,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  });
+}
+
+class _Crazyhouse extends Crazyhouse {
+  const _Crazyhouse({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  }) : super._();
+
+  @override
+  Crazyhouse copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
   }) {
     return Crazyhouse(
       board: board ?? this.board,
-      pockets: pockets != null ? pockets.value : this.pockets,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare != null ? epSquare.value : this.epSquare,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
@@ -1567,11 +1694,21 @@ class Crazyhouse extends Position<Crazyhouse> {
 /// A variant similar to standard chess, where you win by putting your king on the center
 /// of the board.
 @immutable
-class KingOfTheHill extends Position<KingOfTheHill> {
+abstract class KingOfTheHill extends Position<KingOfTheHill> {
   @override
   Rule get rule => Rule.kingofthehill;
 
-  const KingOfTheHill({
+  const factory KingOfTheHill({
+    required Board board,
+    Pockets? pockets,
+    required Side turn,
+    required Castles castles,
+    Square? epSquare,
+    required int halfmoves,
+    required int fullmoves,
+  }) = _KingOfTheHill;
+
+  const KingOfTheHill._({
     required super.board,
     super.pockets,
     required super.turn,
@@ -1581,10 +1718,13 @@ class KingOfTheHill extends Position<KingOfTheHill> {
     required super.fullmoves,
   });
 
-  KingOfTheHill._fromSetupUnchecked(super.setup) : super._fromSetupUnchecked();
-  const KingOfTheHill._initial() : super._initial();
-
-  static const initial = KingOfTheHill._initial();
+  static const initial = KingOfTheHill(
+    board: Board.standard,
+    turn: Side.white,
+    castles: Castles.standard,
+    halfmoves: 0,
+    fullmoves: 1,
+  );
 
   @override
   bool get isVariantEnd => board.kings.isIntersected(SquareSet.center);
@@ -1606,7 +1746,15 @@ class KingOfTheHill extends Position<KingOfTheHill> {
   /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
   factory KingOfTheHill.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-    final pos = KingOfTheHill._fromSetupUnchecked(setup);
+    final pos = KingOfTheHill(
+      board: setup.board,
+      pockets: setup.pockets,
+      turn: setup.turn,
+      castles: Castles.fromSetup(setup),
+      epSquare: _validEpSquare(setup),
+      halfmoves: setup.halfmoves,
+      fullmoves: setup.fullmoves,
+    );
     pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
     return pos;
   }
@@ -1615,21 +1763,47 @@ class KingOfTheHill extends Position<KingOfTheHill> {
   bool hasInsufficientMaterial(Side side) => false;
 
   @override
-  KingOfTheHill _copyWith({
+  KingOfTheHill copyWith({
     Board? board,
-    Box<Pockets?>? pockets,
+    Pockets? pockets,
     Side? turn,
     Castles? castles,
-    Box<Square?>? epSquare,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  });
+}
+
+class _KingOfTheHill extends KingOfTheHill {
+  const _KingOfTheHill({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  }) : super._();
+
+  @override
+  KingOfTheHill copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
   }) {
     return KingOfTheHill(
       board: board ?? this.board,
-      pockets: pockets != null ? pockets.value : this.pockets,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare != null ? epSquare.value : this.epSquare,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
@@ -1639,11 +1813,22 @@ class KingOfTheHill extends Position<KingOfTheHill> {
 /// A variant similar to standard chess, where you can win if you put your opponent king
 /// into the third check.
 @immutable
-class ThreeCheck extends Position<ThreeCheck> {
+abstract class ThreeCheck extends Position<ThreeCheck> {
   @override
   Rule get rule => Rule.threecheck;
 
-  const ThreeCheck({
+  const factory ThreeCheck({
+    required Board board,
+    Pockets? pockets,
+    required Side turn,
+    required Castles castles,
+    Square? epSquare,
+    required int halfmoves,
+    required int fullmoves,
+    required (int, int) remainingChecks,
+  }) = _ThreeCheck;
+
+  const ThreeCheck._({
     required super.board,
     super.pockets,
     required super.turn,
@@ -1657,11 +1842,14 @@ class ThreeCheck extends Position<ThreeCheck> {
   /// Number of remainingChecks for white (`item1`) and black (`item2`).
   final (int, int) remainingChecks;
 
-  const ThreeCheck._initial()
-      : remainingChecks = _defaultRemainingChecks,
-        super._initial();
-
-  static const initial = ThreeCheck._initial();
+  static const initial = ThreeCheck(
+    board: Board.standard,
+    turn: Side.white,
+    castles: Castles.standard,
+    halfmoves: 0,
+    fullmoves: 1,
+    remainingChecks: _defaultRemainingChecks,
+  );
 
   static const _defaultRemainingChecks = (3, 3);
 
@@ -1726,7 +1914,7 @@ class ThreeCheck extends Position<ThreeCheck> {
     final newPos = super.playUnchecked(move) as ThreeCheck;
     if (newPos.isCheck) {
       final (whiteChecks, blackChecks) = remainingChecks;
-      return newPos._copyWith(
+      return newPos.copyWith(
           remainingChecks: turn == Side.white
               ? (math.max(whiteChecks - 1, 0), blackChecks)
               : (whiteChecks, math.max(blackChecks - 1, 0)));
@@ -1736,22 +1924,50 @@ class ThreeCheck extends Position<ThreeCheck> {
   }
 
   @override
-  ThreeCheck _copyWith({
+  ThreeCheck copyWith({
     Board? board,
-    Box<Pockets?>? pockets,
+    Pockets? pockets,
     Side? turn,
     Castles? castles,
-    Box<Square?>? epSquare,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+    (int, int)? remainingChecks,
+  });
+}
+
+class _ThreeCheck extends ThreeCheck {
+  const _ThreeCheck({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+    required super.remainingChecks,
+  }) : super._();
+
+  @override
+  ThreeCheck copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
     (int, int)? remainingChecks,
   }) {
     return ThreeCheck(
       board: board ?? this.board,
-      pockets: pockets != null ? pockets.value : this.pockets,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
       turn: turn ?? this.turn,
       castles: castles ?? this.castles,
-      epSquare: epSquare != null ? epSquare.value : this.epSquare,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
       remainingChecks: remainingChecks ?? this.remainingChecks,
@@ -1761,11 +1977,21 @@ class ThreeCheck extends Position<ThreeCheck> {
 
 /// A variant where the goal is to put your king on the eigth rank
 @immutable
-class RacingKings extends Position<RacingKings> {
+abstract class RacingKings extends Position<RacingKings> {
   @override
   Rule get rule => Rule.racingKings;
 
-  const RacingKings({
+  const factory RacingKings({
+    required Board board,
+    Pockets? pockets,
+    required Side turn,
+    required Castles castles,
+    Square? epSquare,
+    required int halfmoves,
+    required int fullmoves,
+  }) = _RacingKings;
+
+  const RacingKings._({
     required super.board,
     super.pockets,
     required super.turn,
@@ -1775,17 +2001,14 @@ class RacingKings extends Position<RacingKings> {
     required super.fullmoves,
   });
 
-  const RacingKings._initial()
-      : super(
-            board: Board.racingKings,
-            pockets: null,
-            turn: Side.white,
-            castles: Castles.empty,
-            epSquare: null,
-            halfmoves: 0,
-            fullmoves: 1);
+  static const initial = RacingKings(
+    board: Board.racingKings,
+    turn: Side.white,
+    castles: Castles.empty,
+    halfmoves: 0,
+    fullmoves: 1,
+  );
 
-  static const initial = RacingKings._initial();
   static const goal = SquareSet.fromRank(Rank.eighth);
 
   bool get blackCanReachGoal {
@@ -1874,31 +2097,70 @@ class RacingKings extends Position<RacingKings> {
       super.playUnchecked(move) as RacingKings;
 
   @override
-  RacingKings _copyWith({
+  RacingKings copyWith({
     Board? board,
-    Box<Pockets?>? pockets,
+    Pockets? pockets,
     Side? turn,
     Castles? castles,
-    Box<Square?>? epSquare,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  });
+}
+
+class _RacingKings extends RacingKings {
+  const _RacingKings({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  }) : super._();
+
+  @override
+  RacingKings copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
   }) {
     return RacingKings(
       board: board ?? this.board,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
       turn: turn ?? this.turn,
-      castles: Castles.empty,
+      castles: castles ?? this.castles,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
     );
   }
 }
 
+/// A variant where white has 36 pawns and black needs to destroy the Horde to win.
 @immutable
-class Horde extends Position<Horde> {
+abstract class Horde extends Position<Horde> {
   @override
   Rule get rule => Rule.horde;
 
-  const Horde({
+  const factory Horde({
+    required Board board,
+    Pockets? pockets,
+    required Side turn,
+    required Castles castles,
+    Square? epSquare,
+    required int halfmoves,
+    required int fullmoves,
+  }) = _Horde;
+
+  const Horde._({
     required super.board,
     super.pockets,
     required super.turn,
@@ -1908,18 +2170,13 @@ class Horde extends Position<Horde> {
     required super.fullmoves,
   });
 
-  const Horde._initial()
-      : super(
-          board: Board.horde,
-          pockets: null,
-          turn: Side.white,
-          castles: Castles.horde,
-          epSquare: null,
-          halfmoves: 0,
-          fullmoves: 1,
-        );
-
-  static const initial = Horde._initial();
+  static const initial = Horde(
+    board: Board.horde,
+    turn: Side.white,
+    castles: Castles.horde,
+    halfmoves: 0,
+    fullmoves: 1,
+  );
 
   factory Horde.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     final pos = Horde(
@@ -2063,10 +2320,10 @@ class Horde extends Position<Horde> {
         // Promote the pawn to a queen or a knight and check whether white can mate.
         final pawnSquare = board.piecesOf(side, Role.pawn).last;
 
-        final promoteToQueen = _copyWith();
+        final promoteToQueen = copyWith();
         promoteToQueen.board
             .setPieceAt(pawnSquare!, Piece(color: side, role: Role.queen));
-        final promoteToKnight = _copyWith();
+        final promoteToKnight = copyWith();
         promoteToKnight.board
             .setPieceAt(pawnSquare, Piece(color: side, role: Role.knight));
         return promoteToQueen.hasInsufficientMaterial(side) &&
@@ -2203,22 +2460,49 @@ class Horde extends Position<Horde> {
   Horde playUnchecked(Move move) => super.playUnchecked(move) as Horde;
 
   @override
-  Horde _copyWith({
+  Horde copyWith({
     Board? board,
-    Box<Pockets?>? pockets,
+    Pockets? pockets,
     Side? turn,
     Castles? castles,
-    Box<Square?>? epSquare,
+    Square? epSquare,
+    int? halfmoves,
+    int? fullmoves,
+  });
+}
+
+class _Horde extends Horde {
+  const _Horde({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  }) : super._();
+
+  @override
+  Horde copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
   }) {
     return Horde(
       board: board ?? this.board,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
       turn: turn ?? this.turn,
-      castles: Castles.empty,
+      castles: castles ?? this.castles,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
       halfmoves: halfmoves ?? this.halfmoves,
       fullmoves: fullmoves ?? this.fullmoves,
-      epSquare: epSquare != null ? epSquare.value : this.epSquare,
     );
   }
 }
@@ -2271,259 +2555,6 @@ class Outcome {
       return '1/2-1/2';
     }
   }
-}
-
-@immutable
-class Castles {
-  /// SquareSet of rooks that have not moved yet.
-  final SquareSet unmovedRooks;
-
-  final Square? _whiteRookQueenSide;
-  final Square? _whiteRookKingSide;
-  final Square? _blackRookQueenSide;
-  final Square? _blackRookKingSide;
-  final SquareSet _whitePathQueenSide;
-  final SquareSet _whitePathKingSide;
-  final SquareSet _blackPathQueenSide;
-  final SquareSet _blackPathKingSide;
-
-  const Castles({
-    required this.unmovedRooks,
-    required Square? whiteRookQueenSide,
-    required Square? whiteRookKingSide,
-    required Square? blackRookQueenSide,
-    required Square? blackRookKingSide,
-    required SquareSet whitePathQueenSide,
-    required SquareSet whitePathKingSide,
-    required SquareSet blackPathQueenSide,
-    required SquareSet blackPathKingSide,
-  })  : _whiteRookQueenSide = whiteRookQueenSide,
-        _whiteRookKingSide = whiteRookKingSide,
-        _blackRookQueenSide = blackRookQueenSide,
-        _blackRookKingSide = blackRookKingSide,
-        _whitePathQueenSide = whitePathQueenSide,
-        _whitePathKingSide = whitePathKingSide,
-        _blackPathQueenSide = blackPathQueenSide,
-        _blackPathKingSide = blackPathKingSide;
-
-  static const standard = Castles(
-    unmovedRooks: SquareSet.corners,
-    whiteRookQueenSide: Square.a1,
-    whiteRookKingSide: Square.h1,
-    blackRookQueenSide: Square.a8,
-    blackRookKingSide: Square.h8,
-    whitePathQueenSide: SquareSet(0x000000000000000e),
-    whitePathKingSide: SquareSet(0x0000000000000060),
-    blackPathQueenSide: SquareSet(0x0e00000000000000),
-    blackPathKingSide: SquareSet(0x6000000000000000),
-  );
-
-  static const empty = Castles(
-    unmovedRooks: SquareSet.empty,
-    whiteRookQueenSide: null,
-    whiteRookKingSide: null,
-    blackRookQueenSide: null,
-    blackRookKingSide: null,
-    whitePathQueenSide: SquareSet.empty,
-    whitePathKingSide: SquareSet.empty,
-    blackPathQueenSide: SquareSet.empty,
-    blackPathKingSide: SquareSet.empty,
-  );
-
-  static const horde = Castles(
-    unmovedRooks: SquareSet(0x8100000000000000),
-    whiteRookKingSide: null,
-    whiteRookQueenSide: null,
-    blackRookKingSide: Square.h8,
-    blackRookQueenSide: Square.a8,
-    whitePathKingSide: SquareSet.empty,
-    whitePathQueenSide: SquareSet.empty,
-    blackPathQueenSide: SquareSet(0x0e00000000000000),
-    blackPathKingSide: SquareSet(0x6000000000000000),
-  );
-
-  factory Castles.fromSetup(Setup setup) {
-    Castles castles = Castles.empty;
-    final rooks = setup.unmovedRooks & setup.board.rooks;
-    for (final side in Side.values) {
-      final backrank = SquareSet.backrankOf(side);
-      final king = setup.board.kingOf(side);
-      if (king == null || !backrank.has(king)) continue;
-      final backrankRooks = rooks & setup.board.bySide(side) & backrank;
-      if (backrankRooks.first != null && backrankRooks.first! < king) {
-        castles =
-            castles._add(side, CastlingSide.queen, king, backrankRooks.first!);
-      }
-      if (backrankRooks.last != null && king < backrankRooks.last!) {
-        castles =
-            castles._add(side, CastlingSide.king, king, backrankRooks.last!);
-      }
-    }
-    return castles;
-  }
-
-  /// Gets rooks positions by side and castling side.
-  BySide<ByCastlingSide<Square?>> get rooksPositions {
-    return BySide({
-      Side.white: ByCastlingSide({
-        CastlingSide.queen: _whiteRookQueenSide,
-        CastlingSide.king: _whiteRookKingSide,
-      }),
-      Side.black: ByCastlingSide({
-        CastlingSide.queen: _blackRookQueenSide,
-        CastlingSide.king: _blackRookKingSide,
-      }),
-    });
-  }
-
-  /// Gets rooks paths by side and castling side.
-  BySide<ByCastlingSide<SquareSet>> get paths {
-    return BySide({
-      Side.white: ByCastlingSide({
-        CastlingSide.queen: _whitePathQueenSide,
-        CastlingSide.king: _whitePathKingSide,
-      }),
-      Side.black: ByCastlingSide({
-        CastlingSide.queen: _blackPathQueenSide,
-        CastlingSide.king: _blackPathKingSide,
-      }),
-    });
-  }
-
-  /// Gets the rook [Square] by side and castling side.
-  Square? rookOf(Side side, CastlingSide cs) => cs == CastlingSide.queen
-      ? side == Side.white
-          ? _whiteRookQueenSide
-          : _blackRookQueenSide
-      : side == Side.white
-          ? _whiteRookKingSide
-          : _blackRookKingSide;
-
-  /// Gets the squares that need to be empty so that castling is possible
-  /// on the given side.
-  ///
-  /// We're assuming the player still has the required castling rigths.
-  SquareSet pathOf(Side side, CastlingSide cs) => cs == CastlingSide.queen
-      ? side == Side.white
-          ? _whitePathQueenSide
-          : _blackPathQueenSide
-      : side == Side.white
-          ? _whitePathKingSide
-          : _blackPathKingSide;
-
-  Castles discardRookAt(Square square) {
-    return _copyWith(
-      unmovedRooks: unmovedRooks.withoutSquare(square),
-      whiteRookQueenSide:
-          _whiteRookQueenSide == square ? const Box(null) : null,
-      whiteRookKingSide: _whiteRookKingSide == square ? const Box(null) : null,
-      blackRookQueenSide:
-          _blackRookQueenSide == square ? const Box(null) : null,
-      blackRookKingSide: _blackRookKingSide == square ? const Box(null) : null,
-    );
-  }
-
-  Castles discardSide(Side side) {
-    return _copyWith(
-      unmovedRooks: unmovedRooks.diff(SquareSet.backrankOf(side)),
-      whiteRookQueenSide: side == Side.white ? const Box(null) : null,
-      whiteRookKingSide: side == Side.white ? const Box(null) : null,
-      blackRookQueenSide: side == Side.black ? const Box(null) : null,
-      blackRookKingSide: side == Side.black ? const Box(null) : null,
-    );
-  }
-
-  Castles _add(Side side, CastlingSide cs, Square king, Square rook) {
-    final kingTo = _kingCastlesTo(side, cs);
-    final rookTo = _rookCastlesTo(side, cs);
-    final path = between(rook, rookTo)
-        .withSquare(rookTo)
-        .union(between(king, kingTo).withSquare(kingTo))
-        .withoutSquare(king)
-        .withoutSquare(rook);
-    return _copyWith(
-      unmovedRooks: unmovedRooks.withSquare(rook),
-      whiteRookQueenSide:
-          side == Side.white && cs == CastlingSide.queen ? Box(rook) : null,
-      whiteRookKingSide:
-          side == Side.white && cs == CastlingSide.king ? Box(rook) : null,
-      blackRookQueenSide:
-          side == Side.black && cs == CastlingSide.queen ? Box(rook) : null,
-      blackRookKingSide:
-          side == Side.black && cs == CastlingSide.king ? Box(rook) : null,
-      whitePathQueenSide:
-          side == Side.white && cs == CastlingSide.queen ? path : null,
-      whitePathKingSide:
-          side == Side.white && cs == CastlingSide.king ? path : null,
-      blackPathQueenSide:
-          side == Side.black && cs == CastlingSide.queen ? path : null,
-      blackPathKingSide:
-          side == Side.black && cs == CastlingSide.king ? path : null,
-    );
-  }
-
-  Castles _copyWith({
-    SquareSet? unmovedRooks,
-    Box<Square?>? whiteRookQueenSide,
-    Box<Square?>? whiteRookKingSide,
-    Box<Square?>? blackRookQueenSide,
-    Box<Square?>? blackRookKingSide,
-    SquareSet? whitePathQueenSide,
-    SquareSet? whitePathKingSide,
-    SquareSet? blackPathQueenSide,
-    SquareSet? blackPathKingSide,
-  }) {
-    return Castles(
-      unmovedRooks: unmovedRooks ?? this.unmovedRooks,
-      whiteRookQueenSide: whiteRookQueenSide != null
-          ? whiteRookQueenSide.value
-          : _whiteRookQueenSide,
-      whiteRookKingSide: whiteRookKingSide != null
-          ? whiteRookKingSide.value
-          : _whiteRookKingSide,
-      blackRookQueenSide: blackRookQueenSide != null
-          ? blackRookQueenSide.value
-          : _blackRookQueenSide,
-      blackRookKingSide: blackRookKingSide != null
-          ? blackRookKingSide.value
-          : _blackRookKingSide,
-      whitePathQueenSide: whitePathQueenSide ?? _whitePathQueenSide,
-      whitePathKingSide: whitePathKingSide ?? _whitePathKingSide,
-      blackPathQueenSide: blackPathQueenSide ?? _blackPathQueenSide,
-      blackPathKingSide: blackPathKingSide ?? _blackPathKingSide,
-    );
-  }
-
-  @override
-  String toString() {
-    return 'Castles(unmovedRooks: ${unmovedRooks.toHexString()})';
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Castles &&
-          other.unmovedRooks == unmovedRooks &&
-          other._whiteRookQueenSide == _whiteRookQueenSide &&
-          other._whiteRookKingSide == _whiteRookKingSide &&
-          other._blackRookQueenSide == _blackRookQueenSide &&
-          other._blackRookKingSide == _blackRookKingSide &&
-          other._whitePathQueenSide == _whitePathQueenSide &&
-          other._whitePathKingSide == _whitePathKingSide &&
-          other._blackPathQueenSide == _blackPathQueenSide &&
-          other._blackPathKingSide == _blackPathKingSide;
-
-  @override
-  int get hashCode => Object.hash(
-      unmovedRooks,
-      _whiteRookQueenSide,
-      _whiteRookKingSide,
-      _blackRookQueenSide,
-      _blackRookKingSide,
-      _whitePathQueenSide,
-      _whitePathKingSide,
-      _blackPathQueenSide,
-      _blackPathKingSide);
 }
 
 @immutable
@@ -2625,3 +2656,6 @@ SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
     return pseudo;
   }
 }
+
+/// Unique object to use as a sentinel value in copyWith methods.
+const _uniqueObjectInstance = Object();
