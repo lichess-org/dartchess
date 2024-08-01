@@ -1,3 +1,9 @@
+## 0.8.0
+
+### Breaking changes:
+- `Square` is now an extension type.
+- Introduce `File` and `Rank` types.
+
 ## 0.7.1
 
 - Add Piece.kind, Role.letter and Role.uppercaseLetter getters.
