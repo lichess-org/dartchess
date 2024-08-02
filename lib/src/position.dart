@@ -634,7 +634,11 @@ abstract class Position<T extends Position<T>> {
     }
   }
 
-  /// Returns the normalized form of a [NormalMove] to avoid castling inconsistencies.
+  /// Normalize a [NormalMove] to avoid castling inconsistencies.
+  ///
+  /// The normalized form of a castling move is the king-to-rook move.
+  ///
+  /// This method does not check if the move is legal.
   Move normalizeMove(NormalMove move) {
     final side = _getCastlingSide(move);
     if (side == null) return move;
@@ -963,14 +967,14 @@ abstract class Position<T extends Position<T>> {
 
   /// Detects if a move is a castling move.
   ///
-  /// Returns the [CastlingSide] or `null` if the move is a drop move.
+  /// Returns the [CastlingSide] or `null` if the move is not a castling move.
   CastlingSide? _getCastlingSide(Move move) {
     if (move case NormalMove(from: final from, to: final to)) {
+      if (!board.kings.has(from)) return null;
+      if (turn == Side.white && move.to > Square.h1) return null;
+      if (turn == Side.black && move.to < Square.a8) return null;
       final delta = to - from;
       if (delta.abs() != 2 && !board.bySide(turn).has(to)) {
-        return null;
-      }
-      if (!board.kings.has(from)) {
         return null;
       }
       return delta > 0 ? CastlingSide.king : CastlingSide.queen;

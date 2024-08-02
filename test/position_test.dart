@@ -42,6 +42,24 @@ void main() {
               .ply,
           3);
     });
+
+    test('normalizeMove', () {
+      final pos = Chess.fromSetup(Setup.parseFen(
+          'r3k2r/pppbbppp/2n2n2/3pp2Q/3PP2q/2N2N2/PPPBBPPP/R3K2R w KQkq - 10 8'));
+      final tests = [
+        (NormalMove.fromUci('a2a4'), 'a2a4'),
+        (NormalMove.fromUci('e1g1'), 'e1h1'),
+        (NormalMove.fromUci('e1c1'), 'e1a1'),
+        (NormalMove.fromUci('e1h1'), 'e1h1'),
+        // illegal move
+        (NormalMove.fromUci('e1a2'), 'e1a2'),
+      ];
+
+      for (final test in tests) {
+        final (move, uci) = test;
+        expect(pos.normalizeMove(move).uci, uci);
+      }
+    });
   });
 
   group('san', () {
@@ -459,6 +477,33 @@ void main() {
       expect(
           promPos.isLegal(const NormalMove(
               from: Square.f7, to: Square.f8, promotion: Role.queen)),
+          true);
+    });
+
+    test('isLegal alternate castling moves', () {
+      final pos = Chess.fromSetup(Setup.parseFen(
+          'r3k2r/pppbbppp/2n2n2/3pp2Q/3PP2q/2N2N2/PPPBBPPP/R3K2R w KQkq - 10 8'));
+      expect(
+          pos.isLegal(const NormalMove(from: Square.e1, to: Square.g1)), true);
+      expect(
+          pos.isLegal(const NormalMove(from: Square.e1, to: Square.c1)), true);
+      expect(
+          pos.isLegal(const NormalMove(from: Square.e1, to: Square.h1)), true);
+      expect(
+          pos.isLegal(const NormalMove(from: Square.e1, to: Square.a1)), true);
+      // illegal move
+      expect(
+          pos.isLegal(const NormalMove(from: Square.e1, to: Square.a2)), false);
+
+      final blackPos = Chess.fromSetup(Setup.parseFen(
+          'r3k2r/pppbbppp/2n2n2/3pp2Q/3PP2q/2N2N2/PPPBBPPP/R4RK1 b kq - 11 8'));
+      expect(blackPos.isLegal(const NormalMove(from: Square.e8, to: Square.g8)),
+          true);
+      expect(blackPos.isLegal(const NormalMove(from: Square.e8, to: Square.c8)),
+          true);
+      expect(blackPos.isLegal(const NormalMove(from: Square.e8, to: Square.h8)),
+          true);
+      expect(blackPos.isLegal(const NormalMove(from: Square.e8, to: Square.a8)),
           true);
     });
 
