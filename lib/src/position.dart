@@ -7,6 +7,7 @@ import 'models.dart';
 import 'board.dart';
 import 'setup.dart';
 import 'square_set.dart';
+import 'utils.dart';
 
 /// A base class for playable chess or chess variant positions.
 ///
@@ -181,6 +182,14 @@ abstract class Position<T extends Position<T>> {
   }
 
   /// Gets all the legal moves of this position.
+  ///
+  /// Returns a [SquareSet] of all the legal moves for each [Square].
+  ///
+  /// In order to support Chess960, the castling move format is encoded as the
+  /// king-to-rook move only.
+  ///
+  /// Use the [makeLegalMoves] helper to get all the legal moves including alternative
+  /// castling moves.
   IMap<Square, SquareSet> get legalMoves {
     final context = _makeContext();
     if (context.isVariantEnd) return IMap(const {});
@@ -193,7 +202,7 @@ abstract class Position<T extends Position<T>> {
   /// Gets all the legal drops of this position.
   SquareSet get legalDrops => SquareSet.empty;
 
-  /// SquareSet of pieces giving check.
+  /// Square set of pieces giving check.
   SquareSet get checkers {
     final king = board.kingOf(turn);
     return king != null ? kingAttackers(king, turn.opposite) : SquareSet.empty;
