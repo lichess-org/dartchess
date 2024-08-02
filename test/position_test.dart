@@ -223,6 +223,29 @@ void main() {
       expect(position.fen,
           'r1k5/1b6/1qnR4/5pPp/5P1P/1PQ1P3/P1P3B1/1K4R1 b - - 0 31');
     });
+
+    test('san disambiguation', () {
+      final tests = [
+        ('N3k2N/8/8/3N4/N4N1N/2R5/1R6/4K3 w - -', 'e1f1', 'Kf1'),
+        ('N3k2N/8/8/3N4/N4N1N/2R5/1R6/4K3 w - -', 'c3c2', 'Rcc2'),
+        ('N3k2N/8/8/3N4/N4N1N/2R5/1R6/4K3 w - -', 'b2c2', 'Rbc2'),
+        ('N3k2N/8/8/3N4/N4N1N/2R5/1R6/4K3 w - -', 'a4b6', 'N4b6'),
+        ('N3k2N/8/8/3N4/N4N1N/2R5/1R6/4K3 w - -', 'h8g6', 'N8g6'),
+        ('N3k2N/8/8/3N4/N4N1N/2R5/1R6/4K3 w - -', 'h4g6', 'Nh4g6'),
+        ('8/2KN1p2/5p2/3N1B1k/5PNp/7P/7P/8 w - -', 'd5f6', 'N5xf6#'),
+        ('8/8/8/R2nkn2/8/8/2K5/8 b - -', 'f5e3', 'Ne3+'),
+        ('7k/1p2Npbp/8/2P5/1P1r4/3b2QP/3q1pPK/2RB4 b - -', 'f2f1q', 'f1=Q'),
+        ('7k/1p2Npbp/8/2P5/1P1r4/3b2QP/3q1pPK/2RB4 b - -', 'f2f1n', 'f1=N+'),
+      ];
+
+      for (final test in tests) {
+        final (fen, uci, san) = test;
+        final pos = Chess.fromSetup(Setup.parseFen(fen));
+        final move = NormalMove.fromUci(uci);
+        final (_, newSan) = pos.makeSan(move);
+        expect(newSan, san);
+      }
+    });
   });
 
   group('Chess', () {

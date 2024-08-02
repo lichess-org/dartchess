@@ -39,6 +39,7 @@ enum Role {
   king,
   queen;
 
+  /// Gets the role from a character.
   static Role? fromChar(String ch) {
     switch (ch.toLowerCase()) {
       case 'p':
@@ -234,6 +235,18 @@ extension type const Square._(int value) implements int {
     return Square(file | (rank << 3));
   }
 
+  /// All squares on the chessboard, from a1 to h8.
+  static const values = [
+    a1, b1, c1, d1, e1, f1, g1, h1,
+    a2, b2, c2, d2, e2, f2, g2, h2,
+    a3, b3, c3, d3, e3, f3, g3, h3,
+    a4, b4, c4, d4, e4, f4, g4, h4,
+    a5, b5, c5, d5, e5, f5, g5, h5,
+    a6, b6, c6, d6, e6, f6, g6, h6,
+    a7, b7, c7, d7, e7, f7, g7, h7,
+    a8, b8, c8, d8, e8, f8, g8, h8
+  ];
+
   /// The file of the square on the board.
   File get file => File(value & 0x7);
 
@@ -322,74 +335,6 @@ extension type const Square._(int value) implements int {
   static const f8 = Square(61);
   static const g8 = Square(62);
   static const h8 = Square(63);
-
-  /// All squares on the chessboard, from a1 to h8.
-  static const values = [
-    a1,
-    b1,
-    c1,
-    d1,
-    e1,
-    f1,
-    g1,
-    h1,
-    a2,
-    b2,
-    c2,
-    d2,
-    e2,
-    f2,
-    g2,
-    h2,
-    a3,
-    b3,
-    c3,
-    d3,
-    e3,
-    f3,
-    g3,
-    h3,
-    a4,
-    b4,
-    c4,
-    d4,
-    e4,
-    f4,
-    g4,
-    h4,
-    a5,
-    b5,
-    c5,
-    d5,
-    e5,
-    f5,
-    g5,
-    h5,
-    a6,
-    b6,
-    c6,
-    d6,
-    e6,
-    f6,
-    g6,
-    h6,
-    a7,
-    b7,
-    c7,
-    d7,
-    e7,
-    f7,
-    g7,
-    h7,
-    a8,
-    b8,
-    c8,
-    d8,
-    e8,
-    f8,
-    g8,
-    h8
-  ];
 }
 
 typedef BySide<T> = IMap<Side, T>;
