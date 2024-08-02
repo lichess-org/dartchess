@@ -82,6 +82,7 @@ abstract class Castles {
     blackPathKingSide: SquareSet(0x6000000000000000),
   );
 
+  /// Creates a [Castles] instance from a [Setup].
   factory Castles.fromSetup(Setup setup) {
     Castles castles = Castles.empty;
     final rooks = setup.unmovedRooks & setup.board.rooks;
@@ -131,26 +132,33 @@ abstract class Castles {
   }
 
   /// Gets the rook [Square] by side and castling side.
-  Square? rookOf(Side side, CastlingSide cs) => cs == CastlingSide.queen
-      ? side == Side.white
-          ? _whiteRookQueenSide
-          : _blackRookQueenSide
-      : side == Side.white
-          ? _whiteRookKingSide
-          : _blackRookKingSide;
+  Square? rookOf(Side side, CastlingSide cs) => switch (side) {
+        Side.white => switch (cs) {
+            CastlingSide.queen => _whiteRookQueenSide,
+            CastlingSide.king => _whiteRookKingSide,
+          },
+        Side.black => switch (cs) {
+            CastlingSide.queen => _blackRookQueenSide,
+            CastlingSide.king => _blackRookKingSide,
+          },
+      };
 
   /// Gets the squares that need to be empty so that castling is possible
   /// on the given side.
   ///
   /// We're assuming the player still has the required castling rigths.
-  SquareSet pathOf(Side side, CastlingSide cs) => cs == CastlingSide.queen
-      ? side == Side.white
-          ? _whitePathQueenSide
-          : _blackPathQueenSide
-      : side == Side.white
-          ? _whitePathKingSide
-          : _blackPathKingSide;
+  SquareSet pathOf(Side side, CastlingSide cs) => switch (side) {
+        Side.white => switch (cs) {
+            CastlingSide.queen => _whitePathQueenSide,
+            CastlingSide.king => _whitePathKingSide,
+          },
+        Side.black => switch (cs) {
+            CastlingSide.queen => _blackPathQueenSide,
+            CastlingSide.king => _blackPathKingSide,
+          },
+      };
 
+  /// Returns a new [Castles] instance with the given rook discarded.
   Castles discardRookAt(Square square) {
     return copyWith(
       unmovedRooks: unmovedRooks.withoutSquare(square),
@@ -165,6 +173,7 @@ abstract class Castles {
     );
   }
 
+  /// Returns a new [Castles] instance with the given side discarded.
   Castles discardSide(Side side) {
     return copyWith(
       unmovedRooks: unmovedRooks.diff(SquareSet.backrankOf(side)),
@@ -176,8 +185,8 @@ abstract class Castles {
   }
 
   Castles _add(Side side, CastlingSide cs, Square king, Square rook) {
-    final kingTo = _kingCastlesTo(side, cs);
-    final rookTo = _rookCastlesTo(side, cs);
+    final kingTo = kingCastlesTo(side, cs);
+    final rookTo = rookCastlesTo(side, cs);
     final path = between(rook, rookTo)
         .withSquare(rookTo)
         .union(between(king, kingTo).withSquare(kingTo))
@@ -207,18 +216,6 @@ abstract class Castles {
           side == Side.black && cs == CastlingSide.king ? path : null,
     );
   }
-
-  Castles copyWith({
-    SquareSet? unmovedRooks,
-    Square? whiteRookQueenSide,
-    Square? whiteRookKingSide,
-    Square? blackRookQueenSide,
-    Square? blackRookKingSide,
-    SquareSet? whitePathQueenSide,
-    SquareSet? whitePathKingSide,
-    SquareSet? blackPathQueenSide,
-    SquareSet? blackPathKingSide,
-  });
 
   @override
   String toString() {
@@ -250,7 +247,43 @@ abstract class Castles {
       _whitePathKingSide,
       _blackPathQueenSide,
       _blackPathKingSide);
+
+  Castles copyWith({
+    SquareSet? unmovedRooks,
+    Square? whiteRookQueenSide,
+    Square? whiteRookKingSide,
+    Square? blackRookQueenSide,
+    Square? blackRookKingSide,
+    SquareSet? whitePathQueenSide,
+    SquareSet? whitePathKingSide,
+    SquareSet? blackPathQueenSide,
+    SquareSet? blackPathKingSide,
+  });
 }
+
+/// Returns the square the rook moves to when castling.
+Square rookCastlesTo(Side side, CastlingSide cs) => switch (side) {
+      Side.white => switch (cs) {
+          CastlingSide.queen => Square.d1,
+          CastlingSide.king => Square.f1,
+        },
+      Side.black => switch (cs) {
+          CastlingSide.queen => Square.d8,
+          CastlingSide.king => Square.f8,
+        },
+    };
+
+/// Returns the square the king moves to when castling.
+Square kingCastlesTo(Side side, CastlingSide cs) => switch (side) {
+      Side.white => switch (cs) {
+          CastlingSide.queen => Square.c1,
+          CastlingSide.king => Square.g1,
+        },
+      Side.black => switch (cs) {
+          CastlingSide.queen => Square.c8,
+          CastlingSide.king => Square.g8,
+        },
+    };
 
 class _Castles extends Castles {
   const _Castles({
@@ -297,22 +330,6 @@ class _Castles extends Castles {
       blackPathKingSide: blackPathKingSide ?? _blackPathKingSide,
     );
   }
-}
-
-Square _rookCastlesTo(Side side, CastlingSide cs) {
-  return side == Side.white
-      ? (cs == CastlingSide.queen ? Square.d1 : Square.f1)
-      : cs == CastlingSide.queen
-          ? Square.d8
-          : Square.f8;
-}
-
-Square _kingCastlesTo(Side side, CastlingSide cs) {
-  return side == Side.white
-      ? (cs == CastlingSide.queen ? Square.c1 : Square.g1)
-      : cs == CastlingSide.queen
-          ? Square.c8
-          : Square.g8;
 }
 
 /// Unique object to use as a sentinel value in copyWith methods.

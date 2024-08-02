@@ -93,6 +93,7 @@ class Board {
     kings: SquareSet(0x1000000000000000),
   );
 
+  /// Empty board.
   static const empty = Board(
     occupied: SquareSet.empty,
     promoted: SquareSet.empty,
@@ -140,7 +141,10 @@ class Board {
     return board;
   }
 
+  /// The square set of all rooks and queens.
   SquareSet get rooksAndQueens => rooks | queens;
+
+  /// The square set of all bishops and queens.
   SquareSet get bishopsAndQueens => bishops | queens;
 
   /// Board part of the Forsyth-Edwards-Notation.
@@ -264,7 +268,7 @@ class Board {
 
   /// Puts a [Piece] on a [Square] overriding the existing one, if any.
   Board setPieceAt(Square square, Piece piece) {
-    return removePieceAt(square)._copyWith(
+    return removePieceAt(square).copyWith(
       occupied: occupied.withSquare(square),
       promoted: piece.promoted ? promoted.withSquare(square) : null,
       white: piece.color == Side.white ? white.withSquare(square) : null,
@@ -282,7 +286,7 @@ class Board {
   Board removePieceAt(Square square) {
     final piece = pieceAt(square);
     return piece != null
-        ? _copyWith(
+        ? copyWith(
             occupied: occupied.withoutSquare(square),
             promoted: piece.promoted ? promoted.withoutSquare(square) : null,
             white:
@@ -304,11 +308,13 @@ class Board {
         : this;
   }
 
+  /// Returns a new board with a new [promoted] square set.
   Board withPromoted(SquareSet promoted) {
-    return _copyWith(promoted: promoted);
+    return copyWith(promoted: promoted);
   }
 
-  Board _copyWith({
+  /// Returns a copy of this board with some fields updated.
+  Board copyWith({
     SquareSet? occupied,
     SquareSet? promoted,
     SquareSet? white,

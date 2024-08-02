@@ -539,10 +539,10 @@ abstract class Position<T extends Position<T>> {
               final rook = board.pieceAt(rookFrom);
               newBoard = newBoard
                   .removePieceAt(rookFrom)
-                  .setPieceAt(_kingCastlesTo(turn, castlingSide), piece);
+                  .setPieceAt(kingCastlesTo(turn, castlingSide), piece);
               if (rook != null) {
                 newBoard = newBoard.setPieceAt(
-                    _rookCastlesTo(turn, castlingSide), rook);
+                    rookCastlesTo(turn, castlingSide), rook);
               }
             }
           }
@@ -918,7 +918,7 @@ abstract class Position<T extends Position<T>> {
       return SquareSet.empty;
     }
 
-    final kingTo = _kingCastlesTo(turn, side);
+    final kingTo = kingCastlesTo(turn, side);
     final kingPath = between(king, kingTo);
     final occ = board.occupied.withoutSquare(king);
     for (final sq in kingPath.squares) {
@@ -926,7 +926,7 @@ abstract class Position<T extends Position<T>> {
         return SquareSet.empty;
       }
     }
-    final rookTo = _rookCastlesTo(turn, side);
+    final rookTo = rookCastlesTo(turn, side);
     final after = board.occupied
         .toggleSquare(king)
         .toggleSquare(rook)
@@ -985,6 +985,9 @@ abstract class Position<T extends Position<T>> {
 /// A standard chess position.
 @immutable
 abstract class Chess extends Position<Chess> {
+  @override
+  Rule get rule => Rule.chess;
+
   /// Creates a new [Chess] position.
   const factory Chess({
     required Board board,
@@ -996,9 +999,6 @@ abstract class Chess extends Position<Chess> {
     required int fullmoves,
   }) = _Chess;
 
-  @override
-  Rule get rule => Rule.chess;
-
   const Chess._({
     required super.board,
     super.pockets,
@@ -1009,26 +1009,11 @@ abstract class Chess extends Position<Chess> {
     required super.fullmoves,
   });
 
-  static const initial = Chess(
-    board: Board.standard,
-    turn: Side.white,
-    castles: Castles.standard,
-    halfmoves: 0,
-    fullmoves: 1,
-  );
-
-  @override
-  bool get isVariantEnd => false;
-
-  @override
-  Outcome? get variantOutcome => null;
-
-  /// Set up a playable [Chess] position.
+  /// Sets up a playable [Chess] position.
   ///
   /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
-  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
-  /// requirement.
+  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that requirement.
   factory Chess.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     final pos = Chess(
       board: setup.board,
@@ -1043,6 +1028,21 @@ abstract class Chess extends Position<Chess> {
     return pos;
   }
 
+  /// The initial position of a standard chess game.
+  static const initial = Chess(
+    board: Board.standard,
+    turn: Side.white,
+    castles: Castles.standard,
+    halfmoves: 0,
+    fullmoves: 1,
+  );
+
+  @override
+  bool get isVariantEnd => false;
+
+  @override
+  Outcome? get variantOutcome => null;
+
   @override
   Chess copyWith({
     Board? board,
@@ -1055,48 +1055,13 @@ abstract class Chess extends Position<Chess> {
   });
 }
 
-class _Chess extends Chess {
-  const _Chess({
-    required super.board,
-    required super.turn,
-    required super.castles,
-    required super.halfmoves,
-    required super.fullmoves,
-    super.pockets,
-    super.epSquare,
-  }) : super._();
-
-  @override
-  Chess copyWith({
-    Board? board,
-    Object? pockets = _uniqueObjectInstance,
-    Side? turn,
-    Castles? castles,
-    Object? epSquare = _uniqueObjectInstance,
-    int? halfmoves,
-    int? fullmoves,
-  }) {
-    return Chess(
-      board: board ?? this.board,
-      pockets:
-          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
-      turn: turn ?? this.turn,
-      castles: castles ?? this.castles,
-      epSquare: epSquare == _uniqueObjectInstance
-          ? this.epSquare
-          : epSquare as Square?,
-      halfmoves: halfmoves ?? this.halfmoves,
-      fullmoves: fullmoves ?? this.fullmoves,
-    );
-  }
-}
-
 /// A variant of chess where you lose all your pieces or get stalemated to win.
 @immutable
 abstract class Antichess extends Position<Antichess> {
   @override
   Rule get rule => Rule.antichess;
 
+  /// Creates a new [Antichess] position.
   const factory Antichess({
     required Board board,
     Pockets? pockets,
@@ -1117,6 +1082,27 @@ abstract class Antichess extends Position<Antichess> {
     required super.fullmoves,
   });
 
+  /// Sets up a playable [Antichess] position.
+  ///
+  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
+  /// requirements.
+  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that
+  /// requirement.
+  factory Antichess.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+    final pos = Antichess(
+      board: setup.board,
+      pockets: setup.pockets,
+      turn: setup.turn,
+      castles: Castles.empty,
+      epSquare: _validEpSquare(setup),
+      halfmoves: setup.halfmoves,
+      fullmoves: setup.fullmoves,
+    );
+    pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+    return pos;
+  }
+
+  /// The initial position of an Antichess game.
   static const initial = Antichess(
     board: Board.standard,
     turn: Side.white,
@@ -1134,26 +1120,6 @@ abstract class Antichess extends Position<Antichess> {
       return Outcome(winner: turn);
     }
     return null;
-  }
-
-  /// Set up a playable [Antichess] position.
-  ///
-  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
-  /// requirements.
-  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
-  /// requirement.
-  factory Antichess.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-    final pos = Antichess(
-      board: setup.board,
-      pockets: setup.pockets,
-      turn: setup.turn,
-      castles: Castles.empty,
-      epSquare: _validEpSquare(setup),
-      halfmoves: setup.halfmoves,
-      fullmoves: setup.fullmoves,
-    );
-    pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
-    return pos;
   }
 
   @override
@@ -1226,42 +1192,6 @@ abstract class Antichess extends Position<Antichess> {
   }
 }
 
-class _Antichess extends Antichess {
-  const _Antichess({
-    required super.board,
-    super.pockets,
-    required super.turn,
-    required super.castles,
-    super.epSquare,
-    required super.halfmoves,
-    required super.fullmoves,
-  }) : super._();
-
-  @override
-  Antichess copyWith({
-    Board? board,
-    Object? pockets = _uniqueObjectInstance,
-    Side? turn,
-    Castles? castles,
-    Object? epSquare = _uniqueObjectInstance,
-    int? halfmoves,
-    int? fullmoves,
-  }) {
-    return Antichess(
-      board: board ?? this.board,
-      pockets:
-          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
-      turn: turn ?? this.turn,
-      castles: castles ?? this.castles,
-      epSquare: epSquare == _uniqueObjectInstance
-          ? this.epSquare
-          : epSquare as Square?,
-      halfmoves: halfmoves ?? this.halfmoves,
-      fullmoves: fullmoves ?? this.fullmoves,
-    );
-  }
-}
-
 /// A variant of chess where captures cause an explosion to the surrounding pieces.
 @immutable
 abstract class Atomic extends Position<Atomic> {
@@ -1288,6 +1218,27 @@ abstract class Atomic extends Position<Atomic> {
     required super.fullmoves,
   });
 
+  /// Sets up a playable [Atomic] position.
+  ///
+  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
+  /// requirements.
+  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that
+  /// requirement.
+  factory Atomic.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+    final pos = Atomic(
+      board: setup.board,
+      pockets: setup.pockets,
+      turn: setup.turn,
+      castles: Castles.fromSetup(setup),
+      epSquare: _validEpSquare(setup),
+      halfmoves: setup.halfmoves,
+      fullmoves: setup.fullmoves,
+    );
+    pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+    return pos;
+  }
+
+  /// The initial position of an Atomic game.
   static const initial = Atomic(
     board: Board.standard,
     turn: Side.white,
@@ -1307,26 +1258,6 @@ abstract class Atomic extends Position<Atomic> {
       }
     }
     return null;
-  }
-
-  /// Set up a playable [Atomic] position.
-  ///
-  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
-  /// requirements.
-  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
-  /// requirement.
-  factory Atomic.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-    final pos = Atomic(
-      board: setup.board,
-      pockets: setup.pockets,
-      turn: setup.turn,
-      castles: Castles.fromSetup(setup),
-      epSquare: _validEpSquare(setup),
-      halfmoves: setup.halfmoves,
-      fullmoves: setup.fullmoves,
-    );
-    pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
-    return pos;
   }
 
   /// Attacks that a king on `square` would have to deal with.
@@ -1491,48 +1422,13 @@ abstract class Atomic extends Position<Atomic> {
   });
 }
 
-class _Atomic extends Atomic {
-  const _Atomic({
-    required super.board,
-    super.pockets,
-    required super.turn,
-    required super.castles,
-    super.epSquare,
-    required super.halfmoves,
-    required super.fullmoves,
-  }) : super._();
-
-  @override
-  Atomic copyWith({
-    Board? board,
-    Object? pockets = _uniqueObjectInstance,
-    Side? turn,
-    Castles? castles,
-    Object? epSquare = _uniqueObjectInstance,
-    int? halfmoves,
-    int? fullmoves,
-  }) {
-    return Atomic(
-      board: board ?? this.board,
-      pockets:
-          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
-      turn: turn ?? this.turn,
-      castles: castles ?? this.castles,
-      epSquare: epSquare == _uniqueObjectInstance
-          ? this.epSquare
-          : epSquare as Square?,
-      halfmoves: halfmoves ?? this.halfmoves,
-      fullmoves: fullmoves ?? this.fullmoves,
-    );
-  }
-}
-
 /// A variant where captured pieces can be dropped back on the board instead of moving a piece.
 @immutable
 abstract class Crazyhouse extends Position<Crazyhouse> {
   @override
   Rule get rule => Rule.crazyhouse;
 
+  /// Creates a new [Crazyhouse] position.
   const factory Crazyhouse({
     required Board board,
     Pockets? pockets,
@@ -1553,26 +1449,11 @@ abstract class Crazyhouse extends Position<Crazyhouse> {
     required super.fullmoves,
   });
 
-  static const initial = Crazyhouse(
-    board: Board.standard,
-    pockets: Pockets.empty,
-    turn: Side.white,
-    castles: Castles.standard,
-    halfmoves: 0,
-    fullmoves: 1,
-  );
-
-  @override
-  bool get isVariantEnd => false;
-
-  @override
-  Outcome? get variantOutcome => null;
-
-  /// Set up a playable [Crazyhouse] position.
+  /// Sets up a playable [Crazyhouse] position.
   ///
   /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
-  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
+  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that
   /// requirement.
   factory Crazyhouse.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     final pos = Crazyhouse(
@@ -1590,6 +1471,22 @@ abstract class Crazyhouse extends Position<Crazyhouse> {
     pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
     return pos;
   }
+
+  /// The initial position of a Crazyhouse game.
+  static const initial = Crazyhouse(
+    board: Board.standard,
+    pockets: Pockets.empty,
+    turn: Side.white,
+    castles: Castles.standard,
+    halfmoves: 0,
+    fullmoves: 1,
+  );
+
+  @override
+  bool get isVariantEnd => false;
+
+  @override
+  Outcome? get variantOutcome => null;
 
   @override
   void validate({bool? ignoreImpossibleCheck}) {
@@ -1655,42 +1552,6 @@ abstract class Crazyhouse extends Position<Crazyhouse> {
   });
 }
 
-class _Crazyhouse extends Crazyhouse {
-  const _Crazyhouse({
-    required super.board,
-    super.pockets,
-    required super.turn,
-    required super.castles,
-    super.epSquare,
-    required super.halfmoves,
-    required super.fullmoves,
-  }) : super._();
-
-  @override
-  Crazyhouse copyWith({
-    Board? board,
-    Object? pockets = _uniqueObjectInstance,
-    Side? turn,
-    Castles? castles,
-    Object? epSquare = _uniqueObjectInstance,
-    int? halfmoves,
-    int? fullmoves,
-  }) {
-    return Crazyhouse(
-      board: board ?? this.board,
-      pockets:
-          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
-      turn: turn ?? this.turn,
-      castles: castles ?? this.castles,
-      epSquare: epSquare == _uniqueObjectInstance
-          ? this.epSquare
-          : epSquare as Square?,
-      halfmoves: halfmoves ?? this.halfmoves,
-      fullmoves: fullmoves ?? this.fullmoves,
-    );
-  }
-}
-
 /// A variant similar to standard chess, where you win by putting your king on the center
 /// of the board.
 @immutable
@@ -1698,6 +1559,7 @@ abstract class KingOfTheHill extends Position<KingOfTheHill> {
   @override
   Rule get rule => Rule.kingofthehill;
 
+  /// Creates a new [KingOfTheHill] position.
   const factory KingOfTheHill({
     required Board board,
     Pockets? pockets,
@@ -1718,6 +1580,27 @@ abstract class KingOfTheHill extends Position<KingOfTheHill> {
     required super.fullmoves,
   });
 
+  /// Sets up a playable [KingOfTheHill] position.
+  ///
+  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
+  /// requirements.
+  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that
+  /// requirement.
+  factory KingOfTheHill.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+    final pos = KingOfTheHill(
+      board: setup.board,
+      pockets: setup.pockets,
+      turn: setup.turn,
+      castles: Castles.fromSetup(setup),
+      epSquare: _validEpSquare(setup),
+      halfmoves: setup.halfmoves,
+      fullmoves: setup.fullmoves,
+    );
+    pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+    return pos;
+  }
+
+  /// The initial position of a KingOfTheHill game.
   static const initial = KingOfTheHill(
     board: Board.standard,
     turn: Side.white,
@@ -1739,26 +1622,6 @@ abstract class KingOfTheHill extends Position<KingOfTheHill> {
     return null;
   }
 
-  /// Set up a playable [KingOfTheHill] position.
-  ///
-  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
-  /// requirements.
-  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
-  /// requirement.
-  factory KingOfTheHill.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-    final pos = KingOfTheHill(
-      board: setup.board,
-      pockets: setup.pockets,
-      turn: setup.turn,
-      castles: Castles.fromSetup(setup),
-      epSquare: _validEpSquare(setup),
-      halfmoves: setup.halfmoves,
-      fullmoves: setup.fullmoves,
-    );
-    pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
-    return pos;
-  }
-
   @override
   bool hasInsufficientMaterial(Side side) => false;
 
@@ -1774,42 +1637,6 @@ abstract class KingOfTheHill extends Position<KingOfTheHill> {
   });
 }
 
-class _KingOfTheHill extends KingOfTheHill {
-  const _KingOfTheHill({
-    required super.board,
-    super.pockets,
-    required super.turn,
-    required super.castles,
-    super.epSquare,
-    required super.halfmoves,
-    required super.fullmoves,
-  }) : super._();
-
-  @override
-  KingOfTheHill copyWith({
-    Board? board,
-    Object? pockets = _uniqueObjectInstance,
-    Side? turn,
-    Castles? castles,
-    Object? epSquare = _uniqueObjectInstance,
-    int? halfmoves,
-    int? fullmoves,
-  }) {
-    return KingOfTheHill(
-      board: board ?? this.board,
-      pockets:
-          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
-      turn: turn ?? this.turn,
-      castles: castles ?? this.castles,
-      epSquare: epSquare == _uniqueObjectInstance
-          ? this.epSquare
-          : epSquare as Square?,
-      halfmoves: halfmoves ?? this.halfmoves,
-      fullmoves: fullmoves ?? this.fullmoves,
-    );
-  }
-}
-
 /// A variant similar to standard chess, where you can win if you put your opponent king
 /// into the third check.
 @immutable
@@ -1817,6 +1644,7 @@ abstract class ThreeCheck extends Position<ThreeCheck> {
   @override
   Rule get rule => Rule.threecheck;
 
+  /// Creates a new [ThreeCheck] position.
   const factory ThreeCheck({
     required Board board,
     Pockets? pockets,
@@ -1839,9 +1667,34 @@ abstract class ThreeCheck extends Position<ThreeCheck> {
     required this.remainingChecks,
   });
 
+  /// Set up a playable [ThreeCheck] position.
+  ///
+  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
+  /// requirements.
+  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
+  /// requirement.
+  factory ThreeCheck.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+    if (setup.remainingChecks == null) {
+      throw PositionSetupException.variant;
+    } else {
+      final pos = ThreeCheck(
+        board: setup.board,
+        turn: setup.turn,
+        castles: Castles.fromSetup(setup),
+        epSquare: _validEpSquare(setup),
+        halfmoves: setup.halfmoves,
+        fullmoves: setup.fullmoves,
+        remainingChecks: setup.remainingChecks!,
+      );
+      pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+      return pos;
+    }
+  }
+
   /// Number of remainingChecks for white (`item1`) and black (`item2`).
   final (int, int) remainingChecks;
 
+  /// The initial position of a ThreeCheck game.
   static const initial = ThreeCheck(
     board: Board.standard,
     turn: Side.white,
@@ -1866,30 +1719,6 @@ abstract class ThreeCheck extends Position<ThreeCheck> {
       return Outcome.blackWins;
     }
     return null;
-  }
-
-  /// Set up a playable [ThreeCheck] position.
-  ///
-  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
-  /// requirements.
-  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
-  /// requirement.
-  factory ThreeCheck.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-    if (setup.remainingChecks == null) {
-      throw PositionSetupException.variant;
-    } else {
-      final pos = ThreeCheck(
-        board: setup.board,
-        turn: setup.turn,
-        castles: Castles.fromSetup(setup),
-        epSquare: _validEpSquare(setup),
-        halfmoves: setup.halfmoves,
-        fullmoves: setup.fullmoves,
-        remainingChecks: setup.remainingChecks!,
-      );
-      pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
-      return pos;
-    }
   }
 
   @override
@@ -1936,51 +1765,13 @@ abstract class ThreeCheck extends Position<ThreeCheck> {
   });
 }
 
-class _ThreeCheck extends ThreeCheck {
-  const _ThreeCheck({
-    required super.board,
-    super.pockets,
-    required super.turn,
-    required super.castles,
-    super.epSquare,
-    required super.halfmoves,
-    required super.fullmoves,
-    required super.remainingChecks,
-  }) : super._();
-
-  @override
-  ThreeCheck copyWith({
-    Board? board,
-    Object? pockets = _uniqueObjectInstance,
-    Side? turn,
-    Castles? castles,
-    Object? epSquare = _uniqueObjectInstance,
-    int? halfmoves,
-    int? fullmoves,
-    (int, int)? remainingChecks,
-  }) {
-    return ThreeCheck(
-      board: board ?? this.board,
-      pockets:
-          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
-      turn: turn ?? this.turn,
-      castles: castles ?? this.castles,
-      epSquare: epSquare == _uniqueObjectInstance
-          ? this.epSquare
-          : epSquare as Square?,
-      halfmoves: halfmoves ?? this.halfmoves,
-      fullmoves: fullmoves ?? this.fullmoves,
-      remainingChecks: remainingChecks ?? this.remainingChecks,
-    );
-  }
-}
-
-/// A variant where the goal is to put your king on the eigth rank
+/// A variant where the goal is to put your king on the eigth rank.
 @immutable
 abstract class RacingKings extends Position<RacingKings> {
   @override
   Rule get rule => Rule.racingKings;
 
+  /// Creates a new [RacingKings] position.
   const factory RacingKings({
     required Board board,
     Pockets? pockets,
@@ -2001,6 +1792,25 @@ abstract class RacingKings extends Position<RacingKings> {
     required super.fullmoves,
   });
 
+  /// Sets up a playable [RacingKings] position.
+  ///
+  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
+  /// requirements.
+  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that
+  /// requirement.
+  factory RacingKings.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
+    final pos = RacingKings(
+      board: setup.board,
+      turn: setup.turn,
+      castles: Castles.empty,
+      halfmoves: setup.halfmoves,
+      fullmoves: setup.fullmoves,
+    );
+    pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
+    return pos;
+  }
+
+  /// The initial position of a RacingKings game.
   static const initial = RacingKings(
     board: Board.racingKings,
     turn: Side.white,
@@ -2071,24 +1881,6 @@ abstract class RacingKings extends Position<RacingKings> {
     return Outcome.draw;
   }
 
-  /// Set up a playable [RacingKings] position.
-  ///
-  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
-  /// requirements.
-  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
-  /// requirement.
-  factory RacingKings.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
-    final pos = RacingKings(
-      board: setup.board,
-      turn: setup.turn,
-      castles: Castles.empty,
-      halfmoves: setup.halfmoves,
-      fullmoves: setup.fullmoves,
-    );
-    pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
-    return pos;
-  }
-
   @override
   bool hasInsufficientMaterial(Side side) => false;
 
@@ -2108,48 +1900,13 @@ abstract class RacingKings extends Position<RacingKings> {
   });
 }
 
-class _RacingKings extends RacingKings {
-  const _RacingKings({
-    required super.board,
-    super.pockets,
-    required super.turn,
-    required super.castles,
-    super.epSquare,
-    required super.halfmoves,
-    required super.fullmoves,
-  }) : super._();
-
-  @override
-  RacingKings copyWith({
-    Board? board,
-    Object? pockets = _uniqueObjectInstance,
-    Side? turn,
-    Castles? castles,
-    Object? epSquare = _uniqueObjectInstance,
-    int? halfmoves,
-    int? fullmoves,
-  }) {
-    return RacingKings(
-      board: board ?? this.board,
-      pockets:
-          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
-      turn: turn ?? this.turn,
-      castles: castles ?? this.castles,
-      epSquare: epSquare == _uniqueObjectInstance
-          ? this.epSquare
-          : epSquare as Square?,
-      halfmoves: halfmoves ?? this.halfmoves,
-      fullmoves: fullmoves ?? this.fullmoves,
-    );
-  }
-}
-
 /// A variant where white has 36 pawns and black needs to destroy the Horde to win.
 @immutable
 abstract class Horde extends Position<Horde> {
   @override
   Rule get rule => Rule.horde;
 
+  /// Creates a new [Horde] position.
   const factory Horde({
     required Board board,
     Pockets? pockets,
@@ -2170,14 +1927,12 @@ abstract class Horde extends Position<Horde> {
     required super.fullmoves,
   });
 
-  static const initial = Horde(
-    board: Board.horde,
-    turn: Side.white,
-    castles: Castles.horde,
-    halfmoves: 0,
-    fullmoves: 1,
-  );
-
+  /// Sets up a playable [Horde] position.
+  ///
+  /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
+  /// requirements.
+  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that
+  /// requirement.
   factory Horde.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     final pos = Horde(
       board: setup.board,
@@ -2190,6 +1945,15 @@ abstract class Horde extends Position<Horde> {
     pos.validate(ignoreImpossibleCheck: ignoreImpossibleCheck);
     return pos;
   }
+
+  /// The initial position of the Horde variant.
+  static const initial = Horde(
+    board: Board.horde,
+    turn: Side.white,
+    castles: Castles.horde,
+    halfmoves: 0,
+    fullmoves: 1,
+  );
 
   @override
   void validate({bool? ignoreImpossibleCheck}) {
@@ -2471,43 +2235,7 @@ abstract class Horde extends Position<Horde> {
   });
 }
 
-class _Horde extends Horde {
-  const _Horde({
-    required super.board,
-    super.pockets,
-    required super.turn,
-    required super.castles,
-    super.epSquare,
-    required super.halfmoves,
-    required super.fullmoves,
-  }) : super._();
-
-  @override
-  Horde copyWith({
-    Board? board,
-    Object? pockets = _uniqueObjectInstance,
-    Side? turn,
-    Castles? castles,
-    Object? epSquare = _uniqueObjectInstance,
-    int? halfmoves,
-    int? fullmoves,
-  }) {
-    return Horde(
-      board: board ?? this.board,
-      pockets:
-          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
-      turn: turn ?? this.turn,
-      castles: castles ?? this.castles,
-      epSquare: epSquare == _uniqueObjectInstance
-          ? this.epSquare
-          : epSquare as Square?,
-      halfmoves: halfmoves ?? this.halfmoves,
-      fullmoves: fullmoves ?? this.fullmoves,
-    );
-  }
-}
-
-/// The outcome of a [Position]. No `winner` means a draw.
+/// The outcome of a [Position]. No [winner] means a draw.
 @immutable
 class Outcome {
   const Outcome({this.winner});
@@ -2590,22 +2318,6 @@ class _Context {
   }
 }
 
-Square _rookCastlesTo(Side side, CastlingSide cs) {
-  return side == Side.white
-      ? (cs == CastlingSide.queen ? Square.d1 : Square.f1)
-      : cs == CastlingSide.queen
-          ? Square.d8
-          : Square.f8;
-}
-
-Square _kingCastlesTo(Side side, CastlingSide cs) {
-  return side == Side.white
-      ? (cs == CastlingSide.queen ? Square.c1 : Square.g1)
-      : cs == CastlingSide.queen
-          ? Square.c8
-          : Square.g8;
-}
-
 Square? _validEpSquare(Setup setup) {
   if (setup.epSquare == null) return null;
   final epRank = setup.turn == Side.white ? 5 : 2;
@@ -2654,6 +2366,299 @@ SquareSet _pseudoLegalMoves(Position pos, Square square, _Context context) {
         .union(pos._castlingMove(CastlingSide.king, context));
   } else {
     return pseudo;
+  }
+}
+
+// -- copyWith implementations
+
+class _Chess extends Chess {
+  const _Chess({
+    required super.board,
+    required super.turn,
+    required super.castles,
+    required super.halfmoves,
+    required super.fullmoves,
+    super.pockets,
+    super.epSquare,
+  }) : super._();
+
+  @override
+  Chess copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return Chess(
+      board: board ?? this.board,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+    );
+  }
+}
+
+class _Antichess extends Antichess {
+  const _Antichess({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  }) : super._();
+
+  @override
+  Antichess copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return Antichess(
+      board: board ?? this.board,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+    );
+  }
+}
+
+class _Atomic extends Atomic {
+  const _Atomic({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  }) : super._();
+
+  @override
+  Atomic copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return Atomic(
+      board: board ?? this.board,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+    );
+  }
+}
+
+class _Crazyhouse extends Crazyhouse {
+  const _Crazyhouse({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  }) : super._();
+
+  @override
+  Crazyhouse copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return Crazyhouse(
+      board: board ?? this.board,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+    );
+  }
+}
+
+class _KingOfTheHill extends KingOfTheHill {
+  const _KingOfTheHill({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  }) : super._();
+
+  @override
+  KingOfTheHill copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return KingOfTheHill(
+      board: board ?? this.board,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+    );
+  }
+}
+
+class _ThreeCheck extends ThreeCheck {
+  const _ThreeCheck({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+    required super.remainingChecks,
+  }) : super._();
+
+  @override
+  ThreeCheck copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
+    int? halfmoves,
+    int? fullmoves,
+    (int, int)? remainingChecks,
+  }) {
+    return ThreeCheck(
+      board: board ?? this.board,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+      remainingChecks: remainingChecks ?? this.remainingChecks,
+    );
+  }
+}
+
+class _RacingKings extends RacingKings {
+  const _RacingKings({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  }) : super._();
+
+  @override
+  RacingKings copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return RacingKings(
+      board: board ?? this.board,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+    );
+  }
+}
+
+class _Horde extends Horde {
+  const _Horde({
+    required super.board,
+    super.pockets,
+    required super.turn,
+    required super.castles,
+    super.epSquare,
+    required super.halfmoves,
+    required super.fullmoves,
+  }) : super._();
+
+  @override
+  Horde copyWith({
+    Board? board,
+    Object? pockets = _uniqueObjectInstance,
+    Side? turn,
+    Castles? castles,
+    Object? epSquare = _uniqueObjectInstance,
+    int? halfmoves,
+    int? fullmoves,
+  }) {
+    return Horde(
+      board: board ?? this.board,
+      pockets:
+          pockets == _uniqueObjectInstance ? this.pockets : pockets as Pockets?,
+      turn: turn ?? this.turn,
+      castles: castles ?? this.castles,
+      epSquare: epSquare == _uniqueObjectInstance
+          ? this.epSquare
+          : epSquare as Square?,
+      halfmoves: halfmoves ?? this.halfmoves,
+      fullmoves: fullmoves ?? this.fullmoves,
+    );
   }
 }
 

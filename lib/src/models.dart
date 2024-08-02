@@ -21,9 +21,12 @@ enum SquareColor {
       this == SquareColor.light ? SquareColor.dark : SquareColor.light;
 }
 
-/// The chessboard castling side, queen or king side.
+/// The chessboard castling side.
 enum CastlingSide {
+  /// The queen side castling.
   queen,
+
+  /// The king side castling.
   king;
 }
 

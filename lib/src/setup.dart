@@ -8,32 +8,7 @@ import './board.dart';
 /// A not necessarily legal position.
 @immutable
 class Setup {
-  /// Piece positions on the board.
-  final Board board;
-
-  /// Pockets in chess variants like [Crazyhouse].
-  final Pockets? pockets;
-
-  /// Side to move.
-  final Side turn;
-
-  /// Unmoved rooks positions used to determine castling rights.
-  final SquareSet unmovedRooks;
-
-  /// En passant target square.
-  ///
-  /// Valid target squares are on the third or sixth rank.
-  final Square? epSquare;
-
-  /// Number of half-moves since the last capture or pawn move.
-  final int halfmoves;
-
-  /// Current move number.
-  final int fullmoves;
-
-  /// Number of remainingChecks for white and black.
-  final (int, int)? remainingChecks;
-
+  /// Creates a new [Setup] with the provided values.
   const Setup({
     required this.board,
     this.pockets,
@@ -45,15 +20,7 @@ class Setup {
     this.remainingChecks,
   });
 
-  static const standard = Setup(
-    board: Board.standard,
-    turn: Side.white,
-    unmovedRooks: SquareSet.corners,
-    halfmoves: 0,
-    fullmoves: 1,
-  );
-
-  /// Parse Forsyth-Edwards-Notation and returns a Setup.
+  /// Parses a Forsyth-Edwards-Notation string and returns a [Setup].
   ///
   /// The parser is relaxed:
   ///
@@ -172,8 +139,45 @@ class Setup {
     );
   }
 
+  /// Piece positions on the board.
+  final Board board;
+
+  /// Pockets in chess variants like [Crazyhouse].
+  final Pockets? pockets;
+
+  /// Side to move.
+  final Side turn;
+
+  /// Unmoved rooks positions used to determine castling rights.
+  final SquareSet unmovedRooks;
+
+  /// En passant target square.
+  ///
+  /// Valid target squares are on the third or sixth rank.
+  final Square? epSquare;
+
+  /// Number of half-moves since the last capture or pawn move.
+  final int halfmoves;
+
+  /// Current move number.
+  final int fullmoves;
+
+  /// Number of remainingChecks for white and black.
+  final (int, int)? remainingChecks;
+
+  /// Initial position setup.
+  static const standard = Setup(
+    board: Board.standard,
+    turn: Side.white,
+    unmovedRooks: SquareSet.corners,
+    halfmoves: 0,
+    fullmoves: 1,
+  );
+
+  /// FEN character for the side to move.
   String get turnLetter => turn.name[0];
 
+  /// FEN representation of the setup.
   String get fen => [
         board.fen + (pockets != null ? _makePockets(pockets!) : ''),
         turnLetter,
@@ -210,6 +214,7 @@ class Setup {
 /// Pockets (captured pieces) in chess variants like [Crazyhouse].
 @immutable
 class Pockets {
+  /// Creates a new [Pockets] with the provided value.
   const Pockets({
     required this.value,
   });
