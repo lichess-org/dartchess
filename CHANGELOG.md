@@ -4,6 +4,10 @@
 - `Square` is now an extension type.
 - Introduce `File` and `Rank` types.
 
+### Bug fixes:
+- Fix `Position.isLegal` that was generating illegal king moves.
+- Fix `Position.normalizeMove` that could turn an illegal move into a legal castling move.
+
 ## 0.7.1
 
 - Add Piece.kind, Role.letter and Role.uppercaseLetter getters.
