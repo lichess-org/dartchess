@@ -678,7 +678,7 @@ class _PgnParser {
   /// Function to create the headers
   final PgnHeaders Function() initHeaders;
 
-  /// If true, pgn string is parsed for a single game. If false, pgn string is considered to have multiple games and any linebreak is considered as start of a new game
+  /// If true, pgn string is parsed for a single game. If false, pgn string is considered to have multiple games and any empty whitespace line found while parsing moves is considered as start of a new game
   final bool singleGame;
 
   _PgnParser(this.emitGame, this.initHeaders, this.singleGame) {
