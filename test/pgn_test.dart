@@ -364,10 +364,10 @@ the players are also trying to learn as much as possible about the opponent's pr
       expect(game.moves.mainline().length, 65);
     });
 
-    // test('game from crafty', () {
-    //   final game = PgnGame.parsePgn(PgnFixtures.fromCrafty);
-    //   expect(game.moves.mainline().length, 68);
-    // });
+    test('game from crafty', () {
+      final game = PgnGame.parsePgn(PgnFixtures.fromCrafty);
+      expect(game.moves.mainline().length, 68);
+    });
   });
 }
 

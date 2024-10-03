@@ -103,7 +103,7 @@ class PgnGame<T extends PgnNodeData> {
     final List<PgnGame<PgnNodeData>> games = [];
     _PgnParser((PgnGame<PgnNodeData> game) {
       games.add(game);
-    }, initHeaders)
+    }, initHeaders, true)
         .parse(pgn);
 
     if (games.isEmpty) {
@@ -126,7 +126,7 @@ class PgnGame<T extends PgnNodeData> {
     final List<PgnGame<PgnNodeData>> games = [];
     _PgnParser((PgnGame<PgnNodeData> game) {
       games.add(game);
-    }, initHeaders)
+    }, initHeaders, false)
         .parse(pgn);
     return games;
   }
@@ -678,7 +678,10 @@ class _PgnParser {
   /// Function to create the headers
   final PgnHeaders Function() initHeaders;
 
-  _PgnParser(this.emitGame, this.initHeaders) {
+  /// If true, pgn string is parsed for a single game. If false, pgn string is considered to have multiple games and any linebreak is considered as start of a new game
+  final bool singleGame;
+
+  _PgnParser(this.emitGame, this.initHeaders, this.singleGame) {
     _resetGame();
     _state = _ParserState.bom;
   }
@@ -776,7 +779,9 @@ class _PgnParser {
           {
             if (freshLine) {
               if (_isCommentLine(line)) return;
-              if (_isWhitespace(line)) return _emit();
+              if (!singleGame) {
+                if (_isWhitespace(line)) return _emit();
+              }
             }
             final tokenRegex = RegExp(
                 r'(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/');
