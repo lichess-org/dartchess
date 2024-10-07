@@ -294,7 +294,6 @@ the players are also trying to learn as much as possible about the opponent's pr
       final String data =
           File('./data/wcc_2023_eolcomment.pgn').readAsStringSync();
       final List<PgnGame<PgnNodeData>> games = PgnGame.parseMultiGamePgn(data);
-      print(games[0].makePgn());
       expect(games.length, 3);
     });
 
