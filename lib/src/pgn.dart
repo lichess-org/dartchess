@@ -819,12 +819,14 @@ class _PgnParser {
                   if (_stack.length > 1) _stack.removeLast();
                 } else if (token == '{') {
                   final openIndex = match.end;
+                  _state = _ParserState.comment;
                   if (openIndex < line.length) {
                     final beginIndex =
                         line[openIndex] == ' ' ? openIndex + 1 : openIndex;
                     line = line.substring(beginIndex);
+                  } else if (openIndex == line.length) {
+                    return;
                   }
-                  _state = _ParserState.comment;
                   continue continuedLine;
                 } else {
                   if (token == 'Z0' || token == '0000' || token == '@@@@') {

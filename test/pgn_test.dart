@@ -276,6 +276,28 @@ the players are also trying to learn as much as possible about the opponent's pr
       expect(games.length, 3);
     });
 
+    test('Parse initial game comments - comment before newline', () {
+      final String data =
+          File('./data/wcc_2023_eolcomment.pgn').readAsStringSync();
+      final game = PgnGame.parsePgn(data);
+      expect(
+        game.comments,
+        [
+          '''
+The initial game of a World Championship match is always a bit specific. Both players have come there very well prepared, but they know little about the opponent's preparation. Is the opponent willing to enter a theoretical debate, repeating the same openings again or again, or is he going to vary them, coming with many surprising lines for one or two games? In the initial games
+the players are also trying to learn as much as possible about the opponent's preparation, while trying not to reveal much about their own. It makes sense to surprise the opponent, but one should not take too many risks, as a loss in a relatively short match might cause a player big problems.'''
+        ],
+      );
+    });
+
+    test('pgn file - WCC 2023 - comment before newline', () {
+      final String data =
+          File('./data/wcc_2023_eolcomment.pgn').readAsStringSync();
+      final List<PgnGame<PgnNodeData>> games = PgnGame.parseMultiGamePgn(data);
+      print(games[0].makePgn());
+      expect(games.length, 3);
+    });
+
     test('pgn file - kasparov-deep-blue-1997', () {
       final String data =
           File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();
