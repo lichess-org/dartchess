@@ -123,11 +123,19 @@ class PgnGame<T extends PgnNodeData> {
   /// tokens.
   static List<PgnGame<PgnNodeData>> parseMultiGamePgn(String pgn,
       {PgnHeaders Function() initHeaders = defaultHeaders}) {
+    final multiGamePgnSplit = RegExp(r'\n\s+(?=\[)');
     final List<PgnGame<PgnNodeData>> games = [];
-    _PgnParser((PgnGame<PgnNodeData> game) {
-      games.add(game);
-    }, initHeaders)
-        .parse(pgn);
+    final pgnGames = pgn.split(multiGamePgnSplit);
+    for (final pgnGame in pgnGames) {
+      final List<PgnGame<PgnNodeData>> parsedGames = [];
+      _PgnParser((PgnGame<PgnNodeData> game) {
+        parsedGames.add(game);
+      }, initHeaders)
+          .parse(pgnGame);
+      if (parsedGames.isNotEmpty) {
+        games.add(parsedGames[0]);
+      }
+    }
     return games;
   }
 
@@ -775,8 +783,7 @@ class _PgnParser {
         case _ParserState.moves:
           {
             if (freshLine) {
-              if (_isCommentLine(line)) return;
-              if (_isWhitespace(line)) return _emit();
+              if (_isWhitespace(line) || _isCommentLine(line)) return;
             }
             final tokenRegex = RegExp(
                 r'(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/');

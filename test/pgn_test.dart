@@ -318,7 +318,9 @@ the players are also trying to learn as much as possible about the opponent's pr
       final List<PgnGame<PgnNodeData>> games = PgnGame.parseMultiGamePgn(data);
       expect(games[0].moves.mainline().map((move) => move.san).toList(),
           ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5']);
-      expect(games.length, 4);
+      expect(games[2].moves.mainline().map((move) => move.san).toList(),
+          ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5', 'e4', 'e5', 'Nf3', 'Nc6', 'Bb5']);
+      expect(games.length, 3);
     });
 
     test('pgn file - headers-and-moves-on-the-same-line', () {
@@ -385,10 +387,10 @@ the players are also trying to learn as much as possible about the opponent's pr
       expect(game.moves.mainline().length, 65);
     });
 
-    // test('game from crafty', () {
-    //   final game = PgnGame.parsePgn(PgnFixtures.fromCrafty);
-    //   expect(game.moves.mainline().length, 68);
-    // });
+    test('game from crafty', () {
+      final game = PgnGame.parsePgn(PgnFixtures.fromCrafty);
+      expect(game.moves.mainline().length, 68);
+    });
   });
 }
 
