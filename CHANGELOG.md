@@ -1,3 +1,7 @@
+## 0.9.0
+
+- `PieceKind` is now an enum.
+
 ## 0.8.0
 
 ### Breaking changes:
