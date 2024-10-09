@@ -341,8 +341,26 @@ typedef BySide<T> = IMap<Side, T>;
 typedef ByRole<T> = IMap<Role, T>;
 typedef ByCastlingSide<T> = IMap<CastlingSide, T>;
 
-/// Represents a piece kind, which is a tuple of side and role.
-typedef PieceKind = (Side side, Role role);
+/// Describes a chess piece kind by its color and role.
+enum PieceKind {
+  whitePawn(Side.white, Role.pawn),
+  whiteKnight(Side.white, Role.knight),
+  whiteBishop(Side.white, Role.bishop),
+  whiteRook(Side.white, Role.rook),
+  whiteQueen(Side.white, Role.queen),
+  whiteKing(Side.white, Role.king),
+  blackPawn(Side.black, Role.pawn),
+  blackKnight(Side.black, Role.knight),
+  blackBishop(Side.black, Role.bishop),
+  blackRook(Side.black, Role.rook),
+  blackQueen(Side.black, Role.queen),
+  blackKing(Side.black, Role.king);
+
+  const PieceKind(this.side, this.role);
+
+  final Side side;
+  final Role role;
+}
 
 /// Describes a chess piece by its color, role and promotion status.
 @immutable
@@ -366,8 +384,21 @@ class Piece {
     return null;
   }
 
-  /// Gets the piece kind, which is a tuple of side and role.
-  PieceKind get kind => (color, role);
+  /// Gets the piece kind.
+  PieceKind get kind => switch (role) {
+        Role.pawn =>
+          color == Side.white ? PieceKind.whitePawn : PieceKind.blackPawn,
+        Role.knight =>
+          color == Side.white ? PieceKind.whiteKnight : PieceKind.blackKnight,
+        Role.bishop =>
+          color == Side.white ? PieceKind.whiteBishop : PieceKind.blackBishop,
+        Role.rook =>
+          color == Side.white ? PieceKind.whiteRook : PieceKind.blackRook,
+        Role.queen =>
+          color == Side.white ? PieceKind.whiteQueen : PieceKind.blackQueen,
+        Role.king =>
+          color == Side.white ? PieceKind.whiteKing : PieceKind.blackKing,
+      };
 
   /// Gets the FEN character of this piece.
   ///
@@ -755,39 +786,3 @@ enum Rule {
     }
   }
 }
-
-/// The white pawn piece kind.
-const PieceKind kWhitePawnKind = (Side.white, Role.pawn);
-
-/// The white knight piece kind.
-const PieceKind kWhiteKnightKind = (Side.white, Role.knight);
-
-/// The white bishop piece kind.
-const PieceKind kWhiteBishopKind = (Side.white, Role.bishop);
-
-/// The white rook piece kind.
-const PieceKind kWhiteRookKind = (Side.white, Role.rook);
-
-/// The white queen piece kind.
-const PieceKind kWhiteQueenKind = (Side.white, Role.queen);
-
-/// The white king piece kind.
-const PieceKind kWhiteKingKind = (Side.white, Role.king);
-
-/// The black pawn piece kind.
-const PieceKind kBlackPawnKind = (Side.black, Role.pawn);
-
-/// The black knight piece kind.
-const PieceKind kBlackKnightKind = (Side.black, Role.knight);
-
-/// The black bishop piece kind.
-const PieceKind kBlackBishopKind = (Side.black, Role.bishop);
-
-/// The black rook piece kind.
-const PieceKind kBlackRookKind = (Side.black, Role.rook);
-
-/// The black queen piece kind.
-const PieceKind kBlackQueenKind = (Side.black, Role.queen);
-
-/// The black king piece kind.
-const PieceKind kBlackKingKind = (Side.black, Role.king);
