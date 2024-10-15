@@ -276,6 +276,12 @@ the players are also trying to learn as much as possible about the opponent's pr
       expect(games.length, 3);
     });
 
+    /// Test for scenario where
+    /// a. '{' is the last character on a line
+    /// b. a '}' character appears somewhere before the '{' on that same line
+    /// (line 22 of wcc_2023_eolcomment.pgn)
+    ///
+    /// This tests a fix which avoids an infinite loop in the described scenario.
     test('Parse initial game comments - comment before newline', () {
       final String data =
           File('./data/wcc_2023_eolcomment.pgn').readAsStringSync();
@@ -303,12 +309,6 @@ the players are also trying to learn as much as possible about the opponent's pr
       expect(games.length, 3);
     });
 
-    /// Test for scenario where
-    /// a. '{' is the last character on a line
-    /// b. a '}' character appears somewhere before the '{' on that same line
-    /// (line 22 of wcc_2023_eolcomment.pgn)
-    ///
-    /// This tests a fix which avoids an infinite loop in the described scenario.
     test('pgn file - kasparov-deep-blue-1997', () {
       final String data =
           File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();
