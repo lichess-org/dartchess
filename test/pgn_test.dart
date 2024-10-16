@@ -276,6 +276,39 @@ the players are also trying to learn as much as possible about the opponent's pr
       expect(games.length, 3);
     });
 
+    /// Test for scenario where
+    /// a. '{' is the last character on a line
+    /// b. a '}' character appears somewhere before the '{' on that same line
+    /// (line 22 of wcc_2023_eolcomment.pgn)
+    ///
+    /// This tests a fix which avoids an infinite loop in the described scenario.
+    test('Parse initial game comments - comment before newline', () {
+      final String data =
+          File('./data/wcc_2023_eolcomment.pgn').readAsStringSync();
+      final game = PgnGame.parsePgn(data);
+      expect(
+        game.comments,
+        [
+          '''
+The initial game of a World Championship match is always a bit specific. Both players have come there very well prepared, but they know little about the opponent's preparation. Is the opponent willing to enter a theoretical debate, repeating the same openings again or again, or is he going to vary them, coming with many surprising lines for one or two games? In the initial games
+the players are also trying to learn as much as possible about the opponent's preparation, while trying not to reveal much about their own. It makes sense to surprise the opponent, but one should not take too many risks, as a loss in a relatively short match might cause a player big problems.'''
+        ],
+      );
+    });
+
+    /// Test for scenario where
+    /// a. '{' is the last character on a line
+    /// b. a '}' character appears somewhere before the '{' on that same line
+    /// (line 22 of wcc_2023_eolcomment.pgn)
+    ///
+    /// This tests a fix which avoids an infinite loop in the described scenario.
+    test('pgn file - WCC 2023 - comment before newline', () {
+      final String data =
+          File('./data/wcc_2023_eolcomment.pgn').readAsStringSync();
+      final List<PgnGame<PgnNodeData>> games = PgnGame.parseMultiGamePgn(data);
+      expect(games.length, 3);
+    });
+
     test('pgn file - kasparov-deep-blue-1997', () {
       final String data =
           File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();
@@ -297,7 +330,9 @@ the players are also trying to learn as much as possible about the opponent's pr
       final List<PgnGame<PgnNodeData>> games = PgnGame.parseMultiGamePgn(data);
       expect(games[0].moves.mainline().map((move) => move.san).toList(),
           ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5']);
-      expect(games.length, 4);
+      expect(games[2].moves.mainline().map((move) => move.san).toList(),
+          ['e4', 'e5', 'Nf3', 'Nc6', 'Bb5', 'e4', 'e5', 'Nf3', 'Nc6', 'Bb5']);
+      expect(games.length, 3);
     });
 
     test('pgn file - headers-and-moves-on-the-same-line', () {
@@ -364,10 +399,10 @@ the players are also trying to learn as much as possible about the opponent's pr
       expect(game.moves.mainline().length, 65);
     });
 
-    // test('game from crafty', () {
-    //   final game = PgnGame.parsePgn(PgnFixtures.fromCrafty);
-    //   expect(game.moves.mainline().length, 68);
-    // });
+    test('game from crafty', () {
+      final game = PgnGame.parsePgn(PgnFixtures.fromCrafty);
+      expect(game.moves.mainline().length, 68);
+    });
   });
 }
 
