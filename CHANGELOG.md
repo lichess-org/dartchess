@@ -1,3 +1,7 @@
+## 0.9.1
+
+- Fixes bugs in the PGN parser.
+
 ## 0.9.0
 
 - `PieceKind` is now an enum.
