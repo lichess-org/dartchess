@@ -1,3 +1,7 @@
+## 0.9.2
+
+- Fixes castling rights parsing from FEN.
+
 ## 0.9.1
 
 - Fixes bugs in the PGN parser.
