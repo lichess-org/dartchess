@@ -13,12 +13,12 @@ void main() {
 
     test('Chess.toString()', () {
       expect(Chess.initial.toString(),
-          'Chess(board: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR, turn: Side.white, castles: Castles(unmovedRooks: 0x8100000000000081), halfmoves: 0, fullmoves: 1)');
+          'Chess(board: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR, turn: Side.white, castles: Castles(castlingRights: 0x8100000000000081), halfmoves: 0, fullmoves: 1)');
     });
 
     test('Antichess.toString()', () {
       expect(Antichess.initial.toString(),
-          'Antichess(board: $kInitialBoardFEN, turn: Side.white, castles: Castles(unmovedRooks: 0), halfmoves: 0, fullmoves: 1)');
+          'Antichess(board: $kInitialBoardFEN, turn: Side.white, castles: Castles(castlingRights: 0), halfmoves: 0, fullmoves: 1)');
     });
 
     test('ply', () {
@@ -397,6 +397,76 @@ void main() {
       expect(pos.legalMovesOf(Square.e1), const SquareSet(0x00000000000000A9));
     });
 
+    test('castling chess960 legal moves', () {
+      for (final fen in [
+        '1qr2k1r/pppppppp/6n1/8/8/5BN1/PPPPPPPP/1QR2K1R w KQkq - 0 1',
+        '1qr2k1r/pppppppp/6n1/8/8/5BN1/PPPPPPPP/1QR2K1R w CHch - 0 1',
+      ]) {
+        final pos = Chess.fromSetup(Setup.parseFen(fen));
+        expect(pos.legalMovesOf(Square.f1), makeSquareSet('''
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . 1 . 1 . 1 1
+'''));
+      }
+
+      for (final fen in [
+        '1qr2k1r/pppppppp/6n1/8/8/5BN1/PPPPPPPP/1QR2K1R b KQkq - 0 1',
+        '1qr2k1r/pppppppp/6n1/8/8/5BN1/PPPPPPPP/1QR2K1R b CHch - 0 1',
+      ]) {
+        final pos = Chess.fromSetup(Setup.parseFen(fen));
+        expect(pos.legalMovesOf(Square.f8), makeSquareSet('''
+. . 1 . 1 . 1 1
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+'''));
+      }
+
+      for (final fen in [
+        '1qr2k1r/pppppppp/6n1/8/8/5BN1/PPPPPPPP/1QR2K1R w Qkq - 0 1',
+        '1qr2k1r/pppppppp/6n1/8/8/5BN1/PPPPPPPP/1QR2K1R w Cch - 0 1',
+      ]) {
+        final pos = Chess.fromSetup(Setup.parseFen(fen));
+        expect(pos.legalMovesOf(Square.f1), makeSquareSet('''
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . 1 . 1 . 1 .
+'''));
+      }
+
+      for (final fen in [
+        '1qr2k1r/pppppppp/6n1/8/8/5BN1/PPPPPPPP/1QR2K1R b k - 0 1',
+        '1qr2k1r/pppppppp/6n1/8/8/5BN1/PPPPPPPP/1QR2K1R b h - 0 1',
+      ]) {
+        final pos = Chess.fromSetup(Setup.parseFen(fen));
+        expect(pos.legalMovesOf(Square.f8), makeSquareSet('''
+. . . . 1 . 1 1
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+. . . . . . . .
+'''));
+      }
+    });
+
     test('isCheck', () {
       expect(
           Chess.fromSetup(Setup.parseFen(
@@ -598,7 +668,7 @@ void main() {
               CastlingSide.queen: Square.a1,
               CastlingSide.king: null
             })));
-        expect(pos.castles.unmovedRooks.has(Square.h1), false);
+        expect(pos.castles.castlingRights.has(Square.h1), false);
       });
 
       test('capturing a rook removes castling right', () {
@@ -607,7 +677,7 @@ void main() {
             .play(const NormalMove(from: Square.g7, to: Square.a1));
         expect(pos.castles.rookOf(Side.white, CastlingSide.queen), isNull);
         expect(pos.castles.rookOf(Side.white, CastlingSide.king), Square.h1);
-        expect(pos.castles.unmovedRooks.has(Square.a1), false);
+        expect(pos.castles.castlingRights.has(Square.a1), false);
       });
 
       test('king captures unmoved rook', () {
@@ -639,7 +709,7 @@ void main() {
         expect(pos.board.pieceAt(Square.g1), Piece.whiteKing);
         expect(pos.board.pieceAt(Square.f1), Piece.whiteRook);
         expect(
-            pos.castles.unmovedRooks
+            pos.castles.castlingRights
                 .isIntersected(const SquareSet.fromRank(Rank.first)),
             false);
         expect(pos.castles.rookOf(Side.white, CastlingSide.king), isNull);

@@ -10,7 +10,7 @@ import 'square_set.dart';
 abstract class Castles {
   /// Creates a new [Castles] instance.
   const factory Castles({
-    required SquareSet unmovedRooks,
+    required SquareSet castlingRights,
     Square? whiteRookQueenSide,
     Square? whiteRookKingSide,
     Square? blackRookQueenSide,
@@ -22,7 +22,7 @@ abstract class Castles {
   }) = _Castles;
 
   const Castles._({
-    required this.unmovedRooks,
+    required this.castlingRights,
     Square? whiteRookQueenSide,
     Square? whiteRookKingSide,
     Square? blackRookQueenSide,
@@ -41,7 +41,7 @@ abstract class Castles {
         _blackPathKingSide = blackPathKingSide;
 
   /// SquareSet of rooks that have not moved yet.
-  final SquareSet unmovedRooks;
+  final SquareSet castlingRights;
 
   final Square? _whiteRookQueenSide;
   final Square? _whiteRookKingSide;
@@ -53,7 +53,7 @@ abstract class Castles {
   final SquareSet _blackPathKingSide;
 
   static const standard = Castles(
-    unmovedRooks: SquareSet.corners,
+    castlingRights: SquareSet.corners,
     whiteRookQueenSide: Square.a1,
     whiteRookKingSide: Square.h1,
     blackRookQueenSide: Square.a8,
@@ -65,7 +65,7 @@ abstract class Castles {
   );
 
   static const empty = Castles(
-    unmovedRooks: SquareSet.empty,
+    castlingRights: SquareSet.empty,
     whitePathQueenSide: SquareSet.empty,
     whitePathKingSide: SquareSet.empty,
     blackPathQueenSide: SquareSet.empty,
@@ -73,7 +73,7 @@ abstract class Castles {
   );
 
   static const horde = Castles(
-    unmovedRooks: SquareSet(0x8100000000000000),
+    castlingRights: SquareSet(0x8100000000000000),
     blackRookKingSide: Square.h8,
     blackRookQueenSide: Square.a8,
     whitePathKingSide: SquareSet.empty,
@@ -85,7 +85,7 @@ abstract class Castles {
   /// Creates a [Castles] instance from a [Setup].
   factory Castles.fromSetup(Setup setup) {
     Castles castles = Castles.empty;
-    final rooks = setup.unmovedRooks & setup.board.rooks;
+    final rooks = setup.castlingRights & setup.board.rooks;
     for (final side in Side.values) {
       final backrank = SquareSet.backrankOf(side);
       final king = setup.board.kingOf(side);
@@ -161,7 +161,7 @@ abstract class Castles {
   /// Returns a new [Castles] instance with the given rook discarded.
   Castles discardRookAt(Square square) {
     return copyWith(
-      unmovedRooks: unmovedRooks.withoutSquare(square),
+      castlingRights: castlingRights.withoutSquare(square),
       whiteRookQueenSide:
           _whiteRookQueenSide == square ? null : _whiteRookQueenSide,
       whiteRookKingSide:
@@ -176,7 +176,7 @@ abstract class Castles {
   /// Returns a new [Castles] instance with the given side discarded.
   Castles discardSide(Side side) {
     return copyWith(
-      unmovedRooks: unmovedRooks.diff(SquareSet.backrankOf(side)),
+      castlingRights: castlingRights.diff(SquareSet.backrankOf(side)),
       whiteRookQueenSide: side == Side.white ? null : _whiteRookQueenSide,
       whiteRookKingSide: side == Side.white ? null : _whiteRookKingSide,
       blackRookQueenSide: side == Side.black ? null : _blackRookQueenSide,
@@ -193,7 +193,7 @@ abstract class Castles {
         .withoutSquare(king)
         .withoutSquare(rook);
     return copyWith(
-      unmovedRooks: unmovedRooks.withSquare(rook),
+      castlingRights: castlingRights.withSquare(rook),
       whiteRookQueenSide: side == Side.white && cs == CastlingSide.queen
           ? rook
           : _whiteRookQueenSide,
@@ -219,14 +219,14 @@ abstract class Castles {
 
   @override
   String toString() {
-    return 'Castles(unmovedRooks: ${unmovedRooks.toHexString()})';
+    return 'Castles(castlingRights: ${castlingRights.toHexString()})';
   }
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is Castles &&
-          other.unmovedRooks == unmovedRooks &&
+          other.castlingRights == castlingRights &&
           other._whiteRookQueenSide == _whiteRookQueenSide &&
           other._whiteRookKingSide == _whiteRookKingSide &&
           other._blackRookQueenSide == _blackRookQueenSide &&
@@ -238,7 +238,7 @@ abstract class Castles {
 
   @override
   int get hashCode => Object.hash(
-      unmovedRooks,
+      castlingRights,
       _whiteRookQueenSide,
       _whiteRookKingSide,
       _blackRookQueenSide,
@@ -249,7 +249,7 @@ abstract class Castles {
       _blackPathKingSide);
 
   Castles copyWith({
-    SquareSet? unmovedRooks,
+    SquareSet? castlingRights,
     Square? whiteRookQueenSide,
     Square? whiteRookKingSide,
     Square? blackRookQueenSide,
@@ -287,7 +287,7 @@ Square kingCastlesTo(Side side, CastlingSide cs) => switch (side) {
 
 class _Castles extends Castles {
   const _Castles({
-    required super.unmovedRooks,
+    required super.castlingRights,
     super.whiteRookQueenSide,
     super.whiteRookKingSide,
     super.blackRookQueenSide,
@@ -300,7 +300,7 @@ class _Castles extends Castles {
 
   @override
   Castles copyWith({
-    SquareSet? unmovedRooks,
+    SquareSet? castlingRights,
     Object? whiteRookQueenSide = _uniqueObjectInstance,
     Object? whiteRookKingSide = _uniqueObjectInstance,
     Object? blackRookQueenSide = _uniqueObjectInstance,
@@ -311,7 +311,7 @@ class _Castles extends Castles {
     SquareSet? blackPathKingSide,
   }) {
     return _Castles(
-      unmovedRooks: unmovedRooks ?? this.unmovedRooks,
+      castlingRights: castlingRights ?? this.castlingRights,
       whiteRookQueenSide: whiteRookQueenSide == _uniqueObjectInstance
           ? _whiteRookQueenSide
           : whiteRookQueenSide as Square?,

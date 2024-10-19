@@ -14,18 +14,18 @@ void main() {
   test('parse castling fen, standard initial board', () {
     expect(
         Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq')
-            .unmovedRooks,
+            .castlingRights,
         SquareSet.corners);
     expect(
         Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w -')
-            .unmovedRooks,
+            .castlingRights,
         SquareSet.empty);
   });
 
   test('parse castling fen, shredder notation', () {
     expect(
         Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w HAha')
-            .unmovedRooks,
+            .castlingRights,
         SquareSet.corners);
   });
 
@@ -33,7 +33,7 @@ void main() {
     expect(
         () =>
             Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w BGL')
-                .unmovedRooks,
+                .castlingRights,
         throwsA(predicate(
             (e) => e is FenException && e.cause == IllegalFenCause.castling)));
   });
@@ -52,7 +52,7 @@ void main() {
     expect(setup, Setup.standard);
     expect(setup.board, Board.standard);
     expect(setup.turn, Side.white);
-    expect(setup.unmovedRooks, SquareSet.corners);
+    expect(setup.castlingRights, SquareSet.corners);
     expect(setup.epSquare, null);
     expect(setup.halfmoves, 0);
     expect(setup.fullmoves, 1);
@@ -62,7 +62,7 @@ void main() {
     final setup = Setup.parseFen(kInitialBoardFEN);
     expect(setup.board, Board.standard);
     expect(setup.turn, Side.white);
-    expect(setup.unmovedRooks, SquareSet.empty);
+    expect(setup.castlingRights, SquareSet.empty);
     expect(setup.epSquare, null);
     expect(setup.halfmoves, 0);
     expect(setup.fullmoves, 1);
@@ -95,6 +95,7 @@ void main() {
       'rnb1kbnr/ppp1pppp/2Pp2PP/1P3PPP/PPP1PPPP/PPP1PPPP/PPP1PPP1/PPPqPP2 w kq - 0 1',
       '5b1r/1p5p/4ppp1/4Bn2/1PPP1PP1/4P2P/3k4/4K2R w K - 1 1',
       'rnbqkb1r/p1p1nppp/2Pp4/3P1PP1/PPPPPP1P/PPP1PPPP/PPPnbqkb/PPPPPPPP w ha - 1 6',
+      'rnbNRbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQhb - 2 3',
     ]) {
       final setup = Setup.parseFen(fen);
       expect(setup.fen, fen);

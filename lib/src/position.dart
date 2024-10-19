@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'attacks.dart';
 import 'castles.dart';
+import 'debug.dart';
 import 'models.dart';
 import 'board.dart';
 import 'setup.dart';
@@ -130,7 +131,7 @@ abstract class Position<T extends Position<T>> {
       board: board,
       pockets: pockets,
       turn: turn,
-      unmovedRooks: castles.unmovedRooks,
+      castlingRights: castles.castlingRights,
       epSquare: _legalEpSquare(),
       halfmoves: halfmoves,
       fullmoves: fullmoves,
@@ -1739,7 +1740,7 @@ abstract class ThreeCheck extends Position<ThreeCheck> {
     return Setup(
       board: board,
       turn: turn,
-      unmovedRooks: castles.unmovedRooks,
+      castlingRights: castles.castlingRights,
       epSquare: _legalEpSquare(),
       halfmoves: halfmoves,
       fullmoves: fullmoves,
