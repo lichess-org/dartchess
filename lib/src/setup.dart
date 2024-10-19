@@ -13,7 +13,7 @@ class Setup {
     required this.board,
     this.pockets,
     required this.turn,
-    required this.unmovedRooks,
+    required this.castlingRights,
     this.epSquare,
     required this.halfmoves,
     required this.fullmoves,
@@ -73,12 +73,12 @@ class Setup {
     }
 
     // Castling
-    SquareSet unmovedRooks;
+    SquareSet castlingRights;
     if (parts.isEmpty) {
-      unmovedRooks = SquareSet.empty;
+      castlingRights = SquareSet.empty;
     } else {
       final castlingPart = parts.removeAt(0);
-      unmovedRooks = _parseCastlingFen(board, castlingPart);
+      castlingRights = _parseCastlingFen(board, castlingPart);
     }
 
     // En passant square
@@ -131,7 +131,7 @@ class Setup {
       board: board,
       pockets: pockets,
       turn: turn,
-      unmovedRooks: unmovedRooks,
+      castlingRights: castlingRights,
       epSquare: epSquare,
       halfmoves: halfmoves,
       fullmoves: fullmoves,
@@ -149,7 +149,7 @@ class Setup {
   final Side turn;
 
   /// Unmoved rooks positions used to determine castling rights.
-  final SquareSet unmovedRooks;
+  final SquareSet castlingRights;
 
   /// En passant target square.
   ///
@@ -169,7 +169,7 @@ class Setup {
   static const standard = Setup(
     board: Board.standard,
     turn: Side.white,
-    unmovedRooks: SquareSet.corners,
+    castlingRights: SquareSet.corners,
     halfmoves: 0,
     fullmoves: 1,
   );
@@ -181,7 +181,7 @@ class Setup {
   String get fen => [
         board.fen + (pockets != null ? _makePockets(pockets!) : ''),
         turnLetter,
-        _makeCastlingFen(board, unmovedRooks),
+        _makeCastlingFen(board, castlingRights),
         if (epSquare != null) epSquare!.name else '-',
         if (remainingChecks != null) _makeRemainingChecks(remainingChecks!),
         math.max(0, math.min(halfmoves, 9999)),
@@ -194,7 +194,7 @@ class Setup {
         other is Setup &&
             other.board == board &&
             other.turn == turn &&
-            other.unmovedRooks == unmovedRooks &&
+            other.castlingRights == castlingRights &&
             other.epSquare == epSquare &&
             other.halfmoves == halfmoves &&
             other.fullmoves == fullmoves;
@@ -204,7 +204,7 @@ class Setup {
   int get hashCode => Object.hash(
         board,
         turn,
-        unmovedRooks,
+        castlingRights,
         epSquare,
         halfmoves,
         fullmoves,
@@ -312,43 +312,38 @@ Pockets _parsePockets(String pocketPart) {
 }
 
 SquareSet _parseCastlingFen(Board board, String castlingPart) {
-  SquareSet unmovedRooks = SquareSet.empty;
+  SquareSet castlingRights = SquareSet.empty;
   if (castlingPart == '-') {
-    return unmovedRooks;
+    return castlingRights;
   }
-  for (int i = 0; i < castlingPart.length; i++) {
-    final c = castlingPart[i];
+  for (final rune in castlingPart.runes) {
+    final c = String.fromCharCode(rune);
     final lower = c.toLowerCase();
-    final color = c == lower ? Side.black : Side.white;
-    final backrankMask = SquareSet.backrankOf(color);
-    final backrank = backrankMask & board.bySide(color);
-
-    Iterable<Square> candidates;
-    if (lower == 'q') {
-      candidates = backrank.squares;
-    } else if (lower == 'k') {
-      candidates = backrank.squaresReversed;
-    } else if ('a'.compareTo(lower) <= 0 && lower.compareTo('h') <= 0) {
-      candidates =
-          (SquareSet.fromFile(File(lower.codeUnitAt(0) - 'a'.codeUnitAt(0))) &
-                  backrank)
-              .squares;
+    final lowerCode = lower.codeUnitAt(0);
+    final side = c == lower ? Side.black : Side.white;
+    final rank = side == Side.white ? Rank.first : Rank.eighth;
+    if ('a'.codeUnitAt(0) <= lowerCode && lowerCode <= 'h'.codeUnitAt(0)) {
+      castlingRights = castlingRights.withSquare(
+          Square.fromCoords(File(lowerCode - 'a'.codeUnitAt(0)), rank));
+    } else if (lower == 'k' || lower == 'q') {
+      final rooksAndKings = (board.bySide(side) & SquareSet.backrankOf(side)) &
+          (board.rooks | board.kings);
+      final candidate = lower == 'k'
+          ? rooksAndKings.squares.lastOrNull
+          : rooksAndKings.squares.firstOrNull;
+      castlingRights = castlingRights.withSquare(
+          candidate != null && board.rooks.has(candidate)
+              ? candidate
+              : Square.fromCoords(lower == 'k' ? File.h : File.a, rank));
     } else {
       throw const FenException(IllegalFenCause.castling);
     }
-    for (final square in candidates) {
-      if (board.kings.has(square)) break;
-      if (board.rooks.has(square)) {
-        unmovedRooks = unmovedRooks.withSquare(square);
-        break;
-      }
-    }
   }
-  if ((const SquareSet.fromRank(Rank.first) & unmovedRooks).size > 2 ||
-      (const SquareSet.fromRank(Rank.eighth) & unmovedRooks).size > 2) {
+  if (Side.values.any((color) =>
+      SquareSet.backrankOf(color).intersect(castlingRights).size > 2)) {
     throw const FenException(IllegalFenCause.castling);
   }
-  return unmovedRooks;
+  return castlingRights;
 }
 
 String _makePockets(Pockets pockets) {
@@ -363,14 +358,14 @@ String _makePockets(Pockets pockets) {
   return '[${wPart.toUpperCase()}$bPart]';
 }
 
-String _makeCastlingFen(Board board, SquareSet unmovedRooks) {
+String _makeCastlingFen(Board board, SquareSet castlingRights) {
   final buffer = StringBuffer();
   for (final color in Side.values) {
     final backrank = SquareSet.backrankOf(color);
     final king = board.kingOf(color);
     final candidates =
         board.byPiece(Piece(color: color, role: Role.rook)) & backrank;
-    for (final rook in (unmovedRooks & candidates).squaresReversed) {
+    for (final rook in (castlingRights & backrank).squaresReversed) {
       if (rook == candidates.first && king != null && rook < king) {
         buffer.write(color == Side.white ? 'Q' : 'q');
       } else if (rook == candidates.last && king != null && king < rook) {

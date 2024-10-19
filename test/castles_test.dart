@@ -18,7 +18,7 @@ void main() {
     });
     test('fromSetup', () {
       final castles = Castles.fromSetup(Setup.standard);
-      expect(castles.unmovedRooks, SquareSet.corners);
+      expect(castles.castlingRights, SquareSet.corners);
       expect(castles, Castles.standard);
 
       expect(castles.rookOf(Side.white, CastlingSide.queen), Square.a1);

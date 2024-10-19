@@ -130,7 +130,7 @@ abstract class Position<T extends Position<T>> {
       board: board,
       pockets: pockets,
       turn: turn,
-      unmovedRooks: castles.unmovedRooks,
+      castlingRights: castles.castlingRights,
       epSquare: _legalEpSquare(),
       halfmoves: halfmoves,
       fullmoves: fullmoves,
@@ -1739,7 +1739,7 @@ abstract class ThreeCheck extends Position<ThreeCheck> {
     return Setup(
       board: board,
       turn: turn,
-      unmovedRooks: castles.unmovedRooks,
+      castlingRights: castles.castlingRights,
       epSquare: _legalEpSquare(),
       halfmoves: halfmoves,
       fullmoves: fullmoves,
