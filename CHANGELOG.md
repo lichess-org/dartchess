@@ -1,6 +1,7 @@
 ## 0.9.2
 
 - Fixes castling rights parsing from FEN.
+- The FEN parser and writer now preserve syntactically valid castling rights even if there is no matching rook or king. Rename `unmovedRooks` to `castlingRights`.
 
 ## 0.9.1
 
