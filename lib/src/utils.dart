@@ -9,8 +9,16 @@ import 'position.dart';
 IMap<Square, ISet<Square>> makeLegalMoves(
   Position pos, {
   bool isChess960 = false,
+  CastlingMethod castlingMethod = CastlingMethod.both,
 }) {
   final Map<Square, ISet<Square>> result = {};
+  final Map<Square, Square> castlingSquares = {
+    Square.a1: Square.c1,
+    Square.a8: Square.c8,
+    Square.h1: Square.g1,
+    Square.h8: Square.g8
+  };
+
   for (final entry in pos.legalMoves.entries) {
     final dests = entry.value.squares;
     if (dests.isNotEmpty) {
@@ -19,15 +27,22 @@ IMap<Square, ISet<Square>> makeLegalMoves(
       if (!isChess960 &&
           from == pos.board.kingOf(pos.turn) &&
           entry.key.file == 4) {
-        if (dests.contains(Square.a1)) {
-          destSet.add(Square.c1);
-        } else if (dests.contains(Square.a8)) {
-          destSet.add(Square.c8);
-        }
-        if (dests.contains(Square.h1)) {
-          destSet.add(Square.g1);
-        } else if (dests.contains(Square.h8)) {
-          destSet.add(Square.g8);
+        switch (castlingMethod) {
+          case CastlingMethod.kingOverRook:
+            break;
+          case CastlingMethod.both:
+            castlingSquares.forEach((k, v) {
+              if (dests.contains(k)) {
+                destSet.add(v);
+              }
+            });
+          case CastlingMethod.kingTwoSquares:
+            castlingSquares.forEach((k, v) {
+              if (dests.contains(k)) {
+                destSet.add(v);
+                destSet.remove(k);
+              }
+            });
         }
       }
       result[from] = ISet(destSet);
@@ -35,3 +50,5 @@ IMap<Square, ISet<Square>> makeLegalMoves(
   }
   return IMap(result);
 }
+
+enum CastlingMethod { kingOverRook, kingTwoSquares, both }
