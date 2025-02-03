@@ -786,7 +786,7 @@ class _PgnParser {
               if (_isWhitespace(line) || _isCommentLine(line)) return;
             }
             final tokenRegex = RegExp(
-                r'(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/');
+                r'(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2|\d+\.+\S*');
             final matches = tokenRegex.allMatches(line);
             for (final match in matches) {
               final frame = _stack[_stack.length - 1];
@@ -831,16 +831,39 @@ class _PgnParser {
                   }
                   continue continuedLine;
                 } else {
-                  if (token == 'Z0' || token == '0000' || token == '@@@@') {
-                    token = '--';
-                  } else if (token.startsWith('0')) {
-                    token = token.replaceAll('0', 'O');
+                  // If token includes something like "1.e4" or "2...Nc3", strip the leading digits and dots.
+                  // "2...Nc3" => strip "2...", left with "Nc3"
+                  // "1.e4"    => strip "1.", left with "e4"
+                  // If the remainder is empty or purely dots, skip it.
+                  final moveToken = _stripMoveNumberPrefix(token);
+                  if (moveToken == null || moveToken.isEmpty) {
+                    // skip this token
+                    continue;
                   }
+                  // Also handle weird placeholders like "Z0" => convert to "--"
+                  if (moveToken == 'Z0' ||
+                      moveToken == '0000' ||
+                      moveToken == '@@@@') {
+                    token = '--';
+                  } else if (moveToken.startsWith('0')) {
+                    // "0-0" => "O-O" or "0-0-0" => "O-O-O" is handled above in the pattern
+                    // but "0blabla"? This code historically replaced leading '0' with 'O'
+                    // We'll do the same logic:
+                    token = moveToken.replaceAll('0', 'O');
+                  } else {
+                    token = moveToken;
+                  }
+
+                  // Create new node with this SAN
                   if (frame.node != null) {
                     frame.parent = frame.node!;
                   }
-                  frame.node = PgnChildNode(PgnNodeData(
-                      san: token, startingComments: frame.startingComments));
+                  frame.node = PgnChildNode(
+                    PgnNodeData(
+                      san: token,
+                      startingComments: frame.startingComments,
+                    ),
+                  );
                   frame.startingComments = null;
                   frame.root = false;
                   frame.parent.children.add(frame.node!);
@@ -869,6 +892,33 @@ class _PgnParser {
           }
       }
     }
+  }
+
+  /// Strip leading "<digits>.<dots>" from tokens like "1.e4", "1...Nc3"
+  /// so that the SAN stored is "e4" or "Nc3".
+  ///
+  /// Example:
+  ///   "1.e4" => "e4"
+  ///   "2...Nc3" => "Nc3"
+  ///   "11...a1??" => "a1??"
+  ///
+  /// If the remainder is purely dots or empty, return null so we skip it.
+  String? _stripMoveNumberPrefix(String token) {
+    // This pattern captures optional digits+dot sequences like "12...", leaving rest
+    final re = RegExp(r'^(\d+\.+)(.*)$');
+    final match = re.firstMatch(token);
+    if (match == null) {
+      // no leading "<digits>."
+      return token;
+    }
+    // group2 => the portion after the leading digits/dots
+    final remainder = match.group(2) ?? '';
+    final trimmed = remainder.replaceFirst(RegExp(r'^\.+'), '');
+    // if trimmed is empty or still dots, skip
+    if (trimmed.trim().isEmpty || trimmed.trim() == '...') {
+      return null;
+    }
+    return trimmed;
   }
 
   void _handleNag(int nag) {
