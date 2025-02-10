@@ -74,7 +74,7 @@ final _promotionRoles = [Role.queen, Role.rook, Role.knight, Role.bishop];
 ///
 /// Computing perft numbers is useful for comparing, testing and debugging move
 /// generation correctness and performance.
-int perft(Position pos, int depth, {bool shouldLog = false}) {
+int perft<T extends Position<T>>(T pos, int depth, {bool shouldLog = false}) {
   if (depth < 1) return 1;
 
   final promotionRoles =

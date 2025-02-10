@@ -49,7 +49,7 @@ abstract class Position<T extends Position<T>> {
   Rule get rule;
 
   /// Creates a copy of this position with some fields changed.
-  Position<T> copyWith({
+  T copyWith({
     Board? board,
     Pockets? pockets,
     Side? turn,
@@ -509,7 +509,7 @@ abstract class Position<T extends Position<T>> {
   /// Plays a move and returns the updated [Position].
   ///
   /// Throws a [PlayException] if the move is not legal.
-  Position<T> play(Move move) {
+  T play(Move move) {
     if (isLegal(move)) {
       return playUnchecked(move);
     } else {
@@ -518,7 +518,7 @@ abstract class Position<T extends Position<T>> {
   }
 
   /// Plays a move without checking if the move is legal and returns the updated [Position].
-  Position<T> playUnchecked(Move move) {
+  T playUnchecked(Move move) {
     switch (move) {
       case NormalMove(from: final from, to: final to, promotion: final prom):
         final piece = board.pieceAt(from);
@@ -600,7 +600,7 @@ abstract class Position<T extends Position<T>> {
   }
 
   /// Returns the SAN of this [Move] and the updated [Position], without checking if the move is legal.
-  (Position<T>, String) makeSanUnchecked(Move move) {
+  (T, String) makeSanUnchecked(Move move) {
     final san = _makeSanWithoutSuffix(move);
     final newPos = playUnchecked(move);
     final suffixed = newPos.outcome?.winner != null
@@ -614,7 +614,7 @@ abstract class Position<T extends Position<T>> {
   /// Returns the SAN of this [Move] and the updated [Position].
   ///
   /// Throws a [PlayException] if the move is not legal.
-  (Position<T>, String) makeSan(Move move) {
+  (T, String) makeSan(Move move) {
     if (isLegal(move)) {
       return makeSanUnchecked(move);
     } else {
@@ -1336,7 +1336,7 @@ abstract class Atomic extends Position<Atomic> {
     final castlingSide = _getCastlingSide(move);
     final capturedPiece = castlingSide == null ? board.pieceAt(move.to) : null;
     final isCapture = capturedPiece != null || move.to == epSquare;
-    final newPos = super.playUnchecked(move) as Atomic;
+    final newPos = super.playUnchecked(move);
 
     if (isCapture) {
       Castles newCastles = newPos.castles;
@@ -1753,7 +1753,7 @@ abstract class ThreeCheck extends Position<ThreeCheck> {
 
   @override
   ThreeCheck playUnchecked(Move move) {
-    final newPos = super.playUnchecked(move) as ThreeCheck;
+    final newPos = super.playUnchecked(move);
     if (newPos.isCheck) {
       final (whiteChecks, blackChecks) = remainingChecks;
       return newPos.copyWith(
@@ -1896,10 +1896,6 @@ abstract class RacingKings extends Position<RacingKings> {
 
   @override
   bool hasInsufficientMaterial(Side side) => false;
-
-  @override
-  RacingKings playUnchecked(Move move) =>
-      super.playUnchecked(move) as RacingKings;
 
   @override
   RacingKings copyWith({
@@ -2232,9 +2228,6 @@ abstract class Horde extends Position<Horde> {
 
   @override
   bool get isVariantEnd => board.white.isEmpty;
-
-  @override
-  Horde playUnchecked(Move move) => super.playUnchecked(move) as Horde;
 
   @override
   Horde copyWith({

@@ -144,17 +144,17 @@ class PgnGame<T extends PgnNodeData> {
   /// Headers can include an optional 'Variant' and 'Fen' key.
   ///
   /// Throws a [PositionSetupException] if it does not meet basic validity requirements.
-  static Position startingPosition(PgnHeaders headers,
+  static T startingPosition<T extends Position<T>>(PgnHeaders headers,
       {bool? ignoreImpossibleCheck}) {
     final rule = Rule.fromPgn(headers['Variant']);
     if (rule == null) throw PositionSetupException.variant;
     if (!headers.containsKey('FEN')) {
-      return Position.initialPosition(rule);
+      return Position.initialPosition(rule) as T;
     }
     final fen = headers['FEN']!;
     try {
       return Position.setupPosition(rule, Setup.parseFen(fen),
-          ignoreImpossibleCheck: ignoreImpossibleCheck);
+          ignoreImpossibleCheck: ignoreImpossibleCheck) as T;
     } catch (err) {
       rethrow;
     }

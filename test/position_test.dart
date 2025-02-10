@@ -104,7 +104,7 @@ void main() {
     });
 
     test('parse pawn capture', () {
-      Position pos = Chess.initial;
+      Chess pos = Chess.initial;
       const line = ['e4', 'd5', 'c4', 'Nf6', 'exd5'];
       for (final san in line) {
         pos = pos.play(pos.parseSan(san)!);
@@ -124,7 +124,7 @@ void main() {
 
     test('parse fools mate', () {
       const moves = ['e4', 'e5', 'Qh5', 'Nf6', 'Bc4', 'Nc6', 'Qxf7#'];
-      Position position = Chess.initial;
+      Chess position = Chess.initial;
       for (final move in moves) {
         position = position.play(position.parseSan(move)!);
       }
@@ -807,7 +807,7 @@ void main() {
     });
 
     test('parse san', () {
-      Position position = Antichess.initial;
+      Antichess position = Antichess.initial;
       final moves = [
         'g3',
         'Nh6',
@@ -892,7 +892,7 @@ void main() {
         'Bxh1',
         'bxa8=K'
       ];
-      Position position = Antichess.initial;
+      Antichess position = Antichess.initial;
       for (final move in moves) {
         position = position.play(position.parseSan(move)!);
       }
@@ -915,7 +915,7 @@ void main() {
     });
 
     test('parse san', () {
-      Position position = Crazyhouse.initial;
+      Crazyhouse position = Crazyhouse.initial;
       final moves = [
         'd4',
         'd5',
@@ -976,7 +976,7 @@ void main() {
     });
 
     test('castle checkmates', () {
-      Position position = Crazyhouse.initial;
+      Crazyhouse position = Crazyhouse.initial;
       final moves = [
         'd4',
         'f5',
