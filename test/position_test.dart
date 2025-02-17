@@ -13,12 +13,12 @@ void main() {
 
     test('Chess.toString()', () {
       expect(Chess.initial.toString(),
-          'Chess(board: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR, turn: Side.white, castles: Castles(castlingRights: 0x8100000000000081), halfmoves: 0, fullmoves: 1)');
+          'Position(rule: chess, board: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR, turn: Side.white, castles: Castles(castlingRights: 0x8100000000000081), halfmoves: 0, fullmoves: 1)');
     });
 
     test('Antichess.toString()', () {
       expect(Antichess.initial.toString(),
-          'Antichess(board: $kInitialBoardFEN, turn: Side.white, castles: Castles(castlingRights: 0), halfmoves: 0, fullmoves: 1)');
+          'Position(rule: antichess, board: $kInitialBoardFEN, turn: Side.white, castles: Castles(castlingRights: 0), halfmoves: 0, fullmoves: 1)');
     });
 
     test('ply', () {
@@ -82,8 +82,8 @@ void main() {
         NormalMove(from: Square.d7, to: Square.d6),
         NormalMove(from: Square.f3, to: Square.f7),
       ];
-      final (_, sans) = moves
-          .fold<(Position<Chess>, List<String>)>((Chess.initial, []), (acc, e) {
+      final (_, sans) =
+          moves.fold<(Position, List<String>)>((Chess.initial, []), (acc, e) {
         final (pos, sans) = acc;
         final (newPos, san) = pos.makeSan(e);
         return (newPos, [...sans, san]);
@@ -104,7 +104,7 @@ void main() {
     });
 
     test('parse pawn capture', () {
-      Chess pos = Chess.initial;
+      Position pos = Chess.initial;
       const line = ['e4', 'd5', 'c4', 'Nf6', 'exd5'];
       for (final san in line) {
         pos = pos.play(pos.parseSan(san)!);
@@ -124,7 +124,7 @@ void main() {
 
     test('parse fools mate', () {
       const moves = ['e4', 'e5', 'Qh5', 'Nf6', 'Bc4', 'Nc6', 'Qxf7#'];
-      Chess position = Chess.initial;
+      Position position = Chess.initial;
       for (final move in moves) {
         position = position.play(position.parseSan(move)!);
       }
@@ -230,7 +230,7 @@ void main() {
     });
 
     test('chess960 parseSan castle moves', () {
-      Position<Chess> position = Chess.fromSetup(Setup.parseFen(
+      Position position = Chess.fromSetup(Setup.parseFen(
           'brknnqrb/pppppppp/8/8/8/8/PPPPPPPP/BRKNNQRB w KQkq - 0 1'));
       const moves =
           'b3 b6 Ne3 g6 Bxh8 Rxh8 O-O-O Qg7 Kb1 Ne6 Nd3 Nf6 h3 O-O-O Nc4 d5 Na3 Nd4 e3 Nc6 Nb5 Rhe8 f3 e5 g4 Re6 g5 Nd7 h4 h5 Bg2 a6 Nc3 Nc5 Nxc5 bxc5 Qxa6+ Bb7 Qa3 Kd7 Qxc5 Ra8 Nxd5 Rd6 Nf6+ Kc8 Ne8 Qf8 Nxd6+ cxd6 Qc3 f5 f4 e4 d3 Qd8 dxe4 Qb6 exf5 gxf5 Rxd6';
@@ -807,7 +807,7 @@ void main() {
     });
 
     test('parse san', () {
-      Antichess position = Antichess.initial;
+      Position position = Antichess.initial;
       final moves = [
         'g3',
         'Nh6',
@@ -892,7 +892,7 @@ void main() {
         'Bxh1',
         'bxa8=K'
       ];
-      Antichess position = Antichess.initial;
+      Position position = Antichess.initial;
       for (final move in moves) {
         position = position.play(position.parseSan(move)!);
       }
@@ -915,7 +915,7 @@ void main() {
     });
 
     test('parse san', () {
-      Crazyhouse position = Crazyhouse.initial;
+      Position position = Crazyhouse.initial;
       final moves = [
         'd4',
         'd5',
@@ -976,7 +976,7 @@ void main() {
     });
 
     test('castle checkmates', () {
-      Crazyhouse position = Crazyhouse.initial;
+      Position position = Crazyhouse.initial;
       final moves = [
         'd4',
         'f5',

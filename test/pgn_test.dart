@@ -227,8 +227,8 @@ void main() {
     test('transform pgn', () {
       final game = PgnGame.parsePgn('1. a4 ( 1. b4 b5 -- ) 1... a5');
       final PgnNode<PgnNodeWithFen> res =
-          game.moves.transform<PgnNodeWithFen, Chess>(
-        PgnGame.startingPosition<Chess>(game.headers),
+          game.moves.transform<PgnNodeWithFen, Position>(
+        PgnGame.startingPosition(game.headers),
         (pos, data, _) {
           final move = pos.parseSan(data.san);
           if (move != null) {
