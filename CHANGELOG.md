@@ -1,3 +1,8 @@
+## 0.10.0
+
+- Remove the type parameter from `Position` class.
+- Update dependencies.
+
 ## 0.9.2
 
 - Fixes castling rights parsing from FEN.
