@@ -13,7 +13,7 @@ import 'utils.dart';
 ///
 /// See [Chess] for a concrete implementation of standard rules.
 @immutable
-abstract class Position<T extends Position<T>> {
+abstract class Position {
   const Position({
     required this.board,
     this.pockets,
@@ -49,7 +49,7 @@ abstract class Position<T extends Position<T>> {
   Rule get rule;
 
   /// Creates a copy of this position with some fields changed.
-  Position<T> copyWith({
+  Position copyWith({
     Board? board,
     Pockets? pockets,
     Side? turn,
@@ -57,6 +57,7 @@ abstract class Position<T extends Position<T>> {
     Square? epSquare,
     int? halfmoves,
     int? fullmoves,
+    (int, int)? remainingChecks,
   });
 
   /// Create a [Position] from a [Setup] and [Rule].
@@ -509,7 +510,7 @@ abstract class Position<T extends Position<T>> {
   /// Plays a move and returns the updated [Position].
   ///
   /// Throws a [PlayException] if the move is not legal.
-  Position<T> play(Move move) {
+  Position play(Move move) {
     if (isLegal(move)) {
       return playUnchecked(move);
     } else {
@@ -518,7 +519,7 @@ abstract class Position<T extends Position<T>> {
   }
 
   /// Plays a move without checking if the move is legal and returns the updated [Position].
-  Position<T> playUnchecked(Move move) {
+  Position playUnchecked(Move move) {
     switch (move) {
       case NormalMove(from: final from, to: final to, promotion: final prom):
         final piece = board.pieceAt(from);
@@ -600,7 +601,7 @@ abstract class Position<T extends Position<T>> {
   }
 
   /// Returns the SAN of this [Move] and the updated [Position], without checking if the move is legal.
-  (Position<T>, String) makeSanUnchecked(Move move) {
+  (Position, String) makeSanUnchecked(Move move) {
     final san = _makeSanWithoutSuffix(move);
     final newPos = playUnchecked(move);
     final suffixed = newPos.outcome?.winner != null
@@ -614,7 +615,7 @@ abstract class Position<T extends Position<T>> {
   /// Returns the SAN of this [Move] and the updated [Position].
   ///
   /// Throws a [PlayException] if the move is not legal.
-  (Position<T>, String) makeSan(Move move) {
+  (Position, String) makeSan(Move move) {
     if (isLegal(move)) {
       return makeSanUnchecked(move);
     } else {
@@ -681,7 +682,7 @@ abstract class Position<T extends Position<T>> {
 
   @override
   String toString() {
-    return '$T(board: $board, turn: $turn, castles: $castles, halfmoves: $halfmoves, fullmoves: $fullmoves)';
+    return 'Position(rule: ${rule.name}, board: $board, turn: $turn, castles: $castles, halfmoves: $halfmoves, fullmoves: $fullmoves)';
   }
 
   @override
@@ -997,7 +998,7 @@ abstract class Position<T extends Position<T>> {
 
 /// A standard chess position.
 @immutable
-abstract class Chess extends Position<Chess> {
+abstract class Chess extends Position {
   @override
   Rule get rule => Rule.chess;
 
@@ -1055,22 +1056,11 @@ abstract class Chess extends Position<Chess> {
 
   @override
   Outcome? get variantOutcome => null;
-
-  @override
-  Chess copyWith({
-    Board? board,
-    Pockets? pockets,
-    Side? turn,
-    Castles? castles,
-    Square? epSquare,
-    int? halfmoves,
-    int? fullmoves,
-  });
 }
 
 /// A variant of chess where you lose all your pieces or get stalemated to win.
 @immutable
-abstract class Antichess extends Position<Antichess> {
+abstract class Antichess extends Position {
   @override
   Rule get rule => Rule.antichess;
 
@@ -1207,7 +1197,7 @@ abstract class Antichess extends Position<Antichess> {
 
 /// A variant of chess where captures cause an explosion to the surrounding pieces.
 @immutable
-abstract class Atomic extends Position<Atomic> {
+abstract class Atomic extends Position {
   @override
   Rule get rule => Rule.atomic;
 
@@ -1332,11 +1322,11 @@ abstract class Atomic extends Position<Atomic> {
   /// except pawns that are within a one square radius are removed from the
   /// board.
   @override
-  Atomic playUnchecked(Move move) {
+  Position playUnchecked(Move move) {
     final castlingSide = _getCastlingSide(move);
     final capturedPiece = castlingSide == null ? board.pieceAt(move.to) : null;
     final isCapture = capturedPiece != null || move.to == epSquare;
-    final newPos = super.playUnchecked(move) as Atomic;
+    final newPos = super.playUnchecked(move);
 
     if (isCapture) {
       Castles newCastles = newPos.castles;
@@ -1422,22 +1412,11 @@ abstract class Atomic extends Position<Atomic> {
     }
     return moves;
   }
-
-  @override
-  Atomic copyWith({
-    Board? board,
-    Pockets? pockets,
-    Side? turn,
-    Castles? castles,
-    Square? epSquare,
-    int? halfmoves,
-    int? fullmoves,
-  });
 }
 
 /// A variant where captured pieces can be dropped back on the board instead of moving a piece.
 @immutable
-abstract class Crazyhouse extends Position<Crazyhouse> {
+abstract class Crazyhouse extends Position {
   @override
   Rule get rule => Rule.crazyhouse;
 
@@ -1552,23 +1531,12 @@ abstract class Crazyhouse extends Position<Crazyhouse> {
       return mask;
     }
   }
-
-  @override
-  Crazyhouse copyWith({
-    Board? board,
-    Pockets? pockets,
-    Side? turn,
-    Castles? castles,
-    Square? epSquare,
-    int? halfmoves,
-    int? fullmoves,
-  });
 }
 
 /// A variant similar to standard chess, where you win by putting your king on the center
 /// of the board.
 @immutable
-abstract class KingOfTheHill extends Position<KingOfTheHill> {
+abstract class KingOfTheHill extends Position {
   @override
   Rule get rule => Rule.kingofthehill;
 
@@ -1637,23 +1605,12 @@ abstract class KingOfTheHill extends Position<KingOfTheHill> {
 
   @override
   bool hasInsufficientMaterial(Side side) => false;
-
-  @override
-  KingOfTheHill copyWith({
-    Board? board,
-    Pockets? pockets,
-    Side? turn,
-    Castles? castles,
-    Square? epSquare,
-    int? halfmoves,
-    int? fullmoves,
-  });
 }
 
 /// A variant similar to standard chess, where you can win if you put your opponent king
 /// into the third check.
 @immutable
-abstract class ThreeCheck extends Position<ThreeCheck> {
+abstract class ThreeCheck extends Position {
   @override
   Rule get rule => Rule.threecheck;
 
@@ -1752,8 +1709,8 @@ abstract class ThreeCheck extends Position<ThreeCheck> {
       board.piecesOf(side, Role.king) == board.bySide(side);
 
   @override
-  ThreeCheck playUnchecked(Move move) {
-    final newPos = super.playUnchecked(move) as ThreeCheck;
+  Position playUnchecked(Move move) {
+    final newPos = super.playUnchecked(move);
     if (newPos.isCheck) {
       final (whiteChecks, blackChecks) = remainingChecks;
       return newPos.copyWith(
@@ -1764,23 +1721,11 @@ abstract class ThreeCheck extends Position<ThreeCheck> {
       return newPos;
     }
   }
-
-  @override
-  ThreeCheck copyWith({
-    Board? board,
-    Pockets? pockets,
-    Side? turn,
-    Castles? castles,
-    Square? epSquare,
-    int? halfmoves,
-    int? fullmoves,
-    (int, int)? remainingChecks,
-  });
 }
 
 /// A variant where the goal is to put your king on the eigth rank.
 @immutable
-abstract class RacingKings extends Position<RacingKings> {
+abstract class RacingKings extends Position {
   @override
   Rule get rule => Rule.racingKings;
 
@@ -1896,26 +1841,11 @@ abstract class RacingKings extends Position<RacingKings> {
 
   @override
   bool hasInsufficientMaterial(Side side) => false;
-
-  @override
-  RacingKings playUnchecked(Move move) =>
-      super.playUnchecked(move) as RacingKings;
-
-  @override
-  RacingKings copyWith({
-    Board? board,
-    Pockets? pockets,
-    Side? turn,
-    Castles? castles,
-    Square? epSquare,
-    int? halfmoves,
-    int? fullmoves,
-  });
 }
 
 /// A variant where white has 36 pawns and black needs to destroy the Horde to win.
 @immutable
-abstract class Horde extends Position<Horde> {
+abstract class Horde extends Position {
   @override
   Rule get rule => Rule.horde;
 
@@ -2232,20 +2162,6 @@ abstract class Horde extends Position<Horde> {
 
   @override
   bool get isVariantEnd => board.white.isEmpty;
-
-  @override
-  Horde playUnchecked(Move move) => super.playUnchecked(move) as Horde;
-
-  @override
-  Horde copyWith({
-    Board? board,
-    Pockets? pockets,
-    Side? turn,
-    Castles? castles,
-    Square? epSquare,
-    int? halfmoves,
-    int? fullmoves,
-  });
 }
 
 /// The outcome of a [Position]. No [winner] means a draw.
@@ -2404,6 +2320,7 @@ class _Chess extends Chess {
     Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
+    (int, int)? remainingChecks,
   }) {
     return Chess(
       board: board ?? this.board,
@@ -2440,6 +2357,7 @@ class _Antichess extends Antichess {
     Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
+    (int, int)? remainingChecks,
   }) {
     return Antichess(
       board: board ?? this.board,
@@ -2476,6 +2394,7 @@ class _Atomic extends Atomic {
     Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
+    (int, int)? remainingChecks,
   }) {
     return Atomic(
       board: board ?? this.board,
@@ -2512,6 +2431,7 @@ class _Crazyhouse extends Crazyhouse {
     Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
+    (int, int)? remainingChecks,
   }) {
     return Crazyhouse(
       board: board ?? this.board,
@@ -2548,6 +2468,7 @@ class _KingOfTheHill extends KingOfTheHill {
     Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
+    (int, int)? remainingChecks,
   }) {
     return KingOfTheHill(
       board: board ?? this.board,
@@ -2623,6 +2544,7 @@ class _RacingKings extends RacingKings {
     Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
+    (int, int)? remainingChecks,
   }) {
     return RacingKings(
       board: board ?? this.board,
@@ -2659,6 +2581,7 @@ class _Horde extends Horde {
     Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
+    (int, int)? remainingChecks,
   }) {
     return Horde(
       board: board ?? this.board,
