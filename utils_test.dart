@@ -60,7 +60,7 @@ void main() {
       ),
     );
     expect(
-      makeLegalMoves(pos, isChess960: true)[Square.b8],
+      makeLegalMoves(pos, includeAlternateCastlingMoves: false)[Square.b8],
       equals(ISet(const {Square.a8, Square.c8, Square.e8})),
     );
   });

@@ -5,10 +5,10 @@ import 'position.dart';
 
 /// Returns all the legal moves of the [Position] in a convenient format.
 ///
-/// Includes both possible representations of castling moves (unless `chess960` is true).
+/// Includes both possible representations of castling moves unless `includeAlternateCastlingMoves` is false.
 IMap<Square, ISet<Square>> makeLegalMoves(
   Position pos, {
-  bool isChess960 = false,
+  bool includeAlternateCastlingMoves = true,
 }) {
   final Map<Square, ISet<Square>> result = {};
   for (final entry in pos.legalMoves.entries) {
@@ -16,7 +16,7 @@ IMap<Square, ISet<Square>> makeLegalMoves(
     if (dests.isNotEmpty) {
       final from = entry.key;
       final destSet = dests.toSet();
-      if (!isChess960 &&
+      if (includeAlternateCastlingMoves &&
           from == pos.board.kingOf(pos.turn) &&
           entry.key.file == 4) {
         if (dests.contains(Square.a1)) {

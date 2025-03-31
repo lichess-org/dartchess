@@ -1,3 +1,9 @@
+## 0.11.0
+
+- Rename `makeLegalMove` parameter `isChess960` to
+  `includeAlternateCastlingMoves` and invert its meaning. It now defaults to
+  `false`.
+
 ## 0.10.0
 
 - Remove the type parameter from `Position` class.
