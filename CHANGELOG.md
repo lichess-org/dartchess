@@ -1,3 +1,7 @@
+## 0.11.1
+
+- Add the current FEN information to `PlayException` messages.
+
 ## 0.11.0
 
 - Rename `makeLegalMove` parameter `isChess960` to

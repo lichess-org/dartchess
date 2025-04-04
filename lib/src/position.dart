@@ -514,7 +514,7 @@ abstract class Position {
     if (isLegal(move)) {
       return playUnchecked(move);
     } else {
-      throw PlayException('Invalid move $move');
+      throw PlayException('Invalid move $move on position $fen');
     }
   }
 
@@ -619,7 +619,7 @@ abstract class Position {
     if (isLegal(move)) {
       return makeSanUnchecked(move);
     } else {
-      throw PlayException('Invalid move $move');
+      throw PlayException('Invalid move $move on position $fen');
     }
   }
 
@@ -631,7 +631,7 @@ abstract class Position {
     if (isLegal(move)) {
       return makeSanUnchecked(move).$2;
     } else {
-      throw PlayException('Invalid move $move');
+      throw PlayException('Invalid move $move on position $fen');
     }
   }
 
