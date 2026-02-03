@@ -54,7 +54,7 @@ abstract class Position {
     Pockets? pockets,
     Side? turn,
     Castles? castles,
-    Square? epSquare,
+    Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
     (int, int)? remainingChecks,
@@ -596,6 +596,7 @@ abstract class Position {
           turn: turn.opposite,
           board: board.setPieceAt(to, Piece(color: turn, role: role)),
           pockets: pockets?.decrement(turn, role),
+          epSquare: null,
         );
     }
   }
