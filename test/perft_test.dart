@@ -99,10 +99,10 @@ void main() async {
       }
     }
   });
-  /*
+
   group('Atomic', () {
-    final tests =
-        Parser().parse(File('test/resources/atomic.perft').readAsStringSync());
+    final tests = Parser()
+        .parse(io.File('test/resources/atomic.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = Atomic.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases
@@ -115,11 +115,10 @@ void main() async {
       }
     }
   });
-      */
-  /*
+
   group('Crazyhouse', () {
     final tests = Parser()
-        .parse(File('test/resources/crazyhouse.perft').readAsStringSync());
+        .parse(io.File('test/resources/crazyhouse.perft').readAsStringSync());
     for (final perftTest in tests) {
       final position = Crazyhouse.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases
@@ -132,7 +131,7 @@ void main() async {
       }
     }
   });
-      */
+
   group('Horde', () {
     final tests = Parser()
         .parse(io.File('test/resources/horde.perft').readAsStringSync());
