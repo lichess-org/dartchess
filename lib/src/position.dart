@@ -567,10 +567,12 @@ abstract class Position {
         }
 
         final capturedPiece = castlingSide == null
-            ? board.pieceAt(to)
-            : to == epSquare && epCaptureTarget != null
-                ? board.pieceAt(epCaptureTarget)
-                : null;
+            ? (board.pieceAt(to) ??
+                (to == epSquare && epCaptureTarget != null
+                    ? board.pieceAt(epCaptureTarget)
+                    : null))
+            : null;
+
         final isCapture = capturedPiece != null;
 
         if (capturedPiece != null && capturedPiece.role == Role.rook) {
