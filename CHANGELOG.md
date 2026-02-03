@@ -1,3 +1,8 @@
+## 0.12.0
+
+- Fix an en passant bug in crackyhouse and atomichess variants. Now the perft tests
+  cover these variants as well.
+
 ## 0.11.1
 
 - Add the current FEN information to `PlayException` messages.
