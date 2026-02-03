@@ -914,6 +914,14 @@ void main() {
       }
     });
 
+    test('en passant capture', () {
+      final pos = Crazyhouse.fromSetup(Setup.parseFen(
+              'r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'))
+          .play(const NormalMove(from: Square.e5, to: Square.f6));
+      expect(
+          pos.pockets, equals(Pockets.empty.increment(Side.white, Role.pawn)));
+    });
+
     test('parse san', () {
       Position position = Crazyhouse.initial;
       final moves = [

@@ -54,7 +54,7 @@ abstract class Position {
     Pockets? pockets,
     Side? turn,
     Castles? castles,
-    Square? epSquare,
+    Object? epSquare = _uniqueObjectInstance,
     int? halfmoves,
     int? fullmoves,
     (int, int)? remainingChecks,
@@ -567,10 +567,12 @@ abstract class Position {
         }
 
         final capturedPiece = castlingSide == null
-            ? board.pieceAt(to)
-            : to == epSquare && epCaptureTarget != null
-                ? board.pieceAt(epCaptureTarget)
-                : null;
+            ? (board.pieceAt(to) ??
+                (to == epSquare && epCaptureTarget != null
+                    ? board.pieceAt(epCaptureTarget)
+                    : null))
+            : null;
+
         final isCapture = capturedPiece != null;
 
         if (capturedPiece != null && capturedPiece.role == Role.rook) {
@@ -596,6 +598,7 @@ abstract class Position {
           turn: turn.opposite,
           board: board.setPieceAt(to, Piece(color: turn, role: role)),
           pockets: pockets?.decrement(turn, role),
+          epSquare: null,
         );
     }
   }
@@ -1323,9 +1326,15 @@ abstract class Atomic extends Position {
   /// board.
   @override
   Position playUnchecked(Move move) {
+    if (move is! NormalMove) {
+      return copyWith();
+    }
+
     final castlingSide = _getCastlingSide(move);
     final capturedPiece = castlingSide == null ? board.pieceAt(move.to) : null;
-    final isCapture = capturedPiece != null || move.to == epSquare;
+    final isEnPassant =
+        move.to == epSquare && board.pieceAt(move.from)?.role == Role.pawn;
+    final isCapture = capturedPiece != null || isEnPassant;
     final newPos = super.playUnchecked(move);
 
     if (isCapture) {
