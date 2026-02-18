@@ -1124,6 +1124,8 @@ void main() {
         ['8/8/1N6/rb6/kr6/qn6/8/8 b - - 0 1', false, false],
         ['8/8/1N6/qq6/kq6/nq6/8/8 b - - 0 1', true, false],
         ['8/P1P5/8/8/8/8/brqqn3/k7 b - - 0 1', false, false],
+        // Only one white pawn left, this used to trigger a stackoverflow
+        ['rnb1kbnr/pppp2p1/6p1/8/8/8/2q5/P7 b kq - 0 1', false, false],
       ]) {
         final pos = Horde.fromSetup(Setup.parseFen(test[0] as String));
         expect(pos.hasInsufficientMaterial(Side.white), test[1]);

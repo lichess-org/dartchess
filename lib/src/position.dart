@@ -2036,12 +2036,13 @@ abstract class Horde extends Position {
         // Promote the pawn to a queen or a knight and check whether white can mate.
         final pawnSquare = board.piecesOf(side, Role.pawn).last;
 
-        final promoteToQueen = copyWith();
-        promoteToQueen.board
-            .setPieceAt(pawnSquare!, Piece(color: side, role: Role.queen));
-        final promoteToKnight = copyWith();
-        promoteToKnight.board
-            .setPieceAt(pawnSquare, Piece(color: side, role: Role.knight));
+        final promoteToQueen = copyWith(
+            board: board.setPieceAt(
+                pawnSquare!, Piece(color: side, role: Role.queen)));
+
+        final promoteToKnight = copyWith(
+            board: board.setPieceAt(
+                pawnSquare, Piece(color: side, role: Role.knight)));
         return promoteToQueen.hasInsufficientMaterial(side) &&
             promoteToKnight.hasInsufficientMaterial(side);
       } else if (hordeMap[Role.rook] == 1) {
