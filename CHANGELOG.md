@@ -1,6 +1,7 @@
 ## 0.12.1
 
 - Fix a bug in `Horde.hasInsufficientMaterial` that would cause a stack overflow if only one pawn was left.
+- Fix insufficient material detection when the Horde has a lone Queen.
 - Horde positions where the king is white instead of black are now correctly considered invalid.
 
 ## 0.12.0

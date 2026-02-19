@@ -2031,7 +2031,7 @@ abstract class Horde extends Position {
         return !(piecesMap[Role.pawn]! >= 1 ||
             piecesMap[Role.rook]! >= 1 ||
             _hordeBishops(side.opposite, SquareColor.light) >= 2 ||
-            _hordeBishops(side, SquareColor.dark) >= 2);
+            _hordeBishops(side.opposite, SquareColor.dark) >= 2);
       } else if (hordeMap[Role.pawn] == 1) {
         // Promote the pawn to a queen or a knight and check whether white can mate.
         final pawnSquare = board.piecesOf(side, Role.pawn).last;
