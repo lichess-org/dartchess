@@ -1,6 +1,7 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
+import 'dart:io' as io;
 
 void main() {
   group('Position', () {
@@ -1116,20 +1117,16 @@ void main() {
   });
 
   group('Horde', () {
-    test('insufficient material', () {
-      for (final test in [
-        ['8/5k2/8/8/8/4NN2/8/8 w - - 0 1', true, false],
-        ['8/8/8/2B5/p7/kp6/pq6/8 b - - 0 1', false, false],
-        ['8/8/8/2B5/r7/kn6/nr6/8 b - - 0 1', true, false],
-        ['8/8/1N6/rb6/kr6/qn6/8/8 b - - 0 1', false, false],
-        ['8/8/1N6/qq6/kq6/nq6/8/8 b - - 0 1', true, false],
-        ['8/P1P5/8/8/8/8/brqqn3/k7 b - - 0 1', false, false],
-        // Only one white pawn left, this used to trigger a stackoverflow
-        ['rnb1kbnr/pppp2p1/6p1/8/8/8/2q5/P7 b kq - 0 1', false, false],
-      ]) {
-        final pos = Horde.fromSetup(Setup.parseFen(test[0] as String));
-        expect(pos.hasInsufficientMaterial(Side.white), test[1]);
-        expect(pos.hasInsufficientMaterial(Side.black), test[2]);
+    group('insufficient material', () {
+      for (final line
+          in io.File('test/resources/horde_insufficient_material.csv')
+              .readAsLinesSync()) {
+        final [fen, expected, tag] = line.split(',');
+        test('[$tag] $fen', () {
+          final pos = Horde.fromSetup(Setup.parseFen(fen));
+          expect(pos.hasInsufficientMaterial(Side.white), expected == 'true');
+          expect(pos.hasInsufficientMaterial(Side.black), false);
+        });
       }
     });
   });
