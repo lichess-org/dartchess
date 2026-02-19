@@ -1,6 +1,7 @@
 import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
+import 'dart:io' as io;
 
 void main() {
   group('Position', () {
@@ -1116,19 +1117,67 @@ void main() {
   });
 
   group('Horde', () {
-    test('insufficient material', () {
-      for (final test in [
-        ['8/5k2/8/8/8/4NN2/8/8 w - - 0 1', true, false],
-        ['8/8/8/2B5/p7/kp6/pq6/8 b - - 0 1', false, false],
-        ['8/8/8/2B5/r7/kn6/nr6/8 b - - 0 1', true, false],
-        ['8/8/1N6/rb6/kr6/qn6/8/8 b - - 0 1', false, false],
-        ['8/8/1N6/qq6/kq6/nq6/8/8 b - - 0 1', true, false],
-        ['8/P1P5/8/8/8/8/brqqn3/k7 b - - 0 1', false, false],
-      ]) {
-        final pos = Horde.fromSetup(Setup.parseFen(test[0] as String));
-        expect(pos.hasInsufficientMaterial(Side.white), test[1]);
-        expect(pos.hasInsufficientMaterial(Side.black), test[2]);
+    group('insufficient material', () {
+      for (final line
+          in io.File('test/resources/horde_insufficient_material.csv')
+              .readAsLinesSync()) {
+        final [fen, expected, tag] = line.split(',');
+        test('[$tag] $fen', () {
+          final pos = Horde.fromSetup(Setup.parseFen(fen));
+          expect(pos.hasInsufficientMaterial(Side.white), expected == 'true');
+          expect(pos.hasInsufficientMaterial(Side.black), false);
+        });
       }
+    });
+
+    group('Position validation', () {
+      test('Empty board', () {
+        expect(
+            () => Horde.fromSetup(Setup.parseFen(kEmptyFEN)),
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.empty)));
+      });
+      test('Missing kings', () {
+        expect(
+            () => Horde.fromSetup(Setup.parseFen(
+                'rnbq1bnr/pppppppp/8/1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w - - 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.kings)));
+      });
+      test('King is white', () {
+        expect(
+            () => Horde.fromSetup(Setup.parseFen(
+                'rnbq1bnr/pppppppp/8/1PPK1PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w - - 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.kings)));
+      });
+      test('Both sides have a king', () {
+        expect(
+            () => Horde.fromSetup(Setup.parseFen(
+                'rnbqkbnr/pppppppp/8/1PPK1PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w kq - 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.kings)));
+      });
+      test('Opposite check', () {
+        expect(
+            () => Horde.fromSetup(
+                Setup.parseFen('3k4/8/1B6/8/8/8/8/8 w - - 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.oppositeCheck)));
+      });
+      test('Backrank pawns (black)', () {
+        expect(
+            () => Horde.fromSetup(
+                Setup.parseFen('2k3p1/8/8/8/8/3P4/8/8 w - - 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.pawnsOnBackrank)));
+      });
     });
   });
 }

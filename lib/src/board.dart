@@ -267,6 +267,7 @@ class Board {
           .union(pawnAttacks(attacker.opposite, square).intersect(pawns)));
 
   /// Puts a [Piece] on a [Square] overriding the existing one, if any.
+  @useResult
   Board setPieceAt(Square square, Piece piece) {
     return removePieceAt(square).copyWith(
       occupied: occupied.withSquare(square),
@@ -283,6 +284,7 @@ class Board {
   }
 
   /// Removes the [Piece] at this [Square] if it exists.
+  @useResult
   Board removePieceAt(Square square) {
     final piece = pieceAt(square);
     return piece != null
@@ -309,11 +311,13 @@ class Board {
   }
 
   /// Returns a new board with a new [promoted] square set.
+  @useResult
   Board withPromoted(SquareSet promoted) {
     return copyWith(promoted: promoted);
   }
 
   /// Returns a copy of this board with some fields updated.
+  @useResult
   Board copyWith({
     SquareSet? occupied,
     SquareSet? promoted,

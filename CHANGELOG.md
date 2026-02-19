@@ -1,6 +1,12 @@
+## 0.12.1
+
+- Fix a bug in `Horde.hasInsufficientMaterial` that would cause a stack overflow if only one pawn was left.
+- Fix insufficient material detection when the Horde has a lone Queen.
+- Horde positions where the king is white instead of black are now correctly considered invalid.
+
 ## 0.12.0
 
-- Fix an en passant bug in crackyhouse and atomichess variants. Now the perft tests
+- Fix an en passant bug in crazyhouse and atomicchess variants. Now the perft tests
   cover these variants as well.
 
 ## 0.11.1
