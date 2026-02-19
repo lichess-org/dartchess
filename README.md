@@ -1,3 +1,8 @@
+[![Tests](https://github.com/lichess-org/dartchess/workflows/Dart/badge.svg)](https://github.com/lichess-org/dartchess/actions?query=workflow%3A%22Dart%22)
+[![pub package](https://img.shields.io/pub/v/dartchess.svg)](https://pub.dev/packages/dartchess)
+[![package publisher](https://img.shields.io/pub/publisher/dartchess.svg)](https://pub.dev/packages/dartchess/publisher)
+[![Discord](https://img.shields.io/discord/280713822073913354?label=Discord&logo=discord&style=flat)](https://discord.com/channels/280713822073913354/807722604478988348)
+
 Chess and chess variant rules written in dart for native platforms (does not support web).
 
 ## Features
