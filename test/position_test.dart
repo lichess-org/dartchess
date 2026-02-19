@@ -1129,5 +1129,55 @@ void main() {
         });
       }
     });
+
+    group('Position validation', () {
+      test('Empty board', () {
+        expect(
+            () => Horde.fromSetup(Setup.parseFen(kEmptyFEN)),
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.empty)));
+      });
+      test('Missing kings', () {
+        expect(
+            () => Horde.fromSetup(Setup.parseFen(
+                'rnbq1bnr/pppppppp/8/1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w - - 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.kings)));
+      });
+      test('King is white', () {
+        expect(
+            () => Horde.fromSetup(Setup.parseFen(
+                'rnbq1bnr/pppppppp/8/1PPK1PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w - - 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.kings)));
+      });
+      test('Both sides have a king', () {
+        expect(
+            () => Horde.fromSetup(Setup.parseFen(
+                'rnbqkbnr/pppppppp/8/1PPK1PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w kq - 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.kings)));
+      });
+      test('Opposite check', () {
+        expect(
+            () => Horde.fromSetup(
+                Setup.parseFen('3k4/8/1B6/8/8/8/8/8 w - - 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.oppositeCheck)));
+      });
+      test('Backrank pawns (black)', () {
+        expect(
+            () => Horde.fromSetup(
+                Setup.parseFen('2k3p1/8/8/8/8/3P4/8/8 w - - 0 1')),
+            throwsA(predicate((e) =>
+                e is PositionSetupException &&
+                e.cause == IllegalSetupCause.pawnsOnBackrank)));
+      });
+    });
   });
 }

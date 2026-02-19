@@ -1913,7 +1913,7 @@ abstract class Horde extends Position {
       throw PositionSetupException.empty;
     }
 
-    if (board.kings.size != 1) {
+    if (board.kings.size != 1 || board.kingOf(Side.black) == null) {
       throw PositionSetupException.kings;
     }
 
@@ -1966,12 +1966,12 @@ abstract class Horde extends Position {
 
   @override
   bool hasInsufficientMaterial(Side side) {
-    // side with king can always win by capturing the horde
-    if (board.piecesOf(side, Role.king).isNotEmpty) {
+    // Black can always win by capturing the horde
+    if (side == Side.black) {
       return false;
     }
 
-    // now color represents horde and color.opposite is pieces
+    // now side represents horde (white) and side.opposite is pieces (black)
     final hordeNum = board.piecesOf(side, Role.pawn).size +
         board.piecesOf(side, Role.rook).size +
         board.piecesOf(side, Role.queen).size +
