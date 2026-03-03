@@ -1,3 +1,7 @@
+## 0.12.2
+
+- Add `SquareSet explosionSquares(Move move)` method to Atomic class.
+
 ## 0.12.1
 
 - Fix a bug in `Horde.hasInsufficientMaterial` that would cause a stack overflow if only one pawn was left.
