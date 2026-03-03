@@ -1318,6 +1318,24 @@ abstract class Atomic extends Position {
     }
   }
 
+  /// Returns the set of squares that explode when [move] is played.
+  ///
+  /// The explosion center ([move].to) and all surrounding non-pawn occupied
+  /// squares are included. Returns an empty set if the move is not a capture.
+  SquareSet explosionSquares(Move move) {
+    if (move is! NormalMove) return SquareSet.empty;
+    if (_getCastlingSide(move) != null) return SquareSet.empty;
+    final capturedPiece = board.pieceAt(move.to);
+    final isEnPassant =
+        move.to == epSquare && board.pieceAt(move.from)?.role == Role.pawn;
+    if (capturedPiece == null && !isEnPassant) return SquareSet.empty;
+    final surrounding = kingAttacks(move.to)
+        .intersect(board.occupied)
+        .diff(board.pawns)
+        .withoutSquare(move.from);
+    return surrounding.withSquare(move.to);
+  }
+
   /// Plays a move without checking if the move is legal.
   ///
   /// In addition to standard rules, all captures cause an explosion by which

@@ -185,7 +185,7 @@ extension type const Rank._(int value) implements int {
 ///
 /// The square is represented with an integer ranging from 0 to 63, using a
 /// little-endian rank-file mapping (LERF):
-/// ```
+/// ```txt
 ///  8 | 56 57 58 59 60 61 62 63
 ///  7 | 48 49 50 51 52 53 54 55
 ///  6 | 40 41 42 43 44 45 46 47
