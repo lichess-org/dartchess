@@ -773,6 +773,31 @@ void main() {
         expect(pos.hasInsufficientMaterial(Side.black), test[2]);
       }
     });
+
+    test('explosionSquares', () {
+      // Giuoco Piano: Bxf7+ explodes f7 (center), f6 (knight), e8 (king), f8 (bishop)
+      // g7 is a pawn and is not included
+      final pos = Atomic.fromSetup(Setup.parseFen(
+          'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'));
+      expect(
+        pos.explosionSquares(NormalMove.fromUci('c4f7')),
+        SquareSet.fromSquares([Square.f7, Square.f6, Square.e8, Square.f8]),
+      );
+
+      // Non-capture move returns empty set
+      expect(
+        pos.explosionSquares(NormalMove.fromUci('d2d3')),
+        SquareSet.empty,
+      );
+
+      // En passant: explosion centered on the destination square
+      final epPos = Atomic.fromSetup(Setup.parseFen(
+          'rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'));
+      expect(
+        epPos.explosionSquares(NormalMove.fromUci('e5f6')),
+        const SquareSet.fromSquare(Square.f6),
+      );
+    });
   });
 
   group('Antichess', () {
