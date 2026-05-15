@@ -1,3 +1,7 @@
+## 0.13.0
+
+- makeLegalMoves now returns a `Map<Square, Set<Square>>`.
+
 ## 0.12.3
 
 - Fix `Crazyhouse.isGameOver` and `Crazyhouse.isCheckmate` in positions where all legal moves are drop moves.

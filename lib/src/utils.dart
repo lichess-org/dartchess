@@ -1,16 +1,14 @@
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
-
 import 'models.dart';
 import 'position.dart';
 
 /// Returns all the legal moves of the [Position] in a convenient format.
 ///
 /// Includes both possible representations of castling moves unless `includeAlternateCastlingMoves` is false.
-IMap<Square, ISet<Square>> makeLegalMoves(
+Map<Square, Set<Square>> makeLegalMoves(
   Position pos, {
   bool includeAlternateCastlingMoves = true,
 }) {
-  final Map<Square, ISet<Square>> result = {};
+  final Map<Square, Set<Square>> result = {};
   for (final entry in pos.legalMoves.entries) {
     final dests = entry.value.squares;
     if (dests.isNotEmpty) {
@@ -30,8 +28,8 @@ IMap<Square, ISet<Square>> makeLegalMoves(
           destSet.add(Square.g8);
         }
       }
-      result[from] = ISet(destSet);
+      result[from] = destSet;
     }
   }
-  return IMap(result);
+  return result;
 }
