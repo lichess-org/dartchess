@@ -213,33 +213,30 @@ class Setup {
 /// Pockets (captured pieces) in chess variants like [Crazyhouse].
 @immutable
 class Pockets {
-  /// Creates a new [Pockets] with the provided value.
-  const Pockets({
-    required this.value,
-  });
+  const Pockets({required BySide<ByRole<int>> value}) : _value = value;
 
-  final BySide<ByRole<int>> value;
+  final BySide<ByRole<int>> _value;
 
   /// An empty pocket.
   static const empty = Pockets(value: _emptyPocketsBySide);
 
   /// Gets the total number of pieces in the pocket.
-  int get size => value.values
+  int get size => _value.values
       .fold(0, (acc, e) => acc + e.values.fold(0, (acc, e) => acc + e));
 
   /// Gets the number of pieces of that [Side] and [Role] in the pocket.
   int of(Side side, Role role) {
-    return value[side]![role]!;
+    return _value[side]![role]!;
   }
 
   /// Counts the number of pieces by [Role].
   int count(Role role) {
-    return value[Side.white]![role]! + value[Side.black]![role]!;
+    return _value[Side.white]![role]! + _value[Side.black]![role]!;
   }
 
   /// Checks whether this side has at least 1 quality (any piece but a pawn).
   bool hasQuality(Side side) {
-    final bySide = value[side]!;
+    final bySide = _value[side]!;
     return bySide[Role.knight]! > 0 ||
         bySide[Role.bishop]! > 0 ||
         bySide[Role.rook]! > 0 ||
@@ -249,19 +246,19 @@ class Pockets {
 
   /// Checks whether this side has at least 1 pawn.
   bool hasPawn(Side side) {
-    return value[side]![Role.pawn]! > 0;
+    return _value[side]![Role.pawn]! > 0;
   }
 
   /// Increments the number of pieces in the pocket of that [Side] and [Role].
   Pockets increment(Side side, Role role) {
-    final newPocket = {...value[side]!, role: of(side, role) + 1};
-    return Pockets(value: {...value, side: newPocket});
+    final newPocket = {..._value[side]!, role: of(side, role) + 1};
+    return Pockets(value: {..._value, side: newPocket});
   }
 
   /// Decrements the number of pieces in the pocket of that [Side] and [Role].
   Pockets decrement(Side side, Role role) {
-    final newPocket = {...value[side]!, role: of(side, role) - 1};
-    return Pockets(value: {...value, side: newPocket});
+    final newPocket = {..._value[side]!, role: of(side, role) - 1};
+    return Pockets(value: {..._value, side: newPocket});
   }
 
   @override

@@ -566,7 +566,7 @@ class PgnComment {
 
     return PgnComment(
         text: text.isNotEmpty ? text : null,
-        shapes: List.unmodifiable(shapes),
+        shapes: shapes,
         emt: emt,
         clock: clock,
         eval: eval);
@@ -601,7 +601,9 @@ class PgnComment {
     if (text != other.text ||
         clock != other.clock ||
         emt != other.emt ||
-        eval != other.eval) return false;
+        eval != other.eval) {
+      return false;
+    }
     if (shapes.length != other.shapes.length) return false;
     for (var i = 0; i < shapes.length; i++) {
       if (shapes[i] != other.shapes[i]) return false;
