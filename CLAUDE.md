@@ -5,8 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# Run all tests
-dart test
+# Run all tests (exclude slow full_perft tests)
+dart test -x full_perft
 
 # Run a single test file
 dart test test/position_test.dart
@@ -51,7 +51,7 @@ This is a pure Dart chess rules library (`package:dartchess`) supporting standar
 
 **`position.dart`** — the heart of the library. `Position` is an immutable abstract base class; each variant subclasses it: `Chess`, `Antichess`, `Atomic`, `Crazyhouse`, `KingOfTheHill`, `ThreeCheck`, `RacingKings`, `Horde`. Concrete private implementations (`_Chess`, etc.) are returned by `fromSetup`. Key API:
 - `Position.setupPosition(rule, setup)` — variant-aware factory
-- `pos.legalMoves` — `IMap<Square, SquareSet>` (king-to-rook encoding for castling)
+- `pos.legalMoves` — `Map<Square, SquareSet>` (king-to-rook encoding for castling)
 - `pos.play(move)` / `pos.playUnchecked(move)` — returns new position
 - `pos.parseSan(san)` / `pos.makeSan(move)` — SAN I/O
 - `pos.isCheckmate`, `pos.isStalemate`, `pos.isGameOver`, `pos.outcome`
@@ -65,7 +65,7 @@ This is a pure Dart chess rules library (`package:dartchess`) supporting standar
 
 ### Immutability
 
-All `Position`, `Board`, `Setup`, `Castles` instances are immutable (`@immutable`). The library uses `fast_immutable_collections` (`IMap`, `ISet`) for collections stored in positions.
+All `Position`, `Board`, `Setup`, `Castles` instances are immutable (`@immutable`). Standard Dart collections are used throughout; immutability is enforced by the library's internal discipline rather than FIC types.
 
 ### Chess960
 

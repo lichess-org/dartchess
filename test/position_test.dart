@@ -1,4 +1,3 @@
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 import 'dart:io' as io;
@@ -361,7 +360,7 @@ void main() {
     });
 
     test('standard position legal moves', () {
-      final moves = IMap({
+      final moves = {
         Square.a1: SquareSet.empty,
         Square.b1: const SquareSet.fromSquare(Square.a3).withSquare(Square.c3),
         Square.c1: SquareSet.empty,
@@ -378,7 +377,7 @@ void main() {
         Square.f2: const SquareSet.fromSquare(Square.f3).withSquare(Square.f4),
         Square.g2: const SquareSet.fromSquare(Square.g3).withSquare(Square.g4),
         Square.h2: const SquareSet.fromSquare(Square.h3).withSquare(Square.h4),
-      });
+      };
       expect(Chess.initial.legalMoves, equals(moves));
     });
 
@@ -665,10 +664,10 @@ void main() {
             .play(const NormalMove(from: Square.h1, to: Square.f1));
         expect(
             pos.castles.rooksPositions[Side.white],
-            equals(IMap(const {
+            equals(const {
               CastlingSide.queen: Square.a1,
               CastlingSide.king: null
-            })));
+            }));
         expect(pos.castles.castlingRights.has(Square.h1), false);
       });
 

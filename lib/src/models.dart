@@ -1,5 +1,4 @@
 import 'package:meta/meta.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import './square_set.dart';
 
 /// The chessboard side, white or black.
@@ -337,9 +336,9 @@ extension type const Square._(int value) implements int {
   static const h8 = Square(63);
 }
 
-typedef BySide<T> = IMap<Side, T>;
-typedef ByRole<T> = IMap<Role, T>;
-typedef ByCastlingSide<T> = IMap<CastlingSide, T>;
+typedef BySide<T> = Map<Side, T>;
+typedef ByRole<T> = Map<Role, T>;
+typedef ByCastlingSide<T> = Map<CastlingSide, T>;
 
 /// Describes a chess piece kind by its color and role.
 enum PieceKind {

@@ -1,5 +1,4 @@
 import 'package:dartchess/dartchess.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -61,7 +60,7 @@ void main() {
     );
     expect(
       makeLegalMoves(pos, includeAlternateCastlingMoves: false)[Square.b8],
-      equals(ISet(const {Square.a8, Square.c8, Square.e8})),
+      equals(const {Square.a8, Square.c8, Square.e8}),
     );
   });
 }

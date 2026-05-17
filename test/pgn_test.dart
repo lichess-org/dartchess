@@ -1,6 +1,5 @@
 import 'package:dartchess/dartchess.dart' hide File;
 import 'package:test/test.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'dart:io';
 
 import 'pgn_fixtures.dart';
@@ -111,7 +110,7 @@ void main() {
               '[%csl Ya1][%cal Ra1a1,Be1e2]commentary [%csl Gh8]'),
           const PgnComment(
               text: 'commentary',
-              shapes: IListConst([
+              shapes: [
                 PgnCommentShape(
                     color: CommentShapeColor.yellow,
                     from: Square.a1,
@@ -128,7 +127,7 @@ void main() {
                     color: CommentShapeColor.green,
                     from: Square.h8,
                     to: Square.h8)
-              ])));
+              ]));
 
       expect(
           PgnComment.fromPgn('prefix [%eval .99,23]'),
@@ -147,12 +146,12 @@ void main() {
           PgnComment.fromPgn('[%csl Ga1]foo'),
           const PgnComment(
               text: 'foo',
-              shapes: IListConst([
+              shapes: [
                 PgnCommentShape(
                     color: CommentShapeColor.green,
                     from: Square.a1,
                     to: Square.a1)
-              ])));
+              ]));
 
       expect(
           PgnComment.fromPgn(
@@ -169,7 +168,7 @@ void main() {
                   Duration(hours: 1, minutes: 2, seconds: 3, milliseconds: 400),
               eval: PgnEvaluation.pawns(pawns: 10),
               clock: Duration(seconds: 1),
-              shapes: IListConst([
+              shapes: [
                 PgnCommentShape(
                     color: CommentShapeColor.yellow,
                     from: Square.a1,
@@ -182,7 +181,7 @@ void main() {
                     color: CommentShapeColor.red,
                     from: Square.a1,
                     to: Square.c1)
-              ])).makeComment(),
+              ]).makeComment(),
           'text [%csl Ya1] [%cal Ra1b1,Ra1c1] [%eval 10.00] [%emt 1:02:03.4] [%clk 0:00:01]');
 
       expect(

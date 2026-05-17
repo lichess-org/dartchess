@@ -1,5 +1,4 @@
 import 'package:meta/meta.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'dart:math' as math;
 import './square_set.dart';
 import './models.dart';
@@ -255,23 +254,31 @@ class Pockets {
 
   /// Increments the number of pieces in the pocket of that [Side] and [Role].
   Pockets increment(Side side, Role role) {
-    final newPocket = value[side]!.add(role, of(side, role) + 1);
-    return Pockets(value: value.add(side, newPocket));
+    final newPocket = {...value[side]!, role: of(side, role) + 1};
+    return Pockets(value: {...value, side: newPocket});
   }
 
   /// Decrements the number of pieces in the pocket of that [Side] and [Role].
   Pockets decrement(Side side, Role role) {
-    final newPocket = value[side]!.add(role, of(side, role) - 1);
-    return Pockets(value: value.add(side, newPocket));
+    final newPocket = {...value[side]!, role: of(side, role) - 1};
+    return Pockets(value: {...value, side: newPocket});
   }
 
   @override
   bool operator ==(Object other) {
-    return identical(this, other) || other is Pockets && other.value == value;
+    if (identical(this, other)) return true;
+    if (other is! Pockets) return false;
+    for (final side in Side.values) {
+      for (final role in Role.values) {
+        if (of(side, role) != other.of(side, role)) return false;
+      }
+    }
+    return true;
   }
 
   @override
-  int get hashCode => value.hashCode;
+  int get hashCode => Object.hashAll(
+      Side.values.expand((s) => Role.values.map((r) => of(s, r))));
 }
 
 Pockets _parsePockets(String pocketPart) {
@@ -398,16 +405,16 @@ int _nthIndexOf(String haystack, String needle, int nth) {
   return index;
 }
 
-const ByRole<int> _emptyPocket = IMapConst({
+const ByRole<int> _emptyPocket = {
   Role.pawn: 0,
   Role.knight: 0,
   Role.bishop: 0,
   Role.rook: 0,
   Role.queen: 0,
   Role.king: 0,
-});
+};
 
-const BySide<ByRole<int>> _emptyPocketsBySide = IMapConst({
+const BySide<ByRole<int>> _emptyPocketsBySide = {
   Side.white: _emptyPocket,
   Side.black: _emptyPocket,
-});
+};

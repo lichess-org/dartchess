@@ -1,6 +1,5 @@
 import 'package:meta/meta.dart';
 import 'dart:math' as math;
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'attacks.dart';
 import 'castles.dart';
 import 'models.dart';
@@ -191,13 +190,13 @@ abstract class Position {
   ///
   /// Use the [makeLegalMoves] helper to get all the legal moves including alternative
   /// castling moves.
-  IMap<Square, SquareSet> get legalMoves {
+  Map<Square, SquareSet> get legalMoves {
     final context = _makeContext();
-    if (context.isVariantEnd) return IMap(const {});
-    return IMap({
+    if (context.isVariantEnd) return const {};
+    return {
       for (final s in board.bySide(turn).squares)
         s: _legalMovesOf(s, context: context)
-    });
+    };
   }
 
   /// Gets all the legal drops of this position.
