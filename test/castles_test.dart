@@ -46,7 +46,10 @@ void main() {
       expect(
           Castles.standard.discardSide(Side.white).rooksPositions,
           equals({
-            Side.white: const {CastlingSide.queen: null, CastlingSide.king: null},
+            Side.white: const {
+              CastlingSide.queen: null,
+              CastlingSide.king: null
+            },
             Side.black: const {
               CastlingSide.queen: Square.a8,
               CastlingSide.king: Square.h8,
@@ -60,7 +63,10 @@ void main() {
               CastlingSide.queen: Square.a1,
               CastlingSide.king: Square.h1,
             },
-            Side.black: const {CastlingSide.queen: null, CastlingSide.king: null},
+            Side.black: const {
+              CastlingSide.queen: null,
+              CastlingSide.king: null
+            },
           }));
     });
   });

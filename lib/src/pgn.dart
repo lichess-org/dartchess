@@ -492,11 +492,7 @@ class PgnEvaluation {
 @immutable
 class PgnComment {
   const PgnComment(
-      {this.text,
-      this.shapes = const [],
-      this.clock,
-      this.emt,
-      this.eval})
+      {this.text, this.shapes = const [], this.clock, this.emt, this.eval})
       : assert(text == null || text != '');
 
   /// Comment string.
@@ -602,7 +598,10 @@ class PgnComment {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! PgnComment) return false;
-    if (text != other.text || clock != other.clock || emt != other.emt || eval != other.eval) return false;
+    if (text != other.text ||
+        clock != other.clock ||
+        emt != other.emt ||
+        eval != other.eval) return false;
     if (shapes.length != other.shapes.length) return false;
     for (var i = 0; i < shapes.length; i++) {
       if (shapes[i] != other.shapes[i]) return false;
@@ -611,7 +610,8 @@ class PgnComment {
   }
 
   @override
-  int get hashCode => Object.hash(text, Object.hashAll(shapes), clock, emt, eval);
+  int get hashCode =>
+      Object.hash(text, Object.hashAll(shapes), clock, emt, eval);
 }
 
 /// A frame used for parsing a line

@@ -108,26 +108,18 @@ void main() {
       expect(
           PgnComment.fromPgn(
               '[%csl Ya1][%cal Ra1a1,Be1e2]commentary [%csl Gh8]'),
-          const PgnComment(
-              text: 'commentary',
-              shapes: [
-                PgnCommentShape(
-                    color: CommentShapeColor.yellow,
-                    from: Square.a1,
-                    to: Square.a1),
-                PgnCommentShape(
-                    color: CommentShapeColor.red,
-                    from: Square.a1,
-                    to: Square.a1),
-                PgnCommentShape(
-                    color: CommentShapeColor.blue,
-                    from: Square.e1,
-                    to: Square.e2),
-                PgnCommentShape(
-                    color: CommentShapeColor.green,
-                    from: Square.h8,
-                    to: Square.h8)
-              ]));
+          const PgnComment(text: 'commentary', shapes: [
+            PgnCommentShape(
+                color: CommentShapeColor.yellow,
+                from: Square.a1,
+                to: Square.a1),
+            PgnCommentShape(
+                color: CommentShapeColor.red, from: Square.a1, to: Square.a1),
+            PgnCommentShape(
+                color: CommentShapeColor.blue, from: Square.e1, to: Square.e2),
+            PgnCommentShape(
+                color: CommentShapeColor.green, from: Square.h8, to: Square.h8)
+          ]));
 
       expect(
           PgnComment.fromPgn('prefix [%eval .99,23]'),
@@ -144,14 +136,10 @@ void main() {
 
       expect(
           PgnComment.fromPgn('[%csl Ga1]foo'),
-          const PgnComment(
-              text: 'foo',
-              shapes: [
-                PgnCommentShape(
-                    color: CommentShapeColor.green,
-                    from: Square.a1,
-                    to: Square.a1)
-              ]));
+          const PgnComment(text: 'foo', shapes: [
+            PgnCommentShape(
+                color: CommentShapeColor.green, from: Square.a1, to: Square.a1)
+          ]));
 
       expect(
           PgnComment.fromPgn(
