@@ -1,6 +1,14 @@
 ## 0.13.0
 
-- makeLegalMoves now returns a `Map<Square, Set<Square>>`.
+**Breaking changes:**
+
+- Remove `fast_immutable_collections` dependency. Public APIs that previously returned `IMap` or `IList` now return standard Dart collections:
+  - `Position.legalMoves` returns `Map<Square, SquareSet>` (was `IMap<Square, SquareSet>`)
+  - `Board.materialCount` returns `ByRole<int>` / `Map<Role, int>` (was `IMap<Role, int>`)
+  - `Castles.rooksPositions` returns `BySide<ByCastlingSide<Square?>>` / `Map` (was `IMap`-backed)
+  - `Castles.paths` returns `BySide<ByCastlingSide<SquareSet>>` / `Map` (was `IMap`-backed)
+  - `PgnComment.shapes` returns `List<PgnCommentShape>` (was `IList<PgnCommentShape>`)
+  - The `BySide<T>`, `ByRole<T>`, and `ByCastlingSide<T>` typedefs are now aliases for standard `Map` types.
 
 ## 0.12.3
 
