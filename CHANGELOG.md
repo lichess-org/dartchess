@@ -12,6 +12,10 @@
   - The `BySide<T>`, `ByRole<T>`, and `ByCastlingSide<T>` typedefs are now aliases for standard `Map` types.
 - `Pockets.value` is removed; use `Pockets.of(side, role)`, `Pockets.count(role)`, `Pockets.size`, `Pockets.hasQuality(side)`, and `Pockets.hasPawn(side)` instead.
 
+The `Position` class remains completely immutable. Only the return types of some
+methods have changed to use standard Dart collections instead of immutable
+collections.
+
 ## 0.12.3
 
 - Fix `Crazyhouse.isGameOver` and `Crazyhouse.isCheckmate` in positions where all legal moves are drop moves.
