@@ -195,17 +195,18 @@ void main() {
     test('PgnComment implements hashCode/==', () {
       const comment = '[%csl Ga1][%cal Ra1h1,Gb1b8] foo [%clk 3:25:45]';
       expect(PgnComment.fromPgn(comment) == PgnComment.fromPgn(comment), true);
-      expect(
-          PgnComment.fromPgn(comment).hashCode,
+      expect(PgnComment.fromPgn(comment).hashCode,
           PgnComment.fromPgn(comment).hashCode);
     });
 
     test('PgnComment == distinguishes shapes content', () {
       const withShape = PgnComment(shapes: [
-        PgnCommentShape(color: CommentShapeColor.green, from: Square.a1, to: Square.a1),
+        PgnCommentShape(
+            color: CommentShapeColor.green, from: Square.a1, to: Square.a1),
       ]);
       const withDifferentShape = PgnComment(shapes: [
-        PgnCommentShape(color: CommentShapeColor.red, from: Square.a1, to: Square.a1),
+        PgnCommentShape(
+            color: CommentShapeColor.red, from: Square.a1, to: Square.a1),
       ]);
       const withoutShape = PgnComment();
 
