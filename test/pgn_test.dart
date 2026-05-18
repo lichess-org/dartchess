@@ -195,6 +195,52 @@ void main() {
     test('PgnComment implements hashCode/==', () {
       const comment = '[%csl Ga1][%cal Ra1h1,Gb1b8] foo [%clk 3:25:45]';
       expect(PgnComment.fromPgn(comment) == PgnComment.fromPgn(comment), true);
+      expect(
+          PgnComment.fromPgn(comment).hashCode,
+          PgnComment.fromPgn(comment).hashCode);
+    });
+
+    test('PgnComment == distinguishes shapes content', () {
+      const withShape = PgnComment(shapes: [
+        PgnCommentShape(color: CommentShapeColor.green, from: Square.a1, to: Square.a1),
+      ]);
+      const withDifferentShape = PgnComment(shapes: [
+        PgnCommentShape(color: CommentShapeColor.red, from: Square.a1, to: Square.a1),
+      ]);
+      const withoutShape = PgnComment();
+
+      expect(withShape, withShape);
+      expect(withShape, isNot(withDifferentShape));
+      expect(withShape, isNot(withoutShape));
+      expect(withoutShape, withoutShape);
+    });
+
+    test('PgnComment == is order-sensitive for shapes', () {
+      const shapeA = PgnCommentShape(
+          color: CommentShapeColor.green, from: Square.a1, to: Square.h1);
+      const shapeB = PgnCommentShape(
+          color: CommentShapeColor.red, from: Square.b1, to: Square.b8);
+
+      const ab = PgnComment(shapes: [shapeA, shapeB]);
+      const ba = PgnComment(shapes: [shapeB, shapeA]);
+
+      expect(ab, isNot(ba));
+    });
+
+    test('PgnComment hashCode consistent with ==', () {
+      const shapeA = PgnCommentShape(
+          color: CommentShapeColor.green, from: Square.a1, to: Square.h1);
+      const shapeB = PgnCommentShape(
+          color: CommentShapeColor.red, from: Square.b1, to: Square.b8);
+
+      const c1 = PgnComment(text: 'hello', shapes: [shapeA, shapeB]);
+      const c2 = PgnComment(text: 'hello', shapes: [shapeA, shapeB]);
+      expect(c1, c2);
+      expect(c1.hashCode, c2.hashCode);
+
+      // Can be used as a map key.
+      final map = {c1: 42};
+      expect(map[c2], 42);
     });
 
     group('Invalid Pgns', () {

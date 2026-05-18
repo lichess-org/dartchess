@@ -124,5 +124,43 @@ void main() {
               .of(Side.white, Role.knight),
           0);
     });
+
+    test('implements ==', () {
+      expect(Pockets.empty, Pockets.empty);
+
+      final a = Pockets.empty.increment(Side.white, Role.knight);
+      final b = Pockets.empty.increment(Side.white, Role.knight);
+      expect(a, b);
+
+      final c = Pockets.empty.increment(Side.black, Role.knight);
+      expect(a, isNot(c));
+
+      final d = Pockets.empty.increment(Side.white, Role.pawn);
+      expect(a, isNot(d));
+
+      // incrementing then decrementing round-trips back to empty
+      expect(
+        Pockets.empty
+            .increment(Side.white, Role.rook)
+            .decrement(Side.white, Role.rook),
+        Pockets.empty,
+      );
+    });
+
+    test('implements hashCode', () {
+      final a = Pockets.empty.increment(Side.white, Role.knight);
+      final b = Pockets.empty.increment(Side.white, Role.knight);
+      expect(a.hashCode, b.hashCode);
+
+      expect(Pockets.empty.hashCode, Pockets.empty.hashCode);
+
+      // Different pockets should (almost certainly) have different hashes.
+      final c = Pockets.empty.increment(Side.black, Role.queen);
+      expect(a.hashCode, isNot(c.hashCode));
+
+      // Can be used as a map key.
+      final map = {a: 'knight'};
+      expect(map[b], 'knight');
+    });
   });
 }
