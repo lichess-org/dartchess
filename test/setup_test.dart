@@ -103,10 +103,19 @@ void main() {
   });
 
   group('Pockets', () {
+    test('empty', () {
+      expect(Pockets.empty.size, 0);
+      for (final side in Side.values) {
+        for (final role in Role.values) {
+          expect(Pockets.empty.of(side, role), 0);
+        }
+        expect(Pockets.empty.hasPawn(side), false);
+        expect(Pockets.empty.hasQuality(side), false);
+      }
+    });
+
     test('increment', () {
       final pockets = Pockets.empty.increment(Side.white, Role.knight);
-      expect(pockets.hasPawn(Side.white), false);
-      expect(pockets.hasQuality(Side.white), true);
       expect(pockets.of(Side.white, Role.knight), 1);
       expect(pockets.size, 1);
       expect(
@@ -123,6 +132,127 @@ void main() {
               .decrement(Side.white, Role.knight)
               .of(Side.white, Role.knight),
           0);
+    });
+
+    test('increment/decrement round-trip back to empty', () {
+      for (final side in Side.values) {
+        for (final role in Role.values) {
+          expect(
+            Pockets.empty.increment(side, role).decrement(side, role),
+            Pockets.empty,
+          );
+        }
+      }
+    });
+
+    test('of — all roles on both sides are independent (no bitfield overlap)',
+        () {
+      for (final side in Side.values) {
+        for (final role in Role.values) {
+          final p = Pockets.empty.increment(side, role);
+          // Only the targeted slot is non-zero.
+          for (final s in Side.values) {
+            for (final r in Role.values) {
+              expect(p.of(s, r), s == side && r == role ? 1 : 0);
+            }
+          }
+        }
+      }
+    });
+
+    test('of — black side is independent from white', () {
+      final p = Pockets.empty
+          .increment(Side.white, Role.rook)
+          .increment(Side.black, Role.queen);
+      expect(p.of(Side.white, Role.rook), 1);
+      expect(p.of(Side.black, Role.queen), 1);
+      expect(p.of(Side.white, Role.queen), 0);
+      expect(p.of(Side.black, Role.rook), 0);
+    });
+
+    test('size counts pieces across both sides', () {
+      final p = Pockets.empty
+          .increment(Side.white, Role.knight)
+          .increment(Side.white, Role.knight)
+          .increment(Side.black, Role.pawn);
+      expect(p.size, 3);
+    });
+
+    test('count sums both sides for a role', () {
+      final p = Pockets.empty
+          .increment(Side.white, Role.rook)
+          .increment(Side.white, Role.rook)
+          .increment(Side.black, Role.rook);
+      expect(p.count(Role.rook), 3);
+      expect(p.count(Role.pawn), 0);
+    });
+
+    test('hasPawn', () {
+      expect(Pockets.empty.hasPawn(Side.white), false);
+      expect(Pockets.empty.hasPawn(Side.black), false);
+
+      final p = Pockets.empty.increment(Side.black, Role.pawn);
+      expect(p.hasPawn(Side.black), true);
+      expect(p.hasPawn(Side.white), false);
+    });
+
+    test('hasQuality', () {
+      expect(Pockets.empty.hasQuality(Side.white), false);
+
+      // Pawn alone does not count as quality.
+      expect(
+        Pockets.empty.increment(Side.white, Role.pawn).hasQuality(Side.white),
+        false,
+      );
+
+      // Each non-pawn role counts as quality.
+      for (final role in [
+        Role.knight,
+        Role.bishop,
+        Role.rook,
+        Role.queen,
+        Role.king
+      ]) {
+        expect(
+          Pockets.empty.increment(Side.white, role).hasQuality(Side.white),
+          true,
+          reason: '$role should count as quality',
+        );
+      }
+
+      // Black side is checked independently.
+      final p = Pockets.empty.increment(Side.black, Role.bishop);
+      expect(p.hasQuality(Side.black), true);
+      expect(p.hasQuality(Side.white), false);
+    });
+
+    test('implements ==', () {
+      expect(Pockets.empty, Pockets.empty);
+
+      final a = Pockets.empty.increment(Side.white, Role.knight);
+      final b = Pockets.empty.increment(Side.white, Role.knight);
+      expect(a, b);
+
+      final c = Pockets.empty.increment(Side.black, Role.knight);
+      expect(a, isNot(c));
+
+      final d = Pockets.empty.increment(Side.white, Role.pawn);
+      expect(a, isNot(d));
+    });
+
+    test('implements hashCode', () {
+      final a = Pockets.empty.increment(Side.white, Role.knight);
+      final b = Pockets.empty.increment(Side.white, Role.knight);
+      expect(a.hashCode, b.hashCode);
+
+      expect(Pockets.empty.hashCode, Pockets.empty.hashCode);
+
+      final c = Pockets.empty.increment(Side.black, Role.queen);
+      expect(a.hashCode, isNot(c.hashCode));
+
+      // Can be used as a map key.
+      final map = {a: 'knight'};
+      expect(map[b], 'knight');
     });
   });
 }

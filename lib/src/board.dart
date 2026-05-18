@@ -1,5 +1,4 @@
 import 'package:meta/meta.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import './square_set.dart';
 import './models.dart';
 import './attacks.dart';
@@ -185,7 +184,7 @@ class Board {
   }
 
   /// Gets the number of pieces of each [Role] for the given [Side].
-  IMap<Role, int> materialCount(Side side) => IMap.fromEntries(
+  ByRole<int> materialCount(Side side) => Map.fromEntries(
       Role.values.map((role) => MapEntry(role, piecesOf(side, role).size)));
 
   /// A [SquareSet] of all the pieces matching this [Side] and [Role].

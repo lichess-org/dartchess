@@ -33,8 +33,12 @@ void main() {
 
   final legalMovesPos = Chess.fromSetup(Setup.parseFen(
       'rn1qkb1r/pbp2ppp/1p2p3/3n4/8/2N2NP1/PP1PPPBP/R1BQ1RK1 b kq -'));
-  benchmark('valid fen moves', () {
+  benchmark('valid moves', () {
     legalMovesPos.legalMoves.length;
+  });
+
+  benchmark('makeLegalMoves (with alternate castling moves)', () {
+    makeLegalMoves(legalMovesPos);
   });
 
   benchmark('parsePgn - kasparov-deep-blue', () {

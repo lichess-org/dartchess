@@ -105,30 +105,30 @@ abstract class Castles {
 
   /// Gets rooks positions by side and castling side.
   BySide<ByCastlingSide<Square?>> get rooksPositions {
-    return BySide({
-      Side.white: ByCastlingSide({
+    return {
+      Side.white: {
         CastlingSide.queen: _whiteRookQueenSide,
         CastlingSide.king: _whiteRookKingSide,
-      }),
-      Side.black: ByCastlingSide({
+      },
+      Side.black: {
         CastlingSide.queen: _blackRookQueenSide,
         CastlingSide.king: _blackRookKingSide,
-      }),
-    });
+      },
+    };
   }
 
   /// Gets rooks paths by side and castling side.
   BySide<ByCastlingSide<SquareSet>> get paths {
-    return BySide({
-      Side.white: ByCastlingSide({
+    return {
+      Side.white: {
         CastlingSide.queen: _whitePathQueenSide,
         CastlingSide.king: _whitePathKingSide,
-      }),
-      Side.black: ByCastlingSide({
+      },
+      Side.black: {
         CastlingSide.queen: _blackPathQueenSide,
         CastlingSide.king: _blackPathKingSide,
-      }),
-    });
+      },
+    };
   }
 
   /// Gets the rook [Square] by side and castling side.

@@ -1,4 +1,3 @@
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:dartchess/dartchess.dart';
 import 'package:test/test.dart';
 
@@ -40,34 +39,35 @@ void main() {
       expect(Castles.standard.discardRookAt(Square.a4), Castles.standard);
       expect(
           Castles.standard.discardRookAt(Square.h1).rooksPositions[Side.white],
-          IMap(const {CastlingSide.queen: Square.a1, CastlingSide.king: null}));
+          const {CastlingSide.queen: Square.a1, CastlingSide.king: null});
     });
 
     test('discard side', () {
       expect(
           Castles.standard.discardSide(Side.white).rooksPositions,
-          equals(BySide({
-            Side.white: ByCastlingSide(
-              const {CastlingSide.queen: null, CastlingSide.king: null},
-            ),
-            Side.black: ByCastlingSide(
-              const {
-                CastlingSide.queen: Square.a8,
-                CastlingSide.king: Square.h8,
-              },
-            )
-          })));
+          equals({
+            Side.white: const {
+              CastlingSide.queen: null,
+              CastlingSide.king: null
+            },
+            Side.black: const {
+              CastlingSide.queen: Square.a8,
+              CastlingSide.king: Square.h8,
+            },
+          }));
 
       expect(
           Castles.standard.discardSide(Side.black).rooksPositions,
-          equals(BySide({
-            Side.white: ByCastlingSide(const {
+          equals({
+            Side.white: const {
               CastlingSide.queen: Square.a1,
               CastlingSide.king: Square.h1,
-            }),
-            Side.black: ByCastlingSide(
-                const {CastlingSide.queen: null, CastlingSide.king: null})
-          })));
+            },
+            Side.black: const {
+              CastlingSide.queen: null,
+              CastlingSide.king: null
+            },
+          }));
     });
   });
 }

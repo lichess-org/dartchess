@@ -1,6 +1,5 @@
 import 'package:dartchess/dartchess.dart' hide File;
 import 'package:test/test.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'dart:io';
 
 import 'pgn_fixtures.dart';
@@ -109,26 +108,18 @@ void main() {
       expect(
           PgnComment.fromPgn(
               '[%csl Ya1][%cal Ra1a1,Be1e2]commentary [%csl Gh8]'),
-          const PgnComment(
-              text: 'commentary',
-              shapes: IListConst([
-                PgnCommentShape(
-                    color: CommentShapeColor.yellow,
-                    from: Square.a1,
-                    to: Square.a1),
-                PgnCommentShape(
-                    color: CommentShapeColor.red,
-                    from: Square.a1,
-                    to: Square.a1),
-                PgnCommentShape(
-                    color: CommentShapeColor.blue,
-                    from: Square.e1,
-                    to: Square.e2),
-                PgnCommentShape(
-                    color: CommentShapeColor.green,
-                    from: Square.h8,
-                    to: Square.h8)
-              ])));
+          const PgnComment(text: 'commentary', shapes: [
+            PgnCommentShape(
+                color: CommentShapeColor.yellow,
+                from: Square.a1,
+                to: Square.a1),
+            PgnCommentShape(
+                color: CommentShapeColor.red, from: Square.a1, to: Square.a1),
+            PgnCommentShape(
+                color: CommentShapeColor.blue, from: Square.e1, to: Square.e2),
+            PgnCommentShape(
+                color: CommentShapeColor.green, from: Square.h8, to: Square.h8)
+          ]));
 
       expect(
           PgnComment.fromPgn('prefix [%eval .99,23]'),
@@ -145,14 +136,10 @@ void main() {
 
       expect(
           PgnComment.fromPgn('[%csl Ga1]foo'),
-          const PgnComment(
-              text: 'foo',
-              shapes: IListConst([
-                PgnCommentShape(
-                    color: CommentShapeColor.green,
-                    from: Square.a1,
-                    to: Square.a1)
-              ])));
+          const PgnComment(text: 'foo', shapes: [
+            PgnCommentShape(
+                color: CommentShapeColor.green, from: Square.a1, to: Square.a1)
+          ]));
 
       expect(
           PgnComment.fromPgn(
@@ -169,7 +156,7 @@ void main() {
                   Duration(hours: 1, minutes: 2, seconds: 3, milliseconds: 400),
               eval: PgnEvaluation.pawns(pawns: 10),
               clock: Duration(seconds: 1),
-              shapes: IListConst([
+              shapes: [
                 PgnCommentShape(
                     color: CommentShapeColor.yellow,
                     from: Square.a1,
@@ -182,7 +169,7 @@ void main() {
                     color: CommentShapeColor.red,
                     from: Square.a1,
                     to: Square.c1)
-              ])).makeComment(),
+              ]).makeComment(),
           'text [%csl Ya1] [%cal Ra1b1,Ra1c1] [%eval 10.00] [%emt 1:02:03.4] [%clk 0:00:01]');
 
       expect(
@@ -208,6 +195,53 @@ void main() {
     test('PgnComment implements hashCode/==', () {
       const comment = '[%csl Ga1][%cal Ra1h1,Gb1b8] foo [%clk 3:25:45]';
       expect(PgnComment.fromPgn(comment) == PgnComment.fromPgn(comment), true);
+      expect(PgnComment.fromPgn(comment).hashCode,
+          PgnComment.fromPgn(comment).hashCode);
+    });
+
+    test('PgnComment == distinguishes shapes content', () {
+      const withShape = PgnComment(shapes: [
+        PgnCommentShape(
+            color: CommentShapeColor.green, from: Square.a1, to: Square.a1),
+      ]);
+      const withDifferentShape = PgnComment(shapes: [
+        PgnCommentShape(
+            color: CommentShapeColor.red, from: Square.a1, to: Square.a1),
+      ]);
+      const withoutShape = PgnComment();
+
+      expect(withShape, withShape);
+      expect(withShape, isNot(withDifferentShape));
+      expect(withShape, isNot(withoutShape));
+      expect(withoutShape, withoutShape);
+    });
+
+    test('PgnComment == is order-sensitive for shapes', () {
+      const shapeA = PgnCommentShape(
+          color: CommentShapeColor.green, from: Square.a1, to: Square.h1);
+      const shapeB = PgnCommentShape(
+          color: CommentShapeColor.red, from: Square.b1, to: Square.b8);
+
+      const ab = PgnComment(shapes: [shapeA, shapeB]);
+      const ba = PgnComment(shapes: [shapeB, shapeA]);
+
+      expect(ab, isNot(ba));
+    });
+
+    test('PgnComment hashCode consistent with ==', () {
+      const shapeA = PgnCommentShape(
+          color: CommentShapeColor.green, from: Square.a1, to: Square.h1);
+      const shapeB = PgnCommentShape(
+          color: CommentShapeColor.red, from: Square.b1, to: Square.b8);
+
+      const c1 = PgnComment(text: 'hello', shapes: [shapeA, shapeB]);
+      const c2 = PgnComment(text: 'hello', shapes: [shapeA, shapeB]);
+      expect(c1, c2);
+      expect(c1.hashCode, c2.hashCode);
+
+      // Can be used as a map key.
+      final map = {c1: 42};
+      expect(map[c2], 42);
     });
 
     group('Invalid Pgns', () {

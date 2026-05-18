@@ -1,5 +1,4 @@
 import 'package:meta/meta.dart';
-import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'dart:math' as math;
 import './square_set.dart';
 import './models.dart';
@@ -214,64 +213,56 @@ class Setup {
 /// Pockets (captured pieces) in chess variants like [Crazyhouse].
 @immutable
 class Pockets {
-  /// Creates a new [Pockets] with the provided value.
-  const Pockets({
-    required this.value,
-  });
+  const Pockets._(this._value);
 
-  final BySide<ByRole<int>> value;
+  // Bitfield: 5 bits per (side, role) slot.
+  // Offset = side.index * 30 + role.index * 5. Total: 60 bits.
+  final int _value;
 
   /// An empty pocket.
-  static const empty = Pockets(value: _emptyPocketsBySide);
+  static const empty = Pockets._(0);
 
-  /// Gets the total number of pieces in the pocket.
-  int get size => value.values
-      .fold(0, (acc, e) => acc + e.values.fold(0, (acc, e) => acc + e));
+  static int _offset(Side side, Role role) => side.index * 30 + role.index * 5;
 
   /// Gets the number of pieces of that [Side] and [Role] in the pocket.
-  int of(Side side, Role role) {
-    return value[side]![role]!;
-  }
+  int of(Side side, Role role) => (_value >> _offset(side, role)) & 0x1F;
+
+  /// Gets the total number of pieces in the pocket.
+  int get size => Side.values.fold(
+        0,
+        (acc, s) => acc + Role.values.fold(0, (acc2, r) => acc2 + of(s, r)),
+      );
 
   /// Counts the number of pieces by [Role].
-  int count(Role role) {
-    return value[Side.white]![role]! + value[Side.black]![role]!;
-  }
+  int count(Role role) => of(Side.white, role) + of(Side.black, role);
 
   /// Checks whether this side has at least 1 quality (any piece but a pawn).
-  bool hasQuality(Side side) {
-    final bySide = value[side]!;
-    return bySide[Role.knight]! > 0 ||
-        bySide[Role.bishop]! > 0 ||
-        bySide[Role.rook]! > 0 ||
-        bySide[Role.queen]! > 0 ||
-        bySide[Role.king]! > 0;
-  }
+  bool hasQuality(Side side) =>
+      of(side, Role.knight) > 0 ||
+      of(side, Role.bishop) > 0 ||
+      of(side, Role.rook) > 0 ||
+      of(side, Role.queen) > 0 ||
+      of(side, Role.king) > 0;
 
   /// Checks whether this side has at least 1 pawn.
-  bool hasPawn(Side side) {
-    return value[side]![Role.pawn]! > 0;
-  }
+  bool hasPawn(Side side) => of(side, Role.pawn) > 0;
 
   /// Increments the number of pieces in the pocket of that [Side] and [Role].
-  Pockets increment(Side side, Role role) {
-    final newPocket = value[side]!.add(role, of(side, role) + 1);
-    return Pockets(value: value.add(side, newPocket));
-  }
+  Pockets increment(Side side, Role role) =>
+      Pockets._(_value + (1 << _offset(side, role)));
 
   /// Decrements the number of pieces in the pocket of that [Side] and [Role].
-  Pockets decrement(Side side, Role role) {
-    final newPocket = value[side]!.add(role, of(side, role) - 1);
-    return Pockets(value: value.add(side, newPocket));
-  }
+  Pockets decrement(Side side, Role role) =>
+      Pockets._(_value - (1 << _offset(side, role)));
 
   @override
   bool operator ==(Object other) {
-    return identical(this, other) || other is Pockets && other.value == value;
+    if (identical(this, other)) return true;
+    return other is Pockets && other._value == _value;
   }
 
   @override
-  int get hashCode => value.hashCode;
+  int get hashCode => _value.hashCode;
 }
 
 Pockets _parsePockets(String pocketPart) {
@@ -397,17 +388,3 @@ int _nthIndexOf(String haystack, String needle, int nth) {
   }
   return index;
 }
-
-const ByRole<int> _emptyPocket = IMapConst({
-  Role.pawn: 0,
-  Role.knight: 0,
-  Role.bishop: 0,
-  Role.rook: 0,
-  Role.queen: 0,
-  Role.king: 0,
-});
-
-const BySide<ByRole<int>> _emptyPocketsBySide = IMapConst({
-  Side.white: _emptyPocket,
-  Side.black: _emptyPocket,
-});
