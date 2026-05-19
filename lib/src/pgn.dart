@@ -138,6 +138,29 @@ class PgnGame<T extends PgnNodeData> {
     return games;
   }
 
+  /// Parse a multi-game PGN string lazily.
+  ///
+  /// Returns a list of [PgnLazyGame] where only the headers are parsed and the move tree is parsed on-demand when [toPgnGame] is called.
+  static List<PgnLazyGame> parseMultiGameLazy(String pgn,
+      {PgnHeaders Function() initHeaders = defaultHeaders}) {
+    final multiGamePgnSplit = RegExp(r'\n\s+(?=\[)');
+    final List<PgnLazyGame> games = [];
+    final pgnGames = pgn.split(multiGamePgnSplit);
+
+    for (final pgnGame in pgnGames) {
+      PgnHeaders? extractedHeaders;
+      _PgnParser((game) {
+        extractedHeaders = game.headers;
+      }, initHeaders, parseMoves: false)
+          .parse(pgnGame);
+
+      if (extractedHeaders != null) {
+        games.add(PgnLazyGame(headers: extractedHeaders!, rawPgn: pgnGame));
+      }
+    }
+    return games;
+  }
+
   /// Create a [Position] for a Variant from the headers.
   ///
   /// Headers can include an optional 'Variant' and 'Fen' key.
@@ -674,6 +697,7 @@ bool _isCommentLine(String line) => line.startsWith('%');
 /// A class to read a string and create a [PgnGame]
 class _PgnParser {
   List<String> _lineBuf = [];
+  final bool parseMoves;
   late bool _found;
   late _ParserState _state = _ParserState.pre;
   late PgnHeaders _gameHeaders;
@@ -688,7 +712,7 @@ class _PgnParser {
   /// Function to create the headers
   final PgnHeaders Function() initHeaders;
 
-  _PgnParser(this.emitGame, this.initHeaders) {
+  _PgnParser(this.emitGame, this.initHeaders, {this.parseMoves = true}) {
     _resetGame();
     _state = _ParserState.bom;
   }
@@ -784,6 +808,9 @@ class _PgnParser {
 
         case _ParserState.moves:
           {
+            if (!parseMoves) {
+              return;
+            }
             if (freshLine) {
               if (_isWhitespace(line) || _isCommentLine(line)) return;
             }
@@ -854,6 +881,9 @@ class _PgnParser {
 
         case _ParserState.comment:
           {
+            if (!parseMoves) {
+              return;
+            }
             final closeIndex = line.indexOf('}');
             if (closeIndex == -1) {
               _commentBuf.add(line);
@@ -912,4 +942,21 @@ String _makeClk(Duration duration) {
   final dec =
       intVal.toString().padLeft(2, '0'); // get the decimal part of seconds
   return '$hours:${minutes.toString().padLeft(2, "0")}:$dec$frac';
+}
+
+/// Parse a multi-game PGN string lazily.
+///
+/// Returns a list of [PgnLazyGame], where only the tags/headers fall
+/// under initial evaluation. You can call [toPgnGame()] on an element
+/// to evaluate the move tree on-demand.
+class PgnLazyGame {
+  const PgnLazyGame({
+    required this.headers,
+    required this.rawPgn,
+  });
+
+  final PgnHeaders headers;
+  final String rawPgn;
+
+  PgnGame<PgnNodeData> toPgnGame() => PgnGame.parsePgn(rawPgn);
 }

@@ -393,6 +393,33 @@ the players are also trying to learn as much as possible about the opponent's pr
       expect(games.length, 1);
     });
 
+    test('parseMultiGameLazy - parses headers without moves', () {
+      final String data =
+          File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();
+      final List<PgnLazyGame> lazyGames = PgnGame.parseMultiGameLazy(data);
+
+      expect(lazyGames.length, 6);
+
+      // Verify headers were extracted
+      expect(lazyGames[0].headers['Event'], 'IBM Man-Machine, New York USA');
+      expect(lazyGames[0].headers['White'], 'Garry Kasparov');
+      expect(lazyGames[0].headers['Black'], 'Deep Blue (Computer)');
+    });
+
+    test('parseMultiGameLazy - toPgnGame parses move tree on-demand', () {
+      final String data =
+          File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();
+      final List<PgnLazyGame> lazyGames = PgnGame.parseMultiGameLazy(data);
+
+      // Convert the first lazy game to a full PgnGame
+      final fullGame = lazyGames[0].toPgnGame();
+
+      // Verify moves were successfully built
+      expect(fullGame.headers['White'], 'Garry Kasparov');
+      final moves = fullGame.moves.mainline().toList();
+      expect(moves.first.san, 'Nf3');
+    });
+
     test('crazyhouse from prod', () {
       final game = PgnGame.parsePgn(PgnFixtures.crazyhouseFromProd);
       expect(game.moves.mainline().length, 49);
