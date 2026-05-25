@@ -1,3 +1,9 @@
+## 0.13.1
+
+- Introduces `parseMultiGameLazy` and `PgnLazyGame` for lazy parsing of PGN
+  files. These APIs allow you to iterate through games in a PGN file without
+  parsing the moves (only the headers).
+
 ## 0.13.0
 
 **Breaking changes:**
