@@ -6,7 +6,7 @@ import 'dart:io' as io;
 import 'package:dartchess/dartchess.dart';
 import 'perft_parser.dart';
 
-void main() async {
+void main() {
   group('Three Check', () {
     final tests = Parser()
         .parse(io.File('test/resources/3check.perft').readAsStringSync());
@@ -117,7 +117,7 @@ void main() async {
   group('Random', () {
     final tests = Parser()
         .parse(io.File('test/resources/random.perft').readAsStringSync());
-    // only test 25 position in random. Test file has around 6000 positions
+    // only test 25 position in random, to full depth. Test file has around 6000 positions
     for (final perftTest in tests.take(25)) {
       final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
       for (final testCase in perftTest.cases) {
