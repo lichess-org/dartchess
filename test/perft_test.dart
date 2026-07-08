@@ -5,7 +5,7 @@ import 'perft_parser.dart';
 
 const nodeLimit = 10000000;
 
-void main() async {
+void main() {
   group('Standard chess', () {
     test('initial position', () {
       const pos = Chess.initial;
@@ -53,7 +53,7 @@ void main() async {
     group('random', () {
       final tests = Parser()
           .parse(io.File('test/resources/random.perft').readAsStringSync());
-      // only test 10 position in random. Test file has around 6000 positions
+      // only test 50 position in random, to a capped depth. Test file has around 6000 positions
       for (final perftTest in tests.take(50)) {
         final position = Chess.fromSetup(Setup.parseFen(perftTest.fen));
         for (final testCase in perftTest.cases
