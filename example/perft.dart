@@ -5,5 +5,5 @@ void main() {
   const depth = 4;
   perft(Chess.initial, depth);
   print(
-      'initial position perft at depht $depth executed in ${stopwatch.elapsed.inMilliseconds} ms');
+      'initial position perft at depth $depth executed in ${stopwatch.elapsed.inMilliseconds} ms');
 }

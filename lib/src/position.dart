@@ -817,7 +817,7 @@ abstract class Position {
 
   /// Gets the legal moves for that [Square].
   ///
-  /// Optionnaly pass a [_Context] of the position, to optimize performance when
+  /// Optionally pass a [_Context] of the position, to optimize performance when
   /// calling this method several times.
   SquareSet _legalMovesOf(Square square, {_Context? context}) {
     final ctx = context ?? _makeContext();
@@ -1029,7 +1029,7 @@ abstract class Chess extends Position {
   ///
   /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
-  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that requirement.
+  /// Optionally pass [ignoreImpossibleCheck] if you want to skip that requirement.
   factory Chess.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     final pos = Chess(
       board: setup.board,
@@ -1091,7 +1091,7 @@ abstract class Antichess extends Position {
   ///
   /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
-  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that
+  /// Optionally pass [ignoreImpossibleCheck] if you want to skip that
   /// requirement.
   factory Antichess.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     final pos = Antichess(
@@ -1227,7 +1227,7 @@ abstract class Atomic extends Position {
   ///
   /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
-  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that
+  /// Optionally pass [ignoreImpossibleCheck] if you want to skip that
   /// requirement.
   factory Atomic.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     final pos = Atomic(
@@ -1471,7 +1471,7 @@ abstract class Crazyhouse extends Position {
   ///
   /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
-  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that
+  /// Optionally pass [ignoreImpossibleCheck] if you want to skip that
   /// requirement.
   factory Crazyhouse.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     final pos = Crazyhouse(
@@ -1595,7 +1595,7 @@ abstract class KingOfTheHill extends Position {
   ///
   /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
-  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that
+  /// Optionally pass [ignoreImpossibleCheck] if you want to skip that
   /// requirement.
   factory KingOfTheHill.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     final pos = KingOfTheHill(
@@ -1671,7 +1671,7 @@ abstract class ThreeCheck extends Position {
   ///
   /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
-  /// Optionnaly pass a `ignoreImpossibleCheck` boolean if you want to skip that
+  /// Optionally pass a `ignoreImpossibleCheck` boolean if you want to skip that
   /// requirement.
   factory ThreeCheck.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     if (setup.remainingChecks == null) {
@@ -1784,7 +1784,7 @@ abstract class RacingKings extends Position {
   ///
   /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
-  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that
+  /// Optionally pass [ignoreImpossibleCheck] if you want to skip that
   /// requirement.
   factory RacingKings.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     final pos = RacingKings(
@@ -1904,7 +1904,7 @@ abstract class Horde extends Position {
   ///
   /// Throws a [PositionSetupException] if the [Setup] does not meet basic validity
   /// requirements.
-  /// Optionnaly pass [ignoreImpossibleCheck] if you want to skip that
+  /// Optionally pass [ignoreImpossibleCheck] if you want to skip that
   /// requirement.
   factory Horde.fromSetup(Setup setup, {bool? ignoreImpossibleCheck}) {
     final pos = Horde(
