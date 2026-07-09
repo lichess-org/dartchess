@@ -146,7 +146,7 @@ abstract class Castles {
   /// Gets the squares that need to be empty so that castling is possible
   /// on the given side.
   ///
-  /// We're assuming the player still has the required castling rigths.
+  /// We're assuming the player still has the required castling rights.
   SquareSet pathOf(Side side, CastlingSide cs) => switch (side) {
         Side.white => switch (cs) {
             CastlingSide.queen => _whitePathQueenSide,
