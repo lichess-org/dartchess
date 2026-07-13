@@ -193,10 +193,15 @@ abstract class Position {
   Map<Square, SquareSet> get legalMoves {
     final context = _makeContext();
     if (context.isVariantEnd) return const {};
-    return {
-      for (final s in board.bySide(turn).squares)
-        s: _legalMovesOf(s, context: context)
-    };
+    final Map<Square, SquareSet> moves = {};
+    final int pieces = board.bySide(turn).value;
+    for (int i = 0; i < 64; i++) {
+      if ((pieces & (1 << i)) != 0) {
+        final fromSquare = Square(i);
+        moves[fromSquare] = _legalMovesOf(fromSquare, context: context);
+      }
+    }
+    return moves;
   }
 
   /// Gets all the legal drops of this position.
