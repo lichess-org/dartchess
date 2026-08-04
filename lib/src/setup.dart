@@ -31,7 +31,7 @@ class Setup {
   ///
   /// Throws a [FenException] if the provided FEN is not valid.
   factory Setup.parseFen(String fen) {
-    final parts = fen.split(RegExp(r'[\s_]+'));
+    final parts = fen.trim().split(RegExp(r'[\s_]+'));
     if (parts.isEmpty) throw const FenException(IllegalFenCause.format);
 
     // board and pockets
