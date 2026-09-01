@@ -61,6 +61,8 @@ This is a pure Dart chess rules library (`package:dartchess`) supporting standar
 
 **`utils.dart`** — `makeLegalMoves(pos)` returns `Map<Square, Set<Square>>` adding traditional castling destinations alongside king-to-rook destinations.
 
+**`zobrist.dart`** — `pos.zobristHash({EnPassantMode mode = EnPassantMode.legal})` returns a signed 64-bit Zobrist hash, Polyglot compatible for standard chess. The masks live in the generated `zobrist_tables.dart`; regenerate them with `dart run tool/generate_zobrist_tables.dart <path/to/shakmaty/src/zobrist.rs>`, never edit by hand. Like `models.dart`, that generated file is excluded from the CI formatting check, so its mask tables stay several per line.
+
 **`debug.dart`** — `toSfen` helpers for printing boards in ASCII; primarily for testing and debugging.
 
 ### Immutability
