@@ -261,6 +261,20 @@ abstract class Position {
     return _legalMovesOf(square);
   }
 
+  /// The en passant square, as reported according to [mode].
+  ///
+  /// Returns `null` if there is no en passant square matching the [mode].
+  Square? epSquareOf(EnPassantMode mode) {
+    switch (mode) {
+      case EnPassantMode.always:
+        return epSquare;
+      case EnPassantMode.pseudoLegal:
+        return _pseudoLegalEpSquare();
+      case EnPassantMode.legal:
+        return _legalEpSquare();
+    }
+  }
+
   /// Parses a move in Standard Algebraic Notation.
   ///
   /// Returns a legal [Move] of the [Position] or `null`.
@@ -983,6 +997,14 @@ abstract class Position {
       return delta > 0 ? CastlingSide.king : CastlingSide.queen;
     }
     return null;
+  }
+
+  Square? _pseudoLegalEpSquare() {
+    if (epSquare == null) return null;
+    final ourPawns = board.piecesOf(turn, Role.pawn);
+    return pawnAttacks(turn.opposite, epSquare!).isIntersected(ourPawns)
+        ? epSquare
+        : null;
   }
 
   Square? _legalEpSquare() {

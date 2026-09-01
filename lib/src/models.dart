@@ -29,6 +29,23 @@ enum CastlingSide {
   king;
 }
 
+/// Selects which en passant squares are reported by [Position.epSquareOf].
+enum EnPassantMode {
+  /// Only if there is a fully legal en passant move.
+  legal,
+
+  /// Only when a pawn has been advanced by two steps and there is an enemy
+  /// pawn next to it.
+  ///
+  /// Follows the X-FEN specification.
+  pseudoLegal,
+
+  /// Whenever a pawn has been advanced by two steps.
+  ///
+  /// Follows the FEN specification.
+  always;
+}
+
 /// Piece role, such as pawn, knight, etc.
 enum Role {
   pawn,

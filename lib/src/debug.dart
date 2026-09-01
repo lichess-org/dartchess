@@ -68,6 +68,23 @@ String humanReadableBoard(Board board) {
   return buffer.toString();
 }
 
+/// Prints a Zobrist hash as an unsigned 64 bit hexadecimal string.
+///
+/// A Zobrist hash is a signed integer, so `toRadixString(16)` would print a
+/// sign instead of the bit pattern that reference values, such as the
+/// published Polyglot keys, are written with. Binary formats store the hash
+/// as 8 bytes and have no use for this; it is meant for reading and comparing
+/// hashes by eye.
+///
+/// Example:
+/// ```dart
+/// humanReadableZobristHash(Chess.initial.zobristHash());
+/// // '463b96181691fc9c'
+/// ```
+String humanReadableZobristHash(int hash) =>
+    (hash >>> 32).toRadixString(16).padLeft(8, '0') +
+    (hash & 0xffffffff).toRadixString(16).padLeft(8, '0');
+
 final _promotionRoles = [Role.queen, Role.rook, Role.knight, Role.bishop];
 
 /// Counts legal move paths of a given length.

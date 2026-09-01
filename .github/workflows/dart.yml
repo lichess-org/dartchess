@@ -24,7 +24,7 @@ jobs:
 
       - name: Verify formatting
         run: |
-          dart format --output=none --set-exit-if-changed $(find lib/src -name "*.dart" -not \( -name "*models.dart" \) )
+          dart format --output=none --set-exit-if-changed $(find lib/src -name "*.dart" -not \( -name "*models.dart" -o -name "zobrist_tables.dart" \) )
           dart format --output=none --set-exit-if-changed $(find test -name "*.dart" )
 
       - name: Analyze project source
