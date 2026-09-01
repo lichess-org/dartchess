@@ -70,12 +70,6 @@ String humanReadableBoard(Board board) {
 
 /// Prints a Zobrist hash as an unsigned 64 bit hexadecimal string.
 ///
-/// A Zobrist hash is a signed integer, so `toRadixString(16)` would print a
-/// sign instead of the bit pattern that reference values, such as the
-/// published Polyglot keys, are written with. Binary formats store the hash
-/// as 8 bytes and have no use for this; it is meant for reading and comparing
-/// hashes by eye.
-///
 /// Example:
 /// ```dart
 /// humanReadableZobristHash(Chess.initial.zobristHash());
