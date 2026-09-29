@@ -1,3 +1,13 @@
+## 0.14.0
+
+- Add Zobrist hashing: `Position.zobristHash()`, ported from shakmaty. The hash
+  of a standard chess position is Polyglot compatible, and the variants extend
+  it the same way shakmaty does.
+- Add `humanReadableZobristHash`, to print a hash as an unsigned 64 bit
+  hexadecimal string.
+- Add `EnPassantMode` and `Position.epSquareOf`, to select which en passant
+  squares are reported (fully legal, pseudo-legal/X-FEN, or always/FEN).
+
 ## 0.13.1
 
 - Introduces `parseMultiGameLazy` and `PgnLazyGame` for lazy parsing of PGN

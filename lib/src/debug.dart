@@ -68,6 +68,17 @@ String humanReadableBoard(Board board) {
   return buffer.toString();
 }
 
+/// Prints a Zobrist hash as an unsigned 64 bit hexadecimal string.
+///
+/// Example:
+/// ```dart
+/// humanReadableZobristHash(Chess.initial.zobristHash());
+/// // '463b96181691fc9c'
+/// ```
+String humanReadableZobristHash(int hash) =>
+    (hash >>> 32).toRadixString(16).padLeft(8, '0') +
+    (hash & 0xffffffff).toRadixString(16).padLeft(8, '0');
+
 final _promotionRoles = [Role.queen, Role.rook, Role.knight, Role.bishop];
 
 /// Counts legal move paths of a given length.
