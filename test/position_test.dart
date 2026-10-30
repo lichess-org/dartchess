@@ -324,11 +324,12 @@ void main() {
     });
 
     test('promotions', () {
-      final pos = Chess.fromSetup(Setup.parseFen('8/7P/8/8/8/8/8/k6K w - - 0 1'));
+      final pos =
+          Chess.fromSetup(Setup.parseFen('8/7P/8/8/8/8/8/k6K w - - 0 1'));
       const queen =
-      NormalMove(from: Square.h7, to: Square.h8, promotion: Role.queen);
+          NormalMove(from: Square.h7, to: Square.h8, promotion: Role.queen);
       const knight =
-      NormalMove(from: Square.h7, to: Square.h8, promotion: Role.knight);
+          NormalMove(from: Square.h7, to: Square.h8, promotion: Role.knight);
       expect(pos.parseLan('h7-h8=Q'), equals(queen));
       expect(pos.parseLan('h7-h8Q'), equals(queen));
       expect(pos.parseLan('h7-h8=q'), equals(queen));
@@ -343,7 +344,8 @@ void main() {
     });
 
     test('promotion with capture', () {
-      final pos = Chess.fromSetup(Setup.parseFen('1n5k/P7/8/8/8/8/8/K7 w - - 0 1'));
+      final pos =
+          Chess.fromSetup(Setup.parseFen('1n5k/P7/8/8/8/8/8/K7 w - - 0 1'));
       expect(
           pos.parseLan('a7-a8=Q'),
           equals(const NormalMove(
@@ -361,7 +363,16 @@ void main() {
 
     test('king promotion is only valid in Antichess', () {
       const moves = [
-        'e4', 'c6', 'h3', 'd5', 'exd5', 'Bxh3', 'dxc6', 'Bxg2', 'cxb7', 'Bxh1',
+        'e4',
+        'c6',
+        'h3',
+        'd5',
+        'exd5',
+        'Bxh3',
+        'dxc6',
+        'Bxg2',
+        'cxb7',
+        'Bxh1',
       ];
       Position position = Antichess.initial;
       for (final move in moves) {
@@ -415,15 +426,21 @@ void main() {
     });
 
     test('pinned piece cannot move', () {
-      final pos = Chess.fromSetup(
-          Setup.parseFen('4k3/8/8/8/4r3/8/4N3/4K3 w - - 0 1'));
+      final pos =
+          Chess.fromSetup(Setup.parseFen('4k3/8/8/8/4r3/8/4N3/4K3 w - - 0 1'));
       expect(pos.parseLan('Ne2-c3'), isNull);
       expect(pos.parseLan('Ke1-d1'), isNotNull);
     });
 
     test('plays a full game in LAN', () {
       const line = [
-        'e2-e4', 'e7-e5', 'Bf1-c4', 'Nb8-c6', 'Qd1-f3', 'd7-d6', 'Qf3xf7#',
+        'e2-e4',
+        'e7-e5',
+        'Bf1-c4',
+        'Nb8-c6',
+        'Qd1-f3',
+        'd7-d6',
+        'Qf3xf7#',
       ];
       Position pos = Chess.initial;
       for (final lan in line) {
@@ -447,8 +464,20 @@ void main() {
     test('garbage input', () {
       const position = Chess.initial;
       for (final input in [
-        '', ' ', 'e2', 'e2-', '-e4', 'e2-e9', 'i2-i4', 'E2-E4', 'e2-e4-e5',
-        'e2--e4', 'e2 e4', 'Xe2-e4', 'O-O-O-O', 'hello',
+        '',
+        ' ',
+        'e2',
+        'e2-',
+        '-e4',
+        'e2-e9',
+        'i2-i4',
+        'E2-E4',
+        'e2-e4-e5',
+        'e2--e4',
+        'e2 e4',
+        'Xe2-e4',
+        'O-O-O-O',
+        'hello',
       ]) {
         expect(position.parseLan(input), isNull, reason: input);
       }
