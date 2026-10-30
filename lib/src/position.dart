@@ -566,7 +566,7 @@ abstract class Position {
     // Promotion is mandatory for a pawn reaching the last rank.
     final promotionChar = match.group(5);
     final promotion =
-    promotionChar == null ? null : Role.fromChar(promotionChar);
+        promotionChar == null ? null : Role.fromChar(promotionChar);
     if (promotionChar != null && promotion == null) return null;
     if (movingRole == Role.pawn &&
         SquareSet.backranks.has(to) &&
