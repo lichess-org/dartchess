@@ -266,6 +266,224 @@ void main() {
     });
   });
 
+  group('LAN parsing', () {
+    test('basic moves', () {
+      const position = Chess.initial;
+      expect(position.parseLan('e2-e4'),
+          equals(const NormalMove(from: Square.e2, to: Square.e4)));
+      expect(position.parseLan('Ng1-f3'),
+          equals(const NormalMove(from: Square.g1, to: Square.f3)));
+      expect(position.parseLan('g1-f3'),
+          equals(const NormalMove(from: Square.g1, to: Square.f3)));
+    });
+
+    test('rejects UCI style and SAN', () {
+      const position = Chess.initial;
+      expect(position.parseLan('e2e4'), isNull);
+      expect(position.parseLan('g1f3'), isNull);
+      expect(position.parseLan('e4'), isNull);
+      expect(position.parseLan('Nf3'), isNull);
+      expect(position.parseLan('Ke2'), isNull);
+    });
+
+    test('illegal moves', () {
+      const position = Chess.initial;
+      expect(position.parseLan('g1-f6'), isNull);
+      expect(position.parseLan('e1-e2'), isNull);
+      expect(position.parseLan('e2-e5'), isNull);
+      expect(position.parseLan('e3-e4'), isNull); // empty origin square
+    });
+
+    test('piece letter must match the piece on the origin square', () {
+      const position = Chess.initial;
+      expect(position.parseLan('Bg1-f3'), isNull);
+      expect(position.parseLan('Ne2-e4'), isNull);
+      expect(position.parseLan('Ng1-f3'), isNotNull);
+    });
+
+    test('separator must match capture / non-capture', () {
+      final pos = Chess.fromSetup(Setup.parseFen(
+          'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3'));
+      const capture = NormalMove(from: Square.f3, to: Square.e5);
+      expect(pos.parseLan('Nf3xe5'), equals(capture));
+      expect(pos.parseLan('f3xe5'), equals(capture));
+      // capture written with '-'
+      expect(pos.parseLan('Nf3-e5'), isNull);
+      // non-capture written with 'x'
+      expect(pos.parseLan('Nf3xg5'), isNull);
+      expect(Chess.initial.parseLan('e2xe4'), isNull);
+    });
+
+    test('en passant', () {
+      final pos = Chess.fromSetup(Setup.parseFen(
+          'rnbqkbnr/pp1ppppp/8/2pP4/8/8/PPP1PPPP/RNBQKBNR w KQkq c6 0 2'));
+      const ep = NormalMove(from: Square.d5, to: Square.c6);
+      expect(pos.parseLan('d5xc6'), equals(ep));
+      expect(pos.parseLan('d5-c6'), isNull);
+      expect(pos.parseLan('d5c6'), isNull);
+    });
+
+    test('promotions', () {
+      final pos =
+          Chess.fromSetup(Setup.parseFen('8/7P/8/8/8/8/8/k6K w - - 0 1'));
+      const queen =
+          NormalMove(from: Square.h7, to: Square.h8, promotion: Role.queen);
+      const knight =
+          NormalMove(from: Square.h7, to: Square.h8, promotion: Role.knight);
+      expect(pos.parseLan('h7-h8=Q'), equals(queen));
+      expect(pos.parseLan('h7-h8Q'), equals(queen));
+      expect(pos.parseLan('h7-h8=q'), equals(queen));
+      expect(pos.parseLan('h7-h8=N'), equals(knight));
+      expect(pos.parseLan('Ph7-h8=Q'), equals(queen));
+      // missing promotion on the last rank
+      expect(pos.parseLan('h7-h8'), isNull);
+      // invalid promotion pieces
+      expect(pos.parseLan('h7-h8=K'), isNull);
+      expect(pos.parseLan('h7-h8=P'), isNull);
+      expect(pos.parseLan('h7-h8=X'), isNull);
+    });
+
+    test('promotion with capture', () {
+      final pos =
+          Chess.fromSetup(Setup.parseFen('1n5k/P7/8/8/8/8/8/K7 w - - 0 1'));
+      expect(
+          pos.parseLan('a7-a8=Q'),
+          equals(const NormalMove(
+              from: Square.a7, to: Square.a8, promotion: Role.queen)));
+      expect(
+          pos.parseLan('a7xb8=R'),
+          equals(const NormalMove(
+              from: Square.a7, to: Square.b8, promotion: Role.rook)));
+      expect(pos.parseLan('a7-b8=R'), isNull);
+    });
+
+    test('promotion on a non-last rank is rejected', () {
+      expect(Chess.initial.parseLan('e2-e4=Q'), isNull);
+    });
+
+    test('king promotion is only valid in Antichess', () {
+      const moves = [
+        'e4',
+        'c6',
+        'h3',
+        'd5',
+        'exd5',
+        'Bxh3',
+        'dxc6',
+        'Bxg2',
+        'cxb7',
+        'Bxh1',
+      ];
+      Position position = Antichess.initial;
+      for (final move in moves) {
+        position = position.play(position.parseSan(move)!);
+      }
+      expect(
+          position.parseLan('b7xa8=K'),
+          equals(const NormalMove(
+              from: Square.b7, to: Square.a8, promotion: Role.king)));
+    });
+
+    test('castling', () {
+      final pos = Chess.fromSetup(
+          Setup.parseFen('r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1'));
+      const kingSide = NormalMove(from: Square.e1, to: Square.h1);
+      const queenSide = NormalMove(from: Square.e1, to: Square.a1);
+      expect(pos.parseLan('O-O'), equals(kingSide));
+      expect(pos.parseLan('0-0'), equals(kingSide));
+      expect(pos.parseLan('O-O-O'), equals(queenSide));
+      expect(pos.parseLan('0-0-0'), equals(queenSide));
+      // written-out king moves are normalized to king-to-rook
+      expect(pos.parseLan('e1-g1'), equals(kingSide));
+      expect(pos.parseLan('Ke1-c1'), equals(queenSide));
+      expect(pos.parseLan('e1-h1'), equals(kingSide));
+      // not available in the initial position
+      expect(Chess.initial.parseLan('O-O'), isNull);
+      expect(Chess.initial.parseLan('e1-g1'), isNull);
+    });
+
+    test('chess960 castling', () {
+      final pos = Chess.fromSetup(Setup.parseFen(
+          '1qr2k1r/pppppppp/6n1/8/8/5BN1/PPPPPPPP/1QR2K1R w KQkq - 0 1'));
+      expect(pos.parseLan('O-O'),
+          equals(const NormalMove(from: Square.f1, to: Square.h1)));
+      expect(pos.parseLan('O-O-O'),
+          equals(const NormalMove(from: Square.f1, to: Square.c1)));
+    });
+
+    test('check, mate and annotation suffixes are ignored', () {
+      const position = Chess.initial;
+      const e4 = NormalMove(from: Square.e2, to: Square.e4);
+      expect(position.parseLan('e2-e4!'), equals(e4));
+      expect(position.parseLan('e2-e4?!'), equals(e4));
+      expect(position.parseLan('e2-e4+'), equals(e4));
+      expect(position.parseLan('e2-e4#'), equals(e4));
+    });
+
+    test('surrounding whitespace is ignored', () {
+      expect(Chess.initial.parseLan('  e2-e4 \n'),
+          equals(const NormalMove(from: Square.e2, to: Square.e4)));
+    });
+
+    test('pinned piece cannot move', () {
+      final pos =
+          Chess.fromSetup(Setup.parseFen('4k3/8/8/8/4r3/8/4N3/4K3 w - - 0 1'));
+      expect(pos.parseLan('Ne2-c3'), isNull);
+      expect(pos.parseLan('Ke1-d1'), isNotNull);
+    });
+
+    test('plays a full game in LAN', () {
+      const line = [
+        'e2-e4',
+        'e7-e5',
+        'Bf1-c4',
+        'Nb8-c6',
+        'Qd1-f3',
+        'd7-d6',
+        'Qf3xf7#',
+      ];
+      Position pos = Chess.initial;
+      for (final lan in line) {
+        final move = pos.parseLan(lan);
+        expect(move, isNotNull, reason: lan);
+        pos = pos.play(move!);
+      }
+      expect(pos.isCheckmate, isTrue);
+    });
+
+    test('Crazyhouse drops', () {
+      final pos = Crazyhouse.fromSetup(Setup.parseFen(
+          'r1bQqk1R/ppp2ppp/3p4/6n1/2B5/5P2/PPP3PP/3n1K1R[PPNBBpnr] b - - 3 23'));
+      expect(pos.parseLan('N@g8'),
+          equals(const DropMove(to: Square.g8, role: Role.knight)));
+      expect(pos.parseLan('N@a3'), isNull);
+      // not in Chess
+      expect(Chess.initial.parseLan('N@e3'), isNull);
+    });
+
+    test('garbage input', () {
+      const position = Chess.initial;
+      for (final input in [
+        '',
+        ' ',
+        'e2',
+        'e2-',
+        '-e4',
+        'e2-e9',
+        'i2-i4',
+        'E2-E4',
+        'e2-e4-e5',
+        'e2--e4',
+        'e2 e4',
+        'Xe2-e4',
+        'O-O-O-O',
+        'hello',
+      ]) {
+        expect(position.parseLan(input), isNull, reason: input);
+      }
+    });
+  });
+
   group('Chess', () {
     group('Position validation', () {
       test('Empty board', () {

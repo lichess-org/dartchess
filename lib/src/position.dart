@@ -520,6 +520,64 @@ abstract class Position {
     return move;
   }
 
+  /// Parses a move in Long Algebraic Notation (e.g. `e2-e4`, `Ng1-f3`,
+  /// `e5xd6`, `e7-e8=Q`, `O-O`, `N@f3`).
+  ///
+  /// Returns a legal [Move] of the [Position] or `null`.
+  Move? parseLan(String raw) {
+    // Remove optional check/mate/annotation suffixes and surrounding spaces.
+    var lan = raw.trim().replaceAll(RegExp(r'[+#!?]+$'), '');
+
+    // Normalize zero-castling.
+    if (lan == '0-0') lan = 'O-O';
+    if (lan == '0-0-0') lan = 'O-O-O';
+
+    // Castling and Crazyhouse drops share their format with SAN.
+    if (lan == 'O-O' || lan == 'O-O-O' || lan.contains('@')) {
+      return parseSan(lan);
+    }
+
+    // LAN shape: [piece]from(-|x)to[=promotion]
+    final match = RegExp(
+      r'^([pnbrqkPNBRQK]?)([a-h][1-8])([-x])([a-h][1-8])(?:=?([nbrqkNBRQK]))?$',
+    ).firstMatch(lan);
+    if (match == null) return null;
+
+    final from = Square.parse(match.group(2)!);
+    final to = Square.parse(match.group(4)!);
+    if (from == null || to == null) return null;
+
+    final movingRole = board.roleAt(from);
+    if (movingRole == null) return null;
+
+    // The optional piece letter must match the piece on the origin square.
+    final pieceChar = match.group(1)!;
+    if (pieceChar.isNotEmpty && Role.fromChar(pieceChar) != movingRole) {
+      return null;
+    }
+
+    // The separator must agree with the position
+    // (castling written as king-to-rook is not a capture).
+    final isCastling = movingRole == Role.king && board.bySide(turn).has(to);
+    final isCapture = board.bySide(turn.opposite).has(to) ||
+        (movingRole == Role.pawn && to == epSquare);
+    if (!isCastling && (match.group(3) == 'x') != isCapture) return null;
+
+    // Promotion is mandatory for a pawn reaching the last rank.
+    final promotionChar = match.group(5);
+    final promotion =
+        promotionChar == null ? null : Role.fromChar(promotionChar);
+    if (promotionChar != null && promotion == null) return null;
+    if (movingRole == Role.pawn &&
+        SquareSet.backranks.has(to) &&
+        promotion == null) {
+      return null;
+    }
+
+    final move = NormalMove(from: from, to: to, promotion: promotion);
+    return isLegal(move) ? normalizeMove(move) : null;
+  }
+
   /// Plays a move and returns the updated [Position].
   ///
   /// Throws a [PlayException] if the move is not legal.
