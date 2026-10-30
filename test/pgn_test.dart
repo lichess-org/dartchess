@@ -464,6 +464,11 @@ the players are also trying to learn as much as possible about the opponent's pr
       final game = PgnGame.parsePgn(PgnFixtures.fromCrafty);
       expect(game.moves.mainline().length, 68);
     });
+
+    test('draw result in movetext', () {
+      final game = PgnGame.parsePgn('1. e4 e5 1/2-1/2');
+      expect(game.headers['Result'], '1/2-1/2');
+    });
   });
 }
 
