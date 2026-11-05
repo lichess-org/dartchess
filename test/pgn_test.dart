@@ -133,7 +133,7 @@ void main() {
 
       expect(
         PgnComment.fromPgn('foo [%bar] [%csl Ga1] [%cal Ra1h1,Gb1b8] [%clk 3:25:45]').text,
-        'foo [%bar]',
+        'foo',
       );
     });
 
@@ -159,11 +159,42 @@ void main() {
       );
     });
 
+    test('parse comment with unknown commands', () {
+      expect(
+        PgnComment.fromPgn('[%anno "Bobby", bobby] The London System'),
+        const PgnComment(text: 'The London System', commands: ['[%anno "Bobby", bobby]']),
+      );
+
+      expect(
+        PgnComment.fromPgn('Before [%anno "Mary"] [%clk 1:02:03] after [%timestamp 12]'),
+        const PgnComment(
+          text: 'Before   after',
+          clock: Duration(hours: 1, minutes: 2, seconds: 3),
+          commands: ['[%anno "Mary"]', '[%timestamp 12]'],
+        ),
+      );
+
+      expect(PgnComment.fromPgn('[%evp 0,12,-5]'), const PgnComment(commands: ['[%evp 0,12,-5]']));
+
+      // not an embedded command
+      expect(
+        PgnComment.fromPgn('See [book 3] and [%]'),
+        const PgnComment(text: 'See [book 3] and [%]'),
+      );
+    });
+
+    test('make comment keeps unknown commands', () {
+      final comment = PgnComment.fromPgn('[%anno "Mary", mary] note [%eval 0.4]');
+      expect(comment.makeComment(), 'note [%anno "Mary", mary] [%eval 0.40]');
+    });
+
     test('roundtrip comment', () {
       final comments = [
         '[%csl[%eval 0.2] Ga1]',
         '[%c[%csl [%csl Ga1[%csl Ga1][%[%csl Ga1][%cal[%csl Ga1]Ra1]',
         '[%csl Ga1][%cal Ra1h1,Gb1b8] foo [%clk 3:ê5: [%eval 450752] [%evaÿTæ<92>ÿÿ^?,7]',
+        '[%anno "Bobby", bobby] foo [%csl Ga1] [%unknown [%csl Gb2] x]',
+        '[%anno [%anno "a"] b] [%csl  Ga1] [%clk 1:2] [%c]]',
       ];
 
       for (final str in comments) {
