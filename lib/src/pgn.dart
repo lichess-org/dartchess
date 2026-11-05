@@ -524,10 +524,16 @@ class PgnEvaluation {
 /// A PGN comment.
 @immutable
 class PgnComment {
-  const PgnComment({this.text, this.shapes = const [], this.clock, this.emt, this.eval})
-    : assert(text == null || text != '');
+  const PgnComment({
+    this.text,
+    this.shapes = const [],
+    this.clock,
+    this.emt,
+    this.eval,
+    this.commands = const [],
+  }) : assert(text == null || text != '');
 
-  /// Comment string.
+  /// Comment string, without any embedded command.
   final String? text;
 
   /// List of comment shapes.
@@ -542,71 +548,88 @@ class PgnComment {
   /// Move evaluation.
   final PgnEvaluation? eval;
 
+  /// Embedded commands this class does not parse, kept verbatim, e.g. `[%anno "Bobby", bobby]` or
+  /// `[%timestamp 12]`.
+  ///
+  /// The PGN specification supplement defines the `[%command params]` syntax and asks readers to
+  /// ignore the commands they do not understand. They are removed from [text] so they are not
+  /// displayed, and written back by [makeComment] so they survive a round trip.
+  final List<String> commands;
+
   /// Parses a PGN comment string to a [PgnComment].
   factory PgnComment.fromPgn(String comment) {
     Duration? emt;
     Duration? clock;
     final List<PgnCommentShape> shapes = [];
     PgnEvaluation? eval;
-    final text =
-        comment
-            .replaceAllMapped(
-              RegExp(r'\s?\[%(emt|clk)\s(\d{1,5}):(\d{1,2}):(\d{1,2}(?:\.\d{0,3})?)\]\s?'),
-              (match) {
-                final annotation = match.group(1);
-                final hours = match.group(2);
-                final minutes = match.group(3);
-                final seconds = match.group(4);
-                final secondsValue = double.parse(seconds!);
-                final duration = Duration(
-                  hours: int.parse(hours!),
-                  minutes: int.parse(minutes!),
-                  seconds: secondsValue.truncate(),
-                  milliseconds: ((secondsValue - secondsValue.truncate()) * 1000).round(),
-                );
-                if (annotation == 'emt') {
-                  emt = duration;
-                } else if (annotation == 'clk') {
-                  clock = duration;
-                }
-                return '  ';
-              },
-            )
-            .replaceAllMapped(
-              RegExp(
-                r'\s?\[%(?:csl|cal)\s([RGYB][a-h][1-8](?:[a-h][1-8])?(?:,[RGYB][a-h][1-8](?:[a-h][1-8])?)*)\]\s?',
-              ),
-              (match) {
-                final arrows = match.group(1);
-                if (arrows != null) {
-                  for (final arrow in arrows.split(',')) {
-                    final shape = PgnCommentShape.fromPgn(arrow);
-                    if (shape != null) shapes.add(shape);
-                  }
-                }
-                return '  ';
-              },
-            )
-            .replaceAllMapped(
-              RegExp(
-                r'\s?\[%eval\s(?:#([+-]?\d{1,5})|([+-]?(?:\d{1,5}|\d{0,5}\.\d{1,2})))(?:,(\d{1,5}))?\]\s?',
-              ),
-              (match) {
-                final mate = match.group(1);
-                final pawns = match.group(2);
-                final d = match.group(3);
-                final depth = d != null ? int.parse(d) : null;
-                eval =
-                    mate != null
-                        ? PgnEvaluation.mate(mate: int.parse(mate), depth: depth)
-                        : PgnEvaluation.pawns(
-                          pawns: pawns != null ? double.parse(pawns) : null,
-                          depth: depth,
-                        );
-                return '  ';
-              },
-            )
-            .trim();
+    final List<String> commands = [];
+    var text = comment
+        .replaceAllMapped(
+          RegExp(r'\s?\[%(emt|clk)\s(\d{1,5}):(\d{1,2}):(\d{1,2}(?:\.\d{0,3})?)\]\s?'),
+          (match) {
+            final annotation = match.group(1);
+            final hours = match.group(2);
+            final minutes = match.group(3);
+            final seconds = match.group(4);
+            final secondsValue = double.parse(seconds!);
+            final duration = Duration(
+              hours: int.parse(hours!),
+              minutes: int.parse(minutes!),
+              seconds: secondsValue.truncate(),
+              milliseconds: ((secondsValue - secondsValue.truncate()) * 1000).round(),
+            );
+            if (annotation == 'emt') {
+              emt = duration;
+            } else if (annotation == 'clk') {
+              clock = duration;
+            }
+            return '  ';
+          },
+        )
+        .replaceAllMapped(
+          RegExp(
+            r'\s?\[%(?:csl|cal)\s([RGYB][a-h][1-8](?:[a-h][1-8])?(?:,[RGYB][a-h][1-8](?:[a-h][1-8])?)*)\]\s?',
+          ),
+          (match) {
+            final arrows = match.group(1);
+            if (arrows != null) {
+              for (final arrow in arrows.split(',')) {
+                final shape = PgnCommentShape.fromPgn(arrow);
+                if (shape != null) shapes.add(shape);
+              }
+            }
+            return '  ';
+          },
+        )
+        .replaceAllMapped(
+          RegExp(
+            r'\s?\[%eval\s(?:#([+-]?\d{1,5})|([+-]?(?:\d{1,5}|\d{0,5}\.\d{1,2})))(?:,(\d{1,5}))?\]\s?',
+          ),
+          (match) {
+            final mate = match.group(1);
+            final pawns = match.group(2);
+            final d = match.group(3);
+            final depth = d != null ? int.parse(d) : null;
+            eval =
+                mate != null
+                    ? PgnEvaluation.mate(mate: int.parse(mate), depth: depth)
+                    : PgnEvaluation.pawns(
+                      pawns: pawns != null ? double.parse(pawns) : null,
+                      depth: depth,
+                    );
+            return '  ';
+          },
+        );
+    // Removing a command can reveal another one it was nested in, so loop until none is left,
+    // which keeps [makeComment] and [PgnComment.fromPgn] a round trip.
+    final command = RegExp(r'\s?(\[%[^\[\]]+\])\s?');
+    while (command.hasMatch(text)) {
+      text = text.replaceAllMapped(command, (match) {
+        commands.add(match.group(1)!);
+        return '  ';
+      });
+    }
+    text = text.trim();
 
     return PgnComment(
       text: text.isNotEmpty ? text : null,
@@ -614,6 +637,7 @@ class PgnComment {
       emt: emt,
       clock: clock,
       eval: eval,
+      commands: commands,
     );
   }
 
@@ -621,6 +645,7 @@ class PgnComment {
   String makeComment() {
     final List<String> builder = [];
     if (text != null) builder.add(text!);
+    builder.addAll(commands);
     final circles = shapes
         .where((shape) => shape.to == shape.from)
         .map((shape) => shape.toString());
@@ -635,7 +660,7 @@ class PgnComment {
 
   @override
   String toString() =>
-      'PgnComment(text: $text, shapes: $shapes, emt: $emt, clock: $clock, eval: $eval)';
+      'PgnComment(text: $text, shapes: $shapes, emt: $emt, clock: $clock, eval: $eval, commands: $commands)';
 
   @override
   bool operator ==(Object other) {
@@ -648,11 +673,16 @@ class PgnComment {
     for (var i = 0; i < shapes.length; i++) {
       if (shapes[i] != other.shapes[i]) return false;
     }
+    if (commands.length != other.commands.length) return false;
+    for (var i = 0; i < commands.length; i++) {
+      if (commands[i] != other.commands[i]) return false;
+    }
     return true;
   }
 
   @override
-  int get hashCode => Object.hash(text, Object.hashAll(shapes), clock, emt, eval);
+  int get hashCode =>
+      Object.hash(text, Object.hashAll(shapes), clock, emt, eval, Object.hashAll(commands));
 }
 
 /// A frame used for parsing a line

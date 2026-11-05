@@ -1,3 +1,13 @@
+## 0.15.0
+
+**Breaking changes:**
+
+- `PgnComment.fromPgn` removes every embedded command (`[%name params]`) from
+  `text`, not only the ones it parses. The commands it does not parse, such as
+  lichess's `[%anno]` author credits, are kept verbatim in the new
+  `PgnComment.commands` and written back by `makeComment()`.
+- Require Dart 3.7 or later.
+
 ## 0.14.0
 
 - Add Zobrist hashing: `Position.zobristHash()`, ported from shakmaty. The hash
