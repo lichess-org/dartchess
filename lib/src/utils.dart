@@ -4,10 +4,7 @@ import 'position.dart';
 /// Returns all the legal moves of the [Position] in a convenient format.
 ///
 /// Includes both possible representations of castling moves unless `includeAlternateCastlingMoves` is false.
-Map<Square, Set<Square>> makeLegalMoves(
-  Position pos, {
-  bool includeAlternateCastlingMoves = true,
-}) {
+Map<Square, Set<Square>> makeLegalMoves(Position pos, {bool includeAlternateCastlingMoves = true}) {
   final Map<Square, Set<Square>> result = {};
   for (final entry in pos.legalMoves.entries) {
     final dests = entry.value.squares;

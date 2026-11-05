@@ -68,8 +68,7 @@ extension ZobristHash on Position {
 }
 
 /// The Zobrist mask of a [Piece] on a [Square].
-int _zobristForPiece(Square square, Piece piece) =>
-    pieceMasks[piece.color]![piece.role]![square];
+int _zobristForPiece(Square square, Piece piece) => pieceMasks[piece.color]![piece.role]![square];
 
 /// The Zobrist mask of the white side to move.
 int _zobristForWhiteTurn() => whiteTurnMask;

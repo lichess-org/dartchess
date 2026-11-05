@@ -24,7 +24,8 @@ const _dartCastlingSides = ['queen', 'king'];
 void main(List<String> args) {
   if (args.length != 1) {
     throw ArgumentError(
-        'Usage: dart run tool/generate_zobrist_tables.dart <path/to/shakmaty/src/zobrist.rs>');
+      'Usage: dart run tool/generate_zobrist_tables.dart <path/to/shakmaty/src/zobrist.rs>',
+    );
   }
   final source = File(args.single);
   if (!source.existsSync()) {
@@ -82,20 +83,22 @@ void main(List<String> args) {
     }
   }
 
-  final buffer = StringBuffer()
-    ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
-    ..writeln('//')
-    ..writeln('// Regenerate with:')
-    ..writeln(
-        '//   dart run tool/generate_zobrist_tables.dart <path/to/shakmaty/src/zobrist.rs>')
-    ..writeln('//')
-    ..writeln(
-        '// Zobrist masks transcribed from shakmaty (low 64 bits of its 128 bit')
-    ..writeln(
-        '// literals), which are Polyglot compatible for the standard chess part.')
-    ..writeln()
-    ..writeln("import 'models.dart';")
-    ..writeln();
+  final buffer =
+      StringBuffer()
+        ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
+        ..writeln('//')
+        ..writeln('// Regenerate with:')
+        ..writeln(
+          '//   dart run tool/generate_zobrist_tables.dart <path/to/shakmaty/src/zobrist.rs>',
+        )
+        ..writeln('//')
+        ..writeln('// Zobrist masks transcribed from shakmaty (low 64 bits of its 128 bit')
+        ..writeln('// literals), which are Polyglot compatible for the standard chess part.')
+        ..writeln()
+        ..writeln('// dart format off')
+        ..writeln()
+        ..writeln("import 'models.dart';")
+        ..writeln();
 
   _writeBySideByRole(
     buffer,
@@ -117,8 +120,7 @@ void main(List<String> args) {
   for (final side in _dartSides) {
     buffer.writeln('  Side.$side: {');
     for (final castlingSide in _dartCastlingSides) {
-      buffer.writeln(
-          '    CastlingSide.$castlingSide: ${_hex(castling['$side.$castlingSide']!)},');
+      buffer.writeln('    CastlingSide.$castlingSide: ${_hex(castling['$side.$castlingSide']!)},');
     }
     buffer.writeln('  },');
   }
@@ -150,7 +152,8 @@ void main(List<String> args) {
   _writeBySideByRole(
     buffer,
     name: 'pocketMasks',
-    doc: 'Pocket masks, indexed by side, role, then by bit of the number of '
+    doc:
+        'Pocket masks, indexed by side, role, then by bit of the number of '
         'pieces.',
     values: pockets,
   );
@@ -201,11 +204,7 @@ void _writeBySideByRole(
     ..writeln();
 }
 
-void _writeValues(
-  StringBuffer buffer,
-  List<int> values, {
-  required String indent,
-}) {
+void _writeValues(StringBuffer buffer, List<int> values, {required String indent}) {
   // As many masks per line as fit in the 80 columns the formatter targets.
   const width = 18; // '0x' + 16 hexadecimal digits
   var perLine = 1;

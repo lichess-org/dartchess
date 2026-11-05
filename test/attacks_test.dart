@@ -115,7 +115,9 @@ void main() {
   });
 
   test('Bishop attacks, empty board', () {
-    expect(bishopAttacks(Square.d4, SquareSet.empty), makeSquareSet('''
+    expect(
+      bishopAttacks(Square.d4, SquareSet.empty),
+      makeSquareSet('''
 . . . . . . . 1
 1 . . . . . 1 .
 . 1 . . . 1 . .
@@ -124,7 +126,8 @@ void main() {
 . . 1 . 1 . . .
 . 1 . . . 1 . .
 1 . . . . . 1 .
-'''));
+'''),
+    );
   });
 
   test('bishop attacks, occupied board', () {
@@ -138,7 +141,9 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(bishopAttacks(Square.a1, occupied), makeSquareSet('''
+    expect(
+      bishopAttacks(Square.a1, occupied),
+      makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . 1 . .
@@ -147,7 +152,8 @@ void main() {
 . . 1 . . . . .
 . 1 . . . . . .
 . . . . . . . .
-'''));
+'''),
+    );
   });
 
   test('Bishop attacks, surrounded in occupied board', () {
@@ -161,7 +167,9 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(bishopAttacks(Square.e5, occupied), makeSquareSet('''
+    expect(
+      bishopAttacks(Square.e5, occupied),
+      makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . 1 . 1 . .
@@ -170,11 +178,14 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
-'''));
+'''),
+    );
   });
 
   test('Rook attacks, empty board', () {
-    expect(rookAttacks(Square.c2, SquareSet.empty), makeSquareSet('''
+    expect(
+      rookAttacks(Square.c2, SquareSet.empty),
+      makeSquareSet('''
 . . 1 . . . . .
 . . 1 . . . . .
 . . 1 . . . . .
@@ -183,7 +194,8 @@ void main() {
 . . 1 . . . . .
 1 1 . 1 1 1 1 1
 . . 1 . . . . .
-'''));
+'''),
+    );
   });
 
   test('Rook attacks, occupied board', () {
@@ -197,7 +209,9 @@ void main() {
 . . 1 . . . . .
 . . . . . . . .
 ''');
-    expect(rookAttacks(Square.c6, occupied), makeSquareSet('''
+    expect(
+      rookAttacks(Square.c6, occupied),
+      makeSquareSet('''
 . . 1 . . . . .
 . . 1 . . . . .
 1 1 . 1 1 1 . .
@@ -206,7 +220,8 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
-'''));
+'''),
+    );
   });
 
   test('Rook attacks, surrounded in occupied board', () {
@@ -220,7 +235,9 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(rookAttacks(Square.e5, occupied), makeSquareSet('''
+    expect(
+      rookAttacks(Square.e5, occupied),
+      makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . 1 . . .
@@ -229,11 +246,14 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
-'''));
+'''),
+    );
   });
 
   test('Queen attacks, empty board', () {
-    expect(queenAttacks(Square.f5, SquareSet.empty), makeSquareSet('''
+    expect(
+      queenAttacks(Square.f5, SquareSet.empty),
+      makeSquareSet('''
 . . 1 . . 1 . .
 . . . 1 . 1 . 1
 . . . . 1 1 1 .
@@ -242,7 +262,8 @@ void main() {
 . . . 1 . 1 . 1
 . . 1 . . 1 . .
 . 1 . . . 1 . .
-'''));
+'''),
+    );
   });
 
   test('Queen attacks, occupied board', () {
@@ -256,7 +277,9 @@ void main() {
 . . 1 . . . . .
 . . . . . . . .
 ''');
-    expect(queenAttacks(Square.c6, occupied), makeSquareSet('''
+    expect(
+      queenAttacks(Square.c6, occupied),
+      makeSquareSet('''
 1 . 1 . 1 . . .
 . 1 1 1 . . . .
 . 1 . 1 1 1 1 1
@@ -265,7 +288,8 @@ void main() {
 . . . . . 1 . .
 . . . . . . . .
 . . . . . . . .
-'''));
+'''),
+    );
   });
 
   test('Queen attacks, surrounded in occupied board', () {
@@ -279,7 +303,9 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 ''');
-    expect(queenAttacks(Square.e5, occupied), makeSquareSet('''
+    expect(
+      queenAttacks(Square.e5, occupied),
+      makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . 1 1 1 . .
@@ -288,7 +314,8 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
-'''));
+'''),
+    );
   });
 
   test('Legal board position asserts for attacks', () {

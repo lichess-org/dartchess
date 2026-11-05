@@ -81,40 +81,32 @@ void main() {
 
   group('Move', () {
     test('parse', () {
+      expect(Move.parse('a1a2'), const NormalMove(from: Square.a1, to: Square.a2));
       expect(
-          Move.parse('a1a2'), const NormalMove(from: Square.a1, to: Square.a2));
-      expect(
-          Move.parse('h7h8q'),
-          const NormalMove(
-              from: Square.h7, to: Square.h8, promotion: Role.queen));
-      expect(
-          Move.parse('P@h1'), const DropMove(role: Role.pawn, to: Square.h1));
+        Move.parse('h7h8q'),
+        const NormalMove(from: Square.h7, to: Square.h8, promotion: Role.queen),
+      );
+      expect(Move.parse('P@h1'), const DropMove(role: Role.pawn, to: Square.h1));
     });
 
     test('NormalMove.fromUci', () {
-      expect(NormalMove.fromUci('a1a2'),
-          const NormalMove(from: Square.a1, to: Square.a2));
+      expect(NormalMove.fromUci('a1a2'), const NormalMove(from: Square.a1, to: Square.a2));
       expect(
-          NormalMove.fromUci('h7h8q'),
-          const NormalMove(
-              from: Square.h7, to: Square.h8, promotion: Role.queen));
+        NormalMove.fromUci('h7h8q'),
+        const NormalMove(from: Square.h7, to: Square.h8, promotion: Role.queen),
+      );
       expect(() => NormalMove.fromUci('P@h1'), throwsFormatException);
     });
 
     test('DropMove.fromUci', () {
-      expect(DropMove.fromUci('P@h1'),
-          const DropMove(role: Role.pawn, to: Square.h1));
+      expect(DropMove.fromUci('P@h1'), const DropMove(role: Role.pawn, to: Square.h1));
       expect(() => DropMove.fromUci('a1a2'), throwsFormatException);
     });
 
     test('uci', () {
       expect(const DropMove(role: Role.queen, to: Square.b1).uci, 'Q@b1');
       expect(const NormalMove(from: Square.c1, to: Square.d1).uci, 'c1d1');
-      expect(
-          const NormalMove(
-                  from: Square.a1, to: Square.a1, promotion: Role.knight)
-              .uci,
-          'a1a1n');
+      expect(const NormalMove(from: Square.a1, to: Square.a1, promotion: Role.knight).uci, 'a1a1n');
     });
   });
 }

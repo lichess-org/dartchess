@@ -8,7 +8,8 @@ void main() {
   });
 
   final randomPos = Chess.fromSetup(
-      Setup.parseFen('6k1/pp4pp/1np2r2/3pr3/3N4/5P2/1PP3PP/2KRR3 b - - 3 20'));
+    Setup.parseFen('6k1/pp4pp/1np2r2/3pr3/3N4/5P2/1PP3PP/2KRR3 b - - 3 20'),
+  );
   benchmark('make fen from random position', () {
     randomPos.fen;
   });
@@ -31,8 +32,9 @@ void main() {
     }
   });
 
-  final legalMovesPos = Chess.fromSetup(Setup.parseFen(
-      'rn1qkb1r/pbp2ppp/1p2p3/3n4/8/2N2NP1/PP1PPPBP/R1BQ1RK1 b kq -'));
+  final legalMovesPos = Chess.fromSetup(
+    Setup.parseFen('rn1qkb1r/pbp2ppp/1p2p3/3n4/8/2N2NP1/PP1PPPBP/R1BQ1RK1 b kq -'),
+  );
   benchmark('valid moves', () {
     legalMovesPos.legalMoves.length;
   });
@@ -42,14 +44,12 @@ void main() {
   });
 
   benchmark('parsePgn - kasparov-deep-blue', () {
-    final String data =
-        io.File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();
+    final String data = io.File('./data/kasparov-deep-blue-1997.pgn').readAsStringSync();
 
     PgnGame.parseMultiGamePgn(data);
   });
 
-  final game = PgnGame.parsePgn(
-      io.File('./data/lichess-bullet-game.pgn').readAsStringSync());
+  final game = PgnGame.parsePgn(io.File('./data/lichess-bullet-game.pgn').readAsStringSync());
   benchmark('makePgn', () {
     game.makePgn();
   });

@@ -44,8 +44,7 @@ class Setup {
         throw const FenException(IllegalFenCause.format);
       }
       board = Board.parseFen(boardPart.substring(0, pocketStart));
-      pockets = _parsePockets(
-          boardPart.substring(pocketStart + 1, boardPart.length - 1));
+      pockets = _parsePockets(boardPart.substring(pocketStart + 1, boardPart.length - 1));
     } else {
       final pocketStart = _nthIndexOf(boardPart, '/', 7);
       if (pocketStart == -1) {
@@ -105,8 +104,7 @@ class Setup {
     }
 
     final fullmovesPart = parts.isNotEmpty ? parts.removeAt(0) : null;
-    final fullmoves =
-        fullmovesPart != null ? _parseSmallUint(fullmovesPart) : 1;
+    final fullmoves = fullmovesPart != null ? _parseSmallUint(fullmovesPart) : 1;
     if (fullmoves == null) {
       throw const FenException(IllegalFenCause.fullmoveNumber);
     }
@@ -178,14 +176,14 @@ class Setup {
 
   /// FEN representation of the setup.
   String get fen => [
-        board.fen + (pockets != null ? _makePockets(pockets!) : ''),
-        turnLetter,
-        _makeCastlingFen(board, castlingRights),
-        if (epSquare != null) epSquare!.name else '-',
-        if (remainingChecks != null) _makeRemainingChecks(remainingChecks!),
-        math.max(0, math.min(halfmoves, 9999)),
-        math.max(1, math.min(fullmoves, 9999)),
-      ].join(' ');
+    board.fen + (pockets != null ? _makePockets(pockets!) : ''),
+    turnLetter,
+    _makeCastlingFen(board, castlingRights),
+    if (epSquare != null) epSquare!.name else '-',
+    if (remainingChecks != null) _makeRemainingChecks(remainingChecks!),
+    math.max(0, math.min(halfmoves, 9999)),
+    math.max(1, math.min(fullmoves, 9999)),
+  ].join(' ');
 
   @override
   bool operator ==(Object other) {
@@ -200,14 +198,7 @@ class Setup {
   }
 
   @override
-  int get hashCode => Object.hash(
-        board,
-        turn,
-        castlingRights,
-        epSquare,
-        halfmoves,
-        fullmoves,
-      );
+  int get hashCode => Object.hash(board, turn, castlingRights, epSquare, halfmoves, fullmoves);
 }
 
 /// Pockets (captured pieces) in chess variants like [Crazyhouse].
@@ -228,10 +219,8 @@ class Pockets {
   int of(Side side, Role role) => (_value >> _offset(side, role)) & 0x1F;
 
   /// Gets the total number of pieces in the pocket.
-  int get size => Side.values.fold(
-        0,
-        (acc, s) => acc + Role.values.fold(0, (acc2, r) => acc2 + of(s, r)),
-      );
+  int get size =>
+      Side.values.fold(0, (acc, s) => acc + Role.values.fold(0, (acc2, r) => acc2 + of(s, r)));
 
   /// Counts the number of pieces by [Role].
   int count(Role role) => of(Side.white, role) + of(Side.black, role);
@@ -248,12 +237,10 @@ class Pockets {
   bool hasPawn(Side side) => of(side, Role.pawn) > 0;
 
   /// Increments the number of pieces in the pocket of that [Side] and [Role].
-  Pockets increment(Side side, Role role) =>
-      Pockets._(_value + (1 << _offset(side, role)));
+  Pockets increment(Side side, Role role) => Pockets._(_value + (1 << _offset(side, role)));
 
   /// Decrements the number of pieces in the pocket of that [Side] and [Role].
-  Pockets decrement(Side side, Role role) =>
-      Pockets._(_value - (1 << _offset(side, role)));
+  Pockets decrement(Side side, Role role) => Pockets._(_value - (1 << _offset(side, role)));
 
   @override
   bool operator ==(Object other) {
@@ -315,37 +302,33 @@ SquareSet _parseCastlingFen(Board board, String castlingPart) {
     final rank = side == Side.white ? Rank.first : Rank.eighth;
     if ('a'.codeUnitAt(0) <= lowerCode && lowerCode <= 'h'.codeUnitAt(0)) {
       castlingRights = castlingRights.withSquare(
-          Square.fromCoords(File(lowerCode - 'a'.codeUnitAt(0)), rank));
+        Square.fromCoords(File(lowerCode - 'a'.codeUnitAt(0)), rank),
+      );
     } else if (lower == 'k' || lower == 'q') {
-      final rooksAndKings = (board.bySide(side) & SquareSet.backrankOf(side)) &
-          (board.rooks | board.kings);
-      final candidate = lower == 'k'
-          ? rooksAndKings.squares.lastOrNull
-          : rooksAndKings.squares.firstOrNull;
+      final rooksAndKings =
+          (board.bySide(side) & SquareSet.backrankOf(side)) & (board.rooks | board.kings);
+      final candidate =
+          lower == 'k' ? rooksAndKings.squares.lastOrNull : rooksAndKings.squares.firstOrNull;
       castlingRights = castlingRights.withSquare(
-          candidate != null && board.rooks.has(candidate)
-              ? candidate
-              : Square.fromCoords(lower == 'k' ? File.h : File.a, rank));
+        candidate != null && board.rooks.has(candidate)
+            ? candidate
+            : Square.fromCoords(lower == 'k' ? File.h : File.a, rank),
+      );
     } else {
       throw const FenException(IllegalFenCause.castling);
     }
   }
-  if (Side.values.any((color) =>
-      SquareSet.backrankOf(color).intersect(castlingRights).size > 2)) {
+  if (Side.values.any((color) => SquareSet.backrankOf(color).intersect(castlingRights).size > 2)) {
     throw const FenException(IllegalFenCause.castling);
   }
   return castlingRights;
 }
 
 String _makePockets(Pockets pockets) {
-  final wPart = [
-    for (final r in Role.values)
-      ...List.filled(pockets.of(Side.white, r), r.letter)
-  ].join();
-  final bPart = [
-    for (final r in Role.values)
-      ...List.filled(pockets.of(Side.black, r), r.letter)
-  ].join();
+  final wPart =
+      [for (final r in Role.values) ...List.filled(pockets.of(Side.white, r), r.letter)].join();
+  final bPart =
+      [for (final r in Role.values) ...List.filled(pockets.of(Side.black, r), r.letter)].join();
   return '[${wPart.toUpperCase()}$bPart]';
 }
 
@@ -354,8 +337,7 @@ String _makeCastlingFen(Board board, SquareSet castlingRights) {
   for (final color in Side.values) {
     final backrank = SquareSet.backrankOf(color);
     final king = board.kingOf(color);
-    final candidates =
-        board.byPiece(Piece(color: color, role: Role.rook)) & backrank;
+    final candidates = board.byPiece(Piece(color: color, role: Role.rook)) & backrank;
     for (final rook in (castlingRights & backrank).squaresReversed) {
       if (rook == candidates.first && king != null && rook < king) {
         buffer.write(color == Side.white ? 'Q' : 'q');
@@ -376,8 +358,7 @@ String _makeRemainingChecks((int, int) checks) {
   return '$white+$black';
 }
 
-int? _parseSmallUint(String str) =>
-    RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;
+int? _parseSmallUint(String str) => RegExp(r'^\d{1,4}$').hasMatch(str) ? int.parse(str) : null;
 
 int _nthIndexOf(String haystack, String needle, int nth) {
   int index = haystack.indexOf(needle);

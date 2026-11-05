@@ -31,14 +31,14 @@ abstract class Castles {
     required SquareSet whitePathKingSide,
     required SquareSet blackPathQueenSide,
     required SquareSet blackPathKingSide,
-  })  : _whiteRookQueenSide = whiteRookQueenSide,
-        _whiteRookKingSide = whiteRookKingSide,
-        _blackRookQueenSide = blackRookQueenSide,
-        _blackRookKingSide = blackRookKingSide,
-        _whitePathQueenSide = whitePathQueenSide,
-        _whitePathKingSide = whitePathKingSide,
-        _blackPathQueenSide = blackPathQueenSide,
-        _blackPathKingSide = blackPathKingSide;
+  }) : _whiteRookQueenSide = whiteRookQueenSide,
+       _whiteRookKingSide = whiteRookKingSide,
+       _blackRookQueenSide = blackRookQueenSide,
+       _blackRookKingSide = blackRookKingSide,
+       _whitePathQueenSide = whitePathQueenSide,
+       _whitePathKingSide = whitePathKingSide,
+       _blackPathQueenSide = blackPathQueenSide,
+       _blackPathKingSide = blackPathKingSide;
 
   /// SquareSet of rooks that have not moved yet.
   final SquareSet castlingRights;
@@ -92,12 +92,10 @@ abstract class Castles {
       if (king == null || !backrank.has(king)) continue;
       final backrankRooks = rooks & setup.board.bySide(side) & backrank;
       if (backrankRooks.first != null && backrankRooks.first! < king) {
-        castles =
-            castles._add(side, CastlingSide.queen, king, backrankRooks.first!);
+        castles = castles._add(side, CastlingSide.queen, king, backrankRooks.first!);
       }
       if (backrankRooks.last != null && king < backrankRooks.last!) {
-        castles =
-            castles._add(side, CastlingSide.king, king, backrankRooks.last!);
+        castles = castles._add(side, CastlingSide.king, king, backrankRooks.last!);
       }
     }
     return castles;
@@ -106,70 +104,54 @@ abstract class Castles {
   /// Gets rooks positions by side and castling side.
   BySide<ByCastlingSide<Square?>> get rooksPositions {
     return {
-      Side.white: {
-        CastlingSide.queen: _whiteRookQueenSide,
-        CastlingSide.king: _whiteRookKingSide,
-      },
-      Side.black: {
-        CastlingSide.queen: _blackRookQueenSide,
-        CastlingSide.king: _blackRookKingSide,
-      },
+      Side.white: {CastlingSide.queen: _whiteRookQueenSide, CastlingSide.king: _whiteRookKingSide},
+      Side.black: {CastlingSide.queen: _blackRookQueenSide, CastlingSide.king: _blackRookKingSide},
     };
   }
 
   /// Gets rooks paths by side and castling side.
   BySide<ByCastlingSide<SquareSet>> get paths {
     return {
-      Side.white: {
-        CastlingSide.queen: _whitePathQueenSide,
-        CastlingSide.king: _whitePathKingSide,
-      },
-      Side.black: {
-        CastlingSide.queen: _blackPathQueenSide,
-        CastlingSide.king: _blackPathKingSide,
-      },
+      Side.white: {CastlingSide.queen: _whitePathQueenSide, CastlingSide.king: _whitePathKingSide},
+      Side.black: {CastlingSide.queen: _blackPathQueenSide, CastlingSide.king: _blackPathKingSide},
     };
   }
 
   /// Gets the rook [Square] by side and castling side.
   Square? rookOf(Side side, CastlingSide cs) => switch (side) {
-        Side.white => switch (cs) {
-            CastlingSide.queen => _whiteRookQueenSide,
-            CastlingSide.king => _whiteRookKingSide,
-          },
-        Side.black => switch (cs) {
-            CastlingSide.queen => _blackRookQueenSide,
-            CastlingSide.king => _blackRookKingSide,
-          },
-      };
+    Side.white => switch (cs) {
+      CastlingSide.queen => _whiteRookQueenSide,
+      CastlingSide.king => _whiteRookKingSide,
+    },
+    Side.black => switch (cs) {
+      CastlingSide.queen => _blackRookQueenSide,
+      CastlingSide.king => _blackRookKingSide,
+    },
+  };
 
   /// Gets the squares that need to be empty so that castling is possible
   /// on the given side.
   ///
   /// We're assuming the player still has the required castling rigths.
   SquareSet pathOf(Side side, CastlingSide cs) => switch (side) {
-        Side.white => switch (cs) {
-            CastlingSide.queen => _whitePathQueenSide,
-            CastlingSide.king => _whitePathKingSide,
-          },
-        Side.black => switch (cs) {
-            CastlingSide.queen => _blackPathQueenSide,
-            CastlingSide.king => _blackPathKingSide,
-          },
-      };
+    Side.white => switch (cs) {
+      CastlingSide.queen => _whitePathQueenSide,
+      CastlingSide.king => _whitePathKingSide,
+    },
+    Side.black => switch (cs) {
+      CastlingSide.queen => _blackPathQueenSide,
+      CastlingSide.king => _blackPathKingSide,
+    },
+  };
 
   /// Returns a new [Castles] instance with the given rook discarded.
   Castles discardRookAt(Square square) {
     return copyWith(
       castlingRights: castlingRights.withoutSquare(square),
-      whiteRookQueenSide:
-          _whiteRookQueenSide == square ? null : _whiteRookQueenSide,
-      whiteRookKingSide:
-          _whiteRookKingSide == square ? null : _whiteRookKingSide,
-      blackRookQueenSide:
-          _blackRookQueenSide == square ? null : _blackRookQueenSide,
-      blackRookKingSide:
-          _blackRookKingSide == square ? null : _blackRookKingSide,
+      whiteRookQueenSide: _whiteRookQueenSide == square ? null : _whiteRookQueenSide,
+      whiteRookKingSide: _whiteRookKingSide == square ? null : _whiteRookKingSide,
+      blackRookQueenSide: _blackRookQueenSide == square ? null : _blackRookQueenSide,
+      blackRookKingSide: _blackRookKingSide == square ? null : _blackRookKingSide,
     );
   }
 
@@ -194,26 +176,16 @@ abstract class Castles {
         .withoutSquare(rook);
     return copyWith(
       castlingRights: castlingRights.withSquare(rook),
-      whiteRookQueenSide: side == Side.white && cs == CastlingSide.queen
-          ? rook
-          : _whiteRookQueenSide,
-      whiteRookKingSide: side == Side.white && cs == CastlingSide.king
-          ? rook
-          : _whiteRookKingSide,
-      blackRookQueenSide: side == Side.black && cs == CastlingSide.queen
-          ? rook
-          : _blackRookQueenSide,
-      blackRookKingSide: side == Side.black && cs == CastlingSide.king
-          ? rook
-          : _blackRookKingSide,
-      whitePathQueenSide:
-          side == Side.white && cs == CastlingSide.queen ? path : null,
-      whitePathKingSide:
-          side == Side.white && cs == CastlingSide.king ? path : null,
-      blackPathQueenSide:
-          side == Side.black && cs == CastlingSide.queen ? path : null,
-      blackPathKingSide:
-          side == Side.black && cs == CastlingSide.king ? path : null,
+      whiteRookQueenSide:
+          side == Side.white && cs == CastlingSide.queen ? rook : _whiteRookQueenSide,
+      whiteRookKingSide: side == Side.white && cs == CastlingSide.king ? rook : _whiteRookKingSide,
+      blackRookQueenSide:
+          side == Side.black && cs == CastlingSide.queen ? rook : _blackRookQueenSide,
+      blackRookKingSide: side == Side.black && cs == CastlingSide.king ? rook : _blackRookKingSide,
+      whitePathQueenSide: side == Side.white && cs == CastlingSide.queen ? path : null,
+      whitePathKingSide: side == Side.white && cs == CastlingSide.king ? path : null,
+      blackPathQueenSide: side == Side.black && cs == CastlingSide.queen ? path : null,
+      blackPathKingSide: side == Side.black && cs == CastlingSide.king ? path : null,
     );
   }
 
@@ -238,15 +210,16 @@ abstract class Castles {
 
   @override
   int get hashCode => Object.hash(
-      castlingRights,
-      _whiteRookQueenSide,
-      _whiteRookKingSide,
-      _blackRookQueenSide,
-      _blackRookKingSide,
-      _whitePathQueenSide,
-      _whitePathKingSide,
-      _blackPathQueenSide,
-      _blackPathKingSide);
+    castlingRights,
+    _whiteRookQueenSide,
+    _whiteRookKingSide,
+    _blackRookQueenSide,
+    _blackRookKingSide,
+    _whitePathQueenSide,
+    _whitePathKingSide,
+    _blackPathQueenSide,
+    _blackPathKingSide,
+  );
 
   Castles copyWith({
     SquareSet? castlingRights,
@@ -263,27 +236,27 @@ abstract class Castles {
 
 /// Returns the square the rook moves to when castling.
 Square rookCastlesTo(Side side, CastlingSide cs) => switch (side) {
-      Side.white => switch (cs) {
-          CastlingSide.queen => Square.d1,
-          CastlingSide.king => Square.f1,
-        },
-      Side.black => switch (cs) {
-          CastlingSide.queen => Square.d8,
-          CastlingSide.king => Square.f8,
-        },
-    };
+  Side.white => switch (cs) {
+    CastlingSide.queen => Square.d1,
+    CastlingSide.king => Square.f1,
+  },
+  Side.black => switch (cs) {
+    CastlingSide.queen => Square.d8,
+    CastlingSide.king => Square.f8,
+  },
+};
 
 /// Returns the square the king moves to when castling.
 Square kingCastlesTo(Side side, CastlingSide cs) => switch (side) {
-      Side.white => switch (cs) {
-          CastlingSide.queen => Square.c1,
-          CastlingSide.king => Square.g1,
-        },
-      Side.black => switch (cs) {
-          CastlingSide.queen => Square.c8,
-          CastlingSide.king => Square.g8,
-        },
-    };
+  Side.white => switch (cs) {
+    CastlingSide.queen => Square.c1,
+    CastlingSide.king => Square.g1,
+  },
+  Side.black => switch (cs) {
+    CastlingSide.queen => Square.c8,
+    CastlingSide.king => Square.g8,
+  },
+};
 
 class _Castles extends Castles {
   const _Castles({
@@ -312,18 +285,22 @@ class _Castles extends Castles {
   }) {
     return _Castles(
       castlingRights: castlingRights ?? this.castlingRights,
-      whiteRookQueenSide: whiteRookQueenSide == _uniqueObjectInstance
-          ? _whiteRookQueenSide
-          : whiteRookQueenSide as Square?,
-      whiteRookKingSide: whiteRookKingSide == _uniqueObjectInstance
-          ? _whiteRookKingSide
-          : whiteRookKingSide as Square?,
-      blackRookQueenSide: blackRookQueenSide == _uniqueObjectInstance
-          ? _blackRookQueenSide
-          : blackRookQueenSide as Square?,
-      blackRookKingSide: blackRookKingSide == _uniqueObjectInstance
-          ? _blackRookKingSide
-          : blackRookKingSide as Square?,
+      whiteRookQueenSide:
+          whiteRookQueenSide == _uniqueObjectInstance
+              ? _whiteRookQueenSide
+              : whiteRookQueenSide as Square?,
+      whiteRookKingSide:
+          whiteRookKingSide == _uniqueObjectInstance
+              ? _whiteRookKingSide
+              : whiteRookKingSide as Square?,
+      blackRookQueenSide:
+          blackRookQueenSide == _uniqueObjectInstance
+              ? _blackRookQueenSide
+              : blackRookQueenSide as Square?,
+      blackRookKingSide:
+          blackRookKingSide == _uniqueObjectInstance
+              ? _blackRookKingSide
+              : blackRookKingSide as Square?,
       whitePathQueenSide: whitePathQueenSide ?? _whitePathQueenSide,
       whitePathKingSide: whitePathKingSide ?? _whitePathKingSide,
       blackPathQueenSide: blackPathQueenSide ?? _blackPathQueenSide,

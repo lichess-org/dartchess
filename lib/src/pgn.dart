@@ -78,14 +78,14 @@ class PgnGame<T extends PgnNodeData> {
 
   /// Create default headers of a PGN.
   static PgnHeaders defaultHeaders() => {
-        'Event': '?',
-        'Site': '?',
-        'Date': '????.??.??',
-        'Round': '?',
-        'White': '?',
-        'Black': '?',
-        'Result': '*'
-      };
+    'Event': '?',
+    'Site': '?',
+    'Date': '????.??.??',
+    'Round': '?',
+    'White': '?',
+    'Black': '?',
+    'Result': '*',
+  };
 
   /// Create empty headers of a PGN.
   static PgnHeaders emptyHeaders() => <String, String>{};
@@ -97,17 +97,17 @@ class PgnGame<T extends PgnNodeData> {
   /// The parser will interpret any input as a PGN, creating a tree of
   /// syntactically valid (but not necessarily legal) moves, skipping any invalid
   /// tokens.
-  static PgnGame<PgnNodeData> parsePgn(String pgn,
-      {PgnHeaders Function() initHeaders = defaultHeaders}) {
+  static PgnGame<PgnNodeData> parsePgn(
+    String pgn, {
+    PgnHeaders Function() initHeaders = defaultHeaders,
+  }) {
     final List<PgnGame<PgnNodeData>> games = [];
     _PgnParser((PgnGame<PgnNodeData> game) {
       games.add(game);
-    }, initHeaders)
-        .parse(pgn);
+    }, initHeaders).parse(pgn);
 
     if (games.isEmpty) {
-      return PgnGame(
-          headers: initHeaders(), moves: PgnNode(), comments: const []);
+      return PgnGame(headers: initHeaders(), moves: PgnNode(), comments: const []);
     }
     return games[0];
   }
@@ -120,8 +120,10 @@ class PgnGame<T extends PgnNodeData> {
   /// The parser will interpret any input as a PGN, creating a tree of
   /// syntactically valid (but not necessarily legal) moves, skipping any invalid
   /// tokens.
-  static List<PgnGame<PgnNodeData>> parseMultiGamePgn(String pgn,
-      {PgnHeaders Function() initHeaders = defaultHeaders}) {
+  static List<PgnGame<PgnNodeData>> parseMultiGamePgn(
+    String pgn, {
+    PgnHeaders Function() initHeaders = defaultHeaders,
+  }) {
     final multiGamePgnSplit = RegExp(r'\n\s+(?=\[)');
     final List<PgnGame<PgnNodeData>> games = [];
     final pgnGames = pgn.split(multiGamePgnSplit);
@@ -129,8 +131,7 @@ class PgnGame<T extends PgnNodeData> {
       final List<PgnGame<PgnNodeData>> parsedGames = [];
       _PgnParser((PgnGame<PgnNodeData> game) {
         parsedGames.add(game);
-      }, initHeaders)
-          .parse(pgnGame);
+      }, initHeaders).parse(pgnGame);
       if (parsedGames.isNotEmpty) {
         games.add(parsedGames[0]);
       }
@@ -141,18 +142,23 @@ class PgnGame<T extends PgnNodeData> {
   /// Parse a multi-game PGN string lazily.
   ///
   /// Returns a list of [PgnLazyGame] where only the headers are parsed and the move tree is parsed on-demand when [toPgnGame] is called.
-  static List<PgnLazyGame> parseMultiGameLazy(String pgn,
-      {PgnHeaders Function() initHeaders = defaultHeaders}) {
+  static List<PgnLazyGame> parseMultiGameLazy(
+    String pgn, {
+    PgnHeaders Function() initHeaders = defaultHeaders,
+  }) {
     final multiGamePgnSplit = RegExp(r'\n\s+(?=\[)');
     final List<PgnLazyGame> games = [];
     final pgnGames = pgn.split(multiGamePgnSplit);
 
     for (final pgnGame in pgnGames) {
       PgnHeaders? extractedHeaders;
-      _PgnParser((game) {
-        extractedHeaders = game.headers;
-      }, initHeaders, parseMoves: false)
-          .parse(pgnGame);
+      _PgnParser(
+        (game) {
+          extractedHeaders = game.headers;
+        },
+        initHeaders,
+        parseMoves: false,
+      ).parse(pgnGame);
 
       if (extractedHeaders != null) {
         games.add(PgnLazyGame(headers: extractedHeaders!, rawPgn: pgnGame));
@@ -166,8 +172,7 @@ class PgnGame<T extends PgnNodeData> {
   /// Headers can include an optional 'Variant' and 'Fen' key.
   ///
   /// Throws a [PositionSetupException] if it does not meet basic validity requirements.
-  static Position startingPosition(PgnHeaders headers,
-      {bool? ignoreImpossibleCheck}) {
+  static Position startingPosition(PgnHeaders headers, {bool? ignoreImpossibleCheck}) {
     final rule = Rule.fromPgn(headers['Variant']);
     if (rule == null) throw PositionSetupException.variant;
     if (!headers.containsKey('FEN')) {
@@ -175,8 +180,11 @@ class PgnGame<T extends PgnNodeData> {
     }
     final fen = headers['FEN']!;
     try {
-      return Position.setupPosition(rule, Setup.parseFen(fen),
-          ignoreImpossibleCheck: ignoreImpossibleCheck);
+      return Position.setupPosition(
+        rule,
+        Setup.parseFen(fen),
+        ignoreImpossibleCheck: ignoreImpossibleCheck,
+      );
     } catch (err) {
       rethrow;
     }
@@ -206,13 +214,16 @@ class PgnGame<T extends PgnNodeData> {
     if (moves.children.isNotEmpty) {
       final variations = moves.children.iterator;
       variations.moveNext();
-      stack.add(_PgnFrame(
+      stack.add(
+        _PgnFrame(
           state: _PgnState.pre,
           ply: initialPly,
           node: variations.current,
           sidelines: variations,
           startsVariation: false,
-          inVariation: false));
+          inVariation: false,
+        ),
+      );
     }
 
     bool forceMoveNumber = true;
@@ -235,8 +246,7 @@ class PgnGame<T extends PgnNodeData> {
               forceMoveNumber = true;
             }
             if (forceMoveNumber || frame.ply.isEven) {
-              token.write(
-                  '${(frame.ply / 2).floor() + 1}${frame.ply.isOdd ? "..." : "."} ');
+              token.write('${(frame.ply / 2).floor() + 1}${frame.ply.isOdd ? "..." : "."} ');
               forceMoveNumber = false;
             }
             token.write('${frame.node.data.san} ');
@@ -261,26 +271,31 @@ class PgnGame<T extends PgnNodeData> {
             if (child) {
               token.write('( ');
               forceMoveNumber = true;
-              stack.add(_PgnFrame(
+              stack.add(
+                _PgnFrame(
                   state: _PgnState.pre,
                   ply: frame.ply,
                   node: frame.sidelines.current,
-                  sidelines:
-                      <PgnChildNode<PgnNodeData>>[].iterator, // empty iterator
+                  sidelines: <PgnChildNode<PgnNodeData>>[].iterator, // empty iterator
                   startsVariation: true,
-                  inVariation: false));
+                  inVariation: false,
+                ),
+              );
               frame.inVariation = true;
             } else {
               if (frame.node.children.isNotEmpty) {
                 final variations = frame.node.children.iterator;
                 variations.moveNext();
-                stack.add(_PgnFrame(
+                stack.add(
+                  _PgnFrame(
                     state: _PgnState.pre,
                     ply: frame.ply + 1,
                     node: variations.current,
                     sidelines: variations,
                     startsVariation: false,
-                    inVariation: false));
+                    inVariation: false,
+                  ),
+                );
               }
               frame.state = _PgnState.end;
             }
@@ -302,8 +317,7 @@ class PgnGame<T extends PgnNodeData> {
 /// PGN data for a [PgnNode].
 class PgnNodeData {
   /// Constructs a new [PgnNodeData].
-  PgnNodeData(
-      {required this.san, this.startingComments, this.comments, this.nags});
+  PgnNodeData({required this.san, this.startingComments, this.comments, this.nags});
 
   /// SAN representation of the move.
   final String san;
@@ -338,15 +352,15 @@ class PgnNode<T extends PgnNodeData> {
   /// callback returns null, the node is not added to the result tree.
   /// The callback should return a tuple of the updated context and node data.
   PgnNode<U> transform<U extends PgnNodeData, C>(
-      C context, (C, U)? Function(C context, T data, int childIndex) f) {
+    C context,
+    (C, U)? Function(C context, T data, int childIndex) f,
+  ) {
     final root = PgnNode<U>();
     final stack = [(before: this, after: root, context: context)];
 
     while (stack.isNotEmpty) {
       final frame = stack.removeLast();
-      for (int childIdx = 0;
-          childIdx < frame.before.children.length;
-          childIdx++) {
+      for (int childIdx = 0; childIdx < frame.before.children.length; childIdx++) {
         C ctx = frame.context;
         final childBefore = frame.before.children[childIdx];
         final transformData = f(ctx, childBefore.data, childIdx);
@@ -416,8 +430,7 @@ enum CommentShapeColor {
 /// Example of a comment shape "%cal Ra1b2" with color: Red from:a1 to:b2.
 @immutable
 class PgnCommentShape {
-  const PgnCommentShape(
-      {required this.color, required this.from, required this.to});
+  const PgnCommentShape({required this.color, required this.from, required this.to});
 
   final CommentShapeColor color;
   final Square from;
@@ -425,9 +438,7 @@ class PgnCommentShape {
 
   @override
   String toString() {
-    return to == from
-        ? '${color.string[0]}${to.name}'
-        : '${color.string[0]}${from.name}${to.name}';
+    return to == from ? '${color.string[0]}${to.name}' : '${color.string[0]}${from.name}${to.name}';
   }
 
   /// Parse the PGN for any comment or return null.
@@ -448,10 +459,7 @@ class PgnCommentShape {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PgnCommentShape &&
-          color == other.color &&
-          from == other.from &&
-          to == other.to;
+      other is PgnCommentShape && color == other.color && from == other.from && to == other.to;
 
   @override
   int get hashCode => Object.hash(color, from, to);
@@ -466,18 +474,20 @@ enum EvalType { pawns, mate }
 @immutable
 class PgnEvaluation {
   /// Constructor to create a [PgnEvaluation] of type pawns.
-  const PgnEvaluation.pawns(
-      {required this.pawns,
-      this.depth,
-      this.mate,
-      this.evalType = EvalType.pawns});
+  const PgnEvaluation.pawns({
+    required this.pawns,
+    this.depth,
+    this.mate,
+    this.evalType = EvalType.pawns,
+  });
 
   /// Constructor to create a [PgnEvaluation] of type mate.
-  const PgnEvaluation.mate(
-      {required this.mate,
-      this.depth,
-      this.pawns,
-      this.evalType = EvalType.mate});
+  const PgnEvaluation.mate({
+    required this.mate,
+    this.depth,
+    this.pawns,
+    this.evalType = EvalType.mate,
+  });
 
   final double? pawns;
   final int? mate;
@@ -514,9 +524,8 @@ class PgnEvaluation {
 /// A PGN comment.
 @immutable
 class PgnComment {
-  const PgnComment(
-      {this.text, this.shapes = const [], this.clock, this.emt, this.eval})
-      : assert(text == null || text != '');
+  const PgnComment({this.text, this.shapes = const [], this.clock, this.emt, this.eval})
+    : assert(text == null || text != '');
 
   /// Comment string.
   final String? text;
@@ -539,60 +548,73 @@ class PgnComment {
     Duration? clock;
     final List<PgnCommentShape> shapes = [];
     PgnEvaluation? eval;
-    final text = comment.replaceAllMapped(
-        RegExp(
-            r'\s?\[%(emt|clk)\s(\d{1,5}):(\d{1,2}):(\d{1,2}(?:\.\d{0,3})?)\]\s?'),
-        (match) {
-      final annotation = match.group(1);
-      final hours = match.group(2);
-      final minutes = match.group(3);
-      final seconds = match.group(4);
-      final secondsValue = double.parse(seconds!);
-      final duration = Duration(
-          hours: int.parse(hours!),
-          minutes: int.parse(minutes!),
-          seconds: secondsValue.truncate(),
-          milliseconds:
-              ((secondsValue - secondsValue.truncate()) * 1000).round());
-      if (annotation == 'emt') {
-        emt = duration;
-      } else if (annotation == 'clk') {
-        clock = duration;
-      }
-      return '  ';
-    }).replaceAllMapped(
-        RegExp(
-            r'\s?\[%(?:csl|cal)\s([RGYB][a-h][1-8](?:[a-h][1-8])?(?:,[RGYB][a-h][1-8](?:[a-h][1-8])?)*)\]\s?'),
-        (match) {
-      final arrows = match.group(1);
-      if (arrows != null) {
-        for (final arrow in arrows.split(',')) {
-          final shape = PgnCommentShape.fromPgn(arrow);
-          if (shape != null) shapes.add(shape);
-        }
-      }
-      return '  ';
-    }).replaceAllMapped(
-        RegExp(
-            r'\s?\[%eval\s(?:#([+-]?\d{1,5})|([+-]?(?:\d{1,5}|\d{0,5}\.\d{1,2})))(?:,(\d{1,5}))?\]\s?'),
-        (match) {
-      final mate = match.group(1);
-      final pawns = match.group(2);
-      final d = match.group(3);
-      final depth = d != null ? int.parse(d) : null;
-      eval = mate != null
-          ? PgnEvaluation.mate(mate: int.parse(mate), depth: depth)
-          : PgnEvaluation.pawns(
-              pawns: pawns != null ? double.parse(pawns) : null, depth: depth);
-      return '  ';
-    }).trim();
+    final text =
+        comment
+            .replaceAllMapped(
+              RegExp(r'\s?\[%(emt|clk)\s(\d{1,5}):(\d{1,2}):(\d{1,2}(?:\.\d{0,3})?)\]\s?'),
+              (match) {
+                final annotation = match.group(1);
+                final hours = match.group(2);
+                final minutes = match.group(3);
+                final seconds = match.group(4);
+                final secondsValue = double.parse(seconds!);
+                final duration = Duration(
+                  hours: int.parse(hours!),
+                  minutes: int.parse(minutes!),
+                  seconds: secondsValue.truncate(),
+                  milliseconds: ((secondsValue - secondsValue.truncate()) * 1000).round(),
+                );
+                if (annotation == 'emt') {
+                  emt = duration;
+                } else if (annotation == 'clk') {
+                  clock = duration;
+                }
+                return '  ';
+              },
+            )
+            .replaceAllMapped(
+              RegExp(
+                r'\s?\[%(?:csl|cal)\s([RGYB][a-h][1-8](?:[a-h][1-8])?(?:,[RGYB][a-h][1-8](?:[a-h][1-8])?)*)\]\s?',
+              ),
+              (match) {
+                final arrows = match.group(1);
+                if (arrows != null) {
+                  for (final arrow in arrows.split(',')) {
+                    final shape = PgnCommentShape.fromPgn(arrow);
+                    if (shape != null) shapes.add(shape);
+                  }
+                }
+                return '  ';
+              },
+            )
+            .replaceAllMapped(
+              RegExp(
+                r'\s?\[%eval\s(?:#([+-]?\d{1,5})|([+-]?(?:\d{1,5}|\d{0,5}\.\d{1,2})))(?:,(\d{1,5}))?\]\s?',
+              ),
+              (match) {
+                final mate = match.group(1);
+                final pawns = match.group(2);
+                final d = match.group(3);
+                final depth = d != null ? int.parse(d) : null;
+                eval =
+                    mate != null
+                        ? PgnEvaluation.mate(mate: int.parse(mate), depth: depth)
+                        : PgnEvaluation.pawns(
+                          pawns: pawns != null ? double.parse(pawns) : null,
+                          depth: depth,
+                        );
+                return '  ';
+              },
+            )
+            .trim();
 
     return PgnComment(
-        text: text.isNotEmpty ? text : null,
-        shapes: shapes,
-        emt: emt,
-        clock: clock,
-        eval: eval);
+      text: text.isNotEmpty ? text : null,
+      shapes: shapes,
+      emt: emt,
+      clock: clock,
+      eval: eval,
+    );
   }
 
   /// Make a PGN string from this comment.
@@ -603,9 +625,7 @@ class PgnComment {
         .where((shape) => shape.to == shape.from)
         .map((shape) => shape.toString());
     if (circles.isNotEmpty) builder.add('[%csl ${circles.join(",")}]');
-    final arrows = shapes
-        .where((shape) => shape.to != shape.from)
-        .map((shape) => shape.toString());
+    final arrows = shapes.where((shape) => shape.to != shape.from).map((shape) => shape.toString());
     if (arrows.isNotEmpty) builder.add('[%cal ${arrows.join(",")}]');
     if (eval != null) builder.add('[%eval ${eval!.toPgn()}]');
     if (emt != null) builder.add('[%emt ${_makeClk(emt!)}]');
@@ -621,10 +641,7 @@ class PgnComment {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! PgnComment) return false;
-    if (text != other.text ||
-        clock != other.clock ||
-        emt != other.emt ||
-        eval != other.eval) {
+    if (text != other.text || clock != other.clock || emt != other.emt || eval != other.eval) {
       return false;
     }
     if (shapes.length != other.shapes.length) return false;
@@ -635,8 +652,7 @@ class PgnComment {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(text, Object.hashAll(shapes), clock, emt, eval);
+  int get hashCode => Object.hash(text, Object.hashAll(shapes), clock, emt, eval);
 }
 
 /// A frame used for parsing a line
@@ -662,13 +678,14 @@ class _PgnFrame {
   bool startsVariation;
   bool inVariation;
 
-  _PgnFrame(
-      {required this.state,
-      required this.ply,
-      required this.node,
-      required this.sidelines,
-      required this.startsVariation,
-      required this.inVariation});
+  _PgnFrame({
+    required this.state,
+    required this.ply,
+    required this.node,
+    required this.sidelines,
+    required this.startsVariation,
+    required this.inVariation,
+  });
 }
 
 /// Remove escape sequence from the string
@@ -732,10 +749,7 @@ class _PgnParser {
       _handleComment();
     }
     if (_found) {
-      emitGame(
-        PgnGame(
-            headers: _gameHeaders, moves: _gameMoves, comments: _gameComments),
-      );
+      emitGame(PgnGame(headers: _gameHeaders, moves: _gameMoves, comments: _gameComments));
     }
     _resetGame();
   }
@@ -788,13 +802,15 @@ class _PgnParser {
             if (_isCommentLine(line)) return;
             var moreHeaders = true;
             final headerReg = RegExp(
-                r'^\s*\[([A-Za-z0-9][A-Za-z0-9_+#=:-]*)\s+"((?:[^"\\]|\\"|\\\\)*)"\]');
+              r'^\s*\[([A-Za-z0-9][A-Za-z0-9_+#=:-]*)\s+"((?:[^"\\]|\\"|\\\\)*)"\]',
+            );
             while (moreHeaders) {
               moreHeaders = false;
               line = line.replaceFirstMapped(headerReg, (match) {
                 if (match[1] != null && match[2] != null) {
-                  _gameHeaders[match[1]!] =
-                      match[2]!.replaceAll('\\"', '"').replaceAll('\\\\', '\\');
+                  _gameHeaders[match[1]!] = match[2]!
+                      .replaceAll('\\"', '"')
+                      .replaceAll('\\\\', '\\');
                   moreHeaders = true;
                   freshLine = false;
                 }
@@ -815,7 +831,8 @@ class _PgnParser {
               if (_isWhitespace(line) || _isCommentLine(line)) return;
             }
             final tokenRegex = RegExp(
-                r'(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/');
+              r'(?:[NBKRQ]?[a-h]?[1-8]?[-x]?[a-h][1-8](?:=?[nbrqkNBRQK])?|[pnbrqkPNBRQK]?@[a-h][1-8]|O-O-O|0-0-0|O-O|0-0)[+#]?|--|Z0|0000|@@@@|{|;|\$\d{1,4}|[?!]{1,2}|\(|\)|\*|1-0|0-1|1\/2-1\/2/',
+            );
             final matches = tokenRegex.allMatches(line);
             for (final match in matches) {
               final frame = _stack[_stack.length - 1];
@@ -837,10 +854,7 @@ class _PgnParser {
                   _handleNag(5);
                 } else if (token == '?!') {
                   _handleNag(6);
-                } else if (token == '1-0' ||
-                    token == '0-1' ||
-                    token == '1/2-1/2' ||
-                    token == '*') {
+                } else if (token == '1-0' || token == '0-1' || token == '1/2-1/2' || token == '*') {
                   if (_stack.length == 1 && token != '*') {
                     _gameHeaders['Result'] = token;
                   }
@@ -852,8 +866,7 @@ class _PgnParser {
                   final openIndex = match.end;
                   _state = _ParserState.comment;
                   if (openIndex < line.length) {
-                    final beginIndex =
-                        line[openIndex] == ' ' ? openIndex + 1 : openIndex;
+                    final beginIndex = line[openIndex] == ' ' ? openIndex + 1 : openIndex;
                     line = line.substring(beginIndex);
                   } else if (openIndex == line.length) {
                     return;
@@ -868,8 +881,9 @@ class _PgnParser {
                   if (frame.node != null) {
                     frame.parent = frame.node!;
                   }
-                  frame.node = PgnChildNode(PgnNodeData(
-                      san: token, startingComments: frame.startingComments));
+                  frame.node = PgnChildNode(
+                    PgnNodeData(san: token, startingComments: frame.startingComments),
+                  );
                   frame.startingComments = null;
                   frame.root = false;
                   frame.parent.children.add(frame.node!);
@@ -889,9 +903,8 @@ class _PgnParser {
               _commentBuf.add(line);
               return;
             } else {
-              final endIndex = closeIndex > 0 && line[closeIndex - 1] == ' '
-                  ? closeIndex - 1
-                  : closeIndex;
+              final endIndex =
+                  closeIndex > 0 && line[closeIndex - 1] == ' ' ? closeIndex - 1 : closeIndex;
               _commentBuf.add(line.substring(0, endIndex));
               _handleComment();
               line = line.substring(closeIndex);
@@ -939,8 +952,7 @@ String _makeClk(Duration duration) {
       .toStringAsFixed(3)
       .replaceAll(RegExp(r'\.?0+$'), '')
       .substring(1);
-  final dec =
-      intVal.toString().padLeft(2, '0'); // get the decimal part of seconds
+  final dec = intVal.toString().padLeft(2, '0'); // get the decimal part of seconds
   return '$hours:${minutes.toString().padLeft(2, "0")}:$dec$frac';
 }
 
@@ -950,10 +962,7 @@ String _makeClk(Duration duration) {
 /// under initial evaluation. You can call [toPgnGame()] on an element
 /// to evaluate the move tree on-demand.
 class PgnLazyGame {
-  const PgnLazyGame({
-    required this.headers,
-    required this.rawPgn,
-  });
+  const PgnLazyGame({required this.headers, required this.rawPgn});
 
   final PgnHeaders headers;
   final String rawPgn;

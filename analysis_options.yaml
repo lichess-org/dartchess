@@ -13,6 +13,9 @@
 
 include: package:lint/package.yaml
 
+formatter:
+  page_width: 100
+
 analyzer:
   language:
     strict-casts: true

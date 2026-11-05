@@ -7,45 +7,47 @@ void main() {
     test('implements hashCode/==', () {
       expect(Chess.initial, Chess.initial);
       expect(Chess.initial, isNot(Antichess.initial));
-      expect(
-          Chess.initial, isNot(Chess.initial.play(NormalMove.fromUci('e2e4'))));
+      expect(Chess.initial, isNot(Chess.initial.play(NormalMove.fromUci('e2e4'))));
     });
 
     test('Chess.toString()', () {
-      expect(Chess.initial.toString(),
-          'Position(rule: chess, board: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR, turn: Side.white, castles: Castles(castlingRights: 0x8100000000000081), halfmoves: 0, fullmoves: 1)');
+      expect(
+        Chess.initial.toString(),
+        'Position(rule: chess, board: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR, turn: Side.white, castles: Castles(castlingRights: 0x8100000000000081), halfmoves: 0, fullmoves: 1)',
+      );
     });
 
     test('Antichess.toString()', () {
-      expect(Antichess.initial.toString(),
-          'Position(rule: antichess, board: $kInitialBoardFEN, turn: Side.white, castles: Castles(castlingRights: 0), halfmoves: 0, fullmoves: 1)');
+      expect(
+        Antichess.initial.toString(),
+        'Position(rule: antichess, board: $kInitialBoardFEN, turn: Side.white, castles: Castles(castlingRights: 0), halfmoves: 0, fullmoves: 1)',
+      );
     });
 
     test('ply', () {
       expect(Chess.initial.ply, 0);
+      expect(Chess.initial.play(const NormalMove(from: Square.e2, to: Square.e4)).ply, 1);
       expect(
-          Chess.initial
-              .play(const NormalMove(from: Square.e2, to: Square.e4))
-              .ply,
-          1);
+        Chess.initial
+            .play(const NormalMove(from: Square.e2, to: Square.e4))
+            .play(const NormalMove(from: Square.e7, to: Square.e5))
+            .ply,
+        2,
+      );
       expect(
-          Chess.initial
-              .play(const NormalMove(from: Square.e2, to: Square.e4))
-              .play(const NormalMove(from: Square.e7, to: Square.e5))
-              .ply,
-          2);
-      expect(
-          Chess.initial
-              .play(const NormalMove(from: Square.e2, to: Square.e4))
-              .play(const NormalMove(from: Square.e7, to: Square.e5))
-              .play(const NormalMove(from: Square.f1, to: Square.c4))
-              .ply,
-          3);
+        Chess.initial
+            .play(const NormalMove(from: Square.e2, to: Square.e4))
+            .play(const NormalMove(from: Square.e7, to: Square.e5))
+            .play(const NormalMove(from: Square.f1, to: Square.c4))
+            .ply,
+        3,
+      );
     });
 
     test('normalizeMove', () {
-      final pos = Chess.fromSetup(Setup.parseFen(
-          'r3k2r/pppbbppp/2n2n2/3pp2Q/3PP2q/2N2N2/PPPBBPPP/R3K2R w KQkq - 10 8'));
+      final pos = Chess.fromSetup(
+        Setup.parseFen('r3k2r/pppbbppp/2n2n2/3pp2Q/3PP2q/2N2N2/PPPBBPPP/R3K2R w KQkq - 10 8'),
+      );
       final tests = [
         (NormalMove.fromUci('a2a4'), 'a2a4'),
         (NormalMove.fromUci('e1g1'), 'e1h1'),
@@ -82,8 +84,7 @@ void main() {
         NormalMove(from: Square.d7, to: Square.d6),
         NormalMove(from: Square.f3, to: Square.f7),
       ];
-      final (_, sans) =
-          moves.fold<(Position, List<String>)>((Chess.initial, []), (acc, e) {
+      final (_, sans) = moves.fold<(Position, List<String>)>((Chess.initial, []), (acc, e) {
         final (pos, sans) = acc;
         final (newPos, san) = pos.makeSan(e);
         return (newPos, [...sans, san]);
@@ -93,10 +94,8 @@ void main() {
 
     test('parse basic san', () {
       const position = Chess.initial;
-      expect(position.parseSan('e4'),
-          equals(const NormalMove(from: Square.e2, to: Square.e4)));
-      expect(position.parseSan('Nf3'),
-          equals(const NormalMove(from: Square.g1, to: Square.f3)));
+      expect(position.parseSan('e4'), equals(const NormalMove(from: Square.e2, to: Square.e4)));
+      expect(position.parseSan('Nf3'), equals(const NormalMove(from: Square.g1, to: Square.f3)));
       expect(position.parseSan('Nf6'), null);
       expect(position.parseSan('Ke2'), null);
       expect(position.parseSan('O-O'), null);
@@ -109,16 +108,16 @@ void main() {
       for (final san in line) {
         pos = pos.play(pos.parseSan(san)!);
       }
-      expect(pos.fen,
-          'rnbqkb1r/ppp1pppp/5n2/3P4/2P5/8/PP1P1PPP/RNBQKBNR b KQkq - 0 3');
+      expect(pos.fen, 'rnbqkb1r/ppp1pppp/5n2/3P4/2P5/8/PP1P1PPP/RNBQKBNR b KQkq - 0 3');
 
       final pos2 = Chess.fromSetup(
-          Setup.parseFen('r4br1/pp1Npkp1/2P4p/5P2/6P1/5KnP/PP6/R1B5 b - -'));
-      expect(pos2.parseSan('bxc6'),
-          equals(const NormalMove(from: Square.b7, to: Square.c6)));
+        Setup.parseFen('r4br1/pp1Npkp1/2P4p/5P2/6P1/5KnP/PP6/R1B5 b - -'),
+      );
+      expect(pos2.parseSan('bxc6'), equals(const NormalMove(from: Square.b7, to: Square.c6)));
 
-      final pos3 = Chess.fromSetup(Setup.parseFen(
-          '2rq1rk1/pb2bppp/1p2p3/n1ppPn2/2PP4/PP3N2/1B1NQPPP/RB3RK1 b - -'));
+      final pos3 = Chess.fromSetup(
+        Setup.parseFen('2rq1rk1/pb2bppp/1p2p3/n1ppPn2/2PP4/PP3N2/1B1NQPPP/RB3RK1 b - -'),
+      );
       expect(pos3.parseSan('c4'), isNull);
     });
 
@@ -196,22 +195,9 @@ void main() {
     });
 
     test('opening knight moves', () {
-      const legalSans = [
-        'Na3',
-        'Nc3',
-        'Nf3',
-        'Nh3',
-      ];
+      const legalSans = ['Na3', 'Nc3', 'Nf3', 'Nh3'];
 
-      const illegalSans = [
-        'Ba3',
-        'Bc3',
-        'Bf3',
-        'Bh3',
-        'Ne4',
-        'Nb1',
-        'Ng1',
-      ];
+      const illegalSans = ['Ba3', 'Bc3', 'Bf3', 'Bh3', 'Ne4', 'Nb1', 'Ng1'];
 
       const position = Chess.initial;
       for (final san in legalSans) {
@@ -225,21 +211,20 @@ void main() {
 
     test('overspecified pawn move', () {
       const position = Chess.initial;
-      expect(position.parseSan('2e4'),
-          equals(const NormalMove(from: Square.e2, to: Square.e4)));
+      expect(position.parseSan('2e4'), equals(const NormalMove(from: Square.e2, to: Square.e4)));
     });
 
     test('chess960 parseSan castle moves', () {
-      Position position = Chess.fromSetup(Setup.parseFen(
-          'brknnqrb/pppppppp/8/8/8/8/PPPPPPPP/BRKNNQRB w KQkq - 0 1'));
+      Position position = Chess.fromSetup(
+        Setup.parseFen('brknnqrb/pppppppp/8/8/8/8/PPPPPPPP/BRKNNQRB w KQkq - 0 1'),
+      );
       const moves =
           'b3 b6 Ne3 g6 Bxh8 Rxh8 O-O-O Qg7 Kb1 Ne6 Nd3 Nf6 h3 O-O-O Nc4 d5 Na3 Nd4 e3 Nc6 Nb5 Rhe8 f3 e5 g4 Re6 g5 Nd7 h4 h5 Bg2 a6 Nc3 Nc5 Nxc5 bxc5 Qxa6+ Bb7 Qa3 Kd7 Qxc5 Ra8 Nxd5 Rd6 Nf6+ Kc8 Ne8 Qf8 Nxd6+ cxd6 Qc3 f5 f4 e4 d3 Qd8 dxe4 Qb6 exf5 gxf5 Rxd6';
       for (final move in moves.split(' ')) {
         position = position.playUnchecked(position.parseSan(move)!);
       }
       expect(position.fullmoves, equals(31));
-      expect(position.fen,
-          'r1k5/1b6/1qnR4/5pPp/5P1P/1PQ1P3/P1P3B1/1K4R1 b - - 0 31');
+      expect(position.fen, 'r1k5/1b6/1qnR4/5pPp/5P1P/1PQ1P3/P1P3B1/1K4R1 b - - 0 31');
     });
 
     test('san disambiguation', () {
@@ -270,59 +255,73 @@ void main() {
     group('Position validation', () {
       test('Empty board', () {
         expect(
-            () => Chess.fromSetup(Setup.parseFen(kEmptyFEN)),
-            throwsA(predicate((e) =>
-                e is PositionSetupException &&
-                e.cause == IllegalSetupCause.empty)));
+          () => Chess.fromSetup(Setup.parseFen(kEmptyFEN)),
+          throwsA(
+            predicate((e) => e is PositionSetupException && e.cause == IllegalSetupCause.empty),
+          ),
+        );
       });
 
       test('Missing king', () {
         expect(
-            () => Chess.fromSetup(Setup.parseFen(
-                'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1BNR w HAkq - 0 1')),
-            throwsA(predicate((e) =>
-                e is PositionSetupException &&
-                e.cause == IllegalSetupCause.kings)));
+          () => Chess.fromSetup(
+            Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1BNR w HAkq - 0 1'),
+          ),
+          throwsA(
+            predicate((e) => e is PositionSetupException && e.cause == IllegalSetupCause.kings),
+          ),
+        );
       });
 
       test('Opposite check', () {
         expect(
-            () => Chess.fromSetup(Setup.parseFen(
-                'rnbqkbnr/pppp1ppp/8/8/8/8/PPPPQPPP/RNB1KBNR w KQkq - 0 1')),
-            throwsA(predicate((e) =>
-                e is PositionSetupException &&
-                e.cause == IllegalSetupCause.oppositeCheck)));
+          () => Chess.fromSetup(
+            Setup.parseFen('rnbqkbnr/pppp1ppp/8/8/8/8/PPPPQPPP/RNB1KBNR w KQkq - 0 1'),
+          ),
+          throwsA(
+            predicate(
+              (e) => e is PositionSetupException && e.cause == IllegalSetupCause.oppositeCheck,
+            ),
+          ),
+        );
       });
 
       test('Backrank pawns', () {
         expect(
-            () => Chess.fromSetup(Setup.parseFen(
-                'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPNP/RNBQKBPR w KQkq - 0 1')),
-            throwsA(predicate((e) =>
-                e is PositionSetupException &&
-                e.cause == IllegalSetupCause.pawnsOnBackrank)));
+          () => Chess.fromSetup(
+            Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPNP/RNBQKBPR w KQkq - 0 1'),
+          ),
+          throwsA(
+            predicate(
+              (e) => e is PositionSetupException && e.cause == IllegalSetupCause.pawnsOnBackrank,
+            ),
+          ),
+        );
       });
 
       test('checkers alignment', () {
         // Multiple checkers aligned with king.
         expect(
-            () => Chess.fromSetup(
-                Setup.parseFen('3R4/8/q4k2/2B5/1NK5/3b4/8/8 w - - 0 1')),
-            throwsA(predicate((e) =>
-                e is PositionSetupException &&
-                e.cause == IllegalSetupCause.impossibleCheck)));
+          () => Chess.fromSetup(Setup.parseFen('3R4/8/q4k2/2B5/1NK5/3b4/8/8 w - - 0 1')),
+          throwsA(
+            predicate(
+              (e) => e is PositionSetupException && e.cause == IllegalSetupCause.impossibleCheck,
+            ),
+          ),
+        );
 
         // Checkers aligned with opponent king are fine.
-        Chess.fromSetup(Setup.parseFen(
-            '8/8/5k2/p1q5/PP1rp1P1/3P1N2/2RK1r2/5nN1 w - - 0 3'));
+        Chess.fromSetup(Setup.parseFen('8/8/5k2/p1q5/PP1rp1P1/3P1N2/2RK1r2/5nN1 w - - 0 3'));
 
         // En passant square aligned with checker and king.
         expect(
-            () => Chess.fromSetup(
-                Setup.parseFen('8/8/8/1k6/3Pp3/8/8/4KQ2 b - d3 0 1')),
-            throwsA(predicate((e) =>
-                e is PositionSetupException &&
-                e.cause == IllegalSetupCause.impossibleCheck)));
+          () => Chess.fromSetup(Setup.parseFen('8/8/8/1k6/3Pp3/8/8/4KQ2 b - d3 0 1')),
+          throwsA(
+            predicate(
+              (e) => e is PositionSetupException && e.cause == IllegalSetupCause.impossibleCheck,
+            ),
+          ),
+        );
       });
     });
 
@@ -349,14 +348,14 @@ void main() {
 
     test('isInsufficientMaterial', () {
       expect(
-          Chess.fromSetup(Setup.parseFen('5K2/8/8/1B6/8/k7/6b1/8 w - - 0 39'))
-              .isInsufficientMaterial,
-          true);
+        Chess.fromSetup(Setup.parseFen('5K2/8/8/1B6/8/k7/6b1/8 w - - 0 39')).isInsufficientMaterial,
+        true,
+      );
 
       expect(
-          Chess.fromSetup(Setup.parseFen('3b4/8/8/6b1/8/8/R7/K1k5 w - - 0 1'))
-              .isInsufficientMaterial,
-          false);
+        Chess.fromSetup(Setup.parseFen('3b4/8/8/6b1/8/8/R7/K1k5 w - - 0 1')).isInsufficientMaterial,
+        false,
+      );
     });
 
     test('standard position legal moves', () {
@@ -383,17 +382,17 @@ void main() {
 
     test('most known legal moves', () {
       expect(
-          Chess.fromSetup(Setup.parseFen(
-                  'R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1'))
-              .legalMoves
-              .values
-              .fold<int>(0, (value, el) => value + el.size),
-          218);
+        Chess.fromSetup(
+          Setup.parseFen('R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1'),
+        ).legalMoves.values.fold<int>(0, (value, el) => value + el.size),
+        218,
+      );
     });
 
     test('castling legal moves', () {
-      final pos = Chess.fromSetup(Setup.parseFen(
-          'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
+      final pos = Chess.fromSetup(
+        Setup.parseFen('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'),
+      );
       expect(pos.legalMovesOf(Square.e1), const SquareSet(0x00000000000000A9));
     });
 
@@ -403,7 +402,9 @@ void main() {
         '1qr2k1r/pppppppp/6n1/8/8/5BN1/PPPPPPPP/1QR2K1R w CHch - 0 1',
       ]) {
         final pos = Chess.fromSetup(Setup.parseFen(fen));
-        expect(pos.legalMovesOf(Square.f1), makeSquareSet('''
+        expect(
+          pos.legalMovesOf(Square.f1),
+          makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
@@ -412,7 +413,8 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . 1 . 1 . 1 1
-'''));
+'''),
+        );
       }
 
       for (final fen in [
@@ -420,7 +422,9 @@ void main() {
         '1qr2k1r/pppppppp/6n1/8/8/5BN1/PPPPPPPP/1QR2K1R b CHch - 0 1',
       ]) {
         final pos = Chess.fromSetup(Setup.parseFen(fen));
-        expect(pos.legalMovesOf(Square.f8), makeSquareSet('''
+        expect(
+          pos.legalMovesOf(Square.f8),
+          makeSquareSet('''
 . . 1 . 1 . 1 1
 . . . . . . . .
 . . . . . . . .
@@ -429,7 +433,8 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
-'''));
+'''),
+        );
       }
 
       for (final fen in [
@@ -437,7 +442,9 @@ void main() {
         '1qr2k1r/pppppppp/6n1/8/8/5BN1/PPPPPPPP/1QR2K1R w Cch - 0 1',
       ]) {
         final pos = Chess.fromSetup(Setup.parseFen(fen));
-        expect(pos.legalMovesOf(Square.f1), makeSquareSet('''
+        expect(
+          pos.legalMovesOf(Square.f1),
+          makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
@@ -446,7 +453,8 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . 1 . 1 . 1 .
-'''));
+'''),
+        );
       }
 
       for (final fen in [
@@ -454,7 +462,9 @@ void main() {
         '1qr2k1r/pppppppp/6n1/8/8/5BN1/PPPPPPPP/1QR2K1R b h - 0 1',
       ]) {
         final pos = Chess.fromSetup(Setup.parseFen(fen));
-        expect(pos.legalMovesOf(Square.f8), makeSquareSet('''
+        expect(
+          pos.legalMovesOf(Square.f8),
+          makeSquareSet('''
 . . . . 1 . 1 1
 . . . . . . . .
 . . . . . . . .
@@ -463,16 +473,18 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
-'''));
+'''),
+        );
       }
     });
 
     test('isCheck', () {
       expect(
-          Chess.fromSetup(Setup.parseFen(
-                  'rnbqkbnr/pppp2pp/8/4pp1Q/4P3/2N5/PPPP1PPP/R1B1KBNR b KQkq - 0 1'))
-              .isCheck,
-          true);
+        Chess.fromSetup(
+          Setup.parseFen('rnbqkbnr/pppp2pp/8/4pp1Q/4P3/2N5/PPPP1PPP/R1B1KBNR b KQkq - 0 1'),
+        ).isCheck,
+        true,
+      );
     });
 
     test('isGameOver', () {
@@ -491,27 +503,22 @@ void main() {
     test('isCheckmate', () {
       expect(Chess.initial.isGameOver, false);
       expect(
-          Chess.fromSetup(Setup.parseFen(
-                  'r2q2k1/5pQp/p2p4/2pP4/1p6/1P6/PBPb1PPP/4R1K1 b - - 0 20'))
-              .isGameOver,
-          true);
+        Chess.fromSetup(
+          Setup.parseFen('r2q2k1/5pQp/p2p4/2pP4/1p6/1P6/PBPb1PPP/4R1K1 b - - 0 20'),
+        ).isGameOver,
+        true,
+      );
     });
 
     test('isStalemate', () {
       expect(Chess.initial.isGameOver, false);
-      expect(
-          Chess.fromSetup(Setup.parseFen('8/8/8/8/8/1pk5/p7/K7 w - - 0 70'))
-              .isStalemate,
-          true);
+      expect(Chess.fromSetup(Setup.parseFen('8/8/8/8/8/1pk5/p7/K7 w - - 0 70')).isStalemate, true);
     });
 
     test('outcome', () {
       const fenTests = [
         ['rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', null],
-        [
-          'r3r2k/6Q1/1qp1Nn2/p1b5/Pp3P2/8/1P4PP/R6K b - - 2 29',
-          Outcome.whiteWins
-        ],
+        ['r3r2k/6Q1/1qp1Nn2/p1b5/Pp3P2/8/1P4PP/R6K b - - 2 29', Outcome.whiteWins],
         ['8/8/8/8/8/1pk5/p7/K7 w - - 0 70', Outcome.draw],
         ['8/8/8/8/6k1/2N5/2K5/8 w - - 0 1', Outcome.draw],
       ];
@@ -522,72 +529,57 @@ void main() {
     });
 
     test('isLegal', () {
+      expect(Chess.initial.isLegal(const NormalMove(from: Square.e2, to: Square.e4)), true);
+      expect(Chess.initial.isLegal(const NormalMove(from: Square.e4, to: Square.f4)), false);
+      final promPos = Chess.fromSetup(Setup.parseFen('8/5P2/2RK2P1/8/4k3/8/8/7r w - - 0 1'));
       expect(
-          Chess.initial
-              .isLegal(const NormalMove(from: Square.e2, to: Square.e4)),
-          true);
+        promPos.isLegal(const NormalMove(from: Square.f7, to: Square.f8, promotion: Role.king)),
+        false,
+      );
       expect(
-          Chess.initial
-              .isLegal(const NormalMove(from: Square.e4, to: Square.f4)),
-          false);
-      final promPos = Chess.fromSetup(
-          Setup.parseFen('8/5P2/2RK2P1/8/4k3/8/8/7r w - - 0 1'));
+        promPos.isLegal(const NormalMove(from: Square.c6, to: Square.c8, promotion: Role.queen)),
+        false,
+      );
       expect(
-          promPos.isLegal(const NormalMove(
-              from: Square.f7, to: Square.f8, promotion: Role.king)),
-          false);
+        promPos.isLegal(const NormalMove(from: Square.g6, to: Square.g7, promotion: Role.queen)),
+        false,
+      );
       expect(
-          promPos.isLegal(const NormalMove(
-              from: Square.c6, to: Square.c8, promotion: Role.queen)),
-          false);
-      expect(
-          promPos.isLegal(const NormalMove(
-              from: Square.g6, to: Square.g7, promotion: Role.queen)),
-          false);
-      expect(
-          promPos.isLegal(const NormalMove(
-              from: Square.f7, to: Square.f8, promotion: Role.queen)),
-          true);
+        promPos.isLegal(const NormalMove(from: Square.f7, to: Square.f8, promotion: Role.queen)),
+        true,
+      );
     });
 
     test('isLegal alternate castling moves', () {
-      final pos = Chess.fromSetup(Setup.parseFen(
-          'r3k2r/pppbbppp/2n2n2/3pp2Q/3PP2q/2N2N2/PPPBBPPP/R3K2R w KQkq - 10 8'));
-      expect(
-          pos.isLegal(const NormalMove(from: Square.e1, to: Square.g1)), true);
-      expect(
-          pos.isLegal(const NormalMove(from: Square.e1, to: Square.c1)), true);
-      expect(
-          pos.isLegal(const NormalMove(from: Square.e1, to: Square.h1)), true);
-      expect(
-          pos.isLegal(const NormalMove(from: Square.e1, to: Square.a1)), true);
+      final pos = Chess.fromSetup(
+        Setup.parseFen('r3k2r/pppbbppp/2n2n2/3pp2Q/3PP2q/2N2N2/PPPBBPPP/R3K2R w KQkq - 10 8'),
+      );
+      expect(pos.isLegal(const NormalMove(from: Square.e1, to: Square.g1)), true);
+      expect(pos.isLegal(const NormalMove(from: Square.e1, to: Square.c1)), true);
+      expect(pos.isLegal(const NormalMove(from: Square.e1, to: Square.h1)), true);
+      expect(pos.isLegal(const NormalMove(from: Square.e1, to: Square.a1)), true);
       // illegal move
-      expect(
-          pos.isLegal(const NormalMove(from: Square.e1, to: Square.a2)), false);
+      expect(pos.isLegal(const NormalMove(from: Square.e1, to: Square.a2)), false);
 
-      final blackPos = Chess.fromSetup(Setup.parseFen(
-          'r3k2r/pppbbppp/2n2n2/3pp2Q/3PP2q/2N2N2/PPPBBPPP/R4RK1 b kq - 11 8'));
-      expect(blackPos.isLegal(const NormalMove(from: Square.e8, to: Square.g8)),
-          true);
-      expect(blackPos.isLegal(const NormalMove(from: Square.e8, to: Square.c8)),
-          true);
-      expect(blackPos.isLegal(const NormalMove(from: Square.e8, to: Square.h8)),
-          true);
-      expect(blackPos.isLegal(const NormalMove(from: Square.e8, to: Square.a8)),
-          true);
+      final blackPos = Chess.fromSetup(
+        Setup.parseFen('r3k2r/pppbbppp/2n2n2/3pp2Q/3PP2q/2N2N2/PPPBBPPP/R4RK1 b kq - 11 8'),
+      );
+      expect(blackPos.isLegal(const NormalMove(from: Square.e8, to: Square.g8)), true);
+      expect(blackPos.isLegal(const NormalMove(from: Square.e8, to: Square.c8)), true);
+      expect(blackPos.isLegal(const NormalMove(from: Square.e8, to: Square.h8)), true);
+      expect(blackPos.isLegal(const NormalMove(from: Square.e8, to: Square.a8)), true);
     });
 
     group('play', () {
       test('a move not valid', () {
         expect(
-            () => Chess.initial
-                .play(const NormalMove(from: Square.e4, to: Square.e6)),
-            throwsA(const TypeMatcher<PlayException>()));
+          () => Chess.initial.play(const NormalMove(from: Square.e4, to: Square.e6)),
+          throwsA(const TypeMatcher<PlayException>()),
+        );
       });
 
       test('e2 e4 on standard position', () {
-        final pos = Chess.initial
-            .play(const NormalMove(from: Square.e2, to: Square.e4));
+        final pos = Chess.initial.play(const NormalMove(from: Square.e2, to: Square.e4));
         expect(pos.board.pieceAt(Square.e4), Piece.whitePawn);
         expect(pos.board.pieceAt(Square.e2), null);
         expect(pos.turn, Side.black);
@@ -607,82 +599,68 @@ void main() {
         expect(pos.turn, Side.black);
         expect(pos.halfmoves, 0);
         expect(pos.fullmoves, 4);
-        expect(pos.fen,
-            'r1bqkbnr/ppp2Qpp/2np4/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4');
+        expect(pos.fen, 'r1bqkbnr/ppp2Qpp/2np4/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4');
       });
 
       test('halfmoves increment', () {
         // pawn move
-        expect(
-            Chess.initial
-                .play(const NormalMove(from: Square.e2, to: Square.e4))
-                .halfmoves,
-            0);
+        expect(Chess.initial.play(const NormalMove(from: Square.e2, to: Square.e4)).halfmoves, 0);
 
         // piece move
-        final pos = Chess.fromSetup(Setup.parseFen(
-                'r2qr2k/5Qpp/2R1nn2/3p4/3P4/1B3P2/PB4PP/4R1K1 b - - 0 29'))
-            .play(const NormalMove(from: Square.e6, to: Square.g5));
+        final pos = Chess.fromSetup(
+          Setup.parseFen('r2qr2k/5Qpp/2R1nn2/3p4/3P4/1B3P2/PB4PP/4R1K1 b - - 0 29'),
+        ).play(const NormalMove(from: Square.e6, to: Square.g5));
         expect(pos.halfmoves, 1);
 
         // capture move
-        final pos2 = Chess.fromSetup(Setup.parseFen(
-                'r2qr2k/5Qpp/2R2n2/3p2n1/3P4/1B3P2/PB4PP/4R1K1 w - - 1 30'))
-            .play(const NormalMove(from: Square.b3, to: Square.d5));
+        final pos2 = Chess.fromSetup(
+          Setup.parseFen('r2qr2k/5Qpp/2R2n2/3p2n1/3P4/1B3P2/PB4PP/4R1K1 w - - 1 30'),
+        ).play(const NormalMove(from: Square.b3, to: Square.d5));
         expect(pos2.halfmoves, 0);
       });
 
       test('fullmoves increment', () {
-        final pos = Chess.initial
-            .play(const NormalMove(from: Square.e2, to: Square.e4));
+        final pos = Chess.initial.play(const NormalMove(from: Square.e2, to: Square.e4));
         expect(pos.fullmoves, 1);
-        expect(
-            pos
-                .play(const NormalMove(from: Square.e7, to: Square.e5))
-                .fullmoves,
-            2);
+        expect(pos.play(const NormalMove(from: Square.e7, to: Square.e5)).fullmoves, 2);
       });
 
       test('epSquare is correctly set after a double push move', () {
-        final pos = Chess.initial
-            .play(const NormalMove(from: Square.e2, to: Square.e4));
+        final pos = Chess.initial.play(const NormalMove(from: Square.e2, to: Square.e4));
         expect(pos.epSquare, Square.e3);
       });
 
       test('en passant capture', () {
-        final pos = Chess.fromSetup(Setup.parseFen(
-                'r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'))
-            .play(const NormalMove(from: Square.e5, to: Square.f6));
+        final pos = Chess.fromSetup(
+          Setup.parseFen('r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'),
+        ).play(const NormalMove(from: Square.e5, to: Square.f6));
         expect(pos.board.pieceAt(Square.f6), Piece.whitePawn);
         expect(pos.board.pieceAt(Square.f5), null);
         expect(pos.epSquare, null);
       });
 
       test('rook move removes castling right', () {
-        final pos = Chess.fromSetup(Setup.parseFen(
-                'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
-            .play(const NormalMove(from: Square.h1, to: Square.f1));
+        final pos = Chess.fromSetup(
+          Setup.parseFen('r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'),
+        ).play(const NormalMove(from: Square.h1, to: Square.f1));
         expect(
-            pos.castles.rooksPositions[Side.white],
-            equals(const {
-              CastlingSide.queen: Square.a1,
-              CastlingSide.king: null
-            }));
+          pos.castles.rooksPositions[Side.white],
+          equals(const {CastlingSide.queen: Square.a1, CastlingSide.king: null}),
+        );
         expect(pos.castles.castlingRights.has(Square.h1), false);
       });
 
       test('capturing a rook removes castling right', () {
-        final pos = Chess.fromSetup(Setup.parseFen(
-                'r1bqk1nr/pppp1pbp/2n1p1p1/8/2B1P3/1P3N2/P1PP1PPP/RNBQK2R b KQkq - 4 4'))
-            .play(const NormalMove(from: Square.g7, to: Square.a1));
+        final pos = Chess.fromSetup(
+          Setup.parseFen('r1bqk1nr/pppp1pbp/2n1p1p1/8/2B1P3/1P3N2/P1PP1PPP/RNBQK2R b KQkq - 4 4'),
+        ).play(const NormalMove(from: Square.g7, to: Square.a1));
         expect(pos.castles.rookOf(Side.white, CastlingSide.queen), isNull);
         expect(pos.castles.rookOf(Side.white, CastlingSide.king), Square.h1);
         expect(pos.castles.castlingRights.has(Square.a1), false);
       });
 
       test('king captures unmoved rook', () {
-        final pos = Chess.fromSetup(
-            Setup.parseFen('8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K - 0 1'));
+        final pos = Chess.fromSetup(Setup.parseFen('8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K - 0 1'));
         const move = NormalMove(from: Square.g2, to: Square.h1);
         expect(pos.isLegal(move), true);
         final pos2 = pos.play(move);
@@ -691,65 +669,76 @@ void main() {
 
       test('en passant and unrelated check', () {
         final setup = Setup.parseFen(
-            'rnbqk1nr/bb3p1p/1q2r3/2pPp3/3P4/7P/1PP1NpPP/R1BQKBNR w KQkq c6');
+          'rnbqk1nr/bb3p1p/1q2r3/2pPp3/3P4/7P/1PP1NpPP/R1BQKBNR w KQkq c6',
+        );
         expect(
-            () => Chess.fromSetup(setup),
-            throwsA(predicate((e) =>
-                e is PositionSetupException &&
-                e.cause == IllegalSetupCause.impossibleCheck)));
+          () => Chess.fromSetup(setup),
+          throwsA(
+            predicate(
+              (e) => e is PositionSetupException && e.cause == IllegalSetupCause.impossibleCheck,
+            ),
+          ),
+        );
         final pos = Chess.fromSetup(setup, ignoreImpossibleCheck: true);
         const enPassant = NormalMove(from: Square.d5, to: Square.c6);
         expect(pos.isLegal(enPassant), false);
       });
 
       test('castling move', () {
-        final pos = Chess.fromSetup(Setup.parseFen(
-                'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'))
-            .play(const NormalMove(from: Square.e1, to: Square.g1));
+        final pos = Chess.fromSetup(
+          Setup.parseFen('r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'),
+        ).play(const NormalMove(from: Square.e1, to: Square.g1));
         expect(pos.board.pieceAt(Square.g1), Piece.whiteKing);
         expect(pos.board.pieceAt(Square.f1), Piece.whiteRook);
         expect(
-            pos.castles.castlingRights
-                .isIntersected(const SquareSet.fromRank(Rank.first)),
-            false);
+          pos.castles.castlingRights.isIntersected(const SquareSet.fromRank(Rank.first)),
+          false,
+        );
         expect(pos.castles.rookOf(Side.white, CastlingSide.king), isNull);
         expect(pos.castles.rookOf(Side.white, CastlingSide.queen), isNull);
       });
 
       test('castling moves', () {
-        final pos =
-            Chess.fromSetup(Setup.parseFen('2r5/8/8/8/8/8/6PP/k2KR3 w K -'));
+        final pos = Chess.fromSetup(Setup.parseFen('2r5/8/8/8/8/8/6PP/k2KR3 w K -'));
         const move = NormalMove(from: Square.d1, to: Square.e1);
         expect(pos.play(move).fen, '2r5/8/8/8/8/8/6PP/k4RK1 b - - 1 1');
 
-        final pos2 = Chess.fromSetup(Setup.parseFen(
-            'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'));
+        final pos2 = Chess.fromSetup(
+          Setup.parseFen('r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'),
+        );
         const move2 = NormalMove(from: Square.e1, to: Square.a1);
-        expect(pos2.play(move2).fen,
-            'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/2KR3R b kq - 1 1');
+        expect(
+          pos2.play(move2).fen,
+          'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/2KR3R b kq - 1 1',
+        );
 
-        final pos3 = Chess.fromSetup(Setup.parseFen(
-            '1r2k2r/p1b1n1pp/1q3p2/1p2pPQ1/4P3/2P4P/1B2B1P1/R3K2R w KQk - 0 20'));
+        final pos3 = Chess.fromSetup(
+          Setup.parseFen('1r2k2r/p1b1n1pp/1q3p2/1p2pPQ1/4P3/2P4P/1B2B1P1/R3K2R w KQk - 0 20'),
+        );
         const queenSide = NormalMove(from: Square.e1, to: Square.a1);
         const altQueenSide = NormalMove(from: Square.e1, to: Square.c1);
         expect(pos3.normalizeMove(queenSide), queenSide);
         expect(pos3.normalizeMove(altQueenSide), queenSide);
-        expect(pos3.play(altQueenSide).fen,
-            '1r2k2r/p1b1n1pp/1q3p2/1p2pPQ1/4P3/2P4P/1B2B1P1/2KR3R b k - 1 20');
+        expect(
+          pos3.play(altQueenSide).fen,
+          '1r2k2r/p1b1n1pp/1q3p2/1p2pPQ1/4P3/2P4P/1B2B1P1/2KR3R b k - 1 20',
+        );
       });
     });
   });
 
   group('Atomic', () {
     test('king exploded', () {
-      final pos1 = Atomic.fromSetup(Setup.parseFen(
-          'r4b1r/ppp1pppp/7n/8/8/8/PPPPPPPP/RNBQKB1R b KQ - 0 3'));
+      final pos1 = Atomic.fromSetup(
+        Setup.parseFen('r4b1r/ppp1pppp/7n/8/8/8/PPPPPPPP/RNBQKB1R b KQ - 0 3'),
+      );
       expect(pos1.isGameOver, true);
       expect(pos1.isVariantEnd, true);
       expect(pos1.outcome, Outcome.whiteWins);
 
-      final pos2 = Atomic.fromSetup(Setup.parseFen(
-          'rn5r/pp4pp/2p3Nn/5p2/1b2P1PP/8/PPP2P2/R1B1KB1R b KQ - 0 9'));
+      final pos2 = Atomic.fromSetup(
+        Setup.parseFen('rn5r/pp4pp/2p3Nn/5p2/1b2P1PP/8/PPP2P2/R1B1KB1R b KQ - 0 9'),
+      );
       expect(pos2.isGameOver, true);
       expect(pos2.isVariantEnd, true);
       expect(pos2.outcome, Outcome.whiteWins);
@@ -776,22 +765,21 @@ void main() {
     test('explosionSquares', () {
       // Giuoco Piano: Bxf7+ explodes f7 (center), f6 (knight), e8 (king), f8 (bishop)
       // g7 is a pawn and is not included
-      final pos = Atomic.fromSetup(Setup.parseFen(
-          'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'));
+      final pos = Atomic.fromSetup(
+        Setup.parseFen('r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4'),
+      );
       expect(
         pos.explosionSquares(NormalMove.fromUci('c4f7')),
         SquareSet.fromSquares([Square.f7, Square.f6, Square.e8, Square.f8]),
       );
 
       // Non-capture move returns empty set
-      expect(
-        pos.explosionSquares(NormalMove.fromUci('d2d3')),
-        SquareSet.empty,
-      );
+      expect(pos.explosionSquares(NormalMove.fromUci('d2d3')), SquareSet.empty);
 
       // En passant: explosion centered on the destination square
-      final epPos = Atomic.fromSetup(Setup.parseFen(
-          'rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'));
+      final epPos = Atomic.fromSetup(
+        Setup.parseFen('rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'),
+      );
       expect(
         epPos.explosionSquares(NormalMove.fromUci('e5f6')),
         const SquareSet.fromSquare(Square.f6),
@@ -821,8 +809,7 @@ void main() {
     });
 
     test('en passant', () {
-      final setup = Setup.parseFen(
-          'r1bqkbn1/p1ppp3/2n4p/6p1/1Pp5/4P3/P2P1PP1/R1B1K3 b - b3 0 11');
+      final setup = Setup.parseFen('r1bqkbn1/p1ppp3/2n4p/6p1/1Pp5/4P3/P2P1PP1/R1B1K3 b - b3 0 11');
       final pos = Antichess.fromSetup(setup);
       final move = NormalMove.fromUci('c4b3');
       expect(pos.isLegal(move), isTrue);
@@ -915,14 +902,13 @@ void main() {
         'Bxg2',
         'cxb7',
         'Bxh1',
-        'bxa8=K'
+        'bxa8=K',
       ];
       Position position = Antichess.initial;
       for (final move in moves) {
         position = position.play(position.parseSan(move)!);
       }
-      expect(position.fen,
-          equals('Kn1qkbnr/p3pppp/8/8/8/8/PPPP1P2/RNBQKBNb b - - 0 6'));
+      expect(position.fen, equals('Kn1qkbnr/p3pppp/8/8/8/8/PPPP1P2/RNBQKBNb b - - 0 6'));
     });
   });
 
@@ -940,10 +926,10 @@ void main() {
     });
 
     test('game is not over when all valid moves are drop moves', () {
-      final pos = Crazyhouse.fromSetup(Setup.parseFen(
-          'r1bQqk1R/ppp2ppp/3p4/6n1/2B5/5P2/PPP3PP/3n1K1R[PPNBBpnr] b - - 3 23'));
-      expect(pos.legalMoves.values,
-          everyElement((SquareSet squareSet) => squareSet.isEmpty));
+      final pos = Crazyhouse.fromSetup(
+        Setup.parseFen('r1bQqk1R/ppp2ppp/3p4/6n1/2B5/5P2/PPP3PP/3n1K1R[PPNBBpnr] b - - 3 23'),
+      );
+      expect(pos.legalMoves.values, everyElement((SquareSet squareSet) => squareSet.isEmpty));
       expect(pos.legalDrops, const SquareSet.fromSquare(Square.g8));
       expect(pos.hasSomeLegalMoves, true);
       expect(pos.isGameOver, false);
@@ -951,11 +937,10 @@ void main() {
     });
 
     test('en passant capture', () {
-      final pos = Crazyhouse.fromSetup(Setup.parseFen(
-              'r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'))
-          .play(const NormalMove(from: Square.e5, to: Square.f6));
-      expect(
-          pos.pockets, equals(Pockets.empty.increment(Side.white, Role.pawn)));
+      final pos = Crazyhouse.fromSetup(
+        Setup.parseFen('r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3'),
+      ).play(const NormalMove(from: Square.e5, to: Square.f6));
+      expect(pos.pockets, equals(Pockets.empty.increment(Side.white, Role.pawn)));
     });
 
     test('parse san', () {
@@ -1014,14 +999,15 @@ void main() {
         position = position.play(position.parseSan(move)!);
       }
       expect(
-          position.fen,
-          equals(
-              'r4rk1/ppp1nppp/6b1/8/2B1pP2/4Pq2/PPP4P/R1BqK3[PPNNNBRp] w - - 1 25'));
+        position.fen,
+        equals('r4rk1/ppp1nppp/6b1/8/2B1pP2/4Pq2/PPP4P/R1BqK3[PPNNNBRp] w - - 1 25'),
+      );
     });
 
     test('castle checkmates', () {
-      Position position = Crazyhouse.fromSetup(Setup.parseFen(
-          'rnbq1r2/pbppq1p1/1p2pN2/7p/2PP2NP/1P4P1/P3BP1R/R3K1k1[PPNB] w Q - 1 21'));
+      Position position = Crazyhouse.fromSetup(
+        Setup.parseFen('rnbq1r2/pbppq1p1/1p2pN2/7p/2PP2NP/1P4P1/P3BP1R/R3K1k1[PPNB] w Q - 1 21'),
+      );
       position = position.play(position.parseSan('O-O-O#')!);
       expect(position.isCheckmate, equals(true));
     });
@@ -1038,8 +1024,7 @@ void main() {
       }
     });
     test('game end conditions', () {
-      final pos = KingOfTheHill.fromSetup(
-          Setup.parseFen('8/5k2/8/8/8/8/1K6/8 w - - 0 1'));
+      final pos = KingOfTheHill.fromSetup(Setup.parseFen('8/5k2/8/8/8/8/1K6/8 w - - 0 1'));
       expect(pos.isInsufficientMaterial, false);
       expect(pos.isCheck, false);
       expect(pos.isVariantEnd, false);
@@ -1047,8 +1032,9 @@ void main() {
       expect(pos.outcome, null);
       expect(pos.isGameOver, false);
 
-      final pos2 = KingOfTheHill.fromSetup(Setup.parseFen(
-          'r1bqkbnr/ppp2ppp/2np4/4p3/4K3/8/PPPP1PPP/RNBQ1BNR w HAkq - 0 1'));
+      final pos2 = KingOfTheHill.fromSetup(
+        Setup.parseFen('r1bqkbnr/ppp2ppp/2np4/4p3/4K3/8/PPPP1PPP/RNBQ1BNR w HAkq - 0 1'),
+      );
       expect(pos2.isVariantEnd, true);
       expect(pos2.isGameOver, true);
       expect(pos2.variantOutcome, Outcome.whiteWins);
@@ -1064,21 +1050,20 @@ void main() {
     test('draw', () {
       // Both pieces are on the backrank
       final position = RacingKings.fromSetup(
-          Setup.parseFen('kr3NK1/1q2R3/8/8/8/5n2/2N5/1rb2B1R w - - 11 14'));
+        Setup.parseFen('kr3NK1/1q2R3/8/8/8/5n2/2N5/1rb2B1R w - - 11 14'),
+      );
       expect(position.isVariantEnd, true);
       expect(position.variantOutcome, Outcome.draw);
     });
 
     test('white win', () {
-      final position = RacingKings.fromSetup(
-          Setup.parseFen('2KR4/k7/2Q5/4q3/8/8/8/2N5 b - - 0 1'));
+      final position = RacingKings.fromSetup(Setup.parseFen('2KR4/k7/2Q5/4q3/8/8/8/2N5 b - - 0 1'));
       expect(position.isVariantEnd, true);
       expect(position.variantOutcome, Outcome.whiteWins);
     });
 
     test('black win', () {
-      final position = RacingKings.fromSetup(
-          Setup.parseFen('1k6/6K1/8/8/8/8/8/8 w - - 0 1'));
+      final position = RacingKings.fromSetup(Setup.parseFen('1k6/6K1/8/8/8/8/8/8 w - - 0 1'));
       expect(position.isVariantEnd, true);
       expect(position.variantOutcome, Outcome.blackWins);
     });
@@ -1086,8 +1071,7 @@ void main() {
     test('game ongoing', () {
       // While the white king is on the back rank
       // The black king can reach the back rank this turn
-      final position =
-          RacingKings.fromSetup(Setup.parseFen('1K6/7k/8/8/8/8/8/8 b - - 0 1'));
+      final position = RacingKings.fromSetup(Setup.parseFen('1K6/7k/8/8/8/8/8/8 b - - 0 1'));
       expect(position.isVariantEnd, false);
       expect(position.variantOutcome, null);
     });
@@ -1106,18 +1090,20 @@ void main() {
     });
 
     test('remaining checks', () {
-      final pos = ThreeCheck.fromSetup(Setup.parseFen(
-          'rnbqkbnr/ppp1pppp/3p4/8/8/4P3/PPPP1PPP/RNBQKBNR w KQkq - 3+3 0 2'));
-      expect(pos.play(NormalMove.fromUci('f1b5')).fen,
-          'rnbqkbnr/ppp1pppp/3p4/1B6/8/4P3/PPPP1PPP/RNBQK1NR b KQkq - 2+3 1 2');
+      final pos = ThreeCheck.fromSetup(
+        Setup.parseFen('rnbqkbnr/ppp1pppp/3p4/8/8/4P3/PPPP1PPP/RNBQKBNR w KQkq - 3+3 0 2'),
+      );
+      expect(
+        pos.play(NormalMove.fromUci('f1b5')).fen,
+        'rnbqkbnr/ppp1pppp/3p4/1B6/8/4P3/PPPP1PPP/RNBQK1NR b KQkq - 2+3 1 2',
+      );
     });
   });
 
   group('Horde', () {
     group('insufficient material', () {
       for (final line
-          in io.File('test/resources/horde_insufficient_material.csv')
-              .readAsLinesSync()) {
+          in io.File('test/resources/horde_insufficient_material.csv').readAsLinesSync()) {
         final [fen, expected, tag] = line.split(',');
         test('[$tag] $fen', () {
           final pos = Horde.fromSetup(Setup.parseFen(fen));
@@ -1130,50 +1116,67 @@ void main() {
     group('Position validation', () {
       test('Empty board', () {
         expect(
-            () => Horde.fromSetup(Setup.parseFen(kEmptyFEN)),
-            throwsA(predicate((e) =>
-                e is PositionSetupException &&
-                e.cause == IllegalSetupCause.empty)));
+          () => Horde.fromSetup(Setup.parseFen(kEmptyFEN)),
+          throwsA(
+            predicate((e) => e is PositionSetupException && e.cause == IllegalSetupCause.empty),
+          ),
+        );
       });
       test('Missing kings', () {
         expect(
-            () => Horde.fromSetup(Setup.parseFen(
-                'rnbq1bnr/pppppppp/8/1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w - - 0 1')),
-            throwsA(predicate((e) =>
-                e is PositionSetupException &&
-                e.cause == IllegalSetupCause.kings)));
+          () => Horde.fromSetup(
+            Setup.parseFen(
+              'rnbq1bnr/pppppppp/8/1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w - - 0 1',
+            ),
+          ),
+          throwsA(
+            predicate((e) => e is PositionSetupException && e.cause == IllegalSetupCause.kings),
+          ),
+        );
       });
       test('King is white', () {
         expect(
-            () => Horde.fromSetup(Setup.parseFen(
-                'rnbq1bnr/pppppppp/8/1PPK1PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w - - 0 1')),
-            throwsA(predicate((e) =>
-                e is PositionSetupException &&
-                e.cause == IllegalSetupCause.kings)));
+          () => Horde.fromSetup(
+            Setup.parseFen(
+              'rnbq1bnr/pppppppp/8/1PPK1PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w - - 0 1',
+            ),
+          ),
+          throwsA(
+            predicate((e) => e is PositionSetupException && e.cause == IllegalSetupCause.kings),
+          ),
+        );
       });
       test('Both sides have a king', () {
         expect(
-            () => Horde.fromSetup(Setup.parseFen(
-                'rnbqkbnr/pppppppp/8/1PPK1PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w kq - 0 1')),
-            throwsA(predicate((e) =>
-                e is PositionSetupException &&
-                e.cause == IllegalSetupCause.kings)));
+          () => Horde.fromSetup(
+            Setup.parseFen(
+              'rnbqkbnr/pppppppp/8/1PPK1PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w kq - 0 1',
+            ),
+          ),
+          throwsA(
+            predicate((e) => e is PositionSetupException && e.cause == IllegalSetupCause.kings),
+          ),
+        );
       });
       test('Opposite check', () {
         expect(
-            () => Horde.fromSetup(
-                Setup.parseFen('3k4/8/1B6/8/8/8/8/8 w - - 0 1')),
-            throwsA(predicate((e) =>
-                e is PositionSetupException &&
-                e.cause == IllegalSetupCause.oppositeCheck)));
+          () => Horde.fromSetup(Setup.parseFen('3k4/8/1B6/8/8/8/8/8 w - - 0 1')),
+          throwsA(
+            predicate(
+              (e) => e is PositionSetupException && e.cause == IllegalSetupCause.oppositeCheck,
+            ),
+          ),
+        );
       });
       test('Backrank pawns (black)', () {
         expect(
-            () => Horde.fromSetup(
-                Setup.parseFen('2k3p1/8/8/8/8/3P4/8/8 w - - 0 1')),
-            throwsA(predicate((e) =>
-                e is PositionSetupException &&
-                e.cause == IllegalSetupCause.pawnsOnBackrank)));
+          () => Horde.fromSetup(Setup.parseFen('2k3p1/8/8/8/8/3P4/8/8 w - - 0 1')),
+          throwsA(
+            predicate(
+              (e) => e is PositionSetupException && e.cause == IllegalSetupCause.pawnsOnBackrank,
+            ),
+          ),
+        );
       });
     });
   });

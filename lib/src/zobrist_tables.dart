@@ -6,6 +6,8 @@
 // Zobrist masks transcribed from shakmaty (low 64 bits of its 128 bit
 // literals), which are Polyglot compatible for the standard chess part.
 
+// dart format off
+
 import 'models.dart';
 
 /// Piece masks, indexed by side, role and square.

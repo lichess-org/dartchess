@@ -16,7 +16,8 @@ void main() {
     final sq = makeSquareSet(rep);
 
     expect(rep, humanReadableSquareSet(sq));
-    expect(makeSquareSet('''
+    expect(
+      makeSquareSet('''
 . . . . . . . 1
 . . . . . . 1 .
 . . . . . 1 . .
@@ -25,7 +26,9 @@ void main() {
 . . 1 . . . . .
 . 1 . . . . . .
 1 . . . . . . .
-'''), SquareSet.diagonal);
+'''),
+      SquareSet.diagonal,
+    );
   });
 
   test('humanReadableBoard', () {

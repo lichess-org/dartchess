@@ -13,23 +13,18 @@ extension type const SquareSet(int value) {
 
   /// Creates a [SquareSet] from several [Square]s.
   SquareSet.fromSquares(Iterable<Square> squares)
-      : value = squares
-            .map((square) => 1 << square)
-            .fold(0, (left, right) => left | right);
+    : value = squares.map((square) => 1 << square).fold(0, (left, right) => left | right);
 
   /// Create a [SquareSet] containing all squares of the given rank.
-  const SquareSet.fromRank(Rank rank)
-      : value = 0xff << (8 * rank),
-        assert(rank >= 0 && rank < 8);
+  const SquareSet.fromRank(Rank rank) : value = 0xff << (8 * rank), assert(rank >= 0 && rank < 8);
 
   /// Create a [SquareSet] containing all squares of the given file.
   const SquareSet.fromFile(File file)
-      : value = 0x0101010101010101 << file,
-        assert(file >= 0 && file < 8);
+    : value = 0x0101010101010101 << file,
+      assert(file >= 0 && file < 8);
 
   /// Create a [SquareSet] containing all squares of the given backrank [Side].
-  const SquareSet.backrankOf(Side side)
-      : value = side == Side.white ? 0xff : 0xff00000000000000;
+  const SquareSet.backrankOf(Side side) : value = side == Side.white ? 0xff : 0xff00000000000000;
 
   static const empty = SquareSet(0);
   static const full = SquareSet(0xffffffffffffffff);
@@ -168,14 +163,14 @@ extension type const SquareSet(int value) {
       buffer.write(has(Square(square)) ? '1' : '0');
     }
     final b = buffer.toString();
-    final first = int.parse(b.substring(0, 32), radix: 2)
-        .toRadixString(16)
-        .toUpperCase()
-        .padLeft(8, '0');
-    final last = int.parse(b.substring(32, 64), radix: 2)
-        .toRadixString(16)
-        .toUpperCase()
-        .padLeft(8, '0');
+    final first = int.parse(
+      b.substring(0, 32),
+      radix: 2,
+    ).toRadixString(16).toUpperCase().padLeft(8, '0');
+    final last = int.parse(
+      b.substring(32, 64),
+      radix: 2,
+    ).toRadixString(16).toUpperCase().padLeft(8, '0');
     final stringVal = '$first$last';
     if (stringVal == '0000000000000000') {
       return '0';
@@ -214,8 +209,7 @@ extension type const SquareSet(int value) {
 
 int _popcnt64(int n) {
   final count2 = n - ((n >>> 1) & 0x5555555555555555);
-  final count4 =
-      (count2 & 0x3333333333333333) + ((count2 >>> 2) & 0x3333333333333333);
+  final count4 = (count2 & 0x3333333333333333) + ((count2 >>> 2) & 0x3333333333333333);
   final count8 = (count4 + (count4 >>> 4)) & 0x0f0f0f0f0f0f0f0f;
   return (count8 * 0x0101010101010101) >>> 56;
 }

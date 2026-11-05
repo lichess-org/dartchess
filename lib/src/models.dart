@@ -16,8 +16,7 @@ enum SquareColor {
   dark;
 
   /// Gets the opposite color.
-  SquareColor get opposite =>
-      this == SquareColor.light ? SquareColor.dark : SquareColor.light;
+  SquareColor get opposite => this == SquareColor.light ? SquareColor.dark : SquareColor.light;
 }
 
 /// The chessboard castling side.
@@ -26,7 +25,7 @@ enum CastlingSide {
   queen,
 
   /// The king side castling.
-  king;
+  king,
 }
 
 /// Selects which en passant squares are reported by [Position.epSquareOf].
@@ -43,7 +42,7 @@ enum EnPassantMode {
   /// Whenever a pawn has been advanced by two steps.
   ///
   /// Follows the FEN specification.
-  always;
+  always,
 }
 
 /// Piece role, such as pawn, knight, etc.
@@ -77,23 +76,23 @@ enum Role {
 
   /// Gets the role letter in lowercase (as for black piece in FEN notation).
   String get letter => switch (this) {
-        Role.pawn => 'p',
-        Role.knight => 'n',
-        Role.bishop => 'b',
-        Role.rook => 'r',
-        Role.queen => 'q',
-        Role.king => 'k',
-      };
+    Role.pawn => 'p',
+    Role.knight => 'n',
+    Role.bishop => 'b',
+    Role.rook => 'r',
+    Role.queen => 'q',
+    Role.king => 'k',
+  };
 
   /// Gets the role letter in uppercase (as for white piece in FEN notation).
   String get uppercaseLetter => switch (this) {
-        Role.pawn => 'P',
-        Role.knight => 'N',
-        Role.bishop => 'B',
-        Role.rook => 'R',
-        Role.queen => 'Q',
-        Role.king => 'K',
-      };
+    Role.pawn => 'P',
+    Role.knight => 'N',
+    Role.bishop => 'B',
+    Role.rook => 'R',
+    Role.queen => 'Q',
+    Role.king => 'K',
+  };
 }
 
 /// A file of the chessboard.
@@ -168,16 +167,7 @@ extension type const Rank._(int value) implements int {
   static const eighth = Rank(7);
 
   /// All ranks in ascending order.
-  static const values = [
-    first,
-    second,
-    third,
-    fourth,
-    fifth,
-    sixth,
-    seventh,
-    eighth
-  ];
+  static const values = [first, second, third, fourth, fifth, sixth, seventh, eighth];
 
   static const _names = ['1', '2', '3', '4', '5', '6', '7', '8'];
 
@@ -252,6 +242,7 @@ extension type const Square._(int value) implements int {
   }
 
   /// All squares on the chessboard, from a1 to h8.
+  // dart format off
   static const values = [
     a1, b1, c1, d1, e1, f1, g1, h1,
     a2, b2, c2, d2, e2, f2, g2, h2,
@@ -262,6 +253,7 @@ extension type const Square._(int value) implements int {
     a7, b7, c7, d7, e7, f7, g7, h7,
     a8, b8, c8, d8, e8, f8, g8, h8
   ];
+  // dart format on
 
   /// The file of the square on the board.
   File get file => File(value & 0x7);
@@ -381,11 +373,7 @@ enum PieceKind {
 /// Describes a chess piece by its color, role and promotion status.
 @immutable
 class Piece {
-  const Piece({
-    required this.color,
-    required this.role,
-    this.promoted = false,
-  });
+  const Piece({required this.color, required this.role, this.promoted = false});
 
   final Side color;
   final Role role;
@@ -394,27 +382,20 @@ class Piece {
   static Piece? fromChar(String ch) {
     final role = Role.fromChar(ch);
     if (role != null) {
-      return Piece(
-          role: role, color: ch.toLowerCase() == ch ? Side.black : Side.white);
+      return Piece(role: role, color: ch.toLowerCase() == ch ? Side.black : Side.white);
     }
     return null;
   }
 
   /// Gets the piece kind.
   PieceKind get kind => switch (role) {
-        Role.pawn =>
-          color == Side.white ? PieceKind.whitePawn : PieceKind.blackPawn,
-        Role.knight =>
-          color == Side.white ? PieceKind.whiteKnight : PieceKind.blackKnight,
-        Role.bishop =>
-          color == Side.white ? PieceKind.whiteBishop : PieceKind.blackBishop,
-        Role.rook =>
-          color == Side.white ? PieceKind.whiteRook : PieceKind.blackRook,
-        Role.queen =>
-          color == Side.white ? PieceKind.whiteQueen : PieceKind.blackQueen,
-        Role.king =>
-          color == Side.white ? PieceKind.whiteKing : PieceKind.blackKing,
-      };
+    Role.pawn => color == Side.white ? PieceKind.whitePawn : PieceKind.blackPawn,
+    Role.knight => color == Side.white ? PieceKind.whiteKnight : PieceKind.blackKnight,
+    Role.bishop => color == Side.white ? PieceKind.whiteBishop : PieceKind.blackBishop,
+    Role.rook => color == Side.white ? PieceKind.whiteRook : PieceKind.blackRook,
+    Role.queen => color == Side.white ? PieceKind.whiteQueen : PieceKind.blackQueen,
+    Role.king => color == Side.white ? PieceKind.whiteKing : PieceKind.blackKing,
+  };
 
   /// Gets the FEN character of this piece.
   ///
@@ -426,11 +407,7 @@ class Piece {
     return r;
   }
 
-  Piece copyWith({
-    Side? color,
-    Role? role,
-    bool? promoted,
-  }) {
+  Piece copyWith({Side? color, Role? role, bool? promoted}) {
     return Piece(
       color: color ?? this.color,
       role: role ?? this.role,
@@ -476,9 +453,7 @@ class Piece {
 /// A move can be either a [NormalMove] or a [DropMove].
 @immutable
 sealed class Move {
-  const Move({
-    required this.to,
-  });
+  const Move({required this.to});
 
   /// The target square of this move.
   final Square to;
@@ -528,11 +503,7 @@ sealed class Move {
 /// Represents a chess move, which is possibly a promotion.
 @immutable
 class NormalMove extends Move {
-  const NormalMove({
-    required this.from,
-    required super.to,
-    this.promotion,
-  });
+  const NormalMove({required this.from, required super.to, this.promotion});
 
   /// Constructs a [NormalMove] from a UCI string.
   ///
@@ -563,18 +534,15 @@ class NormalMove extends Move {
   Iterable<Square> get squares => [from, to];
 
   /// Returns a copy of this move with a [promotion] role.
-  NormalMove withPromotion(Role? promotion) =>
-      NormalMove(from: from, to: to, promotion: promotion);
+  NormalMove withPromotion(Role? promotion) => NormalMove(from: from, to: to, promotion: promotion);
 
   /// Gets UCI notation, like `g1f3` for a normal move, `a7a8q` for promotion to a queen.
   @override
-  String get uci =>
-      from.name + to.name + (promotion != null ? promotion!.letter : '');
+  String get uci => from.name + to.name + (promotion != null ? promotion!.letter : '');
 
   @override
   bool operator ==(Object other) {
-    return identical(this, other) ||
-        other.runtimeType == runtimeType && hashCode == other.hashCode;
+    return identical(this, other) || other.runtimeType == runtimeType && hashCode == other.hashCode;
   }
 
   @override
@@ -585,10 +553,7 @@ class NormalMove extends Move {
 @immutable
 class DropMove extends Move {
   /// Constructs a [DropMove] from a target square and a role.
-  const DropMove({
-    required super.to,
-    required this.role,
-  });
+  const DropMove({required super.to, required this.role});
 
   /// Constructs a [DropMove] from a UCI string.
   ///
@@ -617,8 +582,7 @@ class DropMove extends Move {
 
   @override
   bool operator ==(Object other) {
-    return identical(this, other) ||
-        other.runtimeType == runtimeType && hashCode == other.hashCode;
+    return identical(this, other) || other.runtimeType == runtimeType && hashCode == other.hashCode;
   }
 
   @override
@@ -716,12 +680,9 @@ class PositionSetupException implements Exception {
   final IllegalSetupCause cause;
 
   static const empty = PositionSetupException(IllegalSetupCause.empty);
-  static const oppositeCheck =
-      PositionSetupException(IllegalSetupCause.oppositeCheck);
-  static const impossibleCheck =
-      PositionSetupException(IllegalSetupCause.impossibleCheck);
-  static const pawnsOnBackrank =
-      PositionSetupException(IllegalSetupCause.pawnsOnBackrank);
+  static const oppositeCheck = PositionSetupException(IllegalSetupCause.oppositeCheck);
+  static const impossibleCheck = PositionSetupException(IllegalSetupCause.impossibleCheck);
+  static const pawnsOnBackrank = PositionSetupException(IllegalSetupCause.pawnsOnBackrank);
   static const kings = PositionSetupException(IllegalSetupCause.kings);
   static const variant = PositionSetupException(IllegalSetupCause.variant);
 

@@ -12,8 +12,7 @@ void main() {
       expect(SquareSet.antidiagonal.toHexString(), '0x0102040810204080');
       expect(SquareSet.corners.toHexString(), '0x8100000000000081');
       expect(SquareSet.backranks.toHexString(), '0xFF000000000000FF');
-      expect(const SquareSet(0x0000000000000001).toHexString(),
-          '0x0000000000000001');
+      expect(const SquareSet(0x0000000000000001).toHexString(), '0x0000000000000001');
       expect(const SquareSet(0xf).toHexString(), '0x000000000000000F');
     });
 
@@ -78,80 +77,66 @@ void main() {
       expect(SquareSet.empty.moreThanOne, false);
       expect(SquareSet.full.moreThanOne, true);
       expect(const SquareSet.fromSquare(Square.e1).moreThanOne, false);
-      expect(
-          const SquareSet.fromSquare(Square.e1)
-              .withSquare(Square.f1)
-              .moreThanOne,
-          true);
+      expect(const SquareSet.fromSquare(Square.e1).withSquare(Square.f1).moreThanOne, true);
     });
 
     test('singleSquare', () {
       expect(SquareSet.empty.singleSquare, null);
       expect(SquareSet.full.singleSquare, null);
       expect(const SquareSet.fromSquare(Square.e1).singleSquare, Square.e1);
-      expect(
-          const SquareSet.fromSquare(Square.e1)
-              .withSquare(Square.f1)
-              .singleSquare,
-          null);
+      expect(const SquareSet.fromSquare(Square.e1).withSquare(Square.f1).singleSquare, null);
     });
 
     test('squares', () {
       expect(SquareSet.empty.squares.toList(), List<Square>.empty());
+      expect(SquareSet.full.squares.toList(), [for (int i = 0; i < 64; i++) Square(i)]);
       expect(
-        SquareSet.full.squares.toList(),
-        [for (int i = 0; i < 64; i++) Square(i)],
+        SquareSet.diagonal.squares,
+        equals([
+          Square.a1,
+          Square.b2,
+          Square.c3,
+          Square.d4,
+          Square.e5,
+          Square.f6,
+          Square.g7,
+          Square.h8,
+        ]),
       );
-      expect(
-          SquareSet.diagonal.squares,
-          equals([
-            Square.a1,
-            Square.b2,
-            Square.c3,
-            Square.d4,
-            Square.e5,
-            Square.f6,
-            Square.g7,
-            Square.h8,
-          ]));
     });
 
     test('squaresReversed', () {
       expect(SquareSet.empty.squaresReversed.toList(), List<Square>.empty());
+      expect(SquareSet.full.squaresReversed.toList(), [for (int i = 63; i >= 0; i--) Square(i)]);
       expect(
-        SquareSet.full.squaresReversed.toList(),
-        [for (int i = 63; i >= 0; i--) Square(i)],
+        SquareSet.diagonal.squaresReversed,
+        equals([
+          Square.h8,
+          Square.g7,
+          Square.f6,
+          Square.e5,
+          Square.d4,
+          Square.c3,
+          Square.b2,
+          Square.a1,
+        ]),
       );
-      expect(
-          SquareSet.diagonal.squaresReversed,
-          equals([
-            Square.h8,
-            Square.g7,
-            Square.f6,
-            Square.e5,
-            Square.d4,
-            Square.c3,
-            Square.b2,
-            Square.a1,
-          ]));
     });
 
     test('from file', () {
-      expect(const SquareSet.fromFile(File(0)),
-          const SquareSet(0x0101010101010101));
-      expect(const SquareSet.fromFile(File(7)),
-          const SquareSet(0x8080808080808080));
+      expect(const SquareSet.fromFile(File(0)), const SquareSet(0x0101010101010101));
+      expect(const SquareSet.fromFile(File(7)), const SquareSet(0x8080808080808080));
     });
 
     test('from rank', () {
-      expect(const SquareSet.fromRank(Rank(0)),
-          const SquareSet(0x00000000000000FF));
-      expect(const SquareSet.fromRank(Rank(7)),
-          const SquareSet(0xFF00000000000000));
+      expect(const SquareSet.fromRank(Rank(0)), const SquareSet(0x00000000000000FF));
+      expect(const SquareSet.fromRank(Rank(7)), const SquareSet(0xFF00000000000000));
     });
 
     test('from square', () {
-      expect(const SquareSet.fromSquare(Square.c6), makeSquareSet('''
+      expect(
+        const SquareSet.fromSquare(Square.c6),
+        makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . 1 . . . . .
@@ -160,18 +145,17 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
-'''));
+'''),
+      );
 
       expect(const SquareSet.fromSquare(Square.a1), const SquareSet(1));
-      expect(const SquareSet.fromSquare(Square.h8),
-          const SquareSet(0x8000000000000000));
+      expect(const SquareSet.fromSquare(Square.h8), const SquareSet(0x8000000000000000));
     });
 
     test('from squares', () {
       expect(
-          SquareSet.fromSquares(
-              const [Square.c6, Square.e6, Square.c4, Square.e4]),
-          makeSquareSet('''
+        SquareSet.fromSquares(const [Square.c6, Square.e6, Square.c4, Square.e4]),
+        makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . 1 . 1 . . .
@@ -180,11 +164,14 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
-'''));
+'''),
+      );
     });
 
     test('with square', () {
-      expect(SquareSet.center.withSquare(Square.d6), makeSquareSet('''
+      expect(
+        SquareSet.center.withSquare(Square.d6),
+        makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . 1 . . . .
@@ -193,11 +180,14 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
-'''));
+'''),
+      );
     });
 
     test('without square', () {
-      expect(SquareSet.center.withoutSquare(Square.d4), makeSquareSet('''
+      expect(
+        SquareSet.center.withoutSquare(Square.d4),
+        makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
@@ -206,12 +196,14 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
-'''));
+'''),
+      );
     });
 
     test('toggle square', () {
-      expect(SquareSet.center.toggleSquare(Square.d5).toggleSquare(Square.d6),
-          makeSquareSet('''
+      expect(
+        SquareSet.center.toggleSquare(Square.d5).toggleSquare(Square.d6),
+        makeSquareSet('''
 . . . . . . . .
 . . . . . . . .
 . . . 1 . . . .
@@ -220,11 +212,13 @@ void main() {
 . . . . . . . .
 . . . . . . . .
 . . . . . . . .
-'''));
+'''),
+      );
     });
 
     test('flip vertical', () {
-      expect(makeSquareSet('''
+      expect(
+        makeSquareSet('''
 . 1 1 1 1 . . .
 . 1 . . . 1 . .
 . 1 . . . 1 . .
@@ -233,7 +227,8 @@ void main() {
 . 1 . 1 . . . .
 . 1 . . 1 . . .
 . 1 . . . 1 . .
-''').flipVertical(), makeSquareSet('''
+''').flipVertical(),
+        makeSquareSet('''
 . 1 . . . 1 . .
 . 1 . . 1 . . .
 . 1 . 1 . . . .
@@ -242,11 +237,13 @@ void main() {
 . 1 . . . 1 . .
 . 1 . . . 1 . .
 . 1 1 1 1 . . .
-'''));
+'''),
+      );
     });
 
     test('mirror horizontal', () {
-      expect(makeSquareSet('''
+      expect(
+        makeSquareSet('''
 . 1 1 1 1 . . .
 . 1 . . . 1 . .
 . 1 . . . 1 . .
@@ -255,7 +252,8 @@ void main() {
 . 1 . 1 . . . .
 . 1 . . 1 . . .
 . 1 . . . 1 . .
-''').mirrorHorizontal(), makeSquareSet('''
+''').mirrorHorizontal(),
+        makeSquareSet('''
 . . . 1 1 1 1 .
 . . 1 . . . 1 .
 . . 1 . . . 1 .
@@ -264,7 +262,8 @@ void main() {
 . . . . 1 . 1 .
 . . . 1 . . 1 .
 . . 1 . . . 1 .
-'''));
+'''),
+      );
     });
   });
 }

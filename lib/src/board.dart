@@ -67,16 +67,17 @@ class Board {
 
   /// Racing Kings start position
   static const racingKings = Board(
-      occupied: SquareSet(0xffff),
-      promoted: SquareSet.empty,
-      white: SquareSet(0xf0f0),
-      black: SquareSet(0x0f0f),
-      pawns: SquareSet.empty,
-      knights: SquareSet(0x1818),
-      bishops: SquareSet(0x2424),
-      rooks: SquareSet(0x4242),
-      queens: SquareSet(0x0081),
-      kings: SquareSet(0x8100));
+    occupied: SquareSet(0xffff),
+    promoted: SquareSet.empty,
+    white: SquareSet(0xf0f0),
+    black: SquareSet(0x0f0f),
+    pawns: SquareSet.empty,
+    knights: SquareSet(0x1818),
+    bishops: SquareSet(0x2424),
+    rooks: SquareSet(0x4242),
+    queens: SquareSet(0x0081),
+    kings: SquareSet(0x8100),
+  );
 
   /// Horde start Positioin
   static const horde = Board(
@@ -184,8 +185,8 @@ class Board {
   }
 
   /// Gets the number of pieces of each [Role] for the given [Side].
-  ByRole<int> materialCount(Side side) => Map.fromEntries(
-      Role.values.map((role) => MapEntry(role, piecesOf(side, role).size)));
+  ByRole<int> materialCount(Side side) =>
+      Map.fromEntries(Role.values.map((role) => MapEntry(role, piecesOf(side, role).size)));
 
   /// A [SquareSet] of all the pieces matching this [Side] and [Role].
   SquareSet piecesOf(Side side, Role role) {
@@ -257,13 +258,14 @@ class Board {
 
   /// Finds the squares who are attacking `square` by the `attacker` [Side].
   SquareSet attacksTo(Square square, Side attacker, {SquareSet? occupied}) =>
-      bySide(attacker).intersect(rookAttacks(square, occupied ?? this.occupied)
-          .intersect(rooksAndQueens)
-          .union(bishopAttacks(square, occupied ?? this.occupied)
-              .intersect(bishopsAndQueens))
-          .union(knightAttacks(square).intersect(knights))
-          .union(kingAttacks(square).intersect(kings))
-          .union(pawnAttacks(attacker.opposite, square).intersect(pawns)));
+      bySide(attacker).intersect(
+        rookAttacks(square, occupied ?? this.occupied)
+            .intersect(rooksAndQueens)
+            .union(bishopAttacks(square, occupied ?? this.occupied).intersect(bishopsAndQueens))
+            .union(knightAttacks(square).intersect(knights))
+            .union(kingAttacks(square).intersect(kings))
+            .union(pawnAttacks(attacker.opposite, square).intersect(pawns)),
+      );
 
   /// Puts a [Piece] on a [Square] overriding the existing one, if any.
   @useResult
@@ -288,24 +290,17 @@ class Board {
     final piece = pieceAt(square);
     return piece != null
         ? copyWith(
-            occupied: occupied.withoutSquare(square),
-            promoted: piece.promoted ? promoted.withoutSquare(square) : null,
-            white:
-                piece.color == Side.white ? white.withoutSquare(square) : null,
-            black:
-                piece.color == Side.black ? black.withoutSquare(square) : null,
-            pawns: piece.role == Role.pawn ? pawns.withoutSquare(square) : null,
-            knights: piece.role == Role.knight
-                ? knights.withoutSquare(square)
-                : null,
-            bishops: piece.role == Role.bishop
-                ? bishops.withoutSquare(square)
-                : null,
-            rooks: piece.role == Role.rook ? rooks.withoutSquare(square) : null,
-            queens:
-                piece.role == Role.queen ? queens.withoutSquare(square) : null,
-            kings: piece.role == Role.king ? kings.withoutSquare(square) : null,
-          )
+          occupied: occupied.withoutSquare(square),
+          promoted: piece.promoted ? promoted.withoutSquare(square) : null,
+          white: piece.color == Side.white ? white.withoutSquare(square) : null,
+          black: piece.color == Side.black ? black.withoutSquare(square) : null,
+          pawns: piece.role == Role.pawn ? pawns.withoutSquare(square) : null,
+          knights: piece.role == Role.knight ? knights.withoutSquare(square) : null,
+          bishops: piece.role == Role.bishop ? bishops.withoutSquare(square) : null,
+          rooks: piece.role == Role.rook ? rooks.withoutSquare(square) : null,
+          queens: piece.role == Role.queen ? queens.withoutSquare(square) : null,
+          kings: piece.role == Role.king ? kings.withoutSquare(square) : null,
+        )
         : this;
   }
 
@@ -363,17 +358,18 @@ class Board {
   }
 
   @override
-  int get hashCode => Object.hash(occupied, promoted, white, black, pawns,
-      knights, bishops, rooks, queens, kings);
+  int get hashCode =>
+      Object.hash(occupied, promoted, white, black, pawns, knights, bishops, rooks, queens, kings);
 }
 
 Piece? _charToPiece(String ch, bool promoted) {
   final role = Role.fromChar(ch);
   if (role != null) {
     return Piece(
-        role: role,
-        color: ch == ch.toLowerCase() ? Side.black : Side.white,
-        promoted: promoted);
+      role: role,
+      color: ch == ch.toLowerCase() ? Side.black : Side.white,
+      promoted: promoted,
+    );
   }
   return null;
 }

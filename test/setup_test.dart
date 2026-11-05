@@ -6,45 +6,42 @@ void main() {
     expect(Setup.standard, Setup.standard);
     expect(Setup.parseFen(kInitialFEN), Setup.standard);
     expect(
-        Setup.parseFen(
-            'rnbqkbnr/pppppppp/8/8/8/P7/1PPPPPPP/RNBQKBRN w KQkq - 0 1'),
-        isNot(Setup.standard));
+      Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/P7/1PPPPPPP/RNBQKBRN w KQkq - 0 1'),
+      isNot(Setup.standard),
+    );
   });
 
   test('parse castling fen, standard initial board', () {
     expect(
-        Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq')
-            .castlingRights,
-        SquareSet.corners);
+      Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq').castlingRights,
+      SquareSet.corners,
+    );
     expect(
-        Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w -')
-            .castlingRights,
-        SquareSet.empty);
+      Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w -').castlingRights,
+      SquareSet.empty,
+    );
   });
 
   test('parse castling fen, shredder notation', () {
     expect(
-        Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w HAha')
-            .castlingRights,
-        SquareSet.corners);
+      Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w HAha').castlingRights,
+      SquareSet.corners,
+    );
   });
 
   test('invalid castling fen', () {
     expect(
-        () =>
-            Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w BGL')
-                .castlingRights,
-        throwsA(predicate(
-            (e) => e is FenException && e.cause == IllegalFenCause.castling)));
+      () => Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w BGL').castlingRights,
+      throwsA(predicate((e) => e is FenException && e.cause == IllegalFenCause.castling)),
+    );
   });
 
   test('parse en passant square', () {
     expect(Setup.parseFen(kInitialFEN).epSquare, null);
     expect(
-        Setup.parseFen(
-                'r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6')
-            .epSquare,
-        Square.f6);
+      Setup.parseFen('r1bqkbnr/ppppp1pp/2n5/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6').epSquare,
+      Square.f6,
+    );
   });
 
   test('parse initial fen', () {
@@ -70,19 +67,18 @@ void main() {
 
   test('parse invalid fen', () {
     expect(
-        () => Setup.parseFen(
-            'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR u KQkq - 0 1'),
-        throwsException);
+      () => Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR u KQkq - 0 1'),
+      throwsException,
+    );
     expect(
-        () => Setup.parseFen(
-            'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQQKBNR w cq - 0P1'),
-        throwsException);
+      () => Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQQKBNR w cq - 0P1'),
+      throwsException,
+    );
     expect(
-        () => Setup.parseFen(
-            'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w  - 0 1'),
-        throwsException);
-    expect(() => Setup.parseFen('4k2r/8/8/8/8/8/8/RR2K2R w KBQk - 0 1'),
-        throwsException);
+      () => Setup.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w  - 0 1'),
+      throwsException,
+    );
+    expect(() => Setup.parseFen('4k2r/8/8/8/8/8/8/RR2K2R w KBQk - 0 1'), throwsException);
   });
 
   test('parse and make fen', () {
@@ -118,35 +114,23 @@ void main() {
       final pockets = Pockets.empty.increment(Side.white, Role.knight);
       expect(pockets.of(Side.white, Role.knight), 1);
       expect(pockets.size, 1);
-      expect(
-          pockets
-              .increment(Side.white, Role.knight)
-              .of(Side.white, Role.knight),
-          2);
+      expect(pockets.increment(Side.white, Role.knight).of(Side.white, Role.knight), 2);
     });
 
     test('decrement', () {
       final pockets = Pockets.empty.increment(Side.white, Role.knight);
-      expect(
-          pockets
-              .decrement(Side.white, Role.knight)
-              .of(Side.white, Role.knight),
-          0);
+      expect(pockets.decrement(Side.white, Role.knight).of(Side.white, Role.knight), 0);
     });
 
     test('increment/decrement round-trip back to empty', () {
       for (final side in Side.values) {
         for (final role in Role.values) {
-          expect(
-            Pockets.empty.increment(side, role).decrement(side, role),
-            Pockets.empty,
-          );
+          expect(Pockets.empty.increment(side, role).decrement(side, role), Pockets.empty);
         }
       }
     });
 
-    test('of — all roles on both sides are independent (no bitfield overlap)',
-        () {
+    test('of — all roles on both sides are independent (no bitfield overlap)', () {
       for (final side in Side.values) {
         for (final role in Role.values) {
           final p = Pockets.empty.increment(side, role);
@@ -161,9 +145,7 @@ void main() {
     });
 
     test('of — black side is independent from white', () {
-      final p = Pockets.empty
-          .increment(Side.white, Role.rook)
-          .increment(Side.black, Role.queen);
+      final p = Pockets.empty.increment(Side.white, Role.rook).increment(Side.black, Role.queen);
       expect(p.of(Side.white, Role.rook), 1);
       expect(p.of(Side.black, Role.queen), 1);
       expect(p.of(Side.white, Role.queen), 0);
@@ -200,19 +182,10 @@ void main() {
       expect(Pockets.empty.hasQuality(Side.white), false);
 
       // Pawn alone does not count as quality.
-      expect(
-        Pockets.empty.increment(Side.white, Role.pawn).hasQuality(Side.white),
-        false,
-      );
+      expect(Pockets.empty.increment(Side.white, Role.pawn).hasQuality(Side.white), false);
 
       // Each non-pawn role counts as quality.
-      for (final role in [
-        Role.knight,
-        Role.bishop,
-        Role.rook,
-        Role.queen,
-        Role.king
-      ]) {
+      for (final role in [Role.knight, Role.bishop, Role.rook, Role.queen, Role.king]) {
         expect(
           Pockets.empty.increment(Side.white, role).hasQuality(Side.white),
           true,
